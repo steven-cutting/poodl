@@ -1,0 +1,29 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.py]
+indent_size = 4
+
+[Justfile]
+indent_size = 4
+
+# The specifications are written to a fixed column width with their own
+# comment-led layout; treating them as ordinary source reflows them.
+[*.allium]
+indent_size = 4
+
+# List continuations and fenced blocks legitimately indent by other amounts.
+[*.md]
+indent_size = unset
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+indent_size = unset

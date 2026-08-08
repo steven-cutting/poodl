@@ -1,0 +1,63 @@
+[project]
+name = "poodl-tooling"
+version = "0.1.0"
+description = "Repository tooling for Poodl. Not the application; see package.json for that."
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+  "prek==0.4.12",
+  "ruff==0.16.2",
+]
+
+[tool.uv]
+# Poodl ships no Python package. This project exists so `uv run --frozen` can
+# provide a pinned prek and ruff to the hooks; see
+# docs/decisions/0004-python-toolchain-in-a-frontend-repo.md.
+package = false
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 99
+target-version = "py314"
+unsafe-fixes = false
+src = ["scripts"]
+
+[tool.ruff.lint]
+select = [
+  "A", "ANN", "ARG", "B", "BLE", "C4", "COM", "DTZ", "E",
+  "EM", "EXE", "F", "FA", "FLY", "FURB", "G", "I", "INP", "INT",
+  "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PTH", "PYI",
+  "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "T10", "TC",
+  "TID", "TRY", "UP", "W",
+]
+ignore = ["COM812", "E501", "ISC001"]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+# These are single-file command-line checkers: they print, they take no
+# annotations beyond their own signatures, and they shell out to git by design.
+"scripts/**" = [
+  "ANN", "BLE001", "EM101", "EM102", "INP001", "PLR0912", "PLR0915",
+  "PLR2004", "S404", "S603", "S607", "T201", "TRY003",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[tool.typos.files]
+# Lockfiles carry hashes that look like typos. The word lists are data: a
+# dictionary of five-letter words is largely indistinguishable from a list of
+# misspellings, and correcting one would change what the game plays with.
+extend-exclude = [
+  "package-lock.json",
+  "uv.lock",
+  "src/lib/data/",
+]

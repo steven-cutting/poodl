@@ -1,0 +1,17 @@
+{
+  "config": {
+    "default": true,
+    // Prose is wrapped by the author, not by a column limit.
+    "MD013": false,
+    // Duplicate headings are legitimate under different parents.
+    "MD024": { "siblings_only": true },
+    // Frontmatter carries a title field, but the level-one heading in the body
+    // is the document's real title and the contract requires it.
+    "MD025": { "front_matter_title": "" },
+    "MD033": { "allowed_elements": ["br"] },
+    // The documentation contract owns the first heading, not markdownlint.
+    "MD041": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules", ".svelte-kit", "build", "coverage", "ai_tmp", ".venv"]
+}

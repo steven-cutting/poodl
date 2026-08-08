@@ -1,0 +1,83 @@
+/*
+ * Design tokens.
+ *
+ * `settings.allium`'s Appearance surface decides which of these apply: theme
+ * follows the device until the player chooses, and high contrast swaps the
+ * correct and present colours for the orange and blue pair that
+ * `sharing.allium` also uses for its emoji grid. Colour never carries meaning
+ * on its own — every mark has a shape and an accessible description too.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --background: #ffffff;
+  --text: #1a1a1b;
+  --muted: #5f6368;
+  --focus: #0b57d0;
+
+  --mark-correct: #538d4e;
+  --mark-present: #b59f3b;
+  --mark-absent: #787c7e;
+  --mark-text: #ffffff;
+
+  --tile-background: transparent;
+  --tile-border: #d3d6da;
+  --tile-text: var(--text);
+
+  --key-background: #d3d6da;
+  --key-border: #b9bcc0;
+  --key-text: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --background: #121213;
+    --text: #f5f5f5;
+    --muted: #a0a4a8;
+    --focus: #a8c7fa;
+
+    --tile-border: #3a3a3c;
+    --key-background: #818384;
+    --key-border: #565758;
+    --key-text: #f5f5f5;
+  }
+}
+
+:root[data-theme='dark'] {
+  --background: #121213;
+  --text: #f5f5f5;
+  --muted: #a0a4a8;
+  --focus: #a8c7fa;
+
+  --tile-border: #3a3a3c;
+  --key-background: #818384;
+  --key-border: #565758;
+  --key-text: #f5f5f5;
+}
+
+:root[data-high-contrast='true'] {
+  --mark-correct: #f5793a;
+  --mark-present: #85c0f9;
+  --mark-text: #000000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

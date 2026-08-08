@@ -1,0 +1,14 @@
+cache = true
+max_retries = 2
+max_concurrency = 8
+timeout = 20
+accept = [200, 204, 206, 429]
+exclude_path = [
+  ".git",
+  ".svelte-kit",
+  ".venv",
+  "ai_tmp",
+  "build",
+  "coverage",
+  "node_modules",
+]

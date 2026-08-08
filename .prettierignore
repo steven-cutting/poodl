@@ -1,0 +1,18 @@
+.svelte-kit
+build
+coverage
+node_modules
+package-lock.json
+
+# Markdown belongs to markdownlint-cli2. Two formatters over the same files
+# disagree eventually, and `just fix` runs markdownlint before Prettier, so the
+# disagreement would surface as a gate that never converges.
+*.md
+
+# Word lists are data, one word per line.
+src/lib/data
+
+# The manifest is strict JSON despite the extension, because validate_docs.py
+# parses it with json.loads. Prettier reads the .yml and rewrites it as YAML
+# with single quotes, which is no longer JSON and fails the contract outright.
+docs/manifest.yml

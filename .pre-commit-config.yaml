@@ -1,0 +1,112 @@
+exclude: >-
+  (?x)^(
+    \.git/|
+    \.svelte-kit/|
+    \.venv/|
+    ai_tmp/|
+    build/|
+    coverage/|
+    node_modules/|
+    src/lib/data/|
+    uv\.lock$|
+    package-lock\.json$
+  )
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff lint
+        entry: uv run --frozen ruff check --force-exclude
+        language: system
+        types_or: [python, pyi]
+
+      - id: ruff-format-check
+        name: Ruff format check
+        entry: uv run --frozen ruff format --check --force-exclude
+        language: system
+        types_or: [python, pyi]
+
+      - id: editorconfig-checker
+        name: EditorConfig
+        entry: ec
+        language: node
+        additional_dependencies: [editorconfig-checker@6.1.1]
+        types: [text]
+
+      - id: eslint
+        name: ESLint and Prettier
+        entry: npm run lint
+        language: system
+        pass_filenames: false
+        files: ^(src/|tests/|package\.json$|package-lock\.json$|eslint\.config\.js$|tsconfig\.json$|vite\.config\.ts$|svelte\.config\.js$|\.prettierrc\.json$|\.prettierignore$)
+
+      - id: validate-docs
+        name: Documentation contract
+        entry: uv run --frozen python scripts/validate_docs.py
+        language: system
+        pass_filenames: false
+        files: ^(README\.md|SECURITY\.md|docs/|scripts/validate_docs\.py)
+
+      - id: validate-agents
+        name: Agent instruction contract
+        entry: uv run --frozen python scripts/validate_agents.py
+        language: system
+        pass_filenames: false
+        files: ^(AGENTS\.md|CLAUDE\.md|\.agents/|\.claude/|\.codex/|\.github/copilot-instructions\.md|scripts/validate_agents\.py)
+
+  - repo: builtin
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=768]
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+      # end-of-file-fixer and trailing-whitespace live in .pre-commit-fix.yaml.
+      # This config is the read-only gate, so it may report but never repair;
+      # editorconfig-checker and markdownlint report the same defects here.
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: b82a6c8896e491b9cb377a99ff3412131920681b # v0.23.2
+    hooks:
+      - id: markdownlint-cli2
+        name: markdownlint
+
+  - repo: https://github.com/crate-ci/typos
+    rev: bee27e3a4fd1ea2111cf90ab89cd076c870fce14 # v1.48.0
+    hooks:
+      - id: typos
+
+  - repo: https://github.com/lycheeverse/lychee
+    rev: 2bba271688c1abb1503097a064e6c3bc1d1b6a9b # lychee-v0.24.2
+    hooks:
+      - id: lychee
+        args: [--offline, --cache, --config, lychee.toml, --no-progress, --root-dir, .]
+        types: [markdown]
+      - id: lychee
+        alias: lychee-online
+        name: Lychee online (manual)
+        args: [--cache, --config, lychee.toml, --no-progress, --root-dir, .]
+        types: [markdown]
+        stages: [manual]
+
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: 745eface02aef23e168a8afb6b5737818efbea95 # v0.11.0.1
+    hooks:
+      - id: shellcheck
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: 914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+    hooks:
+      - id: actionlint
+        files: ^\.github/workflows/.*\.ya?ml$
+
+  - repo: https://github.com/sirwart/ripsecrets
+    rev: 7d94620933e79b8acaa0cd9e60e9864b07673d86 # v0.1.11
+    hooks:
+      - id: ripsecrets
+        entry: uv run --no-project python scripts/run_ripsecrets_redacted.py

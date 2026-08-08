@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "pages": [
+    {"path": "README.md", "title": "Documentation map", "kind": "project", "audience": ["user", "contributor", "maintainer", "operator", "agent"], "canonical_for": ["documentation_navigation"], "requires": []},
+
+    {"path": "project/purpose-and-scope.md", "title": "Purpose and scope", "kind": "project", "audience": ["user", "contributor", "maintainer", "agent"], "canonical_for": ["project_purpose", "project_non_goals"], "requires": []},
+    {"path": "project/repository-map.md", "title": "Repository map", "kind": "project", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["repository_layout"], "requires": []},
+    {"path": "project/terminology.md", "title": "Terminology", "kind": "project", "audience": ["contributor", "maintainer", "operator", "agent"], "canonical_for": ["project_terminology"], "requires": []},
+
+    {"path": "tutorials/first-change.md", "title": "Make your first change", "kind": "tutorial", "audience": ["contributor", "agent"], "canonical_for": ["first_change_tutorial"], "requires": []},
+
+    {"path": "how-to/develop-locally.md", "title": "Develop locally", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["local_development"], "requires": []},
+    {"path": "how-to/test-and-debug.md", "title": "Test and debug", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["test_workflow"], "requires": []},
+    {"path": "how-to/maintain-dependencies.md", "title": "Maintain dependencies", "kind": "how-to", "audience": ["maintainer", "agent"], "canonical_for": ["dependency_maintenance"], "requires": []},
+    {"path": "how-to/deploy-to-github-pages.md", "title": "Deploy to GitHub Pages", "kind": "how-to", "audience": ["maintainer", "operator", "agent"], "canonical_for": ["deployment_procedure"], "requires": []},
+    {"path": "how-to/replace-the-word-lists.md", "title": "Replace the word lists", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["word_list_provisioning"], "requires": []},
+    {"path": "how-to/work-with-the-specs.md", "title": "Work with the specifications", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["specification_workflow"], "requires": []},
+
+    {"path": "explanation/architecture.md", "title": "Architecture", "kind": "explanation", "audience": ["contributor", "maintainer", "operator", "agent"], "canonical_for": ["system_architecture"], "requires": []},
+    {"path": "explanation/layering.md", "title": "Layering and dependency direction", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["dependency_boundaries"], "requires": []},
+    {"path": "explanation/specifications.md", "title": "Specifications", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["specification_model"], "requires": []},
+    {"path": "explanation/accessibility.md", "title": "Accessibility", "kind": "explanation", "audience": ["user", "contributor", "maintainer", "agent"], "canonical_for": ["accessibility_model"], "requires": []},
+    {"path": "explanation/security-model.md", "title": "Security model", "kind": "explanation", "audience": ["user", "contributor", "maintainer", "operator", "agent"], "canonical_for": ["security_model"], "requires": []},
+    {"path": "explanation/quality-philosophy.md", "title": "Quality philosophy", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["quality_philosophy"], "requires": []},
+
+    {"path": "reference/commands.md", "title": "Commands", "kind": "reference", "audience": ["contributor", "maintainer", "operator", "agent"], "canonical_for": ["command_reference"], "requires": []},
+    {"path": "reference/configuration.md", "title": "Configuration", "kind": "reference", "audience": ["contributor", "maintainer", "operator", "agent"], "canonical_for": ["configuration_reference"], "requires": []},
+    {"path": "reference/testing.md", "title": "Testing", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["testing_reference"], "requires": []},
+    {"path": "reference/quality-gates.md", "title": "Quality gates", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["quality_gate_reference"], "requires": []},
+    {"path": "reference/documentation-contract.md", "title": "Documentation contract", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["documentation_contract"], "requires": []},
+    {"path": "reference/agent-contract.md", "title": "Agent contract", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["agent_contract"], "requires": []},
+
+    {"path": "operations/maintenance.md", "title": "Maintenance", "kind": "operations", "audience": ["maintainer", "operator", "agent"], "canonical_for": ["maintenance_routine"], "requires": []},
+    {"path": "operations/troubleshooting.md", "title": "Troubleshooting", "kind": "operations", "audience": ["contributor", "maintainer", "operator", "agent"], "canonical_for": ["troubleshooting"], "requires": []},
+
+    {"path": "decisions/README.md", "title": "Architecture decisions", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_index"], "requires": []},
+    {"path": "decisions/0001-static-site-no-backend.md", "title": "Decision 0001: A static site with no backend", "kind": "decision", "audience": ["maintainer", "agent"], "canonical_for": ["decision_no_backend"], "requires": []},
+    {"path": "decisions/0002-ports-and-fakes.md", "title": "Decision 0002: Side effects behind ports", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_ports_and_fakes"], "requires": []},
+    {"path": "decisions/0003-specs-are-the-source-of-truth.md", "title": "Decision 0003: Specifications decide behaviour", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_spec_first"], "requires": []},
+    {"path": "decisions/0004-python-toolchain.md", "title": "Decision 0004: A Python toolchain in a frontend repository", "kind": "decision", "audience": ["maintainer", "agent"], "canonical_for": ["decision_python_toolchain"], "requires": []},
+    {"path": "decisions/0005-obfuscation-not-security.md", "title": "Decision 0005: Answer obfuscation is not security", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_obfuscation_not_security"], "requires": []}
+  ]
+}

@@ -1,0 +1,22 @@
+.DS_Store
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.cache/
+.lycheecache
+.env
+.env.*
+!.env.example
+
+ai_tmp/
+
+# Assistant state written on first use; the agent contract covers only the
+# committed surface, so these must never enter the inventory.
+.claude/settings.local.json
+.codex/settings.local.json
+
+node_modules/
+.svelte-kit/
+build/
+coverage/

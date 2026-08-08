@@ -1,0 +1,225 @@
+import { describe, expect, it } from 'vitest';
+
+import { createFakeClock, createSystemClock } from '../src/lib/ports/clock';
+import { createFakeClipboard, createNavigatorClipboard } from '../src/lib/ports/clipboard';
+import { createCryptoRandom, createFakeRandom } from '../src/lib/ports/random';
+import { createFakeStorage, createWebStorage } from '../src/lib/ports/storage';
+
+/**
+ * A working `Storage`, supplied to the adapter as an argument.
+ *
+ * jsdom exposes no `localStorage` under Node 26 — Node's own experimental
+ * global shadows it and stays undefined without `--localstorage-file`. That
+ * costs nothing here: the adapter takes its backing store as a parameter, so
+ * the real code path is exercised without a browser and without stubbing a
+ * global.
+ */
+function memoryStorage(): Storage {
+  const entries = new Map<string, string>();
+  return {
+    get length(): number {
+      return entries.size;
+    },
+    clear: () => {
+      entries.clear();
+    },
+    getItem: (key: string) => entries.get(key) ?? null,
+    key: (index: number) => [...entries.keys()][index] ?? null,
+    removeItem: (key: string) => {
+      entries.delete(key);
+    },
+    setItem: (key: string, value: string) => {
+      entries.set(key, value);
+    }
+  };
+}
+
+/** A Storage whose every operation fails, as Safari's private mode does. */
+function unusableStorage(): Storage {
+  const refuse = (): never => {
+    throw new Error('storage is unavailable');
+  };
+  return {
+    get length(): number {
+      return 0;
+    },
+    clear: refuse,
+    getItem: refuse,
+    key: refuse,
+    removeItem: refuse,
+    setItem: refuse
+  };
+}
+
+/** A random source that hands out the given words in order. */
+function sequenceSource(values: readonly number[]): Pick<Crypto, 'getRandomValues'> {
+  let position = 0;
+  return {
+    getRandomValues<Target extends ArrayBufferView | null>(target: Target): Target {
+      if (target instanceof Uint32Array) {
+        target[0] = values[position] ?? 0;
+        position += 1;
+      }
+      return target;
+    }
+  };
+}
+
+describe('storage port', () => {
+  it('round-trips a value through the browser store', () => {
+    const storage = createWebStorage(memoryStorage());
+
+    expect(storage.read('poodl:game')).toBeNull();
+    storage.write('poodl:game', '{"mode":"random"}');
+    expect(storage.read('poodl:game')).toBe('{"mode":"random"}');
+
+    storage.remove('poodl:game');
+    expect(storage.read('poodl:game')).toBeNull();
+  });
+
+  it('stays usable where there is no store at all', () => {
+    // The ambient default, in an environment that provides nothing. Losing
+    // persistence must not cost the player the game.
+    const storage = createWebStorage();
+
+    expect(() => {
+      storage.write('poodl:game', 'anything');
+    }).not.toThrow();
+    expect(storage.read('poodl:game')).toBeNull();
+  });
+
+  it('keeps working when the store refuses every operation', () => {
+    const storage = createWebStorage(unusableStorage());
+
+    expect(() => {
+      storage.write('poodl:game', 'anything');
+    }).not.toThrow();
+    expect(() => {
+      storage.remove('poodl:game');
+    }).not.toThrow();
+    expect(storage.read('poodl:game')).toBeNull();
+  });
+
+  it('offers the same contract in memory', () => {
+    const storage = createFakeStorage({ 'poodl:settings': '{"hardMode":true}' });
+
+    expect(storage.read('poodl:settings')).toBe('{"hardMode":true}');
+    expect(storage.read('poodl:missing')).toBeNull();
+
+    storage.write('poodl:settings', '{"hardMode":false}');
+    expect(storage.read('poodl:settings')).toBe('{"hardMode":false}');
+
+    storage.remove('poodl:settings');
+    expect(storage.read('poodl:settings')).toBeNull();
+  });
+});
+
+describe('random port', () => {
+  it('draws from the platform source', () => {
+    const random = createCryptoRandom(sequenceSource([7]));
+
+    expect(random.uniformChoice(['a', 'b', 'c'])).toBe('b');
+  });
+
+  it('rejects a draw that would bias the low indices', () => {
+    // With three candidates the top value of the 32-bit range has no partner,
+    // so it is discarded and the next draw is used instead.
+    const random = createCryptoRandom(sequenceSource([0xff_ff_ff_ff, 7]));
+
+    expect(random.uniformChoice(['a', 'b', 'c'])).toBe('b');
+  });
+
+  it('uses the real platform source by default', () => {
+    const random = createCryptoRandom();
+
+    expect(['a', 'b', 'c']).toContain(random.uniformChoice(['a', 'b', 'c']));
+  });
+
+  it('walks a fixed sequence in tests, cycling when it runs out', () => {
+    const random = createFakeRandom([2, 0]);
+    const items = ['a', 'b', 'c'];
+
+    expect(random.uniformChoice(items)).toBe('c');
+    expect(random.uniformChoice(items)).toBe('a');
+    expect(random.uniformChoice(items)).toBe('c');
+  });
+
+  it('wraps an offset that overruns the collection', () => {
+    expect(createFakeRandom([4]).uniformChoice(['a', 'b', 'c'])).toBe('b');
+    expect(createFakeRandom([]).uniformChoice(['a', 'b'])).toBe('a');
+  });
+
+  it('refuses to draw from nothing', () => {
+    expect(() => createFakeRandom().uniformChoice([])).toThrow(/at least one candidate/);
+    expect(() => createCryptoRandom(sequenceSource([0])).uniformChoice([])).toThrow(
+      /at least one candidate/
+    );
+  });
+});
+
+describe('clock port', () => {
+  it('reads the supplied time source', () => {
+    expect(createSystemClock(() => 1_234).now()).toBe(1_234);
+  });
+
+  it('reads the system clock by default', () => {
+    expect(createSystemClock().now()).toBeGreaterThan(0);
+  });
+
+  it('only moves when a test moves it', () => {
+    const clock = createFakeClock(1_000);
+
+    expect(clock.now()).toBe(1_000);
+    clock.advance(5_000);
+    expect(clock.now()).toBe(6_000);
+    clock.set(0);
+    expect(clock.now()).toBe(0);
+  });
+
+  it('starts at the epoch by default', () => {
+    expect(createFakeClock().now()).toBe(0);
+  });
+});
+
+describe('clipboard port', () => {
+  it('writes through the supplied navigator', async () => {
+    const written: string[] = [];
+    const clipboard = createNavigatorClipboard({
+      clipboard: {
+        writeText: (text: string) => {
+          written.push(text);
+          return Promise.resolve();
+        }
+      } as Clipboard
+    });
+
+    await clipboard.write('Poodl 4/6');
+
+    expect(written).toEqual(['Poodl 4/6']);
+  });
+
+  it('reports a browser that exposes no clipboard', async () => {
+    const clipboard = createNavigatorClipboard({});
+
+    await expect(clipboard.write('Poodl 4/6')).rejects.toThrow(/no clipboard/);
+  });
+
+  it('records what a test copied', async () => {
+    const clipboard = createFakeClipboard();
+
+    await clipboard.write('Poodl X/6');
+
+    expect(clipboard.writes).toEqual(['Poodl X/6']);
+  });
+
+  it('can be made to fail so the caller error path is exercised', async () => {
+    const clipboard = createFakeClipboard({ failing: true });
+
+    await expect(clipboard.write('Poodl 4/6')).rejects.toThrow(/unavailable/);
+    expect(clipboard.writes).toEqual([]);
+  });
+
+  it('falls back to the ambient navigator, which jsdom leaves without a clipboard', async () => {
+    await expect(createNavigatorClipboard().write('Poodl 4/6')).rejects.toThrow(/no clipboard/);
+  });
+});
