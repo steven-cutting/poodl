@@ -1,0 +1,159 @@
+-- allium: 3
+--
+-- Poodl — word lists
+--
+-- Scope
+--   The two word lists Poodl plays from, and the properties every entry in
+--   them must satisfy. This module knows nothing about games, guesses,
+--   scoring or statistics.
+--
+-- Includes
+--   - The Word entity, and its membership of the curated answer list and of
+--     the larger valid-guess dictionary.
+--   - Shape obligations on every entry: exactly five letters, lowercase,
+--     one entry per distinct word.
+--   - The obligation that every answer is itself a valid guess.
+--   - The provisioning contract through which the lists arrive: they are
+--     replaceable data, not content authored in this specification.
+--
+-- Excludes
+--   - Curation. How a word is judged familiar enough for the answer list, and
+--     where either list comes from, is outside this specification; see the
+--     deferred WordListCuration below.
+--   - Any notion of play: a game, an attempt, a mark, a statistic.
+--   - How the lists are stored, encoded, bundled or loaded.
+--
+-- Dependencies
+--   None. This is the root module. game.allium, statistics.allium and
+--   sharing.allium depend on it.
+
+------------------------------------------------------------
+-- Contracts
+------------------------------------------------------------
+
+-- The lists are supplied to the product as data. Replacing the data replaces
+-- the playable vocabulary without any change to behaviour specified here.
+--
+-- Sizes are a design intent rather than an obligation: roughly 2,300 answer
+-- words and roughly 13,000 dictionary words. The obligations below are the
+-- ones that must hold whatever the sizes turn out to be.
+contract WordListSource {
+    answer_words: () -> Set<Word>
+    guess_words: () -> Set<Word>
+
+    @invariant EveryEntryIsAFiveLetterLowercaseWord
+        -- Every word in either list is exactly config.word_length letters
+        -- long and contains only lowercase letters of the English alphabet.
+
+    @invariant NoDuplicatesWithinAList
+        -- Neither list contains the same word twice.
+
+    @invariant AnswersAreASubsetOfGuesses
+        -- Every word in answer_words also appears in guess_words. A player
+        -- can therefore always type the answer as a guess.
+
+    @invariant AnswerListIsFamiliarVocabulary
+        -- The answer list is curated for familiarity: a player who loses
+        -- should recognise the answer. The guess dictionary carries no such
+        -- obligation and is expected to contain obscure words.
+
+    @invariant ListsAreStableWithinASession
+        -- Both lists are fully available before the first game starts and do
+        -- not change while a game is in progress.
+
+    @guidance
+        -- The two lists are expected to ship as separate replaceable data
+        -- files. Nothing in this specification depends on their order, so a
+        -- source may present them in any order it likes.
+}
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- A single playable word. The two lists are modelled as membership flags on
+-- one entry rather than as two collections, so that the relationship between
+-- them (every answer is a valid guess) is stated directly and checkably.
+entity Word {
+    text: String
+
+    -- Membership
+    in_answer_list: Boolean
+    in_guess_dictionary: Boolean
+
+    invariant EntryIsWordLength {
+        length(text) = config.word_length
+    }
+
+    invariant EntryIsLowercase {
+        text = lowercase(text)
+    }
+
+    invariant EveryAnswerIsAValidGuess {
+        in_answer_list implies in_guess_dictionary
+    }
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    word_length: Integer = 5
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+-- One entry per distinct word. Uniqueness across the single Word collection
+-- gives uniqueness within each list, and lets a guess be resolved to at most
+-- one entry by its text.
+invariant WordTextIsUnique {
+    for a in Words:
+        for b in Words:
+            a != b implies a.text != b.text
+}
+
+-- Drawing an answer must always be possible.
+invariant AnswerListIsNotEmpty {
+    Words.any(w => w.in_answer_list)
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+-- The boundary between this specification and whatever supplies the lists.
+-- The counterpart is data, not a person.
+surface WordListProvisioning {
+    exposes:
+        Word
+
+    contracts:
+        demands WordListSource
+
+    @guarantee ListsAreReplaceableWithoutSpecChange
+        -- Swapping either list for a different set of words that satisfies
+        -- WordListSource changes what Poodl plays with and nothing else. No
+        -- rule in any module names a specific word.
+
+    @guarantee NoWordIsAuthoredHere
+        -- This specification contains no word list content. It states only
+        -- what any supplied list must satisfy.
+}
+
+------------------------------------------------------------
+-- Deferred Specifications
+------------------------------------------------------------
+
+-- How the answer list is selected and pruned for familiarity.
+deferred WordListCuration.curate    -- see: outside this specification; the lists arrive through WordListSource
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "List replacement mid-flight - if the lists are replaced (a new release) while a game is in progress on a device, that game's answer may no longer be in the dictionary, and a previously issued custom link may no longer decode to a valid word. Should replacement invalidate in-progress games and outstanding custom links, or should both be honoured until they end?"
+
+open question "Are the list sizes (roughly 2,300 answers, roughly 13,000 valid guesses) a target to check, or purely descriptive? A checked lower bound on the answer list would catch a truncated data file."

@@ -1,0 +1,847 @@
+-- allium: 3
+--
+-- Poodl — playing a game
+--
+-- Scope
+--   One game of Poodl: how it starts, how letters are entered, how a guess is
+--   scored, how the game ends, and what a player may abandon. This is the
+--   core module; the other modules hang off it.
+--
+-- Includes
+--   - The four modes, and the lifecycle of a single Game.
+--   - The guess-scoring contract: two-pass duplicate handling, stated
+--     precisely enough to test against.
+--   - Input rules: letter entry, deletion, submission, and the two kinds of
+--     rejection that consume no attempt.
+--   - Per-letter keyboard knowledge derived from the guesses so far.
+--   - Abandonment: what happens to the outgoing game when a new one starts.
+--   - The endless-mode auto-continue countdown.
+--   - Starting a game from nothing: the game-navigation surface, and the
+--     first visit starting a random game by itself.
+--
+-- Excludes
+--   - Where an answer comes from for random and endless games (the no-repeat
+--     answer pool lives in statistics.allium) and for custom games (the link
+--     decoding lives in sharing.allium). Both supply an answer by emitting
+--     AnswerDrawn; this module creates the game from it.
+--   - Anything counted or remembered across games (statistics.allium).
+--   - Where the player's settings are stored and changed (settings.allium).
+--     This module reads only what it needs to play, through the PlaySettings
+--     placeholder below.
+--   - Screen layout, markup, styling and animation mechanics.
+--
+-- Dependencies
+--   words.allium — the Word entity and the two lists.
+--   The external PlaySettings entity below is the abstraction this module
+--   depends on for the two settings that change play. settings.allium's
+--   Settings entity is what fulfils it.
+
+use "./words.allium" as words
+
+------------------------------------------------------------
+-- Given
+------------------------------------------------------------
+
+given {
+    -- Poodl runs on one device for one person. There are no accounts, so the
+    -- player exists by declaration rather than by being created.
+    player: Player
+
+    -- The settings that change how a game plays, read live: a change to hard
+    -- mode applies from the very next submission.
+    play_settings: PlaySettings
+}
+
+------------------------------------------------------------
+-- External Entities
+------------------------------------------------------------
+
+-- The two settings that reach into play. Declared here as an abstraction so
+-- that this module does not depend on settings.allium; settings.allium
+-- depends on this one, and its Settings entity supplies these fields.
+external entity PlaySettings {
+    -- Hard mode: revealed letters must be reused. Read at submission time,
+    -- not at the start of the game.
+    hard_mode: Boolean
+
+    -- Whether keys pressed on a physical keyboard reach the board.
+    physical_keyboard: Boolean
+}
+
+------------------------------------------------------------
+-- Value Types
+------------------------------------------------------------
+
+-- One letter of one submitted guess, with what that letter turned out to be
+-- worth. Positions are 1-based and run left to right.
+value LetterResult {
+    position: Integer
+    letter: String
+    mark: LetterMark
+}
+
+-- What is known about one letter of the alphabet across the whole game, as
+-- shown on the on-screen keyboard. An absent status means "not yet seen in
+-- any submitted guess".
+value KeyKnowledge {
+    letter: String
+    status: LetterMark?
+}
+
+------------------------------------------------------------
+-- Contracts
+------------------------------------------------------------
+
+-- Scoring one guess against the answer. This is the heart of the game and the
+-- place duplicate letters are easy to get wrong, so the two passes are stated
+-- as obligations rather than left to the implementation.
+contract GuessScoring {
+    score_guess: (guess: words/Word, answer: words/Word) -> List<LetterResult>
+
+    @invariant OneResultPerPositionInOrder
+        -- The result carries exactly one LetterResult for each position
+        -- 1..words/config.word_length, in ascending position order, and each
+        -- result's letter is the guess's letter at that position.
+
+    @invariant ExactMatchesClaimOccurrencesFirst
+        -- Pass one visits every position. Where the guess letter equals the
+        -- answer letter at that position, the position is marked correct and
+        -- claims one occurrence of that letter in the answer. No position is
+        -- marked present or absent during pass one.
+
+    @invariant RemainingPositionsMarkedLeftToRight
+        -- Pass two visits the positions left unmarked by pass one, in
+        -- ascending position order. A position is marked present when the
+        -- answer still holds an unclaimed occurrence of that position's
+        -- letter, and claiming it; otherwise the position is marked absent.
+        -- Order matters: with two of a letter in the guess and one in the
+        -- answer, the leftmost unmatched position takes the present mark.
+
+    @invariant MarkBudgetNeverExceeded
+        -- For any letter, the number of correct and present marks in a single
+        -- guess never exceeds the number of times that letter occurs in the
+        -- answer. Every other position holding that letter is absent.
+
+    @invariant AllCorrectExactlyWhenEqual
+        -- Every position is marked correct if and only if the guess is the
+        -- same word as the answer.
+
+    @invariant Deterministic
+        -- The same guess and answer always produce the same results.
+
+    @guidance
+        -- The pass-one-then-pass-two shape is not an implementation
+        -- suggestion, it is the definition. A single left-to-right pass gives
+        -- different, wrong answers for guesses that repeat a letter the
+        -- answer holds once.
+}
+
+-- Whether the guesses already submitted in a game would all have been legal
+-- under hard mode. Used when the player asks to turn hard mode on mid-game.
+contract HardModeAdmission {
+    respects_hard_mode: (guesses: Set<Guess>) -> Boolean
+
+    @invariant PrefixSemantics
+        -- True when every submitted guess satisfies the hard-mode constraints
+        -- revealed by the guesses that preceded it, taking the guesses in
+        -- ascending position order. A guess is judged only against what was
+        -- known before it was submitted, never against its own results.
+
+    @invariant TriviallyTrueWithNoGuesses
+        -- An empty set of guesses respects hard mode.
+
+    @invariant Deterministic
+        -- The same guesses always produce the same verdict.
+}
+
+-- The state of the on-screen keyboard, derived from the guesses so far.
+contract KeyboardKnowledge {
+    keyboard_knowledge: (guesses: Set<Guess>) -> List<KeyKnowledge>
+
+    @invariant CoversTheAlphabet
+        -- Produces exactly one entry per letter of the English alphabet,
+        -- whether or not that letter has been guessed.
+
+    @invariant BestKnownStatusWins
+        -- Each entry's status is the strongest mark that letter has received
+        -- in any submitted guess, ranked correct over present over absent,
+        -- and absent-of-value (null) when the letter has not been submitted.
+        -- Knowledge never weakens: a letter shown correct stays correct even
+        -- if a later guess places it wrongly.
+}
+
+------------------------------------------------------------
+-- Enumerations
+------------------------------------------------------------
+
+enum GameMode { random | endless | practice | custom }
+
+enum LetterMark { correct | present | absent }
+
+enum GuessRejectionReason { incomplete | not_in_dictionary | hard_mode_violation }
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- The person at this device. One player, one game at a time.
+entity Player {
+    -- The game on the board: in progress, or just finished and not yet
+    -- replaced. Null before the first game.
+    current_game: Game?
+
+    -- Relationships
+    games: Game with player = this
+
+    -- Projections
+    in_progress_games: games where status = in_progress
+
+    invariant OnlyTheCurrentGameIsInProgress {
+        in_progress_games.all(g => g = current_game)
+    }
+}
+
+entity Game {
+    player: Player
+    mode: GameMode
+    answer: words/Word
+    status: in_progress | won | lost | abandoned
+
+    -- Whether hard mode was on when this game began. Recorded for the record;
+    -- submission is judged against the live setting, not against this.
+    hard_mode_at_start: Boolean
+
+    -- The letters typed but not yet submitted, between zero and word_length
+    -- of them.
+    current_input: String
+
+    started_at: Timestamp
+    completed_at: Timestamp when status = won | lost | abandoned
+
+    -- When set, an endless game's next round starts at this moment unless the
+    -- player stops the countdown first. Null in every other mode and whenever
+    -- no countdown is running.
+    auto_continue_at: Timestamp?
+
+    transitions status {
+        in_progress -> won
+        in_progress -> lost
+        in_progress -> abandoned
+        terminal: won, lost, abandoned
+    }
+
+    -- Relationships
+    guesses: Guess with game = this
+
+    -- Derived: the game's state
+    is_current: player.current_game = this
+    attempts_used: guesses.count
+    attempts_remaining: config.max_attempts - guesses.count
+    is_complete: status in {won, lost, abandoned}
+    is_finished_by_play: status in {won, lost}
+    is_stat_eligible: mode in {random, endless}
+    input_length: length(current_input)
+    is_input_complete: input_length = words/config.word_length
+
+    -- Derived: what the guesses so far have revealed
+    all_results: flatMap(guesses, g => g.results)
+    correct_results: filter(all_results, r => r.mark = correct)
+    present_results: filter(all_results, r => r.mark = present)
+    keyboard: keyboard_knowledge(guesses)
+
+    -- The strongest mark a letter has earned anywhere in this game, or null
+    -- when the letter has not been submitted. This is what the on-screen
+    -- keyboard shows, and the precedence is correct over present over absent
+    -- over nothing.
+    letter_status(l):
+        if filter(all_results, r => r.letter = l).any(r => r.mark = correct): correct
+        else if filter(all_results, r => r.letter = l).any(r => r.mark = present): present
+        else if filter(all_results, r => r.letter = l).any(r => r.mark = absent): absent
+        else: null
+
+    -- Hard mode, applied to a candidate guess: every letter revealed in place
+    -- must be played in that same place, and every letter revealed as present
+    -- must be played somewhere.
+    satisfies_hard_mode(candidate):
+        correct_results.all(r => letter_at(candidate.text, r.position) = r.letter)
+        and present_results.all(r => contains_letter(candidate.text, r.letter))
+
+    -- Whether hard mode may be turned on now without invalidating history.
+    hard_mode_admissible: respects_hard_mode(guesses)
+
+    invariant NeverMoreThanTheAttemptLimit {
+        guesses.count <= config.max_attempts
+    }
+
+    invariant GuessPositionsAreDistinct {
+        for a in guesses:
+            for b in guesses:
+                a != b implies a.position != b.position
+    }
+}
+
+-- A guess the player has submitted, with what it revealed. Unsubmitted
+-- letters live in Game.current_input and are not a Guess.
+entity Guess {
+    game: Game
+    position: Integer
+    word: words/Word
+    results: List<LetterResult>
+
+    is_winning: results.all(r => r.mark = correct)
+
+    invariant PositionIsAnAttemptNumber {
+        position >= 1 and position <= config.max_attempts
+    }
+
+    invariant OneResultPerLetter {
+        results.count = words/config.word_length
+    }
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    max_attempts: Integer = 6
+
+    -- How long the end-of-game modal waits before starting the next endless
+    -- round. See the open question below.
+    endless_countdown: Duration = 5.seconds
+}
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+-- Starting a game -------------------------------------------------------
+
+-- Opening Poodl with nothing on the board starts a random game, so a first
+-- visit lands on something playable rather than on a choice.
+--
+-- The guard is what makes this rule the whole of the resume story too. Open
+-- Poodl with a game in progress and no rule fires: the board comes back as it
+-- was left. Open it with a finished game still current and again nothing
+-- fires, so the end-of-game modal is still there, answer and all.
+--
+-- PlayerOpensPoodl is deliberately the one trigger no surface provides:
+-- opening the app is an arrival, not a control, and every surface is
+-- something reached by arriving.
+rule StartFirstGameOnOpening {
+    when: PlayerOpensPoodl(player)
+
+    requires: player.current_game = null
+
+    ensures: NewGameRequested(player: player, mode: random)
+}
+
+-- Practice draws straight from the answer list: no pool, no record, repeats
+-- allowed. Random and endless are answered by statistics.allium, which draws
+-- from the no-repeat pool. Custom games never arrive this way; they arrive as
+-- an AnswerDrawn emitted by sharing.allium when a link is opened.
+rule ProvidePracticeAnswer {
+    when: NewGameRequested(player, mode)
+
+    requires: mode = practice
+
+    let candidates = filter(words/Words, w => w.in_answer_list)
+    let drawn = uniform_choice(candidates)
+
+    ensures: AnswerDrawn(player: player, mode: mode, answer: drawn)
+
+    @guidance
+        -- uniform_choice is the one deliberately non-deterministic step in
+        -- this specification. What matters is that every candidate is equally
+        -- likely and that the result is a member of the candidates, not that
+        -- the same input yields the same word.
+}
+
+-- Every game begins here, whatever supplied the answer. The outgoing game is
+-- retired first: this is the single place abandonment can happen, so New
+-- Game, switching mode, opening a custom link and the endless countdown all
+-- get the same treatment.
+rule BeginGame {
+    when: AnswerDrawn(player, mode, answer)
+
+    let outgoing = player.current_game
+
+    ensures:
+        if exists outgoing:
+            RetireGame(game: outgoing)
+        let game = Game.created(
+            player: player,
+            mode: mode,
+            answer: answer,
+            status: in_progress,
+            hard_mode_at_start: play_settings.hard_mode,
+            current_input: "",
+            started_at: now
+        )
+        player.current_game = game
+}
+
+-- Abandoning a game that was under way counts as a loss. statistics.allium
+-- chains from the transition; it decides whether this game was eligible.
+rule AbandonRetiredGame {
+    when: RetireGame(game)
+
+    requires: game.status = in_progress
+    requires: game.guesses.count >= 1
+
+    ensures:
+        game.status = abandoned
+        game.completed_at = now
+}
+
+-- A game the player never guessed in leaves no trace at all: no loss, no
+-- broken streak, nothing counted.
+rule DiscardRetiredGame {
+    when: RetireGame(game)
+
+    requires: game.status = in_progress
+    requires: game.guesses.count = 0
+
+    ensures: not exists game
+}
+
+-- Entering letters ------------------------------------------------------
+
+rule PlayerEntersLetter {
+    when: PlayerEntersLetter(player, letter)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: is_letter(letter)
+    requires: game.input_length < words/config.word_length
+
+    ensures: game.current_input = append(game.current_input, lowercase(letter))
+}
+
+rule PlayerDeletesLetter {
+    when: PlayerDeletesLetter(player)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: game.input_length > 0
+
+    ensures: game.current_input = drop_last(game.current_input)
+}
+
+-- Submitting a guess ----------------------------------------------------
+
+-- Fewer than five letters. Nothing is scored and no attempt is spent.
+rule RejectIncompleteGuess {
+    when: PlayerSubmitsGuess(player)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: game.input_length < words/config.word_length
+
+    ensures: GuessRejected(game: game, reason: incomplete)
+}
+
+-- Five letters, but not a word Poodl accepts.
+rule RejectUnknownWord {
+    when: PlayerSubmitsGuess(player)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: game.is_input_complete
+
+    let input = game.current_input
+    let candidate = words/Word{text: input}
+
+    requires: not exists candidate or not candidate.in_guess_dictionary
+
+    ensures: GuessRejected(game: game, reason: not_in_dictionary)
+}
+
+-- A real word, but it drops a letter the player has already been shown. Hard
+-- mode is read live, so this depends on the setting as it stands now.
+rule RejectHardModeViolation {
+    when: PlayerSubmitsGuess(player)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: game.is_input_complete
+
+    let input = game.current_input
+    let candidate = words/Word{text: input}
+
+    requires: exists candidate
+    requires: candidate.in_guess_dictionary
+    requires: play_settings.hard_mode
+    requires: not game.satisfies_hard_mode(candidate)
+
+    ensures: GuessRejected(game: game, reason: hard_mode_violation)
+}
+
+-- The guess stands: it is scored, it spends an attempt, and it may end the
+-- game.
+rule AcceptGuess {
+    when: PlayerSubmitsGuess(player)
+
+    let game = player.current_game
+
+    requires: exists game
+    requires: game.status = in_progress
+    requires: game.is_input_complete
+
+    let input = game.current_input
+    let candidate = words/Word{text: input}
+    let attempt = game.attempts_used + 1
+
+    requires: exists candidate
+    requires: candidate.in_guess_dictionary
+    requires: not play_settings.hard_mode or game.satisfies_hard_mode(candidate)
+
+    ensures:
+        let submitted = Guess.created(
+            game: game,
+            position: attempt,
+            word: candidate,
+            results: score_guess(candidate, game.answer)
+        )
+        game.current_input = ""
+        if submitted.is_winning:
+            game.status = won
+            game.completed_at = now
+        else if attempt = config.max_attempts:
+            game.status = lost
+            game.completed_at = now
+}
+
+-- Endless mode ----------------------------------------------------------
+
+-- Endless shows the same end-of-game modal as random, but arms a countdown.
+rule ArmEndlessCountdown {
+    when: game: Game.is_finished_by_play
+
+    requires: game.mode = endless
+    requires: game.auto_continue_at = null
+
+    ensures: game.auto_continue_at = now + config.endless_countdown
+}
+
+-- The countdown runs out and the next round starts by itself. Clearing
+-- auto_continue_at is what stops this firing again.
+rule EndlessCountdownElapses {
+    when: game: Game.auto_continue_at <= now
+
+    requires: game.mode = endless
+    requires: game.is_current
+
+    ensures:
+        game.auto_continue_at = null
+        NewGameRequested(player: game.player, mode: endless)
+}
+
+-- The player stops the countdown and the modal simply stays put. Starting the
+-- next round is then up to them, exactly as in random mode.
+rule PlayerStopsCountdown {
+    when: PlayerStopsCountdown(player, game)
+
+    requires: game.auto_continue_at != null
+
+    ensures: game.auto_continue_at = null
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+-- The duplicate-letter obligation, stated over stored state rather than over
+-- the scoring function: a letter is never marked correct or present more
+-- times in one guess than it occurs in the answer.
+invariant MarksNeverExceedAnswerOccurrences {
+    for g in Guesses:
+        for r in g.results:
+            filter(g.results, x => x.letter = r.letter and x.mark in {correct, present}).count
+                <= occurrences(g.game.answer.text, r.letter)
+}
+
+invariant CorrectMarksSitOnMatchingPositions {
+    for g in Guesses:
+        for r in g.results:
+            r.mark = correct implies letter_at(g.game.answer.text, r.position) = r.letter
+}
+
+invariant LettersNotInTheAnswerAreMarkedAbsent {
+    for g in Guesses:
+        for r in g.results:
+            occurrences(g.game.answer.text, r.letter) = 0 implies r.mark = absent
+}
+
+invariant WinningGuessIsTheAnswer {
+    for g in Guesses:
+        g.is_winning implies g.word = g.game.answer
+}
+
+invariant WonGamesHoldAWinningGuess {
+    for g in Games:
+        g.status = won implies g.guesses.any(x => x.is_winning)
+}
+
+invariant LostGamesUsedEveryAttempt {
+    for g in Games:
+        g.status = lost implies g.guesses.count = config.max_attempts
+}
+
+invariant AbandonedGamesHadAGuess {
+    for g in Games:
+        g.status = abandoned implies g.guesses.count >= 1
+}
+
+-- The keyboard never contradicts the guesses. The other direction, that every
+-- letter of the alphabet has an entry, is an obligation on the
+-- KeyboardKnowledge contract.
+invariant KeyboardAgreesWithTheGuesses {
+    for g in Games:
+        for key in g.keyboard:
+            key.status != null implies key.status = g.letter_status(key.letter)
+}
+
+invariant AnswersAreAlwaysGuessable {
+    for g in Games:
+        g.answer.in_guess_dictionary
+}
+
+invariant InputNeverExceedsWordLength {
+    for g in Games:
+        g.input_length <= words/config.word_length
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+-- Starting and switching games. This is the only surface that is not scoped
+-- to a game, so it is the one that exists before the first game and the one
+-- that can always start another.
+surface GameNavigation {
+    facing viewer: Player
+
+    exposes:
+        viewer.current_game?.mode
+        viewer.current_game?.status
+
+    provides:
+        NewGameRequested(viewer, mode)
+
+    related:
+        GameBoard(viewer.current_game)
+            when viewer.current_game != null
+
+    @guarantee AvailableWhetherOrNotAGameExists
+        -- Nothing here depends on a game being under way. On a first visit,
+        -- with no game and no history, this surface is still present and can
+        -- still start one.
+
+    @guarantee OpeningPoodlWithNoGameStartsARandomOne
+        -- A player arriving with nothing on the board does not have to choose
+        -- a mode first: a random game is already waiting. Arriving with a
+        -- game in progress resumes it untouched, and arriving with a finished
+        -- game shows its conclusion again rather than moving on.
+
+    @guarantee ThreeModesCanBeStartedFromHere
+        -- Random, endless and practice are the modes a player can start.
+        -- Custom is not among them: a custom game exists only because someone
+        -- made a link, so it is reached by opening that link and never by
+        -- choosing a mode.
+
+    @guarantee StartingAGameEndsTheOneUnderWay
+        -- Asking for a new game, in the same mode or a different one, retires
+        -- whatever was on the board. If that game was under way and had a
+        -- guess in it, it counts as a loss in a mode that counts; if it had no
+        -- guesses, it goes without trace. This is stated where the player acts
+        -- on it, so the cost of switching mode mid-game is never a surprise.
+
+    @guarantee CurrentModeIsPerceivable
+        -- Which mode is being played, and whether a game is under way at all,
+        -- are readable as text rather than signalled only by which control
+        -- looks selected.
+
+    @guarantee FullyKeyboardOperable
+        -- Every mode and the New Game control can be reached and invoked from
+        -- the keyboard alone, and the currently selected mode is announced.
+}
+
+-- The board. It exists for as long as a game is on it, including after the
+-- game ends: the final grid stays visible behind the end-of-game modal.
+surface GameBoard {
+    facing viewer: Player
+
+    context game: Game where player = viewer and is_current
+
+    exposes:
+        game.mode
+        game.attempts_used
+        game.attempts_remaining
+        game.current_input
+        for submitted in game.guesses:
+            submitted.position
+            submitted.word.text
+            submitted.results
+        for key in game.keyboard:
+            key.letter
+            key.status
+
+    provides:
+        PlayerEntersLetter(viewer, letter)
+            when game.status = in_progress and game.input_length < words/config.word_length
+        PlayerDeletesLetter(viewer)
+            when game.status = in_progress and game.input_length > 0
+        PlayerSubmitsGuess(viewer)
+            when game.status = in_progress
+        NewGameRequested(viewer, mode)
+
+    related:
+        PhysicalKeyboardInput(game)
+            when game.status = in_progress
+        GameConclusion(game)
+            when game.is_finished_by_play
+
+    @guarantee AnswerIsNeverExposedWhileInProgress
+        -- game.answer is deliberately absent from the exposed set. While the
+        -- game is in progress nothing on this surface reveals the answer, or
+        -- any letter of it, beyond what the player's own submitted guesses
+        -- have revealed. The answer becomes visible only on GameConclusion,
+        -- once the game is over. This holds for custom games too: the
+        -- creator's word is hidden the moment the game starts.
+
+    @guarantee ResultsAreNeverConveyedByColourAlone
+        -- Every letter result and every keyboard key status is distinguishable
+        -- without colour vision: correct, present and absent each carry a
+        -- non-colour indication as well as their colour.
+
+    @guarantee EverySubmittedGuessIsAnnounced
+        -- When a guess is accepted, its per-letter results are announced to
+        -- assistive technology in reading order, along with the attempt
+        -- number and how many attempts remain.
+
+    @guarantee EveryRejectionIsAnnounced
+        -- A GuessRejected outcome is made perceivable both visually and to
+        -- assistive technology, and says which of the three reasons applied.
+        -- A rejected guess spends no attempt: the typed letters stay on the
+        -- board for the player to correct.
+
+    @guarantee FullyKeyboardOperable
+        -- Every operation on this surface can be reached and invoked from the
+        -- keyboard alone, including each key of the on-screen keyboard. This
+        -- holds regardless of the physical_keyboard setting, which governs
+        -- only whether typing goes straight into the board.
+
+    @guarantee InProgressGameSurvivesReload
+        -- The current game — its mode, its answer, its submitted guesses and
+        -- their results, and any unsubmitted letters — persists between
+        -- sessions on the same device and browser. Reopening Poodl resumes
+        -- the game exactly where it was left.
+
+    @guarantee MotionRespectsTheReducedMotionPreference
+        -- Tile and key animations run only when the animations setting is on
+        -- and the operating system expresses no reduced-motion preference.
+        -- The operating system preference wins.
+}
+
+-- Typing straight into the board. The same three actions as the on-screen
+-- keyboard, from a different channel, and the only one the physical_keyboard
+-- setting can switch off.
+surface PhysicalKeyboardInput {
+    facing viewer: Player
+
+    context game: Game
+        where player = viewer and is_current and status = in_progress
+
+    let physical_input_enabled = play_settings.physical_keyboard
+
+    provides:
+        PlayerEntersLetter(viewer, letter)
+            when physical_input_enabled and game.input_length < words/config.word_length
+        PlayerDeletesLetter(viewer)
+            when physical_input_enabled and game.input_length > 0
+        PlayerSubmitsGuess(viewer)
+            when physical_input_enabled
+
+    @guarantee EnterSubmitsAndBackspaceDeletes
+        -- Enter submits the current input and Backspace deletes its last
+        -- letter. Letter keys enter that letter, whatever case they arrive in.
+
+    @guarantee TurningThisOffLeavesTheGameFullyPlayable
+        -- With physical_keyboard off, the on-screen keyboard still offers
+        -- every action, and remains reachable by keyboard navigation.
+}
+
+-- The end-of-game modal. Random waits here indefinitely; endless counts down
+-- and moves on unless the player stops it.
+surface GameConclusion {
+    facing viewer: Player
+
+    context game: Game
+        where player = viewer and is_current and is_finished_by_play
+
+    exposes:
+        game.status
+        game.mode
+        game.answer.text
+        game.attempts_used
+        game.auto_continue_at
+        for submitted in game.guesses:
+            submitted.position
+            submitted.word.text
+            submitted.results
+
+    provides:
+        NewGameRequested(viewer, mode)
+        PlayerStopsCountdown(viewer, game)
+            when game.auto_continue_at != null
+
+    related:
+        GameBoard(game)
+
+    @guarantee OutcomeAnswerAndAttemptsAreAllShown
+        -- Whether the game was won or lost, the answer, and how many attempts
+        -- were used are all shown, on a win as well as on a loss.
+
+    @guarantee EndlessContinuesUnlessStopped
+        -- In endless mode the next game starts by itself once the countdown
+        -- elapses. The remaining time is perceivable, and stopping the
+        -- countdown is an action the player can take at any point while it
+        -- runs. In every other mode nothing happens until the player asks
+        -- for a new game.
+
+    @guarantee NoDailyLimit
+        -- A new game can always be requested. Poodl never withholds a game
+        -- because of the date or because of how many have been played.
+
+    @guarantee ConclusionIsAnnounced
+        -- The outcome, the answer and the attempt count are announced to
+        -- assistive technology when the game ends, and an armed countdown is
+        -- announced along with the means to stop it.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "First visit starts a random game automatically, on the reading that a Wordle-like should open onto a playable board rather than onto a menu. Is that wanted, or should a first-time player be asked to choose a mode? The choice also decides what a player who has cleared their browser data meets on their way back in."
+
+open question "Endless countdown duration - endless_countdown defaults to 5 seconds. Is that the right amount of time to read the answer before the next game takes over? It interacts with the ConclusionIsAnnounced guarantee: a screen reader may not finish the announcement in five seconds, which argues for a longer default or for the countdown pausing while an announcement is in flight."
+
+open question "Stopping the countdown - decision 2 describes the player pausing or exiting the countdown, which reads as two behaviours; this specification models one action that cancels it outright. Should a stopped countdown be resumable, and should exiting mean something different from pausing?"
+
+open question "hard_mode_at_start is recorded on every game but no rule reads it, because hard mode is judged live at submission. Should it instead lock hard mode for the duration of a game, or is the field only there for the record?"
+
+open question "Retention of finished games - a won or lost game stays on the board until a new one replaces it, and nothing removes it afterwards. Should finished games be discarded once they are no longer current, or is a history of past games wanted (it would need its own scope: what is kept, and for how long)?"
+
+open question "Whether a player may request a mode that needs an answer nobody supplies. NewGameRequested carries a mode, and only practice, random and endless have a rule that answers it; a request for custom produces no game at all, silently. Should that be a stated rejection instead?"

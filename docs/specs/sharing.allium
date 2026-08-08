@@ -1,0 +1,348 @@
+-- allium: 3
+--
+-- Poodl — custom game links and shared results
+--
+-- Scope
+--   The two things that travel between people. Poodl has no server, so
+--   everything that leaves one device does so as text the player carries: a
+--   link, or a grid of squares.
+--
+-- Includes
+--   - Creating a custom game: the creator's word must be one Poodl accepts,
+--     and the link that results hides it.
+--   - Opening a custom link, including the path where the link does not
+--     decode.
+--   - Sharing a finished game as an emoji grid that gives nothing away, in
+--     either palette, placed on the player's clipboard.
+--
+-- Excludes
+--   - Playing the custom game once it starts (game.allium). Opening a link
+--     hands game.allium an answer and steps back.
+--   - The obfuscation scheme itself. This module states what it must
+--     guarantee, not how it works.
+--   - URL structure beyond the fact that the token rides in it, and anything
+--     about how text reaches the clipboard.
+--
+-- Dependencies
+--   words.allium — the dictionary a custom answer must be in.
+--   game.allium — the finished game a grid is rendered from, and the
+--     AnswerDrawn hand-off that starts a custom game.
+--   settings.allium — high contrast, which chooses the palette.
+
+use "./words.allium" as words
+use "./game.allium" as game
+use "./settings.allium" as settings
+
+------------------------------------------------------------
+-- Contracts
+------------------------------------------------------------
+
+-- Turning an answer into something that can sit in a URL without giving the
+-- game away to anyone who reads it.
+contract AnswerObfuscation {
+    encode: (answer: words/Word) -> String
+    decode: (token: String) -> words/Word?
+    custom_game_url: (token: String) -> String
+
+    @invariant Roundtrip
+        -- decode(encode(w)) is w, for every word in the guess dictionary.
+
+    @invariant TheUrlCarriesTheTokenAndNothingElseAboutTheAnswer
+        -- custom_game_url produces a link that opening resolves back to this
+        -- token. The answer appears nowhere in it except inside the token,
+        -- and the link says nothing else about the word — not its length
+        -- beyond the fixed word length, not a letter, not a hint.
+
+    @invariant AnswerIsNotReadableFromTheToken
+        -- The token does not contain the answer as text, and the answer
+        -- cannot be read off it by eye. Someone who is sent a link and looks
+        -- at it learns nothing they could not learn by playing.
+
+    @invariant DecodeRejectsWhatItDidNotProduce
+        -- decode returns nothing for a token this scheme did not produce, and
+        -- for a token that has been altered. It never invents a word.
+
+    @guidance
+        -- This is obfuscation, not security. It has to survive idle curiosity
+        -- and a glance at the address bar, not a determined attacker: the
+        -- answer is in the link by necessity, because there is no server to
+        -- keep it on. A player who is determined to cheat can always read the
+        -- code that decodes it.
+}
+
+-- Rendering a finished game as the grid people paste into messages.
+contract ShareGridFormat {
+    render_share_grid: (finished_game: game/Game, palette: SharePalette) -> String
+
+    @invariant Heading
+        -- The first line is config.share_heading, a space, then the number of
+        -- attempts used, a slash and game/config.max_attempts — "Poodl 4/6".
+        -- A game that was lost uses "X" in place of the number: "Poodl X/6".
+
+    @invariant OneRowPerSubmittedGuess
+        -- After the heading comes one row per submitted guess, in ascending
+        -- position order, each row holding one tile per letter position in
+        -- left-to-right order. Attempts the player never used produce no row.
+
+    @invariant TilesFollowTheMarks
+        -- Each tile is chosen by that position's mark. In the standard
+        -- palette: correct is config.standard_correct_tile, present is
+        -- config.standard_present_tile. In the high-contrast palette: correct
+        -- is config.high_contrast_correct_tile, present is
+        -- config.high_contrast_present_tile. Absent is config.absent_tile in
+        -- both.
+
+    @invariant NeverRevealsTheAnswer
+        -- No letter of the answer, and no letter of any guess, appears
+        -- anywhere in the rendered text. The grid says how the game went, not
+        -- what the word was.
+
+    @invariant Deterministic
+        -- The same finished game and palette always render the same text.
+}
+
+------------------------------------------------------------
+-- Enumerations
+------------------------------------------------------------
+
+enum SharePalette { standard | high_contrast }
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- A link the player has made for someone else. It records what was created;
+-- nothing in Poodl depends on keeping it once it has been copied.
+entity CustomGameLink {
+    creator: game/Player
+    answer: words/Word
+    token: String
+    url: String
+    created_at: Timestamp
+
+    invariant AnswerIsAWordPoodlAccepts {
+        answer.in_guess_dictionary
+    }
+
+    invariant TokenDecodesToTheAnswer {
+        decode(token) = answer
+    }
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    share_heading: String = "Poodl"
+
+    standard_correct_tile: String = "🟩"
+    standard_present_tile: String = "🟨"
+    high_contrast_correct_tile: String = "🟧"
+    high_contrast_present_tile: String = "🟦"
+    absent_tile: String = "⬛"
+}
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+-- Making a custom game ---------------------------------------------------
+
+-- The creator's word has to be one Poodl would accept as a guess, or the
+-- recipient could never type it.
+rule CreateCustomGameLink {
+    when: PlayerCreatesCustomGame(player, entry)
+
+    let text = lowercase(entry)
+    let candidate = words/Word{text: text}
+
+    requires: exists candidate
+    requires: candidate.in_guess_dictionary
+
+    let token = encode(candidate)
+
+    ensures:
+        let link = CustomGameLink.created(
+            creator: player,
+            answer: candidate,
+            token: token,
+            url: custom_game_url(token),
+            created_at: now
+        )
+        CustomLinkReady(player: player, link: link)
+}
+
+rule RejectCustomAnswer {
+    when: PlayerCreatesCustomGame(player, entry)
+
+    let text = lowercase(entry)
+    let candidate = words/Word{text: text}
+
+    requires: not exists candidate or not candidate.in_guess_dictionary
+
+    ensures: CustomAnswerRejected(player: player, entry: entry)
+}
+
+-- Opening a custom link --------------------------------------------------
+
+-- The link decodes, so that word becomes the answer. game.allium takes it
+-- from here: it retires whatever game was on the board, which is why opening
+-- a link can cost the player a streak, and starts the custom game.
+rule OpenCustomGameLink {
+    when: PlayerOpensCustomLink(player, token)
+
+    let decoded = decode(token)
+
+    requires: exists decoded
+    requires: decoded.in_guess_dictionary
+
+    ensures: game/AnswerDrawn(player: player, mode: custom, answer: decoded)
+}
+
+-- The link is malformed, was altered on the way, or names a word this build
+-- does not have. The player is told, and offered an ordinary game instead of
+-- being left on a dead end.
+rule RejectInvalidCustomLink {
+    when: PlayerOpensCustomLink(player, token)
+
+    let decoded = decode(token)
+
+    requires: not exists decoded or not decoded.in_guess_dictionary
+
+    ensures: CustomLinkInvalid(player: player)
+}
+
+rule PlayerAcceptsRandomFallback {
+    when: PlayerAcceptsRandomFallback(player)
+
+    ensures: game/NewGameRequested(player: player, mode: random)
+}
+
+-- Sharing a result -------------------------------------------------------
+
+rule PlayerSharesResults {
+    when: PlayerSharesResults(player, finished)
+
+    requires: finished.is_finished_by_play
+
+    let palette = if settings/player_settings.high_contrast: high_contrast else: standard
+    let text = render_share_grid(finished, palette)
+
+    ensures: ResultsPlacedOnClipboard(player: player, finished_game: finished, text: text)
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface CustomGameCreation {
+    facing viewer: game/Player
+
+    provides:
+        PlayerCreatesCustomGame(viewer, entry)
+
+    contracts:
+        fulfils AnswerObfuscation
+
+    @guarantee OnlyAcceptedWordsBecomeCustomGames
+        -- A word that is not in the guess dictionary produces no link. The
+        -- rejection says so in a way that is perceivable both visually and to
+        -- assistive technology, and the entry stays put for the creator to
+        -- correct.
+
+    @guarantee TheLinkIsTheWholeGame
+        -- The link produced carries everything the recipient needs. There is
+        -- no server: nothing about this custom game is recorded anywhere the
+        -- recipient could reach, so a link that is lost is gone.
+
+    @guarantee TheWordIsNotReadableInTheLink
+        -- The answer travels obfuscated. Neither the link nor anything shown
+        -- alongside it displays the word once the link has been made, and the
+        -- word is hidden from the player who opens it until their game ends.
+
+    @guarantee FullyKeyboardOperable
+        -- Entering a word, submitting it and copying the resulting link can
+        -- all be done from the keyboard alone.
+}
+
+surface CustomLinkEntry {
+    facing viewer: game/Player
+
+    provides:
+        PlayerOpensCustomLink(viewer, token)
+        PlayerAcceptsRandomFallback(viewer)
+
+    contracts:
+        fulfils AnswerObfuscation
+
+    @guarantee OpeningALinkStartsThatGame
+        -- A link that decodes starts a custom game on that word straight
+        -- away, replacing whatever was on the board. If the game being
+        -- replaced was under way and had a guess in it, that counts as a loss
+        -- in exactly the way starting any other game would.
+
+    @guarantee InvalidLinksAreExplainedAndSurvivable
+        -- A link that does not decode tells the player it is not a Poodl link
+        -- rather than failing silently or starting some other game, and
+        -- offers a random game as a way out. The explanation is perceivable
+        -- both visually and to assistive technology.
+}
+
+surface ShareResults {
+    facing viewer: game/Player
+
+    context finished: game/Game
+        where player = viewer and is_current and is_finished_by_play
+
+    let palette =
+        if settings/player_settings.high_contrast: high_contrast
+        else: standard
+
+    exposes:
+        finished.status
+        finished.attempts_used
+        palette
+
+    provides:
+        PlayerSharesResults(viewer, finished)
+
+    contracts:
+        fulfils ShareGridFormat
+
+    related:
+        game/GameConclusion(finished)
+
+    @guarantee SharedTextGivesNothingAway
+        -- The text placed on the clipboard names no letter and no word. A
+        -- recipient who has not played can read it without having the game
+        -- spoiled, which is the whole point of sharing squares rather than
+        -- letters.
+
+    @guarantee PaletteFollowsHighContrast
+        -- The tiles match what the player sees: the high-contrast palette
+        -- when that setting is on, the standard palette otherwise.
+
+    @guarantee SharingIsAvailableOnceTheGameIsOver
+        -- Sharing is offered for any game the player finished, won or lost,
+        -- and never while one is still in progress.
+
+    @guarantee TheGridIsAvailableAsText
+        -- What gets copied is text. It can be read by assistive technology
+        -- before it is sent, and the action reports whether the copy
+        -- succeeded.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Confirm the product name. config.share_heading is 'Poodl', which is the word that goes out on every shared grid and is the most public thing in the product. Is the name settled?"
+
+open question "A custom game's result shares as an ordinary 'Poodl 4/6' grid, which reads as though the player beat that day's word rather than a word a friend chose. Should a custom result be marked as custom, and if so does that leak anything?"
+
+open question "Wordle-likes usually put a link to the game in the shared text so recipients can play too. Poodl does not. Should the shared grid carry a link, and for a custom game should that link be the custom one (which would pass the same word on to everyone who reads the message)?"
+
+open question "Sharing is scoped to games the player finished by playing them out. An abandoned game is never on the board to share — it is replaced the instant it is abandoned — so 'any completed game' is read here as won or lost. Confirm that abandoned games should not be shareable."
+
+open question "Nothing expires or cleans up CustomGameLink records once their links have been copied. Should they be kept at all after the link is in the player's hands?"

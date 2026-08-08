@@ -1,0 +1,245 @@
+-- allium: 3
+--
+-- Poodl — settings
+--
+-- Scope
+--   The player's preferences, when each may be changed, and how two of them
+--   negotiate with preferences expressed by the operating system.
+--
+-- Includes
+--   - Theme, high contrast, hard mode, animations and physical-keyboard
+--     input.
+--   - The guard on turning hard mode on part way through a game, and the
+--     absence of any guard on turning it off.
+--   - Theme following the system until the player chooses otherwise, and
+--     animations deferring to a reduced-motion preference.
+--
+-- Excludes
+--   - What hard mode does to a guess. That is game.allium's business; this
+--     module only decides when the flag may change.
+--   - What high contrast does to the shared emoji grid (sharing.allium).
+--   - Colour values, palettes, markup and animation mechanics.
+--
+-- Dependencies
+--   game.allium — the Player, and the game in progress that the hard-mode
+--   guard has to inspect.
+--
+--   game.allium declares an external PlaySettings entity with hard_mode and
+--   physical_keyboard on it, and reads those two fields live while playing.
+--   The Settings entity below is what supplies them: one source of truth,
+--   named from two sides so that the dependency runs one way only.
+
+use "./game.allium" as game
+
+------------------------------------------------------------
+-- Given
+------------------------------------------------------------
+
+given {
+    -- Preferences the player expressed to their operating system rather than
+    -- to Poodl. Poodl reads them and never writes them.
+    device: DevicePreferences
+}
+
+------------------------------------------------------------
+-- External Entities
+------------------------------------------------------------
+
+external entity DevicePreferences {
+    prefers_dark_colour_scheme: Boolean
+    prefers_reduced_motion: Boolean
+}
+
+------------------------------------------------------------
+-- Enumerations
+------------------------------------------------------------
+
+-- system means "whatever the device asks for, as it changes". light and dark
+-- are the player overriding that.
+enum ThemeChoice { system | light | dark }
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+entity Settings {
+    theme: ThemeChoice
+    high_contrast: Boolean
+    hard_mode: Boolean
+    animations: Boolean
+    physical_keyboard: Boolean
+}
+
+------------------------------------------------------------
+-- Defaults
+------------------------------------------------------------
+
+-- One settings record, existing from the first visit. Theme starts at system,
+-- so Poodl matches the device until the player says otherwise.
+default Settings player_settings = {
+    theme: system,
+    high_contrast: false,
+    hard_mode: false,
+    animations: true,
+    physical_keyboard: true
+}
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+rule PlayerChoosesTheme {
+    when: PlayerChoosesTheme(player, choice)
+
+    requires: player_settings.theme != choice
+
+    ensures: player_settings.theme = choice
+}
+
+rule PlayerSetsHighContrast {
+    when: PlayerSetsHighContrast(player, enabled)
+
+    requires: player_settings.high_contrast != enabled
+
+    ensures: player_settings.high_contrast = enabled
+}
+
+rule PlayerSetsAnimations {
+    when: PlayerSetsAnimations(player, enabled)
+
+    requires: player_settings.animations != enabled
+
+    ensures: player_settings.animations = enabled
+}
+
+rule PlayerSetsPhysicalKeyboard {
+    when: PlayerSetsPhysicalKeyboard(player, enabled)
+
+    requires: player_settings.physical_keyboard != enabled
+
+    ensures: player_settings.physical_keyboard = enabled
+}
+
+-- Hard mode may be turned on part way through a game only when nothing
+-- already submitted would have broken it. With no guesses submitted that is
+-- trivially true, so between games it can always be turned on.
+rule PlayerEnablesHardMode {
+    when: PlayerEnablesHardMode(player)
+
+    let current = player.current_game
+
+    requires: player_settings.hard_mode = false
+    requires: not exists current
+        or current.status != in_progress
+        or current.hard_mode_admissible
+
+    ensures: player_settings.hard_mode = true
+}
+
+-- Turning it off is never guarded: no history can be invalidated by relaxing
+-- the constraint.
+rule PlayerDisablesHardMode {
+    when: PlayerDisablesHardMode(player)
+
+    requires: player_settings.hard_mode = true
+
+    ensures: player_settings.hard_mode = false
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface SettingsPanel {
+    facing viewer: game/Player
+
+    let settings = player_settings
+    let current = viewer.current_game
+    let hard_mode_may_be_enabled =
+        not exists current
+        or current.status != in_progress
+        or current.hard_mode_admissible
+
+    exposes:
+        settings.theme
+        settings.high_contrast
+        settings.hard_mode
+        settings.animations
+        settings.physical_keyboard
+        hard_mode_may_be_enabled
+
+    provides:
+        PlayerChoosesTheme(viewer, choice)
+        PlayerSetsHighContrast(viewer, enabled)
+        PlayerSetsAnimations(viewer, enabled)
+        PlayerSetsPhysicalKeyboard(viewer, enabled)
+        PlayerEnablesHardMode(viewer)
+            when not settings.hard_mode and hard_mode_may_be_enabled
+        PlayerDisablesHardMode(viewer)
+            when settings.hard_mode
+
+    @guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
+        -- hard_mode_may_be_enabled is exposed so that an unavailable hard-mode
+        -- control can say why: a guess already submitted in this game would
+        -- have broken the rule. The explanation is available to assistive
+        -- technology, not only as a visual state.
+
+    @guarantee HardModeCanAlwaysBeTurnedOff
+        -- Turning hard mode off is available at every point in a game.
+
+    @guarantee TheseSettingsGovernPlayImmediately
+        -- hard_mode and physical_keyboard are what game.allium reads through
+        -- its PlaySettings abstraction. A change applies to the game already
+        -- on the board, from the very next key press or submission.
+
+    @guarantee SettingsPersistBetweenSessions
+        -- Every setting persists between sessions on the same device and
+        -- browser.
+
+    @guarantee FullyKeyboardOperable
+        -- Every control here can be reached, read and operated from the
+        -- keyboard alone, and each one's current state is announced.
+}
+
+-- How Poodl looks, decided jointly by the player's settings and the device.
+-- This surface applies everywhere, not only inside the settings panel.
+surface Appearance {
+    facing viewer: game/Player
+
+    let settings = player_settings
+    let dark_active =
+        if settings.theme = system: device.prefers_dark_colour_scheme
+        else: settings.theme = dark
+    let animations_active = settings.animations and not device.prefers_reduced_motion
+
+    exposes:
+        dark_active
+        animations_active
+        settings.high_contrast
+
+    @guarantee ThemeFollowsTheDeviceUntilThePlayerChooses
+        -- While theme is system, Poodl matches the device's colour scheme and
+        -- keeps matching it as it changes. Once the player picks light or
+        -- dark, that choice holds and the device is no longer consulted.
+
+    @guarantee ReducedMotionOverridesTheAnimationSetting
+        -- Animations run only when the animations setting is on and the
+        -- device expresses no reduced-motion preference. The device
+        -- preference wins: a player who asked their system for less motion
+        -- gets none from Poodl, whatever the setting says.
+
+    @guarantee AppearanceNeverCarriesMeaningAlone
+        -- Neither the theme nor high contrast is what makes a result
+        -- readable. Letter results stay distinguishable without relying on
+        -- colour in any combination of these settings.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "physical_keyboard off is specified here as switching off letters, Enter and Backspace together — the whole typing channel. Should it switch off only letter keys, leaving Enter and Backspace live, and what is the setting actually for (avoiding stray keystrokes on a shared device, or something else)?"
+
+open question "Hard mode can be turned off mid-game and back on later, which lets a player escape the constraint for exactly one guess and then re-enable it — the re-enable guard will pass only if that guess happened to comply. Is that acceptable, or should turning it off mid-game bar it from being turned on again until the next game?"
+
+open question "high_contrast changes the emoji used in shared results as well as the colours on screen. Should a player who wants the accessible palette on screen necessarily share the orange and blue grid, or are these two preferences?"

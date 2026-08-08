@@ -1,0 +1,264 @@
+-- allium: 3
+--
+-- Poodl — statistics and the answer pool
+--
+-- Scope
+--   The two things Poodl remembers across games: how the player has done, and
+--   which answers have already been used.
+--
+-- Includes
+--   - One primary statistics block: games played, wins, win percentage,
+--     current and maximum streak, and the distribution of winning guess
+--     counts.
+--   - Which games count. Only random and endless games ever touch the block.
+--     Practice records nothing at all; custom games record nothing either.
+--   - How a completion moves the numbers, including an abandoned game, which
+--     counts as a loss.
+--   - The answer pool: random and endless draw only from answers not yet
+--     used, and the used set clears when it runs out.
+--
+-- Excludes
+--   - Playing a game (game.allium). This module never reads a guess; it reads
+--     only the mode, the outcome and the number of attempts used.
+--   - Per-mode or per-day breakdowns. There is one block, not several.
+--   - Where the numbers are stored.
+--
+-- Dependencies
+--   game.allium — Game, its lifecycle and its attempt count.
+--   words.allium — the answer list the pool draws from.
+
+use "./game.allium" as game
+use "./words.allium" as words
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- The one statistics block. There is exactly one, declared as a default below
+-- rather than created by any rule.
+entity Statistics {
+    games_played: Integer
+    wins: Integer
+    current_streak: Integer
+    max_streak: Integer
+
+    -- Relationships
+    buckets: GuessDistributionBucket with statistics = this
+
+    -- Derived
+    losses: games_played - wins
+    win_percentage: if games_played = 0: 0.0 else: wins * 100.0 / games_played
+
+    invariant WinsFallWithinGamesPlayed {
+        wins >= 0 and wins <= games_played
+    }
+
+    invariant CurrentStreakNeverExceedsMaximum {
+        current_streak >= 0 and current_streak <= max_streak
+    }
+
+    -- The distribution counts wins and only wins, so it accounts for every
+    -- win and nothing else. A loss moves games_played and the streak, never a
+    -- bucket.
+    invariant DistributionAccountsForEveryWin {
+        sum(buckets, b => b.win_count) = wins
+    }
+
+    invariant StreakCannotExceedWins {
+        current_streak <= wins
+    }
+}
+
+-- One bucket per attempt count: how many games were won in that many guesses.
+entity GuessDistributionBucket {
+    statistics: Statistics
+    guesses_used: Integer
+    win_count: Integer
+
+    invariant BucketIsAnAttemptNumber {
+        guesses_used >= 1 and guesses_used <= game/config.max_attempts
+    }
+
+    invariant WinCountIsNeverNegative {
+        win_count >= 0
+    }
+}
+
+-- The answers random and endless have already served up. Practice ignores
+-- this entirely, and custom games never come near it.
+entity AnswerPool {
+    used: Set<words/Word>
+
+    invariant OnlyAnswerWordsAreRecorded {
+        used.all(w => w.in_answer_list)
+    }
+}
+
+------------------------------------------------------------
+-- Defaults
+------------------------------------------------------------
+
+default Statistics primary = {
+    games_played: 0,
+    wins: 0,
+    current_streak: 0,
+    max_streak: 0
+}
+
+default GuessDistributionBucket bucket_one = { statistics: primary, guesses_used: 1, win_count: 0 }
+default GuessDistributionBucket bucket_two = { statistics: primary, guesses_used: 2, win_count: 0 }
+default GuessDistributionBucket bucket_three = { statistics: primary, guesses_used: 3, win_count: 0 }
+default GuessDistributionBucket bucket_four = { statistics: primary, guesses_used: 4, win_count: 0 }
+default GuessDistributionBucket bucket_five = { statistics: primary, guesses_used: 5, win_count: 0 }
+default GuessDistributionBucket bucket_six = { statistics: primary, guesses_used: 6, win_count: 0 }
+
+default AnswerPool pool = { used: {} }
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+-- Recording an outcome ---------------------------------------------------
+
+-- A win: one more game, one more win, a longer streak, and a mark in the
+-- bucket for however many guesses it took.
+rule RecordWin {
+    when: g: game/Game.status transitions_to won
+
+    let attempts = g.attempts_used
+    let bucket = GuessDistributionBucket{statistics: primary, guesses_used: attempts}
+    let streak = primary.current_streak + 1
+
+    requires: g.is_stat_eligible
+    requires: exists bucket
+
+    ensures:
+        primary.games_played = primary.games_played + 1
+        primary.wins = primary.wins + 1
+        primary.current_streak = streak
+        bucket.win_count = bucket.win_count + 1
+        if streak > primary.max_streak:
+            primary.max_streak = streak
+
+    @guidance
+        -- The streak is bound before the ensures block so that both the new
+        -- current streak and any new maximum are the same number. Writing
+        -- max_streak = current_streak instead would store the streak as it
+        -- was before this win, because the right-hand side of a state change
+        -- reads pre-rule values.
+}
+
+-- A loss: the game counts, the streak goes, and the distribution is
+-- untouched.
+rule RecordLoss {
+    when: g: game/Game.status transitions_to lost
+
+    requires: g.is_stat_eligible
+
+    ensures:
+        primary.games_played = primary.games_played + 1
+        primary.current_streak = 0
+}
+
+-- Walking away from a game that was under way is a loss. A game with no
+-- guesses in it never reaches this state: game.allium discards it instead, so
+-- it costs the player nothing.
+rule RecordAbandonmentAsLoss {
+    when: g: game/Game.status transitions_to abandoned
+
+    requires: g.is_stat_eligible
+    requires: g.attempts_used >= 1
+
+    ensures:
+        primary.games_played = primary.games_played + 1
+        primary.current_streak = 0
+}
+
+-- Drawing an answer ------------------------------------------------------
+
+-- Random and endless draw uniformly from the answers not yet used, and record
+-- what they drew. When nothing is left, the used set clears and drawing
+-- carries on from the whole list, so answers may repeat from then on.
+rule DrawPooledAnswer {
+    when: game/NewGameRequested(player, mode)
+
+    requires: mode in {random, endless}
+
+    let answer_words = filter(words/Words, w => w.in_answer_list)
+    let unused = filter(answer_words, w => w not in pool.used)
+    let pool_exhausted = unused.count = 0
+    let candidates = if pool_exhausted: answer_words else: unused
+    let drawn = uniform_choice(candidates)
+
+    ensures:
+        if pool_exhausted:
+            pool.used = { drawn }
+        else:
+            pool.used = pool.used + { drawn }
+        game/AnswerDrawn(player: player, mode: mode, answer: drawn)
+
+    @guidance
+        -- uniform_choice must give every candidate the same chance. It is the
+        -- one deliberately non-deterministic step here, so it is uniformity
+        -- that matters, not repeatability.
+        --
+        -- On exhaustion the used set is replaced by the word just drawn
+        -- rather than emptied, so the reset and the record happen together
+        -- and the new cycle starts with one answer already spent.
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+surface StatisticsPanel {
+    facing viewer: game/Player
+
+    let stats = primary
+
+    exposes:
+        stats.games_played
+        stats.wins
+        stats.win_percentage
+        stats.current_streak
+        stats.max_streak
+        for bucket in stats.buckets:
+            bucket.guesses_used
+            bucket.win_count
+
+    @guarantee OnlyRandomAndEndlessAreCounted
+        -- Practice and custom games never move any number on this panel.
+        -- Practice keeps no record of any kind: no games played, no answers
+        -- recorded, nothing.
+
+    @guarantee AbandonmentCostsTheSameAsALoss
+        -- Leaving a stat-eligible game part way through — starting a new
+        -- game, switching mode, or opening a custom link — counts a game
+        -- played and resets the current streak, exactly as losing does.
+        -- Leaving before guessing at all costs nothing.
+
+    @guarantee DistributionIsReadableWithoutSeeingIt
+        -- Each bucket's attempt number and count are available as text, so
+        -- the distribution can be read by assistive technology rather than
+        -- inferred from the length of a bar.
+
+    @guarantee StatisticsPersistBetweenSessions
+        -- Every number on this panel, and the pool of already-used answers,
+        -- persists between sessions on the same device and browser.
+
+    @guarantee FullyKeyboardOperable
+        -- The panel can be opened, read and dismissed from the keyboard
+        -- alone.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+open question "Random and endless share one answer pool, so a run of endless games consumes answers that random would otherwise have served. Should each mode keep its own used set, or is one shared pool the intent?"
+
+open question "The guess distribution counts wins only, so its buckets sum to wins rather than to games played. Should losses appear as a seventh bucket, as some Wordle-likes show, or stay out of the distribution?"
+
+open question "Nothing tells the player when the answer pool has recycled and repeats become possible again. Is that worth surfacing, given a player who has seen every answer may be surprised to meet one twice?"
+
+open question "There is one statistics block for all time. If the player clears it (a Reset Statistics action, which this specification does not have), does the answer pool clear with it?"
