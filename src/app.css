@@ -46,7 +46,16 @@
     --focus: #a8c7fa;
 
     --tile-border: #3a3a3c;
-    --key-background: #818384;
+    /*
+     * Darker than the grey this palette started with. At #818384 the key text
+     * measured 3.49 to one, under the 4.5 bar that 16px at weight 600 answers
+     * to, and no story pinned the dark theme with a keyboard in it — so the
+     * gate was green and the defect was real. At #6b6d6e the text measures 4.77
+     * and the key still stands off the page background at 3.60, over the 3.0
+     * bar a control's boundary answers to. See
+     * `docs/decisions/0006-component-workshop.md`.
+     */
+    --key-background: #6b6d6e;
     --key-border: #565758;
     --key-text: #f5f5f5;
   }
@@ -71,7 +80,8 @@
   --focus: #a8c7fa;
 
   --tile-border: #3a3a3c;
-  --key-background: #818384;
+  /* The measured key background, for the reason recorded above. */
+  --key-background: #6b6d6e;
   --key-border: #565758;
   --key-text: #f5f5f5;
 }
