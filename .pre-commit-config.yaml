@@ -39,7 +39,7 @@ repos:
         entry: npm run lint
         language: system
         pass_filenames: false
-        files: ^(src/|stories/|tests/|\.storybook/|package\.json$|package-lock\.json$|eslint\.config\.js$|tsconfig\.json$|vite\.config\.ts$|vitest\.storybook\.config\.ts$|svelte\.config\.js$|scripts/check_playwright_browsers\.js$|\.prettierrc\.json$|\.prettierignore$)
+        files: ^(src/|stories/|tests/|\.storybook/|package\.json$|package-lock\.json$|eslint\.config\.js$|tsconfig\.json$|vite\.config\.ts$|vitest\.config\.ts$|vitest\.storybook\.config\.ts$|svelte\.config\.js$|scripts/check_playwright_browsers\.js$|\.prettierrc\.json$|\.prettierignore$)
 
       - id: validate-docs
         name: Documentation contract

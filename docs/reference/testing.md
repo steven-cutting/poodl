@@ -15,6 +15,12 @@ Library registers its automatic cleanup hook, one setup line in `tests/setup.ts`
 configured in `vite.config.ts`. The story suite runs in real Chromium through Playwright
 and is configured separately in `vitest.storybook.config.ts`.
 
+A third file, `vitest.config.ts`, names those two as projects and holds nothing else. It
+exists because `@storybook/addon-vitest` finds its runner's configuration by filename, and
+the Testing Module in the Storybook UI otherwise resolves `vite.config.ts` and fails: the
+project it filters for, `storybook:<configDir>`, is declared nowhere the jsdom suite can
+see. Both recipes pass `--config` themselves, so neither depends on that discovery.
+
 ## Layout
 
 Tests live in `tests/`, never colocated with `src/`. Stories live in `stories/`, also at
@@ -72,8 +78,11 @@ and statements. Below the floor the run fails.
 
 Only the jsdom suite is measured. Vitest 4 has no per-project coverage option and the v8
 provider merges every project that ran into one report before it checks the thresholds, so
-the separation is a separate configuration file rather than a flag: `npm run coverage`
-loads `vite.config.ts` and cannot reach a story.
+a story sharing a run with the unit suite would raise the number without adding an
+assertion. The separation is the file it is declared in: the floor lives in
+`vite.config.ts`, the story configuration has no coverage block at all, and
+`npm run coverage` pins `--config vite.config.ts` so the run that measures the floor is the
+run that cannot reach a story.
 
 Distinguish an untested branch from an unreachable one. Defensive code no input can reach
 should be deleted rather than covered; see

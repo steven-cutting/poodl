@@ -27,6 +27,12 @@ To render every story in Chromium and run axe over each one:
 just storybook-test
 ```
 
+The same run is available from the workshop itself: **Run tests** at the foot of the
+sidebar, with interactions, coverage and accessibility as separate toggles, marks each story
+in the sidebar as it finishes. It is the same story suite the recipe runs — the panel starts
+its own Vitest, which is why `vitest.config.ts` exists — but `just check` reads the recipe,
+so the button is for working, not for evidence.
+
 Both `just storybook-build` and `just storybook-test` are part of `just check`, so a story
 that stops rendering, or a component that picks up an accessibility violation, fails the
 gate rather than waiting to be noticed.

@@ -10,6 +10,7 @@ export default defineConfig({
     port: 5173
   },
   test: {
+    name: 'unit',
     environment: 'jsdom',
     // Enabled so Testing Library registers its automatic cleanup hook.
     globals: true,

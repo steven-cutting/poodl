@@ -8,14 +8,16 @@ import { defineConfig } from 'vitest/config';
  * The story run: every story rendered in real Chromium, with axe over each one
  * and the play functions executed as interaction tests.
  *
- * This is a separate config file rather than a second project inside
- * `vite.config.ts`, and that is the mechanism that protects the coverage floor.
- * Vitest 4 has no per-project coverage — `coverage` is a `NonProjectOptions`
- * member — and `@vitest/coverage-v8` merges every project that ran into one map
- * before it checks the thresholds. A story project sharing a run with the unit
- * project would therefore raise the number measured over `src/lib/**` without
- * adding an assertion. Here there is no coverage block at all and
- * `npm run coverage` never loads this file, so the question cannot arise.
+ * This is a file of its own rather than a second project inside `vite.config.ts`,
+ * and that is what protects the coverage floor. Vitest 4 has no per-project
+ * coverage — `coverage` is a `NonProjectOptions` member — and
+ * `@vitest/coverage-v8` merges every project that ran into one map before it
+ * checks the thresholds. A story project sharing a run with the unit project
+ * would therefore raise the number measured over `src/lib/**` without adding an
+ * assertion. Here there is no coverage block at all, and `npm run coverage`
+ * pins `--config vite.config.ts`, so the run that measures the floor never
+ * loads this file. `vitest.config.ts` names both as projects, but nothing runs
+ * it with coverage enabled.
  *
  * `sveltekit()` is listed explicitly because `storybookTest` supplies no Svelte
  * compiler: it hands the framework presets a bare `{ root }` object, and

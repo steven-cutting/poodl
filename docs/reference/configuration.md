@@ -27,11 +27,12 @@ belong in source where they can be reviewed.
 | --- | --- |
 | `svelte.config.js` | The static adapter, preprocessing, and the base path. |
 | `vite.config.ts` | The dev server, the jsdom unit suite, and the coverage thresholds. |
+| `vitest.config.ts` | Names both suites as projects and nothing else. It exists so the Storybook UI's test runner, which finds its configuration by filename, resolves the story project instead of failing on the unit one. |
 | `tsconfig.json` | Strict TypeScript, plus `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `isolatedModules` and `checkJs`. |
 | `eslint.config.js` | Flat config on `strictTypeChecked`, two documented rule decisions, and the Storybook plugin's preset. |
 | `.storybook/main.ts` | Where stories are found, which addons load, the SvelteKit framework, telemetry off, and the dev server's permission to serve `stories/`. |
 | `.storybook/preview.ts` | The design tokens, the theme, contrast and motion toolbar globals, and the axe run applied to every story. |
-| `vitest.storybook.config.ts` | The story run: browser mode, Chromium, axe. Deliberately separate from `vite.config.ts` so the coverage floor cannot be affected. |
+| `vitest.storybook.config.ts` | The story run: browser mode, Chromium, axe. It declares no coverage block, and the run that measures the floor pins `vite.config.ts`, so a story cannot affect the number. |
 | `.prettierrc.json` | 100 columns, single quotes, no trailing commas, Svelte block order. |
 | `.prettierignore` | Notably excludes Markdown, which markdownlint owns, and the word lists. |
 | `.markdownlint-cli2.jsonc` | Markdown rules, including the exemptions the documentation contract needs. |
