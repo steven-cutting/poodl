@@ -3,6 +3,28 @@
 /** `game.allium` — the `LetterMark` enumeration. */
 export type LetterMark = 'correct' | 'present' | 'absent';
 
+/** `game.allium` — the `GameMode` enumeration: every mode a game can have. */
+export type GameMode = 'random' | 'endless' | 'practice' | 'custom';
+
+/**
+ * `game.allium` — the `StartableMode` enumeration: what a player may ask to
+ * start. Custom is deliberately absent, which is what makes asking for a custom
+ * game unrepresentable rather than merely refused.
+ */
+export type StartableMode = 'random' | 'endless' | 'practice';
+
+/** `game.allium` — the states of `Game.status`. */
+export type GameStatus = 'in_progress' | 'won' | 'lost' | 'abandoned';
+
+/** `game.allium` — the `GuessRejectionReason` enumeration. */
+export type GuessRejectionReason = 'incomplete' | 'not_in_dictionary' | 'hard_mode_violation';
+
+/** `settings.allium` — the `ThemeChoice` enumeration. */
+export type ThemeChoice = 'system' | 'light' | 'dark';
+
+/** `sharing.allium` — the `SharePalette` enumeration. */
+export type SharePalette = 'standard' | 'high_contrast';
+
 /** `game.allium` — the `LetterResult` value type. Positions are 1-based. */
 export interface LetterResult {
   position: number;

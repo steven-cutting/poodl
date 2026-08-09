@@ -21,3 +21,23 @@ export const MIN_GUESS_WORDS = 10000;
 
 /** `game.allium` — `config.max_attempts`. */
 export const MAX_ATTEMPTS = 6;
+
+/**
+ * `game.allium` — `config.endless_countdown`, in milliseconds.
+ *
+ * Long enough to read the answer and the attempt count, and to leave a screen
+ * reader room to finish announcing the conclusion, without making endless feel
+ * as though it has stalled.
+ */
+export const ENDLESS_COUNTDOWN_MS = 10_000;
+
+/** `sharing.allium` — `config.share_heading` and `config.custom_marker`. */
+export const SHARE_HEADING = 'Poodl';
+export const CUSTOM_MARKER = 'custom';
+
+/** `sharing.allium` — the two tile palettes. Absent is the same in both. */
+export const STANDARD_CORRECT_TILE = '🟩';
+export const STANDARD_PRESENT_TILE = '🟨';
+export const HIGH_CONTRAST_CORRECT_TILE = '🟧';
+export const HIGH_CONTRAST_PRESENT_TILE = '🟦';
+export const ABSENT_TILE = '⬛';
