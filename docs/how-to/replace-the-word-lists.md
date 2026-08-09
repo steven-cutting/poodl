@@ -17,6 +17,12 @@ accepted guesses, enough to exercise the code and far short of a playable vocabu
 specification's design intent is roughly 2,300 answers and roughly 13,000 accepted
 guesses.
 
+Those figures are intent, but `words.allium` also states floors beneath them —
+`config.min_answer_words` is 2,000 and `config.min_guess_words` is 10,000 — so a
+truncated data file fails rather than shipping. **The placeholders do not meet either
+floor.** That obligation is knowingly unmet until real lists land, and no test asserts it
+yet; adding the assertion belongs in the same change as the replacement, not before it.
+
 ## The obligations
 
 From the `WordListSource` contract in [`words.allium`](../specs/words.allium):
@@ -27,6 +33,14 @@ From the `WordListSource` contract in [`words.allium`](../specs/words.allium):
   type the answer.
 - The answer list is curated for familiarity — a losing player should recognise the word.
   The guess dictionary carries no such obligation and is expected to hold obscure words.
+- Each list meets its floor: at least `min_answer_words` answers and `min_guess_words`
+  accepted guesses.
+- **`guesses.txt` is append-only across releases.** A replacement may add words and may
+  re-curate `answers.txt` freely within the dictionary, but must never withdraw a word
+  from `guesses.txt`. This is what lets a game in progress keep an answer Poodl still
+  accepts, and a custom link issued months ago still decode to a playable word. Check a
+  new dictionary against the outgoing one before shipping it; a word that disappears
+  breaks links already in other people's hands, silently.
 
 `tests/words.test.ts` asserts all of these against whatever is in the files, so a
 truncated or malformed list fails the gate rather than shipping.

@@ -17,7 +17,7 @@ randomness, the clock, the clipboard, and the word lists.
 
 Two of those are awkward to test directly. `statistics.allium` draws answers with
 `uniform_choice`, which the specification calls the one deliberately non-deterministic
-step. `game.allium` arms a five-second countdown, and a test that waits five real seconds
+step. `game.allium` arms a ten-second countdown, and a test that waits ten real seconds
 is not a test worth having.
 
 ## Decision

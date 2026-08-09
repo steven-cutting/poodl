@@ -41,20 +41,26 @@ words  ←  game  ←  settings
 ```
 
 `game.allium` deliberately does not depend on `settings.allium`. It declares an external
-`PlaySettings` entity naming just the two settings that reach into play, and
+`PlaySettings` entity naming just the settings that reach into playing and arriving, and
 `settings.allium` supplies them. One source of truth, named from two sides, so the
 dependency runs one way only.
 
 ## Open questions are a feature
 
-Each module ends with `open question` blocks — around twenty across the five. They are
-product decisions nobody has made: whether a first visit should open onto a board or a
-menu, whether five seconds is long enough to read an answer before the next game takes
-over, whether an abandoned game should be shareable.
+An `open question` block records a product decision nobody has made yet. They are
+recorded rather than resolved on purpose: an unwritten gap gets filled in by whoever
+writes the code first, silently and invisibly, while a written one has to be answered by
+someone entitled to answer it.
 
-They are recorded rather than resolved on purpose. An unwritten gap gets filled in by
-whoever writes the code first, silently and invisibly. A written one has to be answered
-by someone entitled to answer it.
+The five modules carried twenty of them when they were first written — whether a first
+visit should open onto a board or a menu, how long the endless countdown should run,
+whether an abandoned game should be shareable. All twenty have since been answered, and
+each answer is now stated as a rule, a guarantee or a config value with its question
+deleted. None are outstanding.
+
+That the count is currently zero is the normal state of a settled module, not a reason to
+stop using the construct. A change that reaches a decision nobody has taken should add
+one back rather than guess.
 
 ## What a specification is not
 

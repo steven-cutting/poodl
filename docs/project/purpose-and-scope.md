@@ -26,7 +26,10 @@ because nothing is tracking one.
 - Results shared as a grid of coloured squares that names no letter and no word.
 - Custom games shared as a link that carries the answer obfuscated, because there is no
   server to keep it on.
-- Settings for theme, high contrast, hard mode, animations and physical-keyboard input.
+- A welcome screen on opening: an introduction the first time, and afterwards the mode
+  last played offered alongside the three a player can start.
+- Settings for theme, high contrast, hard mode, animations, physical-keyboard input and
+  whether the welcome screen appears.
 
 The precise behaviour of each is specified in `docs/specs/`, not here. See
 [Specifications](../explanation/specifications.md).

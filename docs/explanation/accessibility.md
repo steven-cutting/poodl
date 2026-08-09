@@ -35,7 +35,16 @@ which applied. A rejected guess spends no attempt and the typed letters stay put
 
 **The conclusion is announced.** The outcome, the answer and the attempt count reach
 assistive technology when the game ends, and an armed endless countdown is announced
-along with the means to stop it.
+along with the means to stop it. The countdown runs for ten seconds rather than five for
+exactly this reason: the web platform gives no way to observe when an announcement has
+finished, so the only honest lever is to leave enough room for one.
+
+**Typing can be surrendered to assistive technology.** A screen reader navigates by
+letter key, and an application that swallows those keys takes that navigation away.
+Turning `physical_keyboard` off is what gives them back: Poodl then handles no key press
+at all — not letters, not Enter, not Backspace — and Enter activates whichever control
+has focus. The on-screen keyboard still offers every action, so the game stays fully
+playable. That is what the setting is for.
 
 **Motion respects the operating system.** Animations run only when the animations setting
 is on *and* the operating system expresses no reduced-motion preference. The operating

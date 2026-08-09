@@ -8,8 +8,11 @@
 --   link, or a grid of squares.
 --
 -- Includes
---   - Creating a custom game: the creator's word must be one Poodl accepts,
---     and the link that results hides it.
+--   - Creating a custom game from a word the creator chooses: it must be one
+--     Poodl accepts, and the link that results hides it.
+--   - Passing on the answer of the game on the board, in any mode, without
+--     that word being shown to the player who shares it and without their
+--     game being disturbed.
 --   - Opening a custom link, including the path where the link does not
 --     decode.
 --   - Sharing a finished game as an emoji grid that gives nothing away, in
@@ -25,8 +28,9 @@
 --
 -- Dependencies
 --   words.allium — the dictionary a custom answer must be in.
---   game.allium — the finished game a grid is rendered from, and the
---     AnswerDrawn hand-off that starts a custom game.
+--   game.allium — the finished game a grid is rendered from, the game on the
+--     board whose answer can be passed on, and the AnswerDrawn hand-off that
+--     starts a custom game.
 --   settings.allium — high contrast, which chooses the palette.
 
 use "./words.allium" as words
@@ -75,9 +79,16 @@ contract ShareGridFormat {
     render_share_grid: (finished_game: game/Game, palette: SharePalette) -> String
 
     @invariant Heading
-        -- The first line is config.share_heading, a space, then the number of
-        -- attempts used, a slash and game/config.max_attempts — "Poodl 4/6".
-        -- A game that was lost uses "X" in place of the number: "Poodl X/6".
+        -- The first line is config.share_heading; then, when the game's mode
+        -- is custom and not otherwise, a space and config.custom_marker; then
+        -- a space, the number of attempts used, a slash and
+        -- game/config.max_attempts — "Poodl 4/6", or "Poodl custom 4/6". A
+        -- game that was lost uses "X" in place of the number: "Poodl X/6".
+
+    @invariant NoLinkTravelsWithTheGrid
+        -- The rendered text carries no URL. Nothing in a shared result lets a
+        -- reader open the game, and nothing in a custom result passes that
+        -- word on to whoever the message eventually reaches.
 
     @invariant OneRowPerSubmittedGuess
         -- After the heading comes one row per submitted guess, in ascending
@@ -108,33 +119,15 @@ contract ShareGridFormat {
 enum SharePalette { standard | high_contrast }
 
 ------------------------------------------------------------
--- Entities and Variants
-------------------------------------------------------------
-
--- A link the player has made for someone else. It records what was created;
--- nothing in Poodl depends on keeping it once it has been copied.
-entity CustomGameLink {
-    creator: game/Player
-    answer: words/Word
-    token: String
-    url: String
-    created_at: Timestamp
-
-    invariant AnswerIsAWordPoodlAccepts {
-        answer.in_guess_dictionary
-    }
-
-    invariant TokenDecodesToTheAnswer {
-        decode(token) = answer
-    }
-}
-
-------------------------------------------------------------
 -- Config
 ------------------------------------------------------------
 
 config {
     share_heading: String = "Poodl"
+
+    -- What marks a grid as coming from someone else's word. It names the
+    -- mode and says nothing about the answer.
+    custom_marker: String = "custom"
 
     standard_correct_tile: String = "🟩"
     standard_present_tile: String = "🟨"
@@ -151,6 +144,10 @@ config {
 
 -- The creator's word has to be one Poodl would accept as a guess, or the
 -- recipient could never type it.
+--
+-- Nothing is recorded. The link is handed to the creator and that is the end
+-- of Poodl's involvement: there is no entity, no history and nothing that
+-- survives a reload.
 rule CreateCustomGameLink {
     when: PlayerCreatesCustomGame(player, entry)
 
@@ -162,15 +159,7 @@ rule CreateCustomGameLink {
 
     let token = encode(candidate)
 
-    ensures:
-        let link = CustomGameLink.created(
-            creator: player,
-            answer: candidate,
-            token: token,
-            url: custom_game_url(token),
-            created_at: now
-        )
-        CustomLinkReady(player: player, link: link)
+    ensures: CustomLinkReady(player: player, url: custom_game_url(token))
 }
 
 rule RejectCustomAnswer {
@@ -182,6 +171,38 @@ rule RejectCustomAnswer {
     requires: not exists candidate or not candidate.in_guess_dictionary
 
     ensures: CustomAnswerRejected(player: player, entry: entry)
+}
+
+-- Passing on the answer in play ------------------------------------------
+
+-- The other way a custom link comes about: not a word the player chose, but
+-- the one their own game is built on. It works the same from the board and
+-- from the end-of-game modal, and in every mode — including a custom game,
+-- so a word that was sent to somebody can be sent on by them.
+--
+-- Nothing is recorded here either. As with CreateCustomGameLink, the link is
+-- handed over and that is the end of it.
+rule ShareCurrentAnswerAsCustomGame {
+    when: PlayerSharesCurrentAnswer(player, current_game)
+
+    requires: current_game.is_current
+
+    let token = encode(current_game.answer)
+
+    ensures: CustomLinkReady(player: player, url: custom_game_url(token))
+
+    @guidance
+        -- The game is a parameter, not a target. Nothing in ensures touches
+        -- it: sharing spends no attempt, retires nothing and changes no
+        -- status, so the board is exactly as it was afterwards.
+        --
+        -- There is no rejection counterpart to this rule, and no validation
+        -- to do. Unlike CreateCustomGameLink, which is handed a word by a
+        -- person, this answer came from Poodl, and game.allium's
+        -- AnswersAreAlwaysGuessable already holds it in the guess dictionary.
+        --
+        -- The binding is called current_game rather than game because this
+        -- module imports game.allium under that alias.
 }
 
 -- Opening a custom link --------------------------------------------------
@@ -261,9 +282,83 @@ surface CustomGameCreation {
         -- alongside it displays the word once the link has been made, and the
         -- word is hidden from the player who opens it until their game ends.
 
+    @guarantee NothingAboutTheLinkIsKept
+        -- The link exists long enough for the creator to copy it and no
+        -- longer. Poodl keeps no record of a custom game it has made: nothing
+        -- survives a reload, and there is no list of the words a player has
+        -- set for other people. A link that is lost is gone, which is the
+        -- same thing TheLinkIsTheWholeGame says from the other direction.
+
     @guarantee FullyKeyboardOperable
         -- Entering a word, submitting it and copying the resulting link can
         -- all be done from the keyboard alone.
+}
+
+-- Handing on the word the player is playing. One surface covers the board and
+-- the end-of-game modal both, because is_current spans a game in progress and
+-- one just finished, and an abandoned game is never on the board to share.
+surface ShareCurrentAnswer {
+    facing viewer: game/Player
+
+    context current_game: game/Game where player = viewer and is_current
+
+    exposes:
+        current_game.mode
+        current_game.status
+
+    provides:
+        PlayerSharesCurrentAnswer(viewer, current_game)
+
+    contracts:
+        fulfils AnswerObfuscation
+
+    related:
+        game/GameBoard(current_game)
+        game/GameConclusion(current_game)
+            when current_game.is_finished_by_play
+
+    @guarantee TheAnswerIsNeverShownInOrderToShareIt
+        -- current_game.answer is deliberately absent from the exposed set.
+        -- Making a link displays nothing about the word — not a letter, not
+        -- its position, not a hint — so a player who shares part way through
+        -- learns nothing beyond what their own guesses have already revealed,
+        -- exactly as game.allium's AnswerIsNeverExposedWhileInProgress
+        -- requires. Once the game is over the conclusion has already shown the
+        -- answer; sharing still adds nothing of its own.
+
+    @guarantee SharingCostsTheGameNothing
+        -- No attempt is spent, no game is retired, no status changes, no
+        -- streak moves and nothing is counted. A game in progress carries on
+        -- untouched with its typed letters still on the board, and a finished
+        -- one keeps its conclusion on screen.
+
+    @guarantee TheRecipientDoesNotSeeTheWordEither
+        -- The link travels obfuscated on the terms AnswerObfuscation states,
+        -- and opening it starts a game whose answer stays hidden until that
+        -- game ends, on the terms CustomLinkEntry states. Neither end of the
+        -- exchange is told the word.
+
+    @guarantee AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard
+        -- Random, endless, practice and custom alike, from before the first
+        -- guess through to after the game is over. Nothing here depends on
+        -- having guessed anything, or on how the game turned out.
+
+    @guarantee AWordSomebodySentYouCanBeSentOn
+        -- A custom game's answer can be shared onward like any other. The
+        -- creator chose who received their link and not who receives it after
+        -- that, and Poodl does not try to hold that line: there is no server
+        -- that could, and the word is only ever as private as the people
+        -- holding it.
+
+    @guarantee NothingAboutTheLinkIsKept
+        -- The link exists long enough for the player to copy it and no longer.
+        -- Poodl keeps no record of one: no list of the answers a player has
+        -- passed on, and nothing that survives a reload.
+
+    @guarantee FullyKeyboardOperable
+        -- Sharing and copying the resulting link can be done from the keyboard
+        -- alone, and whether the copy succeeded is reported both visually and
+        -- to assistive technology.
 }
 
 surface CustomLinkEntry {
@@ -301,6 +396,7 @@ surface ShareResults {
 
     exposes:
         finished.status
+        finished.mode
         finished.attempts_used
         palette
 
@@ -314,35 +410,33 @@ surface ShareResults {
         game/GameConclusion(finished)
 
     @guarantee SharedTextGivesNothingAway
-        -- The text placed on the clipboard names no letter and no word. A
-        -- recipient who has not played can read it without having the game
-        -- spoiled, which is the whole point of sharing squares rather than
-        -- letters.
+        -- The text placed on the clipboard names no letter, no word and no
+        -- link. A recipient who has not played can read it without having the
+        -- game spoiled, which is the whole point of sharing squares rather
+        -- than letters. Passing the word itself on is a separate action the
+        -- player takes deliberately, on ShareCurrentAnswer; it never rides
+        -- along with a grid, so a forwarded message stays a report of how a
+        -- game went rather than becoming a way into it.
 
     @guarantee PaletteFollowsHighContrast
         -- The tiles match what the player sees: the high-contrast palette
         -- when that setting is on, the standard palette otherwise.
 
+    @guarantee ACustomResultSaysSo
+        -- A grid from a custom game is marked as one, so it never reads as
+        -- though the player beat a word Poodl chose. The marker names the mode
+        -- and nothing else: it says the word came from a link rather than from
+        -- Poodl, and reveals nothing about which word it was, nor who set it,
+        -- nor whether whoever sent the link knew it themselves.
+
     @guarantee SharingIsAvailableOnceTheGameIsOver
-        -- Sharing is offered for any game the player finished, won or lost,
-        -- and never while one is still in progress.
+        -- Sharing is offered for a game the player finished by playing it
+        -- out, won or lost, and never while one is still in progress. A game
+        -- that was abandoned is never on the board to share: it is replaced
+        -- the instant it is abandoned.
 
     @guarantee TheGridIsAvailableAsText
         -- What gets copied is text. It can be read by assistive technology
         -- before it is sent, and the action reports whether the copy
         -- succeeded.
 }
-
-------------------------------------------------------------
--- Open Questions
-------------------------------------------------------------
-
-open question "Confirm the product name. config.share_heading is 'Poodl', which is the word that goes out on every shared grid and is the most public thing in the product. Is the name settled?"
-
-open question "A custom game's result shares as an ordinary 'Poodl 4/6' grid, which reads as though the player beat that day's word rather than a word a friend chose. Should a custom result be marked as custom, and if so does that leak anything?"
-
-open question "Wordle-likes usually put a link to the game in the shared text so recipients can play too. Poodl does not. Should the shared grid carry a link, and for a custom game should that link be the custom one (which would pass the same word on to everyone who reads the message)?"
-
-open question "Sharing is scoped to games the player finished by playing them out. An abandoned game is never on the board to share — it is replaced the instant it is abandoned — so 'any completed game' is read here as won or lost. Confirm that abandoned games should not be shareable."
-
-open question "Nothing expires or cleans up CustomGameLink records once their links have been copied. Should they be kept at all after the link is in the player's hands?"

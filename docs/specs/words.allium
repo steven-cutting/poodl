@@ -13,8 +13,11 @@
 --   - Shape obligations on every entry: exactly five letters, lowercase,
 --     one entry per distinct word.
 --   - The obligation that every answer is itself a valid guess.
+--   - Size floors on both lists, so a truncated data file fails rather than
+--     ships.
 --   - The provisioning contract through which the lists arrive: they are
---     replaceable data, not content authored in this specification.
+--     replaceable data, not content authored in this specification, and the
+--     guess dictionary only ever grows.
 --
 -- Excludes
 --   - Curation. How a word is judged familiar enough for the answer list, and
@@ -34,9 +37,10 @@
 -- The lists are supplied to the product as data. Replacing the data replaces
 -- the playable vocabulary without any change to behaviour specified here.
 --
--- Sizes are a design intent rather than an obligation: roughly 2,300 answer
--- words and roughly 13,000 dictionary words. The obligations below are the
--- ones that must hold whatever the sizes turn out to be.
+-- The intended sizes are roughly 2,300 answer words and roughly 13,000
+-- dictionary words. Those figures are design intent, but the floors beneath
+-- them are not: a truncated data file has to fail rather than ship as a
+-- playable but tiny vocabulary.
 contract WordListSource {
     answer_words: () -> Set<Word>
     guess_words: () -> Set<Word>
@@ -60,6 +64,15 @@ contract WordListSource {
     @invariant ListsAreStableWithinASession
         -- Both lists are fully available before the first game starts and do
         -- not change while a game is in progress.
+
+    @invariant TheGuessDictionaryIsAppendOnlyAcrossReleases
+        -- A later supply of the lists contains every word the previous one
+        -- had in guess_words. Words may be added, and the answer list may be
+        -- re-curated freely within the dictionary, but no word is ever
+        -- withdrawn from guess_words. A game in progress therefore keeps an
+        -- answer Poodl still accepts, and a custom link issued by an earlier
+        -- release still decodes to a word that can be played, so replacing
+        -- the lists invalidates nothing that is already in someone's hands.
 
     @guidance
         -- The two lists are expected to ship as separate replaceable data
@@ -100,6 +113,12 @@ entity Word {
 
 config {
     word_length: Integer = 5
+
+    -- Floors, not targets. They exist so that a truncated or half-written
+    -- data file fails outright instead of shipping as a vocabulary small
+    -- enough to repeat answers within a sitting.
+    min_answer_words: Integer = 2000
+    min_guess_words: Integer = 10000
 }
 
 ------------------------------------------------------------
@@ -115,9 +134,15 @@ invariant WordTextIsUnique {
             a != b implies a.text != b.text
 }
 
--- Drawing an answer must always be possible.
-invariant AnswerListIsNotEmpty {
-    Words.any(w => w.in_answer_list)
+-- Drawing an answer must always be possible, and must stay possible for long
+-- enough to be worth doing. A list that has lost most of its entries is a
+-- broken build, not a small one.
+invariant AnswerListMeetsItsMinimum {
+    filter(Words, w => w.in_answer_list).count >= config.min_answer_words
+}
+
+invariant GuessDictionaryMeetsItsMinimum {
+    filter(Words, w => w.in_guess_dictionary).count >= config.min_guess_words
 }
 
 ------------------------------------------------------------
@@ -141,6 +166,13 @@ surface WordListProvisioning {
     @guarantee NoWordIsAuthoredHere
         -- This specification contains no word list content. It states only
         -- what any supplied list must satisfy.
+
+    @guarantee ReplacingTheListsBreaksNothingAlreadyInPlay
+        -- Because the guess dictionary only ever grows, a release that
+        -- changes the lists leaves every game in progress playable and every
+        -- custom link already issued still openable. A player is never
+        -- interrupted mid-game, and a link handed to a friend last month
+        -- does not stop working because the vocabulary moved on.
 }
 
 ------------------------------------------------------------
@@ -149,11 +181,3 @@ surface WordListProvisioning {
 
 -- How the answer list is selected and pruned for familiarity.
 deferred WordListCuration.curate    -- see: outside this specification; the lists arrive through WordListSource
-
-------------------------------------------------------------
--- Open Questions
-------------------------------------------------------------
-
-open question "List replacement mid-flight - if the lists are replaced (a new release) while a game is in progress on a device, that game's answer may no longer be in the dictionary, and a previously issued custom link may no longer decode to a valid word. Should replacement invalidate in-progress games and outstanding custom links, or should both be honoured until they end?"
-
-open question "Are the list sizes (roughly 2,300 answers, roughly 13,000 valid guesses) a target to check, or purely descriptive? A checked lower bound on the answer list would catch a truncated data file."

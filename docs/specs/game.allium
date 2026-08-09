@@ -14,10 +14,11 @@
 --   - Input rules: letter entry, deletion, submission, and the two kinds of
 --     rejection that consume no attempt.
 --   - Per-letter keyboard knowledge derived from the guesses so far.
---   - Abandonment: what happens to the outgoing game when a new one starts.
+--   - Abandonment: what happens to the outgoing game when a new one starts,
+--     and the discarding of every game that is no longer the current one.
 --   - The endless-mode auto-continue countdown.
---   - Starting a game from nothing: the game-navigation surface, and the
---     first visit starting a random game by itself.
+--   - Arriving: the welcome screen a player meets on opening, the mode they
+--     last chose themselves, and the game-navigation surface.
 --
 -- Excludes
 --   - Where an answer comes from for random and endless games (the no-repeat
@@ -33,8 +34,8 @@
 -- Dependencies
 --   words.allium — the Word entity and the two lists.
 --   The external PlaySettings entity below is the abstraction this module
---   depends on for the two settings that change play. settings.allium's
---   Settings entity is what fulfils it.
+--   depends on for the settings that change how a game plays and how a player
+--   arrives. settings.allium's Settings entity is what fulfils it.
 
 use "./words.allium" as words
 
@@ -47,8 +48,8 @@ given {
     -- player exists by declaration rather than by being created.
     player: Player
 
-    -- The settings that change how a game plays, read live: a change to hard
-    -- mode applies from the very next submission.
+    -- The settings that change how a game plays and how a player arrives,
+    -- read live: a change to hard mode applies from the very next submission.
     play_settings: PlaySettings
 }
 
@@ -56,9 +57,10 @@ given {
 -- External Entities
 ------------------------------------------------------------
 
--- The two settings that reach into play. Declared here as an abstraction so
--- that this module does not depend on settings.allium; settings.allium
--- depends on this one, and its Settings entity supplies these fields.
+-- The settings that reach into playing and into arriving. Declared here as an
+-- abstraction so that this module does not depend on settings.allium;
+-- settings.allium depends on this one, and its Settings entity supplies these
+-- fields.
 external entity PlaySettings {
     -- Hard mode: revealed letters must be reused. Read at submission time,
     -- not at the start of the game.
@@ -66,6 +68,10 @@ external entity PlaySettings {
 
     -- Whether keys pressed on a physical keyboard reach the board.
     physical_keyboard: Boolean
+
+    -- Whether opening Poodl lands on the welcome screen. Off skips straight
+    -- to continuing, but only when there is something to continue.
+    show_welcome: Boolean
 }
 
 ------------------------------------------------------------
@@ -174,7 +180,15 @@ contract KeyboardKnowledge {
 -- Enumerations
 ------------------------------------------------------------
 
+-- What a game turned out to be. Every mode a game can have, including the one
+-- nobody can ask for.
 enum GameMode { random | endless | practice | custom }
+
+-- What a player may ask to start. Custom is deliberately absent: a custom game
+-- exists only because someone made a link, so it is reached by opening that
+-- link and can never be chosen from a menu. Keeping it out of this type is
+-- what makes asking for it impossible rather than merely refused.
+enum StartableMode { random | endless | practice }
 
 enum LetterMark { correct | present | absent }
 
@@ -190,14 +204,28 @@ entity Player {
     -- replaced. Null before the first game.
     current_game: Game?
 
+    -- The mode this player last chose for themselves. Custom never lands
+    -- here: a custom game cannot be started again, because its answer only
+    -- ever came from a link. Null until the first game the player chose.
+    last_mode: StartableMode?
+
+    -- Whether the welcome screen is what the player is looking at.
+    awaiting_welcome: Boolean
+
     -- Relationships
     games: Game with player = this
 
-    -- Projections
-    in_progress_games: games where status = in_progress
+    -- Derived: whether the welcome screen has anything to offer as Continue —
+    -- a game to resume, or a mode to start another in.
+    can_continue: current_game != null or last_mode != null
 
-    invariant OnlyTheCurrentGameIsInProgress {
-        in_progress_games.all(g => g = current_game)
+    -- Only the current game is kept. A game that stops being current is
+    -- retired, and every retirement path removes it: with no guesses it goes
+    -- without trace, with guesses it is abandoned and then discarded, and one
+    -- already won or lost is discarded outright.
+    invariant OnlyTheCurrentGameIsKept {
+        for g in Games:
+            g.is_current
     }
 }
 
@@ -207,9 +235,16 @@ entity Game {
     answer: words/Word
     status: in_progress | won | lost | abandoned
 
-    -- Whether hard mode was on when this game began. Recorded for the record;
-    -- submission is judged against the live setting, not against this.
+    -- Whether hard mode was on when this game began. Deliberately a record
+    -- and nothing more: no rule reads it, because submission is judged
+    -- against the live setting rather than against how the game started.
     hard_mode_at_start: Boolean
+
+    -- Whether hard mode was switched off part way through this game. Once
+    -- true it stays true for the rest of the game, and settings.allium will
+    -- not let hard mode back on until a new game starts. Turning it off is
+    -- always available; turning it off mid-game is a one-way door.
+    hard_mode_released: Boolean
 
     -- The letters typed but not yet submitted, between zero and word_length
     -- of them.
@@ -307,34 +342,76 @@ config {
     max_attempts: Integer = 6
 
     -- How long the end-of-game modal waits before starting the next endless
-    -- round. See the open question below.
-    endless_countdown: Duration = 5.seconds
+    -- round. Long enough to read the answer and the attempt count, and to
+    -- leave a screen reader room to finish announcing the conclusion, without
+    -- making endless feel as though it has stalled.
+    endless_countdown: Duration = 10.seconds
 }
 
 ------------------------------------------------------------
 -- Rules
 ------------------------------------------------------------
 
--- Starting a game -------------------------------------------------------
+-- Arriving ---------------------------------------------------------------
 
--- Opening Poodl with nothing on the board starts a random game, so a first
--- visit lands on something playable rather than on a choice.
+-- Opening Poodl lands on the welcome screen: a short introduction the first
+-- time, and afterwards the mode last played offered as something to continue.
 --
--- The guard is what makes this rule the whole of the resume story too. Open
--- Poodl with a game in progress and no rule fires: the board comes back as it
--- was left. Open it with a finished game still current and again nothing
--- fires, so the end-of-game modal is still there, answer and all.
+-- The second disjunct is what stops the setting stranding anybody. A player
+-- who turned the welcome screen off and then cleared their browser data has
+-- nothing to continue, so the screen appears regardless — there is no board
+-- to go back to and no mode to resume.
 --
 -- PlayerOpensPoodl is deliberately the one trigger no surface provides:
 -- opening the app is an arrival, not a control, and every surface is
 -- something reached by arriving.
-rule StartFirstGameOnOpening {
+rule ShowWelcomeOnOpening {
     when: PlayerOpensPoodl(player)
 
-    requires: player.current_game = null
+    requires: play_settings.show_welcome or not player.can_continue
 
-    ensures: NewGameRequested(player: player, mode: random)
+    ensures: player.awaiting_welcome = true
 }
+
+-- The welcome screen is off and there is something to continue, so continuing
+-- is what opening means.
+rule ContinueOnOpeningWithoutWelcome {
+    when: PlayerOpensPoodl(player)
+
+    requires: not play_settings.show_welcome
+    requires: player.can_continue
+
+    ensures:
+        player.awaiting_welcome = false
+        PlayerContinues(player: player)
+}
+
+-- Continuing with a game already on the board resumes it untouched. This is
+-- the whole of the resume story: nothing is retired, nothing is drawn, and a
+-- game that had already finished comes back with its conclusion still showing.
+rule ResumeCurrentGame {
+    when: PlayerContinues(player)
+
+    requires: exists player.current_game
+
+    ensures: player.awaiting_welcome = false
+}
+
+-- Continuing with an empty board starts a fresh game in whichever mode the
+-- player last chose. A custom game never set that mode, so continuing after
+-- one offers the last mode they picked themselves.
+rule ContinueInPreviousMode {
+    when: PlayerContinues(player)
+
+    requires: player.current_game = null
+    requires: player.last_mode != null
+
+    ensures:
+        player.awaiting_welcome = false
+        NewGameRequested(player: player, mode: player.last_mode)
+}
+
+-- Starting a game -------------------------------------------------------
 
 -- Practice draws straight from the answer list: no pool, no record, repeats
 -- allowed. Random and endless are answered by statistics.allium, which draws
@@ -348,19 +425,26 @@ rule ProvidePracticeAnswer {
     let candidates = filter(words/Words, w => w.in_answer_list)
     let drawn = uniform_choice(candidates)
 
-    ensures: AnswerDrawn(player: player, mode: mode, answer: drawn)
+    ensures: AnswerDrawn(player: player, mode: practice, answer: drawn)
 
     @guidance
         -- uniform_choice is the one deliberately non-deterministic step in
         -- this specification. What matters is that every candidate is equally
         -- likely and that the result is a member of the candidates, not that
         -- the same input yields the same word.
+        --
+        -- The mode is written out as a literal rather than passed through:
+        -- the request carries a StartableMode and a game carries a GameMode,
+        -- and the requires clause above has already fixed which one this is.
 }
 
 -- Every game begins here, whatever supplied the answer. The outgoing game is
 -- retired first: this is the single place abandonment can happen, so New
 -- Game, switching mode, opening a custom link and the endless countdown all
 -- get the same treatment.
+--
+-- It is also the single place every game start passes through, which is why
+-- the welcome screen is dismissed here rather than by a rule of its own.
 rule BeginGame {
     when: AnswerDrawn(player, mode, answer)
 
@@ -375,14 +459,31 @@ rule BeginGame {
             answer: answer,
             status: in_progress,
             hard_mode_at_start: play_settings.hard_mode,
+            hard_mode_released: false,
             current_input: "",
             started_at: now
         )
         player.current_game = game
+        player.awaiting_welcome = false
+        if mode = random:
+            player.last_mode = random
+        else if mode = endless:
+            player.last_mode = endless
+        else if mode = practice:
+            player.last_mode = practice
+
+    @guidance
+        -- The mode is recorded branch by branch, and a custom game falls off
+        -- the end of the conditional deliberately: there is no branch for it,
+        -- so last_mode is left as it was. GameMode and StartableMode are
+        -- separate types precisely so that this conversion has to be written
+        -- out rather than happening by accident.
 }
 
--- Abandoning a game that was under way counts as a loss. statistics.allium
--- chains from the transition; it decides whether this game was eligible.
+-- Abandoning a game that was under way counts as a loss. The outcome travels
+-- on the emission rather than being read off the game afterwards, because the
+-- game itself is about to be discarded and statistics.allium must not be left
+-- reading an entity that has gone.
 rule AbandonRetiredGame {
     when: RetireGame(game)
 
@@ -392,6 +493,21 @@ rule AbandonRetiredGame {
     ensures:
         game.status = abandoned
         game.completed_at = now
+        GameAbandoned(game: game, mode: game.mode, attempts: game.attempts_used)
+
+    @guidance
+        -- The mode and the attempt count ride along even though the game is
+        -- a parameter too. statistics.allium reads only those two, so that
+        -- recording the loss and discarding the game can happen in either
+        -- order without one of them reading an entity the other has removed.
+}
+
+-- Nothing reads an abandoned game once its loss has been recorded, so it goes
+-- the same way as every other game that is no longer current.
+rule DiscardAbandonedGame {
+    when: GameAbandoned(game, _, _)
+
+    ensures: not exists game
 }
 
 -- A game the player never guessed in leaves no trace at all: no loss, no
@@ -401,6 +517,17 @@ rule DiscardRetiredGame {
 
     requires: game.status = in_progress
     requires: game.guesses.count = 0
+
+    ensures: not exists game
+}
+
+-- A game that was already over when it was replaced. Its outcome went into
+-- the statistics the moment it ended, so the record itself buys nothing and
+-- only the current game is kept.
+rule DiscardRetiredFinishedGame {
+    when: RetireGame(game)
+
+    requires: game.status in {won, lost}
 
     ensures: not exists game
 }
@@ -626,9 +753,79 @@ invariant InputNeverExceedsWordLength {
 -- Surfaces
 ------------------------------------------------------------
 
--- Starting and switching games. This is the only surface that is not scoped
--- to a game, so it is the one that exists before the first game and the one
--- that can always start another.
+-- What a player meets on opening. A short introduction the first time, and
+-- afterwards a way back into what they were doing alongside the three modes
+-- they could start instead.
+surface Welcome {
+    facing viewer: Player
+
+    -- Nothing played and nothing remembered: this is a first visit, or a
+    -- return after clearing browser data.
+    let is_first_visit = viewer.last_mode = null and viewer.current_game = null
+
+    exposes:
+        is_first_visit
+        viewer.awaiting_welcome
+        viewer.can_continue
+        viewer.last_mode
+        viewer.current_game?.mode
+        viewer.current_game?.status
+
+    provides:
+        PlayerContinues(viewer)
+            when viewer.can_continue
+        NewGameRequested(viewer, mode)
+
+    related:
+        GameBoard(viewer.current_game)
+            when viewer.current_game != null
+
+    @guarantee ShownOnEveryArrivalUntilTurnedOff
+        -- Opening Poodl lands here, every time, including a reload with a
+        -- game half played. A player who would rather go straight to the
+        -- board can switch this off in the settings, and then opening
+        -- continues instead — except when there is nothing to continue, when
+        -- this surface appears regardless rather than stranding them on an
+        -- empty board.
+
+    @guarantee AFirstVisitIsExplained
+        -- A player with nothing played and nothing remembered is told what
+        -- Poodl is before being asked to choose: five letters, six attempts,
+        -- and as many games as they like. The explanation is reachable again
+        -- afterwards rather than being shown once and lost.
+
+    @guarantee ContinueAndTheThreeModesAreEqualChoices
+        -- There is no question to answer and nothing to decline. Continue
+        -- sits alongside Random, Endless and Practice as one of four
+        -- choices, and any of them is one action away. Continue names the
+        -- mode it would resume or start, so it never acts on a mode the
+        -- player cannot see.
+
+    @guarantee ContinuingNeverCostsAGame
+        -- Continue with a game in progress resumes it exactly as it was: no
+        -- game is retired, no streak is broken and no attempt is spent.
+        -- Continue with an empty board starts a fresh game in the remembered
+        -- mode. Choosing a different mode instead retires whatever was on the
+        -- board, on exactly the terms GameNavigation states.
+
+    @guarantee CustomGamesAreNotRemembered
+        -- A custom game never becomes the remembered mode, because it could
+        -- never be started again: its answer only ever came from a link.
+        -- After one, Continue offers the last mode the player chose for
+        -- themselves.
+
+    @guarantee ThePreviousModeSurvivesBetweenSessions
+        -- The remembered mode persists between sessions on the same device
+        -- and browser. Coming back tomorrow still says what was played last.
+
+    @guarantee FullyKeyboardOperable
+        -- Continue and each mode can be reached and invoked from the
+        -- keyboard alone, and each one's label is announced.
+}
+
+-- Starting and switching games. This is the surface that is not scoped to a
+-- game, so it is the one that exists before the first game and the one that
+-- can always start another.
 surface GameNavigation {
     facing viewer: Player
 
@@ -648,11 +845,12 @@ surface GameNavigation {
         -- with no game and no history, this surface is still present and can
         -- still start one.
 
-    @guarantee OpeningPoodlWithNoGameStartsARandomOne
-        -- A player arriving with nothing on the board does not have to choose
-        -- a mode first: a random game is already waiting. Arriving with a
-        -- game in progress resumes it untouched, and arriving with a finished
-        -- game shows its conclusion again rather than moving on.
+    @guarantee OpeningPoodlLandsOnTheWelcomeScreen
+        -- A player arriving meets the welcome screen rather than a board.
+        -- Continuing from there resumes a game in progress untouched, shows a
+        -- finished game's conclusion again rather than moving on, or starts a
+        -- fresh game in the mode last played. No game begins without the
+        -- player asking for one.
 
     @guarantee ThreeModesCanBeStartedFromHere
         -- Random, endless and practice are the modes a player can start.
@@ -745,8 +943,10 @@ surface GameBoard {
     @guarantee InProgressGameSurvivesReload
         -- The current game — its mode, its answer, its submitted guesses and
         -- their results, and any unsubmitted letters — persists between
-        -- sessions on the same device and browser. Reopening Poodl resumes
-        -- the game exactly where it was left.
+        -- sessions on the same device and browser. Reopening Poodl meets the
+        -- welcome screen first, unless it has been turned off, and continuing
+        -- from there resumes the game exactly where it was left. Nothing
+        -- about the game changes in the meantime.
 
     @guarantee MotionRespectsTheReducedMotionPreference
         -- Tile and key animations run only when the animations setting is on
@@ -780,6 +980,14 @@ surface PhysicalKeyboardInput {
     @guarantee TurningThisOffLeavesTheGameFullyPlayable
         -- With physical_keyboard off, the on-screen keyboard still offers
         -- every action, and remains reachable by keyboard navigation.
+
+    @guarantee TurningThisOffSurrendersTheKeysEntirely
+        -- Off means Poodl handles no key press at all — not letters, not
+        -- Enter, not Backspace. This is what the setting is for: a screen
+        -- reader navigates by letter key, and an application that swallows
+        -- those keys takes that navigation away. With this off the letter
+        -- keys reach the reader, and Enter activates whichever control has
+        -- focus rather than submitting a guess.
 }
 
 -- The end-of-game modal. Random waits here indefinitely; endless counts down
@@ -820,6 +1028,13 @@ surface GameConclusion {
         -- runs. In every other mode nothing happens until the player asks
         -- for a new game.
 
+    @guarantee StoppingTheCountdownIsFinal
+        -- There is one action and it cancels outright: a stopped countdown
+        -- does not resume and cannot be restarted for this game. The modal
+        -- simply stays put, and the next round is then asked for like any
+        -- other game. Leaving endless altogether is not a separate action
+        -- either — it is starting a game in another mode.
+
     @guarantee NoDailyLimit
         -- A new game can always be requested. Poodl never withholds a game
         -- because of the date or because of how many have been played.
@@ -829,19 +1044,3 @@ surface GameConclusion {
         -- assistive technology when the game ends, and an armed countdown is
         -- announced along with the means to stop it.
 }
-
-------------------------------------------------------------
--- Open Questions
-------------------------------------------------------------
-
-open question "First visit starts a random game automatically, on the reading that a Wordle-like should open onto a playable board rather than onto a menu. Is that wanted, or should a first-time player be asked to choose a mode? The choice also decides what a player who has cleared their browser data meets on their way back in."
-
-open question "Endless countdown duration - endless_countdown defaults to 5 seconds. Is that the right amount of time to read the answer before the next game takes over? It interacts with the ConclusionIsAnnounced guarantee: a screen reader may not finish the announcement in five seconds, which argues for a longer default or for the countdown pausing while an announcement is in flight."
-
-open question "Stopping the countdown - decision 2 describes the player pausing or exiting the countdown, which reads as two behaviours; this specification models one action that cancels it outright. Should a stopped countdown be resumable, and should exiting mean something different from pausing?"
-
-open question "hard_mode_at_start is recorded on every game but no rule reads it, because hard mode is judged live at submission. Should it instead lock hard mode for the duration of a game, or is the field only there for the record?"
-
-open question "Retention of finished games - a won or lost game stays on the board until a new one replaces it, and nothing removes it afterwards. Should finished games be discarded once they are no longer current, or is a history of past games wanted (it would need its own scope: what is kept, and for how long)?"
-
-open question "Whether a player may request a mode that needs an answer nobody supplies. NewGameRequested carries a mode, and only practice, random and endless have a rule that answers it; a request for custom produces no game at all, silently. Should that be a stated rejection instead?"

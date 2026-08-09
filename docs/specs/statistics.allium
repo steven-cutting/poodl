@@ -14,8 +14,10 @@
 --     Practice records nothing at all; custom games record nothing either.
 --   - How a completion moves the numbers, including an abandoned game, which
 --     counts as a loss.
---   - The answer pool: random and endless draw only from answers not yet
---     used, and the used set clears when it runs out.
+--   - The answer pool: random and endless draw from one shared set of
+--     answers not yet used, and the used set clears when it runs out. That
+--     it has run out is visible to the player.
+--   - Starting over: one action clears the numbers and the pool together.
 --
 -- Excludes
 --   - Playing a game (game.allium). This module never reads a guess; it reads
@@ -89,6 +91,12 @@ entity GuessDistributionBucket {
 entity AnswerPool {
     used: Set<words/Word>
 
+    -- Whether the pool has ever run out and started again. A count of unused
+    -- answers cannot stand in for this: on exhaustion the used set is
+    -- immediately refilled with the word just drawn, so the count is non-zero
+    -- again by the time anybody reads it.
+    has_recycled: Boolean
+
     invariant OnlyAnswerWordsAreRecorded {
         used.all(w => w.in_answer_list)
     }
@@ -112,7 +120,7 @@ default GuessDistributionBucket bucket_four = { statistics: primary, guesses_use
 default GuessDistributionBucket bucket_five = { statistics: primary, guesses_used: 5, win_count: 0 }
 default GuessDistributionBucket bucket_six = { statistics: primary, guesses_used: 6, win_count: 0 }
 
-default AnswerPool pool = { used: {} }
+default AnswerPool pool = { used: {}, has_recycled: false }
 
 ------------------------------------------------------------
 -- Rules
@@ -163,11 +171,15 @@ rule RecordLoss {
 -- Walking away from a game that was under way is a loss. A game with no
 -- guesses in it never reaches this state: game.allium discards it instead, so
 -- it costs the player nothing.
+--
+-- This chains from the emission rather than from the transition, and reads
+-- only its parameters. game.allium discards an abandoned game once it has
+-- been retired, and nothing here may depend on reaching that game afterwards.
 rule RecordAbandonmentAsLoss {
-    when: g: game/Game.status transitions_to abandoned
+    when: game/GameAbandoned(_, mode, attempts)
 
-    requires: g.is_stat_eligible
-    requires: g.attempts_used >= 1
+    requires: mode in {random, endless}
+    requires: attempts >= 1
 
     ensures:
         primary.games_played = primary.games_played + 1
@@ -193,9 +205,13 @@ rule DrawPooledAnswer {
     ensures:
         if pool_exhausted:
             pool.used = { drawn }
+            pool.has_recycled = true
         else:
             pool.used = pool.used + { drawn }
-        game/AnswerDrawn(player: player, mode: mode, answer: drawn)
+        if mode = random:
+            game/AnswerDrawn(player: player, mode: random, answer: drawn)
+        else:
+            game/AnswerDrawn(player: player, mode: endless, answer: drawn)
 
     @guidance
         -- uniform_choice must give every candidate the same chance. It is the
@@ -205,6 +221,30 @@ rule DrawPooledAnswer {
         -- On exhaustion the used set is replaced by the word just drawn
         -- rather than emptied, so the reset and the record happen together
         -- and the new cycle starts with one answer already spent.
+        --
+        -- The mode is emitted branch by branch because the request carries a
+        -- StartableMode and a game carries a GameMode. They are separate
+        -- types so that the conversion has to be written out; the requires
+        -- clause above has already narrowed this to two possibilities.
+}
+
+-- Starting over ----------------------------------------------------------
+
+-- One action clears one record of play. The pool goes with the numbers
+-- because they are the same record seen from two sides, and because clearing
+-- browser data — the only other way to start over — has always cleared both.
+rule PlayerResetsStatistics {
+    when: PlayerResetsStatistics(player)
+
+    ensures:
+        primary.games_played = 0
+        primary.wins = 0
+        primary.current_streak = 0
+        primary.max_streak = 0
+        for b in primary.buckets:
+            b.win_count = 0
+        pool.used = {}
+        pool.has_recycled = false
 }
 
 ------------------------------------------------------------
@@ -215,6 +255,9 @@ surface StatisticsPanel {
     facing viewer: game/Player
 
     let stats = primary
+    let answer_words = filter(words/Words, w => w.in_answer_list)
+    let answers_unseen = filter(answer_words, w => w not in pool.used).count
+    let answers_may_repeat = pool.has_recycled
 
     exposes:
         stats.games_played
@@ -222,9 +265,14 @@ surface StatisticsPanel {
         stats.win_percentage
         stats.current_streak
         stats.max_streak
+        answers_unseen
+        answers_may_repeat
         for bucket in stats.buckets:
             bucket.guesses_used
             bucket.win_count
+
+    provides:
+        PlayerResetsStatistics(viewer)
 
     @guarantee OnlyRandomAndEndlessAreCounted
         -- Practice and custom games never move any number on this panel.
@@ -246,19 +294,25 @@ surface StatisticsPanel {
         -- Every number on this panel, and the pool of already-used answers,
         -- persists between sessions on the same device and browser.
 
+    @guarantee RecyclingIsVisibleBeforeItSurprises
+        -- How many answers remain unseen is available as text, and once the
+        -- pool has run out and started again the panel says so. A player who
+        -- meets a word twice can see why rather than doubting the game.
+
+    @guarantee ResettingClearsThePoolToo
+        -- Resetting sets every number to zero and empties the record of used
+        -- answers together. They are one record of play, so afterwards the
+        -- statistics are untouched by history and every answer can be drawn
+        -- again.
+
+    @guarantee ResettingIsDeliberate
+        -- Resetting is confirmed before anything is cleared, and the
+        -- confirmation says what will go: the numbers, the streaks, the
+        -- distribution and the record of which answers have been seen.
+        -- Nothing here is recoverable afterwards.
+
     @guarantee FullyKeyboardOperable
-        -- The panel can be opened, read and dismissed from the keyboard
-        -- alone.
+        -- The panel can be opened, read, reset and dismissed from the
+        -- keyboard alone, and the reset confirmation is reachable and
+        -- announced.
 }
-
-------------------------------------------------------------
--- Open Questions
-------------------------------------------------------------
-
-open question "Random and endless share one answer pool, so a run of endless games consumes answers that random would otherwise have served. Should each mode keep its own used set, or is one shared pool the intent?"
-
-open question "The guess distribution counts wins only, so its buckets sum to wins rather than to games played. Should losses appear as a seventh bucket, as some Wordle-likes show, or stay out of the distribution?"
-
-open question "Nothing tells the player when the answer pool has recycled and repeats become possible again. Is that worth surfacing, given a player who has seen every answer may be surprised to meet one twice?"
-
-open question "There is one statistics block for all time. If the player clears it (a Reset Statistics action, which this specification does not have), does the answer pool clear with it?"

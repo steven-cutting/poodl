@@ -7,10 +7,11 @@
 --   negotiate with preferences expressed by the operating system.
 --
 -- Includes
---   - Theme, high contrast, hard mode, animations and physical-keyboard
---     input.
---   - The guard on turning hard mode on part way through a game, and the
---     absence of any guard on turning it off.
+--   - Theme, high contrast, hard mode, animations, physical-keyboard input
+--     and whether opening Poodl lands on the welcome screen.
+--   - The guard on turning hard mode on part way through a game. Turning it
+--     off is never guarded, but during a game that has guesses in it, doing
+--     so is a one-way door: it cannot be turned back on until the next game.
 --   - Theme following the system until the player chooses otherwise, and
 --     animations deferring to a reduced-motion preference.
 --
@@ -24,10 +25,11 @@
 --   game.allium — the Player, and the game in progress that the hard-mode
 --   guard has to inspect.
 --
---   game.allium declares an external PlaySettings entity with hard_mode and
---   physical_keyboard on it, and reads those two fields live while playing.
---   The Settings entity below is what supplies them: one source of truth,
---   named from two sides so that the dependency runs one way only.
+--   game.allium declares an external PlaySettings entity with hard_mode,
+--   physical_keyboard and show_welcome on it, and reads those three fields
+--   live — the first two while playing, the third on arriving. The Settings
+--   entity below is what supplies them: one source of truth, named from two
+--   sides so that the dependency runs one way only.
 
 use "./game.allium" as game
 
@@ -68,6 +70,12 @@ entity Settings {
     hard_mode: Boolean
     animations: Boolean
     physical_keyboard: Boolean
+
+    -- Whether opening Poodl lands on the welcome screen. Off goes straight to
+    -- continuing, but only when there is something to continue: game.allium
+    -- shows the screen regardless rather than stranding a player on an empty
+    -- board.
+    show_welcome: Boolean
 }
 
 ------------------------------------------------------------
@@ -81,7 +89,8 @@ default Settings player_settings = {
     high_contrast: false,
     hard_mode: false,
     animations: true,
-    physical_keyboard: true
+    physical_keyboard: true,
+    show_welcome: true
 }
 
 ------------------------------------------------------------
@@ -120,9 +129,23 @@ rule PlayerSetsPhysicalKeyboard {
     ensures: player_settings.physical_keyboard = enabled
 }
 
--- Hard mode may be turned on part way through a game only when nothing
--- already submitted would have broken it. With no guesses submitted that is
--- trivially true, so between games it can always be turned on.
+rule PlayerSetsShowWelcome {
+    when: PlayerSetsShowWelcome(player, enabled)
+
+    requires: player_settings.show_welcome != enabled
+
+    ensures: player_settings.show_welcome = enabled
+}
+
+-- Hard mode may be turned on part way through a game on two conditions: it
+-- was not switched off during this game, and nothing already submitted would
+-- have broken it. With no guesses submitted the second is trivially true, so
+-- between games it can always be turned on.
+--
+-- Both guards earn their place. hard_mode_released catches the player who
+-- switched it off to escape the constraint; hard_mode_admissible catches the
+-- game where hard mode was simply never on and the guesses so far would not
+-- have complied.
 rule PlayerEnablesHardMode {
     when: PlayerEnablesHardMode(player)
 
@@ -131,19 +154,31 @@ rule PlayerEnablesHardMode {
     requires: player_settings.hard_mode = false
     requires: not exists current
         or current.status != in_progress
-        or current.hard_mode_admissible
+        or (not current.hard_mode_released and current.hard_mode_admissible)
 
     ensures: player_settings.hard_mode = true
 }
 
--- Turning it off is never guarded: no history can be invalidated by relaxing
--- the constraint.
+-- Turning it off is never guarded: relaxing the constraint invalidates no
+-- history, and a player who wants out of hard mode gets out immediately.
+-- Doing so part way through a game is a one-way door, though — the game
+-- remembers, and hard mode cannot come back until the next one.
 rule PlayerDisablesHardMode {
     when: PlayerDisablesHardMode(player)
 
+    let current = player.current_game
+
     requires: player_settings.hard_mode = true
 
-    ensures: player_settings.hard_mode = false
+    ensures:
+        player_settings.hard_mode = false
+        if exists current and current.status = in_progress and current.attempts_used >= 1:
+            current.hard_mode_released = true
+
+    @guidance
+        -- A game with no guesses in it is untouched: turning hard mode off
+        -- before playing anything is the same as never having had it on, so
+        -- it can be turned straight back on.
 }
 
 ------------------------------------------------------------
@@ -158,7 +193,7 @@ surface SettingsPanel {
     let hard_mode_may_be_enabled =
         not exists current
         or current.status != in_progress
-        or current.hard_mode_admissible
+        or (not current.hard_mode_released and current.hard_mode_admissible)
 
     exposes:
         settings.theme
@@ -166,6 +201,7 @@ surface SettingsPanel {
         settings.hard_mode
         settings.animations
         settings.physical_keyboard
+        settings.show_welcome
         hard_mode_may_be_enabled
 
     provides:
@@ -173,24 +209,51 @@ surface SettingsPanel {
         PlayerSetsHighContrast(viewer, enabled)
         PlayerSetsAnimations(viewer, enabled)
         PlayerSetsPhysicalKeyboard(viewer, enabled)
+        PlayerSetsShowWelcome(viewer, enabled)
         PlayerEnablesHardMode(viewer)
             when not settings.hard_mode and hard_mode_may_be_enabled
         PlayerDisablesHardMode(viewer)
             when settings.hard_mode
 
     @guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
-        -- hard_mode_may_be_enabled is exposed so that an unavailable hard-mode
-        -- control can say why: a guess already submitted in this game would
-        -- have broken the rule. The explanation is available to assistive
-        -- technology, not only as a visual state.
+        -- hard_mode_may_be_enabled is exposed so that an unavailable
+        -- hard-mode control can say which of the two reasons applies: it was
+        -- switched off part way through this game, or a guess already
+        -- submitted would have broken the rule. The explanation is available
+        -- to assistive technology, not only as a visual state.
+
+    @guarantee TurningHardModeOffMidGameIsAOneWayDoor
+        -- Switching hard mode off during a game that has guesses in it bars
+        -- turning it back on until the next game. The control says so before
+        -- it is used, so the cost is known in advance rather than discovered
+        -- afterwards. A game with no guesses in it costs nothing: hard mode
+        -- can be turned straight back on.
+
+    @guarantee HighContrastGovernsTheSharedGridToo
+        -- One preference, not two. Turning high contrast on changes the
+        -- colours on screen and the emoji in a shared result together, so
+        -- what gets pasted into a message matches the board it came from.
+
+    @guarantee PhysicalKeyboardInputCanBeSurrenderedToAssistiveTechnology
+        -- physical_keyboard exists so that Poodl's handling of key presses
+        -- never blocks a screen reader's own navigation, which uses letter
+        -- keys. Off surrenders the whole channel — letters, Enter and
+        -- Backspace alike — and the control says as much, so it never reads
+        -- as though it would make the game unplayable.
 
     @guarantee HardModeCanAlwaysBeTurnedOff
         -- Turning hard mode off is available at every point in a game.
 
     @guarantee TheseSettingsGovernPlayImmediately
         -- hard_mode and physical_keyboard are what game.allium reads through
-        -- its PlaySettings abstraction. A change applies to the game already
-        -- on the board, from the very next key press or submission.
+        -- its PlaySettings abstraction while a game is being played. A change
+        -- applies to the game already on the board, from the very next key
+        -- press or submission.
+
+    @guarantee TheWelcomeSettingAppliesAtTheNextArrival
+        -- show_welcome reaches game.allium through the same abstraction, but
+        -- it governs opening rather than playing. Changing it leaves the
+        -- board alone and takes effect the next time Poodl is opened.
 
     @guarantee SettingsPersistBetweenSessions
         -- Every setting persists between sessions on the same device and
@@ -233,13 +296,3 @@ surface Appearance {
         -- readable. Letter results stay distinguishable without relying on
         -- colour in any combination of these settings.
 }
-
-------------------------------------------------------------
--- Open Questions
-------------------------------------------------------------
-
-open question "physical_keyboard off is specified here as switching off letters, Enter and Backspace together — the whole typing channel. Should it switch off only letter keys, leaving Enter and Backspace live, and what is the setting actually for (avoiding stray keystrokes on a shared device, or something else)?"
-
-open question "Hard mode can be turned off mid-game and back on later, which lets a player escape the constraint for exactly one guess and then re-enable it — the re-enable guard will pass only if that guess happened to comply. Is that acceptable, or should turning it off mid-game bar it from being turned on again until the next game?"
-
-open question "high_contrast changes the emoji used in shared results as well as the colours on screen. Should a player who wants the accessible palette on screen necessarily share the orange and blue grid, or are these two preferences?"

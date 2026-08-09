@@ -36,8 +36,10 @@ another module's `Excludes`, it belongs there.
 
 ## Handle an open question
 
-Every module ends with `open question` blocks — product decisions nobody has made yet.
-They are there so the gaps are visible rather than silently filled in.
+An `open question` block records a product decision nobody has made yet, so the gap is
+visible rather than silently filled in. None are outstanding: the twenty the modules
+started with have all been answered. Treat that as the settled state, not as a reason to
+stop adding them.
 
 - If your change depends on one, raise it. Do not answer it in code.
 - If your change creates a new gap, add an `open question` rather than picking an answer.

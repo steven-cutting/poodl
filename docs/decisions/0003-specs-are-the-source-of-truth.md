@@ -36,9 +36,10 @@ Contracts become testable obligations rather than intentions. `GuessScoring` nam
 invariants, and `tests/scoring.test.ts` asserts them directly, including the
 duplicate-letter cases that a single-pass implementation gets wrong.
 
-Unresolved product decisions stay visible. Each module ends with `open question` blocks —
-around twenty across the five — and they are answered by someone entitled to answer them
-rather than by whoever writes the code first.
+Unresolved product decisions stay visible. They are recorded as `open question` blocks and
+answered by someone entitled to answer them rather than by whoever writes the code first.
+The twenty the five modules started with were settled that way, in an interview, before a
+single rule was built on top of them.
 
 The costs are real. Every behaviour change is two edits, not one. The `allium`
 command-line tool is not installed here, so the specifications are checked by review
