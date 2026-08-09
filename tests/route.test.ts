@@ -15,6 +15,27 @@ function arriveAt(search: string): void {
   window.history.replaceState(null, '', `/${search}`);
 }
 
+/**
+ * Play the game on the board to its end, through the on-screen keyboard.
+ *
+ * Every answer is a word Poodl accepts, so six of them either hit the drawn
+ * answer and win or spend the attempts and lose; both end the game, and the
+ * conclusion is what the tests that use this are about.
+ */
+async function playItOut(): Promise<void> {
+  for (const word of words.answerWords().slice(0, 6)) {
+    if (screen.queryByRole('dialog') !== null) {
+      break;
+    }
+    for (const letter of word.toUpperCase()) {
+      // Once a letter is known its key is named "A, correct" and so on, so the
+      // query matches the letter and whatever the game has learned.
+      await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${letter}(,|$)`) }));
+    }
+    await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
+  }
+}
+
 afterEach(() => {
   arriveAt('');
   document.documentElement.removeAttribute('data-theme');
@@ -100,6 +121,22 @@ describe('the page', () => {
     expect(screen.getByText('Playing random.')).toBeInTheDocument();
   });
 
+  /*
+   * A link that lost its token on the way is still a Poodl link, and
+   * InvalidLinksAreExplainedAndSurvivable wants it explained rather than passed
+   * over in silence: an empty parameter is not the same as no parameter.
+   */
+  it('explains a link whose token has gone missing', async () => {
+    arriveAt(`?${CUSTOM_GAME_PARAM}=`);
+    render(Page);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/not a poodl link/i);
+
+    await userEvent.click(screen.getByRole('button', { name: /random game/i }));
+
+    expect(screen.getByText('Playing random.')).toBeInTheDocument();
+  });
+
   it('opens the settings, the statistics and the custom game form', async () => {
     render(Page);
     await screen.findByRole('button', { name: 'Random' });
@@ -114,6 +151,41 @@ describe('the page', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Close' }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     }
+  });
+
+  /*
+   * A dialog takes focus and holds it, so while one is open the board is not the
+   * surface facing the player. With the board's window listener still mounted,
+   * letters and Enter reached a board nobody could see: a player checking their
+   * statistics mid-game could type a guess into it and spend an attempt on it
+   * without ever seeing the board.
+   */
+  it('lets no key reach the board while a dialog is open', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+
+    expect(screen.getByRole('dialog', { name: /statistics/i })).toHaveFocus();
+
+    await userEvent.keyboard('crane{Enter}{Backspace}');
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(screen.getByRole('listitem', { name: 'Attempt 1: empty' })).toBeInTheDocument();
+    expect(screen.getByText(/0 of 6 attempts used/)).toBeInTheDocument();
+  });
+
+  // And with nothing in front of it, typing still goes straight into the board.
+  it('takes typing into the board once the dialog is closed', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    await userEvent.keyboard('crane');
+
+    expect(
+      screen.getByRole('listitem', { name: 'Attempt 1: CRANE, not yet submitted' })
+    ).toBeInTheDocument();
   });
 
   /*
@@ -173,21 +245,7 @@ describe('the page', () => {
   it('closes the conclusion and offers it again', async () => {
     render(Page);
     await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
-
-    // Play it out. Every answer is a word Poodl accepts, so six of them either
-    // hit the drawn answer and win or spend the attempts and lose; both end the
-    // game, and the conclusion is what this is about.
-    for (const word of words.answerWords().slice(0, 6)) {
-      if (screen.queryByRole('dialog') !== null) {
-        break;
-      }
-      for (const letter of word.toUpperCase()) {
-        // Once a letter is known its key is named "A, correct" and so on, so
-        // the query matches the letter and whatever the game has learned.
-        await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${letter}(,|$)`) }));
-      }
-      await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
-    }
+    await playItOut();
 
     expect(screen.getByRole('dialog', { name: /you won|you lost/i })).toBeInTheDocument();
 
@@ -210,16 +268,7 @@ describe('the page', () => {
   it('shows a link made from the conclusion inside the conclusion', async () => {
     render(Page);
     await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
-
-    for (const word of words.answerWords().slice(0, 6)) {
-      if (screen.queryByRole('dialog') !== null) {
-        break;
-      }
-      for (const letter of word.toUpperCase()) {
-        await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${letter}(,|$)`) }));
-      }
-      await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
-    }
+    await playItOut();
 
     const dialog = screen.getByRole('dialog', { name: /you won|you lost/i });
 
@@ -229,6 +278,33 @@ describe('the page', () => {
 
     expect(links).toHaveLength(1);
     expect(dialog).toContainElement(links[0] as HTMLElement);
+  });
+
+  /*
+   * ShareResults.TheGridIsAvailableAsText. jsdom has no clipboard, so this is
+   * also the failing path: the copy is refused, Poodl says so, and the grid is
+   * still there for the player to select by hand — which is exactly what the
+   * message tells them to do.
+   */
+  it('shows the shared grid as text, and keeps it when the clipboard refuses', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await playItOut();
+
+    const dialog = screen.getByRole('dialog', { name: /you won|you lost/i });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /share results/i }));
+
+    const grid = await within(dialog).findByRole('textbox', { name: /shared result/i });
+    const text = (grid as HTMLTextAreaElement).value;
+
+    expect(text.split('\n')[0]).toMatch(/^Poodl [1-6X]\/6$/);
+    // SharedTextGivesNothingAway: the rows are tiles, and no letter is among them.
+    expect(text.split('\n').slice(1).join('')).not.toMatch(/[a-z]/i);
+
+    // The clipboard jsdom does not have refuses the copy, and the grid stays.
+    expect(within(dialog).getByRole('status')).toHaveTextContent(/could not reach the clipboard/i);
+    expect(grid).toBeInTheDocument();
   });
 
   // GameConclusion is scoped to a game finished by play, so nothing of it is on

@@ -51,7 +51,10 @@ interface Stored {
  *   player asking for one. The modal simply stays put, as a stopped countdown
  *   leaves it.
  * - the notice and the announcement, which exist for as long as Poodl is saying
- *   them. `NothingAboutTheLinkIsKept` requires exactly that of a custom link.
+ *   them.
+ * - the shareable and the copy it is waiting on. `NothingAboutTheLinkIsKept`
+ *   requires exactly that of a custom link: it lasts as long as it takes to copy
+ *   it, and a reload is the end of it.
  */
 export function saveState(storage: StoragePort, state: AppState): void {
   const stored: Stored = {

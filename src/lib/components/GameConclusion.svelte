@@ -3,7 +3,8 @@
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
-  import type { Notice as NoticeValue } from '$lib/app/state';
+  import ResultsReady from '$lib/components/ResultsReady.svelte';
+  import type { Notice as NoticeValue, Shareable } from '$lib/app/state';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
 
@@ -37,7 +38,8 @@
     onclose,
     notice = null,
     noticeSequence = 0,
-    oncopylink
+    shareable = null,
+    oncopy
   }: {
     status: 'won' | 'lost';
     mode: GameMode;
@@ -51,14 +53,15 @@
     onshareanswer: () => void;
     onclose: () => void;
     /**
-     * What either sharing action produced. It belongs in here rather than on the
-     * board, because this dialog keeps the keyboard inside itself: a link
-     * rendered behind it would be unreachable until it was closed, and while a
-     * countdown runs it cannot be.
+     * What either sharing action produced. Both belong in here rather than on
+     * the board, because this dialog keeps the keyboard inside itself: a link or
+     * a grid rendered behind it would be unreachable until it was closed, and
+     * while a countdown runs it cannot be.
      */
     notice?: NoticeValue | null;
     noticeSequence?: number;
-    oncopylink: () => void;
+    shareable?: Shareable | null;
+    oncopy: () => void;
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
@@ -86,8 +89,10 @@
 
   <Notice {notice} sequence={noticeSequence} />
 
-  {#if notice?.kind === 'custom_link_ready'}
-    <LinkReady url={notice.url} oncopy={oncopylink} />
+  {#if shareable?.kind === 'custom_link'}
+    <LinkReady url={shareable.text} {oncopy} />
+  {:else if shareable?.kind === 'results'}
+    <ResultsReady text={shareable.text} {oncopy} />
   {/if}
 
   <div class="actions">

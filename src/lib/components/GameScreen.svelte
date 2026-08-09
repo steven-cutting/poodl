@@ -5,7 +5,8 @@
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
-  import type { GameState, Notice as NoticeValue } from '$lib/app/state';
+  import ResultsReady from '$lib/components/ResultsReady.svelte';
+  import type { GameState, Notice as NoticeValue, Shareable } from '$lib/app/state';
   import type { KeyKnowledge } from '$lib/domain/types';
 
   /**
@@ -26,28 +27,32 @@
     physicalKeyboard = true,
     notice = null,
     noticeSequence = 0,
+    shareable = null,
     announcement = null,
     announcementSequence = 0,
     onletter,
     ondelete,
     onsubmit,
     onshareanswer,
-    oncopylink,
+    oncopy,
     ondismissnotice,
     onshowresult
   }: {
     game: GameState;
     keyboard?: readonly KeyKnowledge[];
+    /** Off while a dialog is open: the keys belong to whatever is in front. */
     physicalKeyboard?: boolean;
     notice?: NoticeValue | null;
     noticeSequence?: number;
+    /** The link or the grid Poodl has just made, for as long as it has one. */
+    shareable?: Shareable | null;
     announcement?: string | null;
     announcementSequence?: number;
     onletter: (letter: string) => void;
     ondelete: () => void;
     onsubmit: () => void;
     onshareanswer: () => void;
-    oncopylink: () => void;
+    oncopy: () => void;
     ondismissnotice: () => void;
     /** Offered only while the conclusion of a finished game is closed. */
     onshowresult?: () => void;
@@ -64,8 +69,10 @@
 
 <Notice {notice} sequence={noticeSequence} ondismiss={ondismissnotice} />
 
-{#if notice?.kind === 'custom_link_ready'}
-  <LinkReady url={notice.url} oncopy={oncopylink} />
+{#if shareable?.kind === 'custom_link'}
+  <LinkReady url={shareable.text} {oncopy} />
+{:else if shareable?.kind === 'results'}
+  <ResultsReady text={shareable.text} {oncopy} />
 {/if}
 
 <Keyboard knowledge={keyboard} disabled={!playing} {onletter} {ondelete} {onsubmit} />

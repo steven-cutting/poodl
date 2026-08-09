@@ -10,8 +10,9 @@
    * `role="status"` — announced by being rendered, rather than duplicated into
    * the live region and heard twice.
    *
-   * The custom link is not one of these. It is a thing to copy rather than a
-   * sentence to read, so `LinkReady` carries it.
+   * Neither the custom link nor the shared grid is one of these. They are things
+   * to copy rather than sentences to read, so `LinkReady` and `ResultsReady`
+   * carry them — and they outlive the sentence that reports the copy.
    */
   let {
     notice = null,
@@ -34,8 +35,6 @@
         return 'Copied to the clipboard.';
       case 'copy_failed':
         return 'Poodl could not reach the clipboard. Select the text and copy it yourself.';
-      case 'custom_link_ready':
-        return null;
     }
   });
 </script>

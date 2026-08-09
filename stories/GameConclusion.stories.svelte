@@ -3,14 +3,14 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameConclusion from '../src/lib/components/GameConclusion.svelte';
-  import { LINK } from './fixtures';
+  import { GRID, GRID_MADE, LINK, LINK_MADE } from './fixtures';
 
   const onstop = fn();
   const onnewgame = fn();
   const onshareresults = fn();
   const onshareanswer = fn();
   const onclose = fn();
-  const oncopylink = fn();
+  const oncopy = fn();
 
   const OVERVIEW = [
     'The end-of-game modal. Random waits here indefinitely; endless counts down and moves on',
@@ -54,9 +54,10 @@
       onshareresults,
       onshareanswer,
       onclose,
-      oncopylink,
+      oncopy,
       notice: null,
-      noticeSequence: 0
+      noticeSequence: 0,
+      shareable: null
     },
     argTypes: {
       status: { control: false, description: 'Won or lost. Abandoned never reaches a board.' },
@@ -64,7 +65,8 @@
       answer: { control: 'text', description: 'Shown here and nowhere earlier.' },
       attemptsUsed: { control: { type: 'range', min: 1, max: 6 } },
       secondsRemaining: { control: false, description: 'Null in every mode but endless.' },
-      notice: { control: false, description: 'What either sharing action produced.' }
+      notice: { control: false, description: 'What Poodl is saying about the last copy.' },
+      shareable: { control: false, description: 'What either sharing action produced.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
   });
@@ -106,7 +108,7 @@
 -->
 <Story
   name="A link, made from here"
-  args={{ notice: { kind: 'custom_link_ready', url: LINK }, noticeSequence: 1 }}
+  args={{ shareable: LINK_MADE }}
   play={async ({ canvasElement }) => {
     // ShareCurrentAnswer.@guarantee FullyKeyboardOperable
     const dialog = within(canvasElement).getByRole('dialog');
@@ -115,8 +117,38 @@
   }}
 />
 
-<!-- And what a copy reports, in the place the copy was asked for. -->
-<Story name="A copy that failed" args={{ notice: { kind: 'copy_failed' }, noticeSequence: 1 }} />
+<!--
+  The grid a share produced, shown as text rather than only placed on the
+  clipboard: a player using a screen reader can read it before they send it, and
+  anyone can select it by hand.
+-->
+<Story
+  name="A grid, shared from here"
+  args={{ shareable: GRID_MADE }}
+  play={async ({ canvasElement }) => {
+    // ShareResults.@guarantee TheGridIsAvailableAsText
+    const dialog = within(canvasElement).getByRole('dialog');
+
+    await expect(within(dialog).getByRole('textbox', { name: /result/i })).toHaveValue(GRID);
+  }}
+/>
+
+<!--
+  And what a copy reports, in the place the copy was asked for. The grid stays
+  put: the message sends the player to text they select themselves, so the text
+  has to outlive the attempt.
+-->
+<Story
+  name="A copy that failed"
+  args={{ shareable: GRID_MADE, notice: { kind: 'copy_failed' }, noticeSequence: 1 }}
+  play={async ({ canvasElement }) => {
+    // ShareResults.@guarantee TheGridIsAvailableAsText
+    const dialog = within(canvasElement).getByRole('dialog');
+
+    await expect(within(dialog).getByRole('status')).toHaveTextContent(/could not/i);
+    await expect(within(dialog).getByRole('textbox', { name: /result/i })).toHaveValue(GRID);
+  }}
+/>
 
 <!-- Every action reachable from the keyboard, and each one doing what it says. -->
 <Story

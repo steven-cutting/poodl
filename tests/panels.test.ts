@@ -227,8 +227,9 @@ describe('CustomGameForm', () => {
   function formProps(overrides: Record<string, unknown> = {}) {
     return {
       notice: null,
+      shareable: null,
       oncreate: vi.fn(),
-      oncopylink: vi.fn(),
+      oncopy: vi.fn(),
       onclose: vi.fn(),
       ...overrides
     };
@@ -264,7 +265,7 @@ describe('CustomGameForm', () => {
 
   it('shows the link once there is one, and copies it', async () => {
     const props = formProps({
-      notice: { kind: 'custom_link_ready', url: 'https://poodl.test/?g=yrqt9rd9' }
+      shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
     });
     render(CustomGameForm, props);
 
@@ -274,7 +275,7 @@ describe('CustomGameForm', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /copy/i }));
 
-    expect(props.oncopylink).toHaveBeenCalledTimes(1);
+    expect(props.oncopy).toHaveBeenCalledTimes(1);
   });
 });
 

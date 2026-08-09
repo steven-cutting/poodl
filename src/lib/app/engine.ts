@@ -89,12 +89,14 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
       return still(newGameRequested(dismiss(state), 'random', env));
     case 'share_results':
       return playerSharesResults(state);
-    case 'copy_link':
-      return copyLink(state);
+    case 'copy_shareable':
+      return copyShareable(state);
     case 'clipboard_settled':
-      return still(notify(state, { kind: command.copied ? 'results_copied' : 'copy_failed' }));
+      return still(clipboardSettled(state, command.id, command.copied));
     case 'dismiss_notice':
       return still(dismiss(state));
+    case 'dismiss_shareable':
+      return still(putAway(state));
   }
 }
 
@@ -195,7 +197,8 @@ function beginGame(state: AppState, mode: GameMode, answer: string, env: Env): A
     // A custom game falls off the end of this deliberately: it could never be
     // started again, because its answer only ever came from a link.
     lastMode: mode === 'custom' ? state.lastMode : mode,
-    notice: null
+    notice: null,
+    shareable: null
   };
 }
 
@@ -492,11 +495,19 @@ function shareCurrentAnswer(state: AppState, env: Env): AppState {
   return linkReady(state, game.answer, env);
 }
 
+/**
+ * `CustomLinkReady`. The link is a thing to take away rather than a sentence to
+ * read, so it goes in `shareable` and takes whatever Poodl was last saying with
+ * it: the rejection this link answers has been answered.
+ */
 function linkReady(state: AppState, answer: string, env: Env): AppState {
-  return notify(state, {
-    kind: 'custom_link_ready',
-    url: customGameUrl(encodeAnswer(answer), env.pageUrl)
-  });
+  return {
+    ...dismiss(state),
+    shareable: {
+      kind: 'custom_link',
+      text: customGameUrl(encodeAnswer(answer), env.pageUrl)
+    }
+  };
 }
 
 /** `OpenCustomGameLink` and `RejectInvalidCustomLink`. */
@@ -511,8 +522,13 @@ function openCustomGameLink(state: AppState, token: string, env: Env): AppState 
 
 /**
  * `PlayerSharesResults`. The palette follows high contrast, so what gets pasted
- * matches the board it came from, and the text itself is the only effect: no
- * attempt, no status, nothing counted.
+ * matches the board it came from, and the game itself is untouched: no attempt,
+ * no status, nothing counted.
+ *
+ * The grid is kept as well as copied. `TheGridIsAvailableAsText` asks for text
+ * that can be read before it is sent and selected by hand when the clipboard
+ * cannot be reached, and a grid that only ever existed inside an effect was
+ * neither.
  */
 function playerSharesResults(state: AppState): Outcome {
   const game = state.currentGame;
@@ -526,22 +542,42 @@ function playerSharesResults(state: AppState): Outcome {
     state.settings.highContrast ? 'high_contrast' : 'standard'
   );
 
-  return { state, effects: [{ kind: 'copy', text }] };
+  return copying({ ...dismiss(state), shareable: { kind: 'results', text } }, text);
 }
 
 /**
- * Putting the link Poodl has just made on the clipboard.
+ * Putting whatever Poodl has just made on the clipboard.
  *
- * `CustomLinkReady` hands the player a link, and `FullyKeyboardOperable` on both
- * `CustomGameCreation` and `ShareCurrentAnswer` requires copying it to be doable
- * from the keyboard alone. It travels the same path a shared grid does, so the
- * outcome is reported the same way.
+ * `FullyKeyboardOperable` on `CustomGameCreation`, `ShareCurrentAnswer` and
+ * `ShareResults` alike requires copying to be doable from the keyboard alone. A
+ * link and a grid travel the same path, and the outcome is reported the same
+ * way; what is copied stays put either way, so a copy the browser refused can be
+ * made by hand.
  */
-function copyLink(state: AppState): Outcome {
-  if (state.notice?.kind !== 'custom_link_ready') {
+function copyShareable(state: AppState): Outcome {
+  if (state.shareable === null) {
     return still(state);
   }
-  return { state, effects: [{ kind: 'copy', text: state.notice.url }] };
+  return copying(state, state.shareable.text);
+}
+
+/** Ask the shell for a copy, and remember which one Poodl is waiting on. */
+function copying(state: AppState, text: string): Outcome {
+  const id = state.copyRequest + 1;
+
+  return { state: { ...state, copyRequest: id }, effects: [{ kind: 'copy', id, text }] };
+}
+
+/**
+ * What the shell reports back. A result for a copy that has already been
+ * superseded says nothing about the one the player is waiting on, so it is
+ * dropped rather than allowed to describe it wrongly.
+ */
+function clipboardSettled(state: AppState, id: number, copied: boolean): AppState {
+  if (id !== state.copyRequest) {
+    return state;
+  }
+  return notify(state, { kind: copied ? 'results_copied' : 'copy_failed' });
 }
 
 // ---------------------------------------------------------------- helpers ---
@@ -567,6 +603,16 @@ function announce(state: AppState, message: string): AppState {
   return { ...state, announcement: message, announcementSequence: state.announcementSequence + 1 };
 }
 
+/** What Poodl was saying stops being said. Anything it made to take away stays. */
 function dismiss(state: AppState): AppState {
   return state.notice === null ? state : { ...state, notice: null };
+}
+
+/**
+ * The link or the grid goes, without waiting for a new game to take it.
+ * Closing the surface it was made on is what asks for this, and it is the end of
+ * that link — `NothingAboutTheLinkIsKept`, and lose it and it is gone.
+ */
+function putAway(state: AppState): AppState {
+  return state.shareable === null ? state : { ...state, shareable: null };
 }

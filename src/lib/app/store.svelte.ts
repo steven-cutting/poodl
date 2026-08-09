@@ -99,12 +99,14 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     }
 
     for (const effect of outcome.effects) {
+      // The identifier goes back exactly as it arrived: the engine decides what
+      // a late result means, and this only has to say which copy it belongs to.
       ports.clipboard.write(effect.text).then(
         () => {
-          dispatch({ kind: 'clipboard_settled', copied: true });
+          dispatch({ kind: 'clipboard_settled', id: effect.id, copied: true });
         },
         () => {
-          dispatch({ kind: 'clipboard_settled', copied: false });
+          dispatch({ kind: 'clipboard_settled', id: effect.id, copied: false });
         }
       );
     }

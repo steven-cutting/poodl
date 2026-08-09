@@ -199,14 +199,24 @@ describe('the custom game link', () => {
     );
   });
 
-  it('finds no token when there is none', () => {
+  it('finds no token when the parameter is absent', () => {
     expect(tokenFromUrl(PAGE)).toBeNull();
     expect(tokenFromUrl(`${PAGE}?other=1`)).toBeNull();
-    expect(tokenFromUrl(`${PAGE}?${CUSTOM_GAME_PARAM}=`)).toBeNull();
   });
 
   it('hands back whatever was in the parameter, and lets decoding judge it', () => {
     expect(tokenFromUrl(`${PAGE}?${CUSTOM_GAME_PARAM}=not-a-token`)).toBe('not-a-token');
     expect(decodeToken('not-a-token')).toBeNull();
+  });
+
+  /*
+   * A parameter that is there and empty is a link that lost its token on the
+   * way, not a page without one. Absent is null; empty is the empty token, and
+   * RejectInvalidCustomLink refuses it with an explanation rather than the
+   * player landing on an ordinary game and never being told.
+   */
+  it('tells a present but empty parameter apart from an absent one', () => {
+    expect(tokenFromUrl(`${PAGE}?${CUSTOM_GAME_PARAM}=`)).toBe('');
+    expect(decodeToken('')).toBeNull();
   });
 });

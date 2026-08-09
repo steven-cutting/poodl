@@ -215,13 +215,19 @@
         the board falls silent while either is open rather than saying the same
         thing twice. It matters most for the modal, which keeps the keyboard
         inside itself — a link behind it would be unreachable.
+
+        The keys go the same way. A dialog takes focus and holds it, so while
+        one is open the board is not the surface facing the player: leaving its
+        window listener mounted let letters, Enter and Backspace reach a board
+        nobody could see, and spend an attempt on it.
       -->
       <GameScreen
         {game}
         keyboard={keyboardKnowledge(game.guesses)}
-        physicalKeyboard={app.settings.physicalKeyboard}
+        physicalKeyboard={app.settings.physicalKeyboard && panel === null}
         notice={panel === null && !conclusionShowing ? app.notice : null}
         noticeSequence={app.noticeSequence}
+        shareable={panel === null && !conclusionShowing ? app.shareable : null}
         announcement={app.announcement}
         announcementSequence={app.announcementSequence}
         onletter={(letter: string) => {
@@ -236,8 +242,8 @@
         onshareanswer={() => {
           store?.dispatch({ kind: 'share_current_answer' });
         }}
-        oncopylink={() => {
-          store?.dispatch({ kind: 'copy_link' });
+        oncopy={() => {
+          store?.dispatch({ kind: 'copy_shareable' });
         }}
         ondismissnotice={() => {
           store?.dispatch({ kind: 'dismiss_notice' });
@@ -274,8 +280,9 @@
           }}
           notice={panel === null ? app.notice : null}
           noticeSequence={app.noticeSequence}
-          oncopylink={() => {
-            store?.dispatch({ kind: 'copy_link' });
+          shareable={panel === null ? app.shareable : null}
+          oncopy={() => {
+            store?.dispatch({ kind: 'copy_shareable' });
           }}
         />
       {/if}
@@ -324,15 +331,18 @@
   {:else if panel === 'custom'}
     <CustomGameForm
       notice={app.notice}
+      shareable={app.shareable}
       oncreate={(entry: string) => {
         store?.dispatch({ kind: 'create_custom_game', entry });
       }}
-      oncopylink={() => {
-        store?.dispatch({ kind: 'copy_link' });
+      oncopy={() => {
+        store?.dispatch({ kind: 'copy_shareable' });
       }}
       onclose={() => {
         panel = null;
         store?.dispatch({ kind: 'dismiss_notice' });
+        // The link was made in here, so closing this is the end of it.
+        store?.dispatch({ kind: 'dismiss_shareable' });
       }}
     />
   {/if}

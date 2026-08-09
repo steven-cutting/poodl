@@ -59,19 +59,35 @@ export interface Settings {
  * The one thing Poodl is currently telling the player, shown where the player
  * is looking and given a role that announces it.
  *
- * These are the emissions the specifications name — `GuessRejected`,
- * `CustomLinkReady`, `CustomAnswerRejected`, `CustomLinkInvalid` and the
- * outcome of `ResultsPlacedOnClipboard`. None of them is durable: a link in
- * particular exists long enough to be copied and no longer, which is what
- * `NothingAboutTheLinkIsKept` requires.
+ * These are the emissions the specifications name that are sentences to read —
+ * `GuessRejected`, `CustomAnswerRejected`, `CustomLinkInvalid` and the outcome
+ * of `ResultsPlacedOnClipboard`. None of them is durable, and none is persisted.
  */
 export type Notice =
   | { kind: 'guess_rejected'; reason: GuessRejectionReason }
-  | { kind: 'custom_link_ready'; url: string }
   | { kind: 'custom_answer_rejected'; entry: string }
   | { kind: 'custom_link_invalid' }
   | { kind: 'results_copied' }
   | { kind: 'copy_failed' };
+
+/**
+ * What Poodl has just made for the player to take away: the link `CustomLinkReady`
+ * hands over, or the grid `ShareResults` renders.
+ *
+ * It sits beside the notice rather than inside one because the two have
+ * different lifetimes. A notice is a sentence about what just happened, and the
+ * outcome of a copy replaces whatever came before it; this is the thing being
+ * copied, and it has to outlive the attempt — `TheGridIsAvailableAsText` and the
+ * failure message both send the player to text they can select by hand.
+ *
+ * Not durable either: `NothingAboutTheLinkIsKept` asks for exactly as long as it
+ * takes to copy, so nothing here is written to storage and nothing survives a
+ * reload.
+ */
+export interface Shareable {
+  kind: 'custom_link' | 'results';
+  text: string;
+}
 
 export interface AppState {
   /** `Player.current_game`: in progress, or just finished and not yet replaced. */
@@ -84,6 +100,7 @@ export interface AppState {
   statistics: Statistics;
   pool: AnswerPool;
   notice: Notice | null;
+  shareable: Shareable | null;
   /**
    * What the live region says next: the results of a submitted guess, and the
    * conclusion when one arrives.
@@ -97,6 +114,12 @@ export interface AppState {
    */
   noticeSequence: number;
   announcementSequence: number;
+  /**
+   * Which copy Poodl is waiting on. The clipboard settles asynchronously, so a
+   * result that arrives after a second copy was asked for would otherwise report
+   * on the wrong one; the shell hands the number back and a stale one is ignored.
+   */
+  copyRequest: number;
 }
 
 /** `default Settings player_settings`. Theme starts at system. */
@@ -119,9 +142,11 @@ export function createInitialState(): AppState {
     statistics: EMPTY_STATISTICS,
     pool: EMPTY_POOL,
     notice: null,
+    shareable: null,
     announcement: null,
     noticeSequence: 0,
-    announcementSequence: 0
+    announcementSequence: 0,
+    copyRequest: 0
   };
 }
 

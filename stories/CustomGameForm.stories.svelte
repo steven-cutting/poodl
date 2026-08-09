@@ -3,10 +3,10 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import CustomGameForm from '../src/lib/components/CustomGameForm.svelte';
-  import { LINK } from './fixtures';
+  import { LINK_MADE } from './fixtures';
 
   const oncreate = fn();
-  const oncopylink = fn();
+  const oncopy = fn();
   const onclose = fn();
 
   const OVERVIEW = [
@@ -22,8 +22,9 @@
     '- `@guarantee TheWordIsNotReadableInTheLink` and `@guarantee TheLinkIsTheWholeGame`, both by',
     '  way of **LinkReady**: the link carries everything the recipient needs and says nothing',
     '  about the word.',
-    '- `@guarantee NothingAboutTheLinkIsKept`. The link lives in a notice, and a notice is not',
-    '  persisted — closing this loses it, which is the point. A link that is lost is gone.',
+    '- `@guarantee NothingAboutTheLinkIsKept`. The link is state Poodl holds for as long as it is',
+    '  showing it, and none of that is persisted — closing this loses it, which is the point. A',
+    '  link that is lost is gone.',
     '- `@guarantee FullyKeyboardOperable`. Entering a word, submitting it and copying the',
     '  resulting link, from the keyboard alone.'
   ].join('\n');
@@ -32,9 +33,10 @@
     title: 'Sharing/CustomGameForm',
     component: CustomGameForm,
     tags: ['autodocs'],
-    args: { notice: null, oncreate, oncopylink, onclose },
+    args: { notice: null, shareable: null, oncreate, oncopy, onclose },
     argTypes: {
-      notice: { control: false, description: 'The link, the refusal, or nothing yet.' }
+      notice: { control: false, description: 'The refusal, or nothing yet.' },
+      shareable: { control: false, description: 'The link, once there is one.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
   });
@@ -50,7 +52,7 @@
 />
 
 <!-- The link, made. Nothing beside it says the word. -->
-<Story name="A link, made" args={{ notice: { kind: 'custom_link_ready', url: LINK } }} />
+<Story name="A link, made" args={{ shareable: LINK_MADE }} />
 
 <!-- Typing a word and submitting it, from the keyboard alone. -->
 <Story

@@ -394,11 +394,17 @@ surface ShareResults {
         if settings/player_settings.high_contrast: high_contrast
         else: standard
 
+    -- The grid itself, shown and not only copied. TheGridIsAvailableAsText
+    -- asks for it to be readable before it is sent, and a clipboard the
+    -- browser refuses is a clipboard the player has to work around by hand.
+    let text = render_share_grid(finished, palette)
+
     exposes:
         finished.status
         finished.mode
         finished.attempts_used
         palette
+        text
 
     provides:
         PlayerSharesResults(viewer, finished)
@@ -436,7 +442,9 @@ surface ShareResults {
         -- the instant it is abandoned.
 
     @guarantee TheGridIsAvailableAsText
-        -- What gets copied is text. It can be read by assistive technology
-        -- before it is sent, and the action reports whether the copy
+        -- What gets copied is text. It is shown as text as well as placed on
+        -- the clipboard, so it can be read by assistive technology and
+        -- selected by hand before it is sent, and it stays there when the
+        -- clipboard cannot be reached. The action reports whether the copy
         -- succeeded.
 }

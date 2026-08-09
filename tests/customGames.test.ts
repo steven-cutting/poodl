@@ -30,10 +30,10 @@ function started(mode: 'random' | 'endless' | 'practice' = 'random'): AppState {
 
 /** The link a rule has just handed the player. */
 function linkFrom(state: AppState): string {
-  if (state.notice?.kind !== 'custom_link_ready') {
-    throw new Error(`expected a link, got ${state.notice?.kind ?? 'nothing'}`);
+  if (state.shareable?.kind !== 'custom_link') {
+    throw new Error(`expected a link, got ${state.shareable?.kind ?? 'nothing'}`);
   }
-  return state.notice.url;
+  return state.shareable.text;
 }
 
 function tokenIn(url: string): string {
@@ -82,28 +82,78 @@ describe('making a custom game', () => {
    */
   it('copies the link it just made', () => {
     const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
-    const { effects } = reduce(ready, { kind: 'copy_link' }, env);
+    const { effects } = reduce(ready, { kind: 'copy_shareable' }, env);
 
-    expect(effects).toEqual([{ kind: 'copy', text: linkFrom(ready) }]);
+    expect(effects).toEqual([{ kind: 'copy', id: 1, text: linkFrom(ready) }]);
   });
 
   it('has no link to copy when none was made', () => {
     const state = fresh();
-    const { effects, state: after } = reduce(state, { kind: 'copy_link' }, env);
+    const { effects, state: after } = reduce(state, { kind: 'copy_shareable' }, env);
 
     expect(effects).toEqual([]);
     expect(after).toBe(state);
   });
 
+  /*
+   * The link outlives the attempt to copy it. Both outcomes replace what Poodl
+   * is saying and neither takes the link away — the failure in particular sends
+   * the player to text they have to select by hand, so the text has to be there.
+   */
+  it('keeps the link on screen whichever way the copy goes', () => {
+    const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const { state: asked } = reduce(ready, { kind: 'copy_shareable' }, env);
+
+    for (const copied of [true, false]) {
+      const settled = run(env, asked, { kind: 'clipboard_settled', id: 1, copied });
+
+      expect(settled.notice).toEqual({ kind: copied ? 'results_copied' : 'copy_failed' });
+      expect(linkFrom(settled)).toBe(linkFrom(ready));
+    }
+  });
+
+  /*
+   * A copy the player has already moved on from says nothing about the one they
+   * are waiting on. Two links made in a row and the first result arriving last
+   * would otherwise report on the second.
+   */
+  it('ignores a result for a copy that has been superseded', () => {
+    const made = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const first = run(env, made, { kind: 'copy_shareable' });
+    const remade = run(env, first, { kind: 'create_custom_game', entry: 'zesty' });
+    const second = run(env, remade, { kind: 'copy_shareable' });
+    const stale = run(env, second, { kind: 'clipboard_settled', id: 1, copied: false });
+
+    expect(stale).toBe(second);
+    expect(run(env, second, { kind: 'clipboard_settled', id: 2, copied: true }).notice).toEqual({
+      kind: 'results_copied'
+    });
+  });
+
   // NothingAboutTheLinkIsKept: no game, no history, nothing durable.
-  it('records nothing but the notice itself', () => {
+  it('records nothing but the link itself', () => {
     const before = fresh();
     const state = run(env, before, { kind: 'create_custom_game', entry: 'crumb' });
 
     expect(state.currentGame).toBeNull();
     expect(state.statistics).toEqual(before.statistics);
     expect(state.pool).toEqual(before.pool);
-    expect(run(env, state, { kind: 'dismiss_notice' }).notice).toBeNull();
+    expect(run(env, state, { kind: 'dismiss_shareable' }).shareable).toBeNull();
+  });
+
+  /*
+   * Reading what Poodl said about a copy is not the same as putting the link
+   * away. The failure message sends the player to text they select by hand, so
+   * dismissing the message must leave that text exactly where it is.
+   */
+  it('keeps the link when the message about it is dismissed', () => {
+    const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const asked = run(env, ready, { kind: 'copy_shareable' });
+    const failed = run(env, asked, { kind: 'clipboard_settled', id: 1, copied: false });
+    const read = run(env, failed, { kind: 'dismiss_notice' });
+
+    expect(read.notice).toBeNull();
+    expect(linkFrom(read)).toBe(linkFrom(ready));
   });
 });
 
@@ -227,21 +277,45 @@ describe('sharing a result', () => {
   it('copies the grid for a game finished by play', () => {
     const won = winInOne(env, started());
     const { state, effects } = reduce(won, { kind: 'share_results' }, env);
+    const grid = renderShareGrid(
+      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [] },
+      'standard'
+    );
 
-    expect(effects).toEqual([
-      {
-        kind: 'copy',
-        text: renderShareGrid(
-          {
-            mode: 'random',
-            status: 'won',
-            guesses: won.currentGame?.guesses ?? []
-          },
-          'standard'
-        )
-      }
-    ]);
+    expect(effects).toEqual([{ kind: 'copy', id: 1, text: grid }]);
     expect(state.notice).toBeNull();
+  });
+
+  /*
+   * TheGridIsAvailableAsText: the grid is kept as well as copied, so it can be
+   * read before it is sent and selected by hand when the clipboard refuses.
+   */
+  it('keeps the grid as text, and keeps it through a copy that failed', () => {
+    const won = winInOne(env, started());
+    const shared = run(env, won, { kind: 'share_results' });
+    const grid = renderShareGrid(
+      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [] },
+      'standard'
+    );
+
+    expect(shared.shareable).toEqual({ kind: 'results', text: grid });
+
+    const failed = run(env, shared, { kind: 'clipboard_settled', id: 1, copied: false });
+
+    expect(failed.notice).toEqual({ kind: 'copy_failed' });
+    expect(failed.shareable).toEqual({ kind: 'results', text: grid });
+    expect(reduce(failed, { kind: 'copy_shareable' }, env).effects).toEqual([
+      { kind: 'copy', id: 2, text: grid }
+    ]);
+  });
+
+  // SharingCostsTheGameNothing: the grid is rendered from the game, not out of it.
+  it('leaves the finished game exactly as it was', () => {
+    const won = winInOne(env, started());
+    const shared = run(env, won, { kind: 'share_results' });
+
+    expect(shared.currentGame).toEqual(won.currentGame);
+    expect(shared.statistics).toEqual(won.statistics);
   });
 
   // PaletteFollowsHighContrast.
@@ -270,14 +344,14 @@ describe('sharing a result', () => {
     expect((effects[0] as { text: string }).text.split('\n')[0]).toBe('Poodl custom X/6');
   });
 
-  // TheGridIsAvailableAsText, and the action reports whether the copy worked.
+  // The action reports whether the copy worked, either way.
   it('reports the outcome of the copy either way', () => {
-    const won = winInOne(env, started());
+    const shared = run(env, winInOne(env, started()), { kind: 'share_results' });
 
-    expect(run(env, won, { kind: 'clipboard_settled', copied: true }).notice).toEqual({
+    expect(run(env, shared, { kind: 'clipboard_settled', id: 1, copied: true }).notice).toEqual({
       kind: 'results_copied'
     });
-    expect(run(env, won, { kind: 'clipboard_settled', copied: false }).notice).toEqual({
+    expect(run(env, shared, { kind: 'clipboard_settled', id: 1, copied: false }).notice).toEqual({
       kind: 'copy_failed'
     });
   });

@@ -4,13 +4,13 @@
 
   import GameScreen from '../src/lib/components/GameScreen.svelte';
   import { keyboardKnowledge } from '../src/lib/domain/keyboard';
-  import { CUSTOM_GAME, LINK, LOST_GAME, PLAYING, WON_GAME } from './fixtures';
+  import { CUSTOM_GAME, LINK, LINK_MADE, LOST_GAME, PLAYING, WON_GAME } from './fixtures';
 
   const onletter = fn();
   const ondelete = fn();
   const onsubmit = fn();
   const onshareanswer = fn();
-  const oncopylink = fn();
+  const oncopy = fn();
   const ondismissnotice = fn();
   const onshowresult = fn();
 
@@ -50,13 +50,14 @@
       physicalKeyboard: true,
       notice: null,
       noticeSequence: 0,
+      shareable: null,
       announcement: null,
       announcementSequence: 0,
       onletter,
       ondelete,
       onsubmit,
       onshareanswer,
-      oncopylink,
+      oncopy,
       ondismissnotice
     },
     argTypes: {
@@ -64,6 +65,7 @@
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
       notice: { control: false, description: 'What Poodl is saying, if anything.' },
+      shareable: { control: false, description: 'The link or the grid this board just made.' },
       onshowresult: { control: false, description: 'Offered only once a conclusion is closed.' }
     },
     parameters: { docs: { description: { component: OVERVIEW } } }
@@ -136,7 +138,7 @@
 <!-- The link this board just made, ready to hand on. -->
 <Story
   name="Passing the word on"
-  args={{ notice: { kind: 'custom_link_ready', url: LINK }, noticeSequence: 1 }}
+  args={{ shareable: LINK_MADE }}
   play={async ({ canvasElement }) => {
     // ShareCurrentAnswer.@guarantee TheAnswerIsNeverShownInOrderToShareIt
     const canvas = within(canvasElement);

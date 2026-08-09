@@ -2,7 +2,7 @@
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
-  import type { Notice as NoticeValue } from '$lib/app/state';
+  import type { Notice as NoticeValue, Shareable } from '$lib/app/state';
   import { WORD_LENGTH } from '$lib/config';
 
   /**
@@ -13,18 +13,21 @@
    * the creator to correct — which is why the field is not cleared on a
    * rejection.
    *
-   * `NothingAboutTheLinkIsKept`: the link lives in a notice, and a notice is not
-   * persisted. Closing this loses it, which is the point.
+   * `NothingAboutTheLinkIsKept`: the link is state Poodl holds for as long as it
+   * is showing it, and none of that is persisted. Closing this loses it, which
+   * is the point.
    */
   let {
     notice = null,
+    shareable = null,
     oncreate,
-    oncopylink,
+    oncopy,
     onclose
   }: {
     notice?: NoticeValue | null;
+    shareable?: Shareable | null;
     oncreate: (entry: string) => void;
-    oncopylink: () => void;
+    oncopy: () => void;
     onclose: () => void;
   } = $props();
 
@@ -64,8 +67,8 @@
 
   <Notice {notice} />
 
-  {#if notice?.kind === 'custom_link_ready'}
-    <LinkReady url={notice.url} oncopy={oncopylink} />
+  {#if shareable?.kind === 'custom_link'}
+    <LinkReady url={shareable.text} {oncopy} />
     <p class="hidden-word">
       The word is not in the link in any readable form, and Poodl keeps no record of it. Lose the
       link and it is gone.

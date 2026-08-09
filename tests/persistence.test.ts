@@ -27,6 +27,13 @@ function roundTrip(state: AppState): AppState {
   return loadState(storage);
 }
 
+/** Everything that reached the device, as one string to look for things in. */
+function storedText(state: AppState): string {
+  const storage = createFakeStorage();
+  saveState(storage, state);
+  return storage.read(STORAGE_KEY) ?? '';
+}
+
 /*
  * Four guarantees ask for this between them: `InProgressGameSurvivesReload`,
  * `ThePreviousModeSurvivesBetweenSessions`, `SettingsPersistBetweenSessions`
@@ -84,7 +91,7 @@ describe('saving and loading', () => {
   });
 
   it('keeps nothing that is only being said right now', () => {
-    const said = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const said = run(env, fresh(), { kind: 'create_custom_game', entry: 'qqqqq' });
 
     expect(said.notice).not.toBeNull();
 
@@ -92,6 +99,24 @@ describe('saving and loading', () => {
 
     expect(loaded.notice).toBeNull();
     expect(loaded.announcement).toBeNull();
+  });
+
+  /*
+   * NothingAboutTheLinkIsKept: the link lasts as long as it takes to copy it,
+   * and a reload is the end of it. There is no list of the words a player has
+   * set for other people, because there is nothing to make one from.
+   */
+  it('keeps no link and no shared grid', () => {
+    const made = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const shared = run(env, winInOne(env, run(env, made, { kind: 'new_game', mode: 'random' })), {
+      kind: 'share_results'
+    });
+
+    expect(made.shareable).not.toBeNull();
+    expect(shared.shareable).not.toBeNull();
+    expect(roundTrip(made).shareable).toBeNull();
+    expect(roundTrip(shared).shareable).toBeNull();
+    expect(storedText(made)).not.toContain(made.shareable?.text);
   });
 
   // Arriving is decided by ShowWelcomeOnOpening on every arrival, so a stored

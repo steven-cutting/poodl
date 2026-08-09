@@ -41,20 +41,27 @@ export type Command =
   | { kind: 'open_custom_link'; token: string }
   | { kind: 'accept_random_fallback' }
   | { kind: 'share_results' }
-  | { kind: 'copy_link' }
-  | { kind: 'clipboard_settled'; copied: boolean }
-  // Dismissing whatever Poodl is currently saying
-  | { kind: 'dismiss_notice' };
+  | { kind: 'copy_shareable' }
+  | { kind: 'clipboard_settled'; id: number; copied: boolean }
+  // Dismissing whatever Poodl is currently saying, and putting away whatever it
+  // made to be taken. Two commands, because the sentence and the thing it is
+  // about have different lifetimes: reading a failure message must not take away
+  // the text that message tells the player to select.
+  | { kind: 'dismiss_notice' }
+  | { kind: 'dismiss_shareable' };
 
 /**
  * The one thing the engine cannot do itself.
  *
  * Writing to the clipboard is asynchronous and can fail, and `sharing.allium`
  * requires the action to report whether the copy succeeded. The engine says
- * what to copy; the shell copies it and dispatches `clipboard_settled`.
+ * what to copy; the shell copies it and dispatches `clipboard_settled` with the
+ * `id` it was given, so a result that arrives late can be told from the one the
+ * player is waiting on.
  */
 export interface CopyEffect {
   kind: 'copy';
+  id: number;
   text: string;
 }
 

@@ -27,13 +27,14 @@ function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
     physicalKeyboard: true,
     notice: null,
     noticeSequence: 0,
+    shareable: null,
     announcement: null,
     announcementSequence: 0,
     onletter: vi.fn(),
     ondelete: vi.fn(),
     onsubmit: vi.fn(),
     onshareanswer: vi.fn(),
-    oncopylink: vi.fn(),
+    oncopy: vi.fn(),
     ondismissnotice: vi.fn(),
     ...overrides
   };
@@ -202,7 +203,8 @@ describe('GameConclusion', () => {
     onclose: vi.fn(),
     notice: null,
     noticeSequence: 0,
-    oncopylink: vi.fn()
+    shareable: null,
+    oncopy: vi.fn()
   };
 
   // OutcomeAnswerAndAttemptsAreAllShown, on a win as well as on a loss.
@@ -282,11 +284,11 @@ describe('GameConclusion', () => {
    * unreachable, and during an endless countdown unreachable twice over.
    */
   it('shows the link it just made, inside itself', async () => {
-    const oncopylink = vi.fn();
+    const oncopy = vi.fn();
     render(GameConclusion, {
       ...base,
-      notice: { kind: 'custom_link_ready', url: 'https://poodl.test/?g=yrqt9rd9' },
-      oncopylink
+      shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' },
+      oncopy
     });
 
     const dialog = screen.getByRole('dialog', { name: /won/i });
@@ -297,11 +299,35 @@ describe('GameConclusion', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: /copy/i }));
 
-    expect(oncopylink).toHaveBeenCalledTimes(1);
+    expect(oncopy).toHaveBeenCalledTimes(1);
   });
 
-  // ShareResults.@guarantee TheGridIsAvailableAsText: the action reports whether
-  // the copy succeeded, and it reports it where the action was taken.
+  /*
+   * ShareResults.@guarantee TheGridIsAvailableAsText: the grid is shown as text
+   * and not only copied, so it can be read before it is sent — and it is still
+   * there when the copy failed and the player has to select it by hand.
+   */
+  it('shows the grid it just rendered, inside itself', async () => {
+    const oncopy = vi.fn();
+    render(GameConclusion, {
+      ...base,
+      shareable: { kind: 'results', text: 'Poodl 3/6\n🟩⬛⬛🟨⬛' },
+      notice: { kind: 'copy_failed' },
+      oncopy
+    });
+
+    const dialog = screen.getByRole('dialog', { name: /won/i });
+
+    expect(within(dialog).getByRole('textbox', { name: /result/i })).toHaveValue(
+      'Poodl 3/6\n🟩⬛⬛🟨⬛'
+    );
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /copy result/i }));
+
+    expect(oncopy).toHaveBeenCalledTimes(1);
+  });
+
+  // The action reports whether the copy succeeded, where the action was taken.
   it('reports the outcome of a copy, inside itself', () => {
     render(GameConclusion, { ...base, notice: { kind: 'copy_failed' } });
 
@@ -479,6 +505,36 @@ describe('GameScreen', () => {
 
     expect(spoken.some((text) => text.includes('Not enough letters'))).toBe(true);
     expect(spoken.some((text) => text.includes('Attempt 1: A correct'))).toBe(true);
+  });
+
+  /*
+   * Whatever Poodl has made is shown where the player is looking, and the board
+   * is where they are looking once a dialog is closed: a grid shared from the
+   * conclusion is still theirs to copy after they put the conclusion away.
+   */
+  it('shows the link or the grid it is holding', async () => {
+    const props = screenProps(gameAfter(), {
+      shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
+    });
+    const { unmount } = render(GameScreen, props);
+
+    expect(screen.getByRole('textbox', { name: /custom game link/i })).toHaveValue(
+      'https://poodl.test/?g=yrqt9rd9'
+    );
+    unmount();
+
+    const shared = screenProps(gameAfter(), {
+      shareable: { kind: 'results', text: 'Poodl 3/6\n🟩⬛⬛🟨⬛' }
+    });
+    render(GameScreen, shared);
+
+    expect(screen.getByRole('textbox', { name: /shared result/i })).toHaveValue(
+      'Poodl 3/6\n🟩⬛⬛🟨⬛'
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: /copy result/i }));
+
+    expect(shared.oncopy).toHaveBeenCalledTimes(1);
   });
 
   // ShareCurrentAnswer.AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard.

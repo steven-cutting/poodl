@@ -8,6 +8,7 @@ import DistributionChart from '../src/lib/components/DistributionChart.svelte';
 import LinkReady from '../src/lib/components/LinkReady.svelte';
 import Modal from '../src/lib/components/Modal.svelte';
 import Notice from '../src/lib/components/Notice.svelte';
+import ResultsReady from '../src/lib/components/ResultsReady.svelte';
 
 /*
  * The live region three guarantees rest on: `EverySubmittedGuessIsAnnounced`,
@@ -108,6 +109,44 @@ describe('LinkReady', () => {
 
     expect(screen.getByRole('button', { name: /copy/i })).toHaveFocus();
 
+    await userEvent.keyboard('{Enter}');
+
+    expect(oncopy).toHaveBeenCalledTimes(1);
+  });
+});
+
+/*
+ * sharing.allium — `TheGridIsAvailableAsText`. The grid is shown as text and not
+ * only written to the clipboard: readable before it is sent, and selectable by
+ * hand when the clipboard cannot be reached.
+ */
+describe('ResultsReady', () => {
+  const GRID = 'Poodl 3/6\n🟩⬛⬛🟨⬛\n🟩🟨⬛⬛⬛\n🟩🟩🟩🟩🟩';
+
+  it('offers the grid as text that can be read and selected', () => {
+    render(ResultsReady, { text: GRID });
+
+    expect(screen.getByRole('textbox', { name: /result/i })).toHaveValue(GRID);
+  });
+
+  // SharedTextGivesNothingAway: what is shown is what is copied, and it names
+  // no letter of any word.
+  it('shows exactly what would be copied, and no letter of any word', () => {
+    render(ResultsReady, { text: GRID });
+
+    expect(screen.getByRole('textbox', { name: /result/i })).toHaveValue(GRID);
+    expect(document.body.textContent).not.toMatch(/apple/i);
+  });
+
+  it('is reachable by keyboard alone', async () => {
+    const oncopy = vi.fn();
+    render(ResultsReady, { text: GRID, oncopy });
+
+    await userEvent.tab();
+
+    expect(screen.getByRole('textbox', { name: /result/i })).toHaveFocus();
+
+    await userEvent.tab();
     await userEvent.keyboard('{Enter}');
 
     expect(oncopy).toHaveBeenCalledTimes(1);

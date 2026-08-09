@@ -29,10 +29,12 @@ export function customGameUrl(token: string, pageUrl: string): string {
 /**
  * The token a link carries, or null when it carries none.
  *
- * Whatever is there is handed back as it stands. Judging it belongs to
- * `decodeToken`, which is the one place that knows what this scheme produces.
+ * Whatever is there is handed back as it stands, an empty value included.
+ * Judging it belongs to `decodeToken`, which is the one place that knows what
+ * this scheme produces — and a link that says `?g=` and nothing more is a Poodl
+ * link that lost its token on the way, which
+ * `InvalidLinksAreExplainedAndSurvivable` wants explained rather than ignored.
  */
 export function tokenFromUrl(pageUrl: string): string | null {
-  const token = new URL(pageUrl).searchParams.get(CUSTOM_GAME_PARAM);
-  return token === null || token === '' ? null : token;
+  return new URL(pageUrl).searchParams.get(CUSTOM_GAME_PARAM);
 }

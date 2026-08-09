@@ -49,9 +49,10 @@ export const LOST: readonly string[] = ['adopt', 'alarm', 'again', 'aroma', 'asi
  */
 
 import { EMPTY_POOL } from '../src/lib/domain/answerPool';
+import { renderShareGrid } from '../src/lib/domain/share';
 import { EMPTY_STATISTICS, recordLoss, recordWin } from '../src/lib/domain/statistics';
 import { DEFAULT_SETTINGS } from '../src/lib/app/state';
-import type { GameState } from '../src/lib/app/state';
+import type { GameState, Shareable } from '../src/lib/app/state';
 import type { GameMode, Guess } from '../src/lib/domain/types';
 
 function guessesFrom(playedWords: readonly string[]): Guess[] {
@@ -111,3 +112,17 @@ export const POOL = EMPTY_POOL;
 
 /** A link the codec really produced, so no story shows a token it could not. */
 export const LINK = 'https://steven-cutting.github.io/poodl/?g=yrqt9rd9';
+
+/**
+ * What Poodl has made for the player to take away, in the two kinds the state
+ * holds. The grid comes from the real renderer, for the same reason every board
+ * here comes from the real scoring: a hand-written one would drift.
+ */
+export const LINK_MADE: Shareable = { kind: 'custom_link', text: LINK };
+
+export const GRID = renderShareGrid(
+  { mode: 'random', status: 'won', guesses: guessesFrom(WON) },
+  'standard'
+);
+
+export const GRID_MADE: Shareable = { kind: 'results', text: GRID };
