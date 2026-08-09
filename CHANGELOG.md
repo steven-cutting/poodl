@@ -68,6 +68,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A stored game was believed about its own marks, so a store that had been written to could
   restore a game that was never won, with a keyboard and a shared grid to match. Every
   stored guess is scored again on load. Stored input is checked for shape as well as length.
+- A copy still in flight outlived the text it was copying, so a link or grid put away before
+  the clipboard answered reported onto whatever screen the player had moved to — including
+  "select the text and copy it yourself" with no text to select. Discarding a shareable
+  discards the copy waiting on it.
 - The workshop never wrote `data-animations`, so every story rendered the tile reveal's
   off path whatever the toolbar said. It writes it now, from the same derivation the route
   uses, and two Tile stories pin the two paths.

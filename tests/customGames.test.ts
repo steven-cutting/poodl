@@ -146,6 +146,26 @@ describe('making a custom game', () => {
     });
   });
 
+  /*
+   * A copy in flight is a copy of something. The clipboard is asynchronous, so
+   * a result can arrive after the text it copied has been put away — and
+   * `copy_failed` sends the player to text to select by hand, which is not an
+   * instruction anyone can follow once there is none.
+   */
+  it('drops a copy result for a link that has already gone', () => {
+    const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const asked = run(env, ready, { kind: 'copy_shareable' });
+
+    for (const gone of [
+      run(env, asked, { kind: 'dismiss_shareable' }),
+      run(env, asked, { kind: 'new_game', mode: 'random' })
+    ]) {
+      expect(gone.shareable).toBeNull();
+      expect(run(env, gone, { kind: 'clipboard_settled', id: 1, copied: false })).toBe(gone);
+      expect(run(env, gone, { kind: 'clipboard_settled', id: 1, copied: true })).toBe(gone);
+    }
+  });
+
   // NothingAboutTheLinkIsKept: no game, no history, nothing durable.
   it('records nothing but the link itself', () => {
     const before = fresh();

@@ -184,7 +184,9 @@ function newGameRequested(state: AppState, mode: StartableMode, env: Env): AppSt
  */
 function beginGame(state: AppState, mode: GameMode, answer: string, env: Env): AppState {
   return {
-    ...retireGame(state),
+    // `putAway` rather than `shareable: null`, so a copy of the old game's grid
+    // cannot report back onto the new game's board.
+    ...putAway(retireGame(state)),
     currentGame: {
       mode,
       answer,
@@ -201,8 +203,7 @@ function beginGame(state: AppState, mode: GameMode, answer: string, env: Env): A
     // A custom game falls off the end of this deliberately: it could never be
     // started again, because its answer only ever came from a link.
     lastMode: mode === 'custom' ? state.lastMode : mode,
-    notice: null,
-    shareable: null
+    notice: null
   };
 }
 
@@ -633,7 +634,17 @@ function dismiss(state: AppState): AppState {
  * The link or the grid goes, without waiting for a new game to take it.
  * Closing the surface it was made on is what asks for this, and it is the end of
  * that link — `NothingAboutTheLinkIsKept`, and lose it and it is gone.
+ *
+ * A copy still in flight goes with it. The clipboard is asynchronous, so a copy
+ * of text that no longer exists can still report back, and the failure is the
+ * one that matters: "Select the text and copy it yourself" is an instruction
+ * nobody can follow once the text has been taken away. Advancing the counter is
+ * how `clipboardSettled` already drops a superseded result, so this is the same
+ * mechanism rather than a second one.
  */
 function putAway(state: AppState): AppState {
-  return state.shareable === null ? state : { ...state, shareable: null };
+  if (state.shareable === null) {
+    return state;
+  }
+  return { ...state, shareable: null, copyRequest: state.copyRequest + 1 };
 }
