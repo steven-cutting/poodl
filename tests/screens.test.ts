@@ -198,7 +198,8 @@ describe('GameConclusion', () => {
     onstop: vi.fn(),
     onnewgame: vi.fn(),
     onshareresults: vi.fn(),
-    onshareanswer: vi.fn()
+    onshareanswer: vi.fn(),
+    onclose: vi.fn()
   };
 
   // OutcomeAnswerAndAttemptsAreAllShown, on a win as well as on a loss.
@@ -241,6 +242,22 @@ describe('GameConclusion', () => {
     await userEvent.click(screen.getByRole('button', { name: 'New game' }));
 
     expect(onnewgame).toHaveBeenCalledWith('random');
+  });
+
+  /*
+   * The modal covers GameNavigation, which carries
+   * ThreeModesCanBeStartedFromHere and AvailableWhetherOrNotAGameExists. A
+   * conclusion that trapped the keyboard would take those away, so it closes —
+   * and the board offers it back, because ResumeCurrentGame says a finished
+   * game comes back "with its conclusion still showing".
+   */
+  it('can be closed, so the rest of the game is reachable', async () => {
+    const onclose = vi.fn();
+    render(GameConclusion, { ...base, onclose });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(onclose).toHaveBeenCalledTimes(1);
   });
 
   it('offers both kinds of sharing', async () => {
@@ -376,6 +393,24 @@ describe('GameScreen', () => {
     render(GameScreen, screenProps(won.currentGame as GameState));
 
     expect(screen.getByRole('button', { name: 'Enter' })).toBeDisabled();
+  });
+
+  // The way back to a conclusion the player closed.
+  it('offers the result again once the conclusion has been closed', async () => {
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    const onshowresult = vi.fn();
+    render(GameScreen, screenProps(won.currentGame as GameState, { onshowresult }));
+
+    await userEvent.click(screen.getByRole('button', { name: /show the result/i }));
+
+    expect(onshowresult).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no way back while the conclusion is on screen', () => {
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    render(GameScreen, screenProps(won.currentGame as GameState));
+
+    expect(screen.queryByRole('button', { name: /show the result/i })).not.toBeInTheDocument();
   });
 
   it('shows what Poodl is saying, and announces it', () => {

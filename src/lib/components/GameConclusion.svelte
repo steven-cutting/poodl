@@ -11,10 +11,14 @@
    * `OutcomeAnswerAndAttemptsAreAllShown` on a win as well as on a loss, and
    * `NoDailyLimit` is why another game is always one action away.
    *
-   * There is deliberately no Close. The specification gives the modal no
-   * dismissal, and `ResumeCurrentGame` brings a finished game back "with its
-   * conclusion still showing" — so closing it would lose something the player
-   * could not ask for again. The board stays visible behind it.
+   * It closes, and the board offers it back. The specification gives the modal
+   * no dismissal and says the board stays visible behind it, but a dialog that
+   * traps the keyboard with no way out would take `GameNavigation` with it —
+   * and that surface carries `ThreeModesCanBeStartedFromHere` and
+   * `AvailableWhetherOrNotAGameExists`. Nothing is lost by closing, because
+   * `GameScreen` offers the result again for as long as the finished game is on
+   * the board, which is what `ResumeCurrentGame` means by a game coming back
+   * "with its conclusion still showing".
    */
   let {
     status,
@@ -26,7 +30,8 @@
     onstop,
     onnewgame,
     onshareresults,
-    onshareanswer
+    onshareanswer,
+    onclose
   }: {
     status: 'won' | 'lost';
     mode: GameMode;
@@ -38,12 +43,13 @@
     onnewgame: (mode: StartableMode) => void;
     onshareresults: () => void;
     onshareanswer: () => void;
+    onclose: () => void;
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
 </script>
 
-<Modal {title}>
+<Modal {title} {onclose}>
   <p class="answer">The word was <strong>{answer.toUpperCase()}</strong>.</p>
   <p class="attempts">
     {attemptsUsed} of {MAX_ATTEMPTS} attempts used{mode === 'custom'

@@ -140,6 +140,13 @@ describe('Modal', () => {
     expect(onclose).toHaveBeenCalledTimes(1);
   });
 
+  // A caller that offers no way to close gets no control that pretends to.
+  it('offers no close at all when a caller keeps it open', () => {
+    render(Modal, { title: 'You won' });
+
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+  });
+
   it('closes from its own control', async () => {
     const onclose = vi.fn();
     render(Modal, { title: 'Settings', onclose });

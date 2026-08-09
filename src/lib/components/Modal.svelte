@@ -84,9 +84,16 @@
   >
     <h2 id={titleId}>{title}</h2>
     {@render children?.()}
-    <div class="close">
-      <button type="button" onclick={() => onclose?.()}>Close</button>
-    </div>
+    {#if onclose !== undefined}
+      <div class="close">
+        <button
+          type="button"
+          onclick={() => {
+            onclose();
+          }}>Close</button
+        >
+      </div>
+    {/if}
   </div>
 </div>
 

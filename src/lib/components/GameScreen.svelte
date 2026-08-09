@@ -33,7 +33,8 @@
     onsubmit,
     onshareanswer,
     oncopylink,
-    ondismissnotice
+    ondismissnotice,
+    onshowresult
   }: {
     game: GameState;
     keyboard?: readonly KeyKnowledge[];
@@ -48,6 +49,8 @@
     onshareanswer: () => void;
     oncopylink: () => void;
     ondismissnotice: () => void;
+    /** Offered only while the conclusion of a finished game is closed. */
+    onshowresult?: () => void;
   } = $props();
 
   const playing = $derived(game.status === 'in_progress');
@@ -73,6 +76,14 @@
   Making a link shows nothing about the word.
 -->
 <p class="share">
+  {#if onshowresult !== undefined}
+    <button
+      type="button"
+      onclick={() => {
+        onshowresult();
+      }}>Show the result again</button
+    >
+  {/if}
   <button
     type="button"
     onclick={() => {
@@ -85,8 +96,11 @@
 
 <style>
   .share {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
     margin-block-start: 1.25rem;
-    text-align: center;
   }
 
   button {
