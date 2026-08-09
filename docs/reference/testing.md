@@ -10,18 +10,27 @@ requires: []
 
 ## Framework
 
-Vitest in jsdom, with `globals: true` so Testing Library registers its automatic cleanup
-hook. Setup is one line: `tests/setup.ts` imports `@testing-library/jest-dom/vitest`.
-Configuration lives in `vite.config.ts`.
+Vitest in two configurations. The unit suite runs in jsdom with `globals: true` so Testing
+Library registers its automatic cleanup hook, one setup line in `tests/setup.ts`, and is
+configured in `vite.config.ts`. The story suite runs in real Chromium through Playwright
+and is configured separately in `vitest.storybook.config.ts`.
+
+A third file, `vitest.config.ts`, names those two as projects and holds nothing else. It
+exists because `@storybook/addon-vitest` finds its runner's configuration by filename, and
+the Testing Module in the Storybook UI otherwise resolves `vite.config.ts` and fails: the
+project it filters for, `storybook:<configDir>`, is declared nowhere the jsdom suite can
+see. Both recipes pass `--config` themselves, so neither depends on that discovery.
 
 ## Layout
 
-Tests live in `tests/`, never colocated with `src/`.
+Tests live in `tests/`, never colocated with `src/`. Stories live in `stories/`, also at
+the repository root, one file per component.
 
 | Suffix | Runner |
 | --- | --- |
-| `*.test.ts` | Vitest. Everything currently in the repository. |
-| `*.spec.ts` | Playwright. Reserved; no end-to-end suite exists yet. |
+| `*.test.ts` | Vitest in jsdom. Everything in `tests/`. |
+| `*.stories.svelte` | Vitest in Chromium, driven by Storybook. Everything in `stories/`. |
+| `*.spec.ts` | Playwright directly. Reserved. Playwright itself is installed — it supplies the browser the story run drives — but no suite of this kind exists. |
 
 Files are named for what they cover rather than mirroring a source path:
 `scoring.test.ts`, `keyboard.test.ts`, `ports.test.ts`, `words.test.ts`,
@@ -40,18 +49,40 @@ screen.getByRole('listitem', { name: /^Attempt 1:/ });
 
 **Inject fakes; never stub a global.** Each port in `src/lib/ports/` exports an in-memory
 fake alongside the real adapter, and every adapter takes its platform object as a
-defaulted argument. This is not a stylistic preference: the test environment provides no
-`localStorage` and no `navigator.clipboard`, so injection is the only thing that works.
+defaulted argument. This is not a stylistic preference, and it is not a jsdom workaround:
+the story run is a real browser where a global would work, which is exactly why stubbing
+one stays forbidden.
 
 **Callbacks are asserted through the props.** Components take callbacks as props, so a
 test passes `vi.fn()` and asserts on the call.
 
-**A new component lands with its test in the same change.**
+**A new component lands with its test and its story in the same change.**
+
+## Story tests
+
+`just storybook-test` renders every story in `stories/` in real Chromium and runs axe over
+each one. A violation fails the run, because `.storybook/preview.ts` sets the accessibility
+addon's test mode to error; the addon's own default only reports. Play functions run in the
+same pass, which is where a guarantee about interaction — tabbing to a key and activating
+it — becomes executable rather than described.
+
+Stories are fixtures, not assertions. The evidence and the coverage floor stay in `tests/`.
+And axe is not exhaustive: it skips what it cannot attribute, including anything behind
+`aria-hidden`, so a guarantee resting on such an element still has to be measured by hand.
+The procedure is in [Work in the component workshop](../how-to/work-in-the-component-workshop.md).
 
 ## Coverage
 
 v8 provider, measured over `src/lib/**`, with a 90% floor on branches, functions, lines
 and statements. Below the floor the run fails.
+
+Only the jsdom suite is measured. Vitest 4 has no per-project coverage option and the v8
+provider merges every project that ran into one report before it checks the thresholds, so
+a story sharing a run with the unit suite would raise the number without adding an
+assertion. The separation is the file it is declared in: the floor lives in
+`vite.config.ts`, the story configuration has no coverage block at all, and
+`npm run coverage` pins `--config vite.config.ts` so the run that measures the floor is the
+run that cannot reach a story.
 
 Distinguish an untested branch from an unreachable one. Defensive code no input can reach
 should be deleted rather than covered; see
@@ -66,6 +97,7 @@ should be deleted rather than covered; see
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data. |
 | `components.test.ts` | Tile, Board and Keyboard through accessible names. |
+| `stories/` | Each implemented component in the states its surface names, rendered in Chromium with axe over every one. |
 
 ## Related pages
 

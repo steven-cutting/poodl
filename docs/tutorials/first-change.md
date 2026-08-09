@@ -8,8 +8,9 @@ requires: []
 
 # Make your first change
 
-About twenty minutes, from a fresh clone to a green gate. The change is small on purpose;
-what matters is that it passes through every layer the repository has.
+About half an hour, from a fresh clone to a green gate — the first run downloads a browser.
+The change is small on purpose; what matters is that it passes through every layer the
+repository has.
 
 ## 1. Get the workspace running
 
@@ -18,9 +19,10 @@ just initialize
 just check
 ```
 
-`just initialize` creates the lockfiles, installs both toolchains, normalises formatting
-and installs the pre-commit hook. It never stages, commits, tags or pushes. If it
-complains about a missing tool, read [Develop locally](../how-to/develop-locally.md).
+`just initialize` creates the lockfiles, installs both toolchains, downloads the Chromium
+build the story gate renders in, normalises formatting and installs the pre-commit hook. It
+never stages, commits, tags or pushes. If it complains about a missing tool, read
+[Develop locally](../how-to/develop-locally.md).
 
 ## 2. See the app
 

@@ -46,6 +46,9 @@ relocking.
 3. Run `just lock`, then read the lockfile diff before accepting it.
 4. Run `just check`. A type-checker or linter upgrade usually surfaces new findings; fix
    them rather than pinning back, unless the finding is wrong for this project.
+5. If the change moved `playwright`, reinstall the browser with `just storybook-browsers`.
+   The binary is versioned by that pin and is in neither lockfile — see
+   [Work in the component workshop](work-in-the-component-workshop.md).
 
 ## Actions in the workflows
 

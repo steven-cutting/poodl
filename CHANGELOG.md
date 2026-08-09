@@ -24,5 +24,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The documentation handbook, enforced by `scripts/validate_docs.py`.
 - The agent contract, enforced by `scripts/validate_agents.py`, with nine skills and
   their provider bridges.
+- Storybook as a local component workshop, with `storybook-build` and `storybook-test` in
+  `just check`, every story rendered in real Chromium with axe over it, and a `stories`
+  job in continuous integration. It is built locally and published nowhere.
+
+### Fixed
+
+- The mark colours failed the WCAG contrast bar against white text, at 3.97, 2.63 and
+  4.22 to one. `--mark-text` is now black, measured at 5.29, 7.99 and 4.98, with no hue
+  changed. The tile's mark glyph is fully opaque for the same reason.
 
 [Unreleased]: https://github.com/steven-cutting/poodl/commits/main/

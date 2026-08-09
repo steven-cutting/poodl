@@ -26,9 +26,13 @@ belong in source where they can be reviewed.
 | File | Governs |
 | --- | --- |
 | `svelte.config.js` | The static adapter, preprocessing, and the base path. |
-| `vite.config.ts` | The dev server, Vitest, and the coverage thresholds. |
+| `vite.config.ts` | The dev server, the jsdom unit suite, and the coverage thresholds. |
+| `vitest.config.ts` | Names both suites as projects and nothing else. It exists so the Storybook UI's test runner, which finds its configuration by filename, resolves the story project instead of failing on the unit one. |
 | `tsconfig.json` | Strict TypeScript, plus `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `isolatedModules` and `checkJs`. |
-| `eslint.config.js` | Flat config on `strictTypeChecked`, plus two documented rule decisions. |
+| `eslint.config.js` | Flat config on `strictTypeChecked`, two documented rule decisions, and the Storybook plugin's preset. |
+| `.storybook/main.ts` | Where stories are found, which addons load, the SvelteKit framework, telemetry off, and the dev server's permission to serve `stories/`. |
+| `.storybook/preview.ts` | The design tokens, the theme, contrast and motion toolbar globals, and the axe run applied to every story. |
+| `vitest.storybook.config.ts` | The story run: browser mode, Chromium, axe. It declares no coverage block, and the run that measures the floor pins `vite.config.ts`, so a story cannot affect the number. |
 | `.prettierrc.json` | 100 columns, single quotes, no trailing commas, Svelte block order. |
 | `.prettierignore` | Notably excludes Markdown, which markdownlint owns, and the word lists. |
 | `.markdownlint-cli2.jsonc` | Markdown rules, including the exemptions the documentation contract needs. |
@@ -37,6 +41,18 @@ belong in source where they can be reviewed.
 | `lychee.toml` | Link checking. |
 | `.pre-commit-config.yaml` | The read-only gate. Installed as the hook. |
 | `.pre-commit-fix.yaml` | The mutating counterpart. Run only by `just fix`. |
+
+### Storybook appearance globals
+
+Set from the workshop toolbar, or pinned by a story with a `globals` prop. The attributes
+go on the preview document's root element, because `src/app.css` keys every palette on
+`:root`.
+
+| Global | Values | Effect |
+| --- | --- | --- |
+| `theme` | `system`, `light`, `dark` | `system` removes `data-theme` so the device preference decides; the other two set it. |
+| `highContrast` | `off`, `on` | `on` sets `data-high-contrast="true"`, which swaps the correct and present colours. |
+| `reducedMotion` | `follow`, `reduce` | `reduce` injects a stylesheet that freezes declarative motion. A simulation: nothing inside the page can change what `prefers-reduced-motion` reports. |
 
 ## Values the specifications decide
 
@@ -53,6 +69,10 @@ changing one here without changing it in the specification is drift.
 Exact versions, no ranges. Node and npm are additionally constrained by `engines` and
 recorded in `volta` in `package.json`; Python by `.python-version`. See
 [Maintain dependencies](../how-to/maintain-dependencies.md).
+
+One dependency is outside that scheme. The browser the story run drives is a binary
+Playwright downloads into a cache outside the repository; its version follows the
+`playwright` pin and appears in neither lockfile.
 
 ## Related pages
 

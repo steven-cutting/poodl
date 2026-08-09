@@ -26,9 +26,9 @@ Exact versions live in `package.json` (`engines`, `volta`) and in `.python-versi
 just initialize
 ```
 
-This creates `uv.lock` and `package-lock.json`, installs both toolchains, normalises
-formatting, and installs the pre-commit hook. Run it once per clone. It never stages,
-commits, tags or pushes.
+This creates `uv.lock` and `package-lock.json`, installs both toolchains and the Chromium
+build the story tests need, normalises formatting, and installs the pre-commit hook. Run it
+once per clone. It never stages, commits, tags or pushes.
 
 ## Every day
 
@@ -39,6 +39,15 @@ just dev
 Vite serves the app with hot module replacement. There is no backend to start, no
 database to bring up and no proxy to configure; the browser talks to Vite and to nothing
 else.
+
+To build a component on its own, rather than by playing until the game produces the state
+you want, run the workshop instead:
+
+```console
+just storybook
+```
+
+See [Work in the component workshop](work-in-the-component-workshop.md).
 
 To see what a deployment would actually serve, build first and then preview:
 
@@ -75,4 +84,5 @@ just sync
 
 - [Commands](../reference/commands.md)
 - [Test and debug](test-and-debug.md)
+- [Work in the component workshop](work-in-the-component-workshop.md)
 - [Troubleshooting](../operations/troubleshooting.md)

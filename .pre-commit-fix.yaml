@@ -10,6 +10,7 @@ exclude: >-
     coverage/|
     node_modules/|
     src/lib/data/|
+    storybook-static/|
     uv\.lock$|
     package-lock\.json$
   )

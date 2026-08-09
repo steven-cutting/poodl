@@ -80,6 +80,14 @@
     inset-inline-end: 3px;
     font-size: 0.625rem;
     line-height: 1;
-    opacity: 0.85;
+    /*
+     * Fully opaque. The glyph is what discharges "colour never carries meaning
+     * alone", so it has to be legible to the readers it exists for. At 0.85 it
+     * composited to 4.43 to one against `--mark-absent`, under the 4.5 bar, and
+     * axe cannot report that: the span is aria-hidden, so the contrast rule
+     * never inspects it at any opacity. Measured, not assumed — see
+     * `docs/decisions/0006-component-workshop.md`.
+     */
+    opacity: 1;
   }
 </style>

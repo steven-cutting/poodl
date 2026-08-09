@@ -16,9 +16,11 @@ rather than in a shell history.
 
 | Recipe | Purpose |
 | --- | --- |
-| `just initialize` | One explicit first run. Creates both lockfiles, installs both toolchains, normalises formatting, installs the hook. Never stages, commits, tags or pushes. |
+| `just initialize` | One explicit first run. Creates both lockfiles, installs both toolchains and the browser the story tests need, normalises formatting, installs the hook. Never stages, commits, tags or pushes. |
 | `just sync` | Install exactly what the lockfiles say. Run after pulling. |
 | `just install-hooks` | Install the read-only pre-commit gate. |
+| `just storybook-browsers` | Download the Chromium the story tests render in. Over the network, into a cache outside the repository. |
+| `just storybook-browsers-deps` | The system libraries Chromium links against. Linux only; CI runs it first. |
 
 ## Dependencies
 
@@ -34,6 +36,7 @@ rather than in a shell history.
 | --- | --- |
 | `just dev` | Vite development server with hot module replacement. |
 | `just preview` | Serve the built output in `build/`. Build first. |
+| `just storybook` | The component workshop on port 6006, with hot module replacement. |
 
 ## Format and repair
 
@@ -51,6 +54,8 @@ rather than in a shell history.
 | `just frontend-unit` | Vitest, once. |
 | `just frontend-coverage` | Vitest with the 90% floor enforced. |
 | `just frontend-build` | Production build. Honours `BASE_PATH`. |
+| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git, published nowhere. |
+| `just storybook-test` | Every story in real Chromium: axe over each render, play functions as interaction tests. |
 
 ## Documents and agents
 

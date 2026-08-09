@@ -53,6 +53,14 @@ Svelte compiles text interpolation into update branches that only run on re-rend
 component tested only with fresh renders shows uncovered branches. A test that updates
 props covers them, and is worth having on its own merits.
 
+## `just check` stops because Playwright cannot start Chromium
+
+The story gate renders in a real browser, and the browser is in neither lockfile, so
+`just sync` does not install it — `just sync` installs exactly what the lockfiles say. Run
+`just storybook-browsers` once per machine, and again after the `playwright` pin moves. On
+Linux, run `just storybook-browsers-deps` first. `just initialize` does both for you on a
+fresh clone.
+
 ## Tests fail on `localStorage` or `navigator.clipboard`
 
 They are not available. Node ships its own experimental `localStorage` that shadows the

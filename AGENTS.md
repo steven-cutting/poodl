@@ -62,8 +62,12 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
   focus handling, visible loading and error states.
 - Tests live in `tests/`, never colocated with `src/`. `*.test.ts` for Vitest,
   `*.spec.ts` reserved for Playwright. Component tests query by accessible role
-  and name — never by class or test id. A new component lands with its test in
-  the same change.
+  and name — never by class or test id.
+- Stories live in `stories/` at the repository root, as `*.stories.svelte` in
+  Svelte CSF, one file per component, covering the states its surface names.
+  They are the workshop, not the evidence: `tests/` still carries the assertions
+  and the coverage floor, and a story injects port fakes exactly as a test does.
+  A new component lands with its test and its story in the same change.
 - **Just** is the task runner and the only supported interface to the checks.
   Pre-commit runs through `prek` under `uv`, split in two:
   `.pre-commit-config.yaml` is the read-only gate that gets installed, and
@@ -146,3 +150,6 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
   than the uniformity.
 - Markdown is formatted by `markdownlint-cli2` alone; Prettier ignores it, so
   the two never disagree.
+- Storybook as a local component workshop: stories under `stories/`, each one
+  rendered in Chromium with axe run over it, gated by `just check` and published
+  nowhere. See [decision 0006](docs/decisions/0006-component-workshop.md).

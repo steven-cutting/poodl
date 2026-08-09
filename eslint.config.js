@@ -1,15 +1,23 @@
 import eslint from '@eslint/js';
 import globals from 'globals';
+import storybook from 'eslint-plugin-storybook';
 import svelte from 'eslint-plugin-svelte';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['.svelte-kit/', 'build/', 'coverage/', 'node_modules/']
+    // `eslint .` walks the filesystem and does not read .gitignore, so the
+    // workshop's build output has to be named here as well as there.
+    ignores: ['.svelte-kit/', 'build/', 'coverage/', 'node_modules/', 'storybook-static/']
   },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...svelte.configs.recommended,
+  // Reaches `.storybook/main.ts` and nothing else here: the plugin's globs carry
+  // no `.svelte`, so the stories get their safety from svelte-check and
+  // typescript-eslint instead. Its react-hooks and import-x entries are all
+  // severity 0, which ESLint never resolves, so neither plugin is needed.
+  ...storybook.configs['flat/recommended'],
   {
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },

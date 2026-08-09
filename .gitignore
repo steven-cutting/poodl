@@ -20,3 +20,15 @@ node_modules/
 .svelte-kit/
 build/
 coverage/
+
+# The workshop's static build, and the log a failed `storybook dev` drops beside
+# it. `just check` re-snapshots the worktree after every recipe, so a generated
+# file Git can see aborts the run before the recipe's own exit code is read.
+storybook-static/
+*storybook.log
+
+# Vitest browser mode writes failure screenshots and attachments next to the
+# tests it ran. vitest.storybook.config.ts turns screenshots off; these are the
+# net under it.
+__screenshots__/
+.vitest-attachments/

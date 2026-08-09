@@ -17,8 +17,9 @@ just initialize
 just dev
 ```
 
-`just initialize` creates both lockfiles, installs both toolchains, normalises formatting
-and installs the pre-commit hook. It never stages, commits, tags or pushes.
+`just initialize` creates both lockfiles, installs both toolchains, downloads the browser
+the story gate needs, normalises formatting and installs the pre-commit hook. It never
+stages, commits, tags or pushes.
 
 ## Check your work
 
@@ -38,6 +39,7 @@ src/lib/ports/    Every side effect, each with an in-memory fake
 src/lib/components/  Svelte 5 components, runes only
 src/routes/       Prerendered routes
 tests/            Vitest suites, never colocated
+stories/          Svelte CSF stories, one per component
 docs/             The handbook
 docs/specs/       Allium specifications — the source of truth for behaviour
 ```
