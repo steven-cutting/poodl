@@ -27,6 +27,7 @@ the specifications under `docs/specs/`, and unresolved ones are recorded there a
 | [0004](0004-python-toolchain.md) | A Python toolchain in a frontend repository |
 | [0005](0005-obfuscation-not-security.md) | Answer obfuscation is not security |
 | [0006](0006-component-workshop.md) | A component workshop |
+| [0007](0007-rules-as-a-reducer.md) | The rules are a reducer |
 
 ## Writing a new one
 

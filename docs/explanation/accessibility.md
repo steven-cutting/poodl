@@ -16,8 +16,10 @@ touches a surface.
 
 **Results are never conveyed by colour alone.** Correct, present and absent each carry a
 non-colour indication as well as a colour. In the implementation a tile has a shape
-glyph, and an accessible name that says the mark in words. A key on the on-screen
-keyboard is named the same way. This holds in every theme and in both palettes.
+glyph, and an accessible name that says the mark in words. A key on the on-screen keyboard
+carries the same glyph and the same name — it did not at first, and a sighted colour-blind
+reader with no assistive technology had only the colour to go on. This holds in every theme
+and in both palettes.
 
 **Everything is keyboard operable.** Every operation a surface `provides` can be reached
 and invoked from the keyboard alone, with visible focus. This includes each key of the
@@ -77,6 +79,12 @@ time it ran — the mark colours failed the contrast bar against white text, and
 changed. Each story is checked in the appearance its globals select, so a palette is
 covered when a story pins it rather than automatically. See
 [Decision 0006](../decisions/0006-component-workshop.md).
+
+That last sentence is not a caveat; it is how the second defect survived. The dark-theme
+plain key measured 3.49 to one against its text and no story pinned dark **with a keyboard
+in it**, so the gate was green and the defect was real. The palette is repaired and the
+story that would have caught it now exists — verified by putting the old value back and
+watching axe fail, rather than by reasoning that it would.
 
 Automated checks still do not cover everything, and silence from one is not a pass. Axe
 skips what it cannot attribute — anything behind `aria-hidden`, which includes the tile's

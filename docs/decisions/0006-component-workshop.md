@@ -10,7 +10,7 @@ requires: []
 
 ## Context
 
-The specifications name thirteen surfaces. Three components exist. The other ten have to
+The specifications name thirteen surfaces. Three components existed. The other ten had to
 be built, and each one is an accessibility contract as much as a rendering job: a shape
 for every mark, a name for every control, a keyboard path to every operation, and two
 palettes to satisfy.

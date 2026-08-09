@@ -6,9 +6,10 @@ attempts; play again immediately, however many times you like.
 Poodl is a single-page static site with no backend, no accounts and no telemetry. It runs
 entirely in the browser and is published to GitHub Pages.
 
-**Status: scaffolding.** The tooling, the contracts and a walking skeleton are in place —
-the board, the tiles, the keyboard and the guess scoring behind them are real. The game
-rules are specified and not yet implemented.
+**Status: playable.** Four modes — random, endless, practice, and a custom game somebody
+sets for you with a link — hard mode, statistics that persist, settings for theme, contrast,
+motion and keyboard handling, and results you can share as squares that give nothing away.
+Every rule comes from the specifications in `docs/specs/`.
 
 ## Quick start
 

@@ -34,8 +34,9 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
    communication passes callbacks as props. Enforced by review and by
    `eslint-plugin-svelte`.
 3. **Side effects sit behind a port.** Storage, randomness, the clock, the
-   clipboard and the word lists are reached through `src/lib/ports/`, each with
-   an in-memory fake. Tests inject fakes; they never stub a global.
+   clipboard, the word lists, the device's preferences and the repeating timer
+   are reached through `src/lib/ports/`, each with an in-memory fake. Tests
+   inject fakes; they never stub a global.
 4. **Every dependency is pinned to an exact version.** No `^`, no `~`, in
    `package.json` or `pyproject.toml`. Lockfiles are committed and
    `just lock-check` proves they match.
@@ -144,7 +145,11 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
 - No backend, database, OpenAPI or Python application code; the app sits at the
   repository root rather than under `frontend/`.
 - Ports and fakes adapted from the template's HTTP `Api` boundary to this app's
-  real boundaries: storage, randomness, clock, clipboard and word lists.
+  real boundaries: storage, randomness, clock, clipboard, word lists, the
+  device's preferences and a repeating timer.
+- A fifth layer, `src/lib/app/`, holding every rule the specifications state as
+  one pure reducer plus a single rune shell. See
+  [decision 0007](docs/decisions/0007-rules-as-a-reducer.md).
 - A small Python toolchain (`uv`, `prek`, `ruff`) in an otherwise frontend
   repository, kept because the hook gate and the two validators are worth more
   than the uniformity.
