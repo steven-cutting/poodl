@@ -69,11 +69,23 @@ assertion fails when a name is missing or wrong — the same information a scree
 would use. The `accessibility-review` skill in `.agents/skills/` carries the review
 procedure.
 
-Automated checks do not cover everything. Focus order, announcement timing and whether a
-description is actually useful still need a person and a screen reader.
+Axe runs too, on every story. `stories/` holds each implemented component in the states its
+surface names, and the story run renders each one in real Chromium and runs axe over it.
+That catches a class of defect a role-and-name query cannot see at all: contrast below
+threshold, a landmark used twice, a control with no computed name. It found one the first
+time it ran — the mark colours failed the contrast bar against white text, and the palette
+changed. Each story is checked in the appearance its globals select, so a palette is
+covered when a story pins it rather than automatically. See
+[Decision 0006](../decisions/0006-component-workshop.md).
+
+Automated checks still do not cover everything, and silence from one is not a pass. Axe
+skips what it cannot attribute — anything behind `aria-hidden`, which includes the tile's
+mark glyph, is never checked for contrast at any opacity. Focus order, announcement timing
+and whether a description is actually useful still need a person and a screen reader.
 
 ## Related pages
 
 - [Specifications](specifications.md)
 - [Testing](../reference/testing.md)
+- [Work in the component workshop](../how-to/work-in-the-component-workshop.md)
 - [Work with the specifications](../how-to/work-with-the-specs.md)

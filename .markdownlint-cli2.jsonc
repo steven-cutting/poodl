@@ -13,5 +13,13 @@
     "MD041": false
   },
   "globs": ["**/*.md"],
-  "ignores": ["node_modules", ".svelte-kit", "build", "coverage", "ai_tmp", ".venv"]
+  "ignores": [
+    "node_modules",
+    ".svelte-kit",
+    "build",
+    "coverage",
+    "storybook-static",
+    "ai_tmp",
+    ".venv"
+  ]
 }

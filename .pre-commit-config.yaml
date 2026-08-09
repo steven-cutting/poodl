@@ -8,6 +8,7 @@ exclude: >-
     coverage/|
     node_modules/|
     src/lib/data/|
+    storybook-static/|
     uv\.lock$|
     package-lock\.json$
   )
@@ -38,7 +39,7 @@ repos:
         entry: npm run lint
         language: system
         pass_filenames: false
-        files: ^(src/|tests/|package\.json$|package-lock\.json$|eslint\.config\.js$|tsconfig\.json$|vite\.config\.ts$|svelte\.config\.js$|\.prettierrc\.json$|\.prettierignore$)
+        files: ^(src/|stories/|tests/|\.storybook/|package\.json$|package-lock\.json$|eslint\.config\.js$|tsconfig\.json$|vite\.config\.ts$|vitest\.storybook\.config\.ts$|svelte\.config\.js$|scripts/check_playwright_browsers\.js$|\.prettierrc\.json$|\.prettierignore$)
 
       - id: validate-docs
         name: Documentation contract
@@ -84,13 +85,31 @@ repos:
   - repo: https://github.com/lycheeverse/lychee
     rev: 2bba271688c1abb1503097a064e6c3bc1d1b6a9b # lychee-v0.24.2
     hooks:
+      # LYCHEE_VERSION must lead the arguments, and must match the rev comment
+      # above. Left to itself the hook derives the version by running
+      # `git describe` inside its own cached checkout — but Git exports GIT_DIR
+      # to every hook it runs, so during a real commit that describe resolves
+      # against this repository instead, finds no `lychee-v*` tag, and exits
+      # 100. It only reproduces on the commit path, which is why `just lint`
+      # and `just check-docs` never saw it. Passing the version is the escape
+      # hatch the hook script itself offers, and it keeps the rev a SHA.
       - id: lychee
-        args: [--offline, --cache, --config, lychee.toml, --no-progress, --root-dir, .]
+        args:
+          [
+            LYCHEE_VERSION=0.24.2,
+            --offline,
+            --cache,
+            --config,
+            lychee.toml,
+            --no-progress,
+            --root-dir,
+            .
+          ]
         types: [markdown]
       - id: lychee
         alias: lychee-online
         name: Lychee online (manual)
-        args: [--cache, --config, lychee.toml, --no-progress, --root-dir, .]
+        args: [LYCHEE_VERSION=0.24.2, --cache, --config, lychee.toml, --no-progress, --root-dir, .]
         types: [markdown]
         stages: [manual]
 

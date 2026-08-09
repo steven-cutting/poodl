@@ -18,9 +18,16 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 3 | `frontend-static` | ESLint, Prettier and `svelte-check --fail-on-warnings` are clean. |
 | 4 | `frontend-coverage` | Every test passes and coverage is at or above the floor. |
 | 5 | `frontend-build` | The site actually builds, with every route prerenderable. |
-| 6 | `check-docs` | The documentation contract holds. |
-| 7 | `check-agents` | The agent contract holds. |
-| 8 | `check-clean` | The run changed nothing. |
+| 6 | `storybook-build` | The workshop builds, documentation pages included. |
+| 7 | `storybook-test` | Every story renders in Chromium, passes axe, and its play function completes. |
+| 8 | `check-docs` | The documentation contract holds. |
+| 9 | `check-agents` | The agent contract holds. |
+| 10 | `check-clean` | The run changed nothing. |
+
+Storybook writes a cache and a static build, and Vitest's browser mode can write failure
+screenshots. All of them are ignored by Git, because a gate that changes one byte of the
+worktree fails before its own exit code is read. Gate 7 needs a browser that no lockfile
+accounts for; see [Work in the component workshop](../how-to/work-in-the-component-workshop.md).
 
 ## What the hook gate contains
 
@@ -31,7 +38,7 @@ configuration, and it is the one installed as the pre-commit hook.
 | --- | --- |
 | `ruff-check`, `ruff-format-check` | The four Python scripts under `scripts/`. |
 | `editorconfig-checker` | Whitespace, line endings, final newlines. |
-| `eslint` | ESLint and `prettier --check` across the application. |
+| `eslint` | ESLint and `prettier --check` across the application, the stories, and the workshop configuration. |
 | `validate-docs`, `validate-agents` | The two contracts, so a hook catches them before the aggregate does. |
 | `markdownlint-cli2` | Markdown structure. Prettier does not touch Markdown, so they cannot disagree. |
 | `typos` | Spelling, excluding the lockfiles and the word lists. |
@@ -51,10 +58,12 @@ installed as a hook and runs only from `just fix`.
 
 ## In continuous integration
 
-`.github/workflows/ci.yml` runs the same recipes in two jobs. `frontend` runs the install,
-the lockfile dry run, `frontend-static`, `frontend-coverage` and `frontend-build`;
-`documents` runs `sync`, `lint`, `check-docs` and `check-agents`. Nothing in CI runs a
-command that does not exist in the `Justfile`.
+`.github/workflows/ci.yml` runs the same recipes in three jobs. `frontend` runs the
+install, the lockfile dry run, `frontend-static`, `frontend-coverage` and `frontend-build`;
+`documents` runs `sync`, `lint`, `check-docs` and `check-agents`; `stories` restores the
+Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
+Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build is
+proved and then discarded: it is uploaded nowhere and published nowhere.
 
 ## Related pages
 

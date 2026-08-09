@@ -28,6 +28,7 @@ how the two relate.
 
 - [Develop locally](how-to/develop-locally.md)
 - [Test and debug](how-to/test-and-debug.md)
+- [Work in the component workshop](how-to/work-in-the-component-workshop.md)
 - [Work with the specifications](how-to/work-with-the-specs.md)
 - [Replace the word lists](how-to/replace-the-word-lists.md)
 - [Maintain dependencies](how-to/maintain-dependencies.md)

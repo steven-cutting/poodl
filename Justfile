@@ -1,6 +1,10 @@
 set positional-arguments := true
 set shell := ["sh", "-eu", "-c"]
 
+# Storybook phones home unless told not to, and `just check` runs it. The core
+# preset in .storybook/main.ts is the primary lever; this is the belt.
+export STORYBOOK_DISABLE_TELEMETRY := "1"
+
 default:
     @just --list
 
@@ -32,6 +36,18 @@ install-hooks:
     test -f uv.lock || { printf '%s\n' 'uv.lock is missing; run just initialize first' >&2; exit 2; }
     uv run --frozen prek install --overwrite --hook-type=pre-commit
 
+# The Chromium build the story tests render in. Downloads over the network into
+# a per-user cache outside the repository, so the worktree never sees it.
+# `just initialize` runs this; `just sync` deliberately does not, because sync
+# installs exactly what the lockfiles say and no lockfile names a browser.
+storybook-browsers:
+    npm run storybook:browsers
+
+# Linux only: an apt front end for the libraries Chromium links against. CI runs
+# it; macOS has nothing to add.
+storybook-browsers-deps:
+    npm run storybook:browsers:deps
+
 # ---------------------------------------------------------------- develop ---
 
 dev:
@@ -41,6 +57,11 @@ dev:
 # same output the Pages workflow would publish by building with it set.
 preview:
     npm run preview
+
+# The component workshop on port 6006. Local only: it is served and built, and
+# never published.
+storybook:
+    npm run storybook
 
 # ----------------------------------------------------------------- format ---
 
@@ -72,6 +93,18 @@ frontend-coverage:
 
 frontend-build:
     npm run build
+
+# Builds the workshop, autodocs included, into the gitignored storybook-static/.
+# This is the only gate that renders the documentation pages.
+storybook-build:
+    npm run storybook:build
+
+# Every story in real Chromium: axe over each render, play functions executed as
+# interaction tests. It checks for the browser first, so a missing download
+# reports itself as a missing download rather than as a failing story. Never
+# measured for coverage — the floor over src/lib/** stays a claim about tests/.
+storybook-test:
+    npm run storybook:test
 
 # --------------------------------------------------------------- documents ---
 

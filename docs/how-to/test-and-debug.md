@@ -14,6 +14,7 @@ requires: []
 just frontend-unit        # Vitest, once
 just frontend-coverage    # Vitest with the coverage floor enforced
 just frontend-static      # ESLint, Prettier check, svelte-check
+just storybook-test       # every story in Chromium, with axe over each
 ```
 
 To iterate on one file, call Vitest directly:
@@ -67,4 +68,5 @@ browser.
 
 - [Testing](../reference/testing.md)
 - [Quality gates](../reference/quality-gates.md)
+- [Work in the component workshop](work-in-the-component-workshop.md)
 - [Troubleshooting](../operations/troubleshooting.md)

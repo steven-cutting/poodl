@@ -19,7 +19,15 @@
   --mark-correct: #538d4e;
   --mark-present: #b59f3b;
   --mark-absent: #787c7e;
-  --mark-text: #ffffff;
+  /*
+   * Black, not white. Against these three hues white measures 3.97, 2.63 and
+   * 4.22 to one, and the keys that carry them are 16px at weight 600 — below
+   * the bold threshold, so they answer to the 4.5 bar and all three fail it.
+   * Black measures 5.29, 7.99 and 4.98 and changes no hue, so the emoji grid
+   * `sharing.allium` specifies still matches what the player sees. See
+   * `docs/decisions/0006-component-workshop.md`.
+   */
+  --mark-text: #000000;
 
   --tile-background: transparent;
   --tile-border: #d3d6da;
@@ -44,7 +52,19 @@
   }
 }
 
+/*
+ * `color-scheme` is set once on bare `:root` and never overridden, so an
+ * explicit choice would flip the custom properties while the user agent kept
+ * painting scrollbars, form controls and system colours the other way. These
+ * two declarations make the choice reach the platform as well as the palette.
+ */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
 :root[data-theme='dark'] {
+  color-scheme: dark;
+
   --background: #121213;
   --text: #f5f5f5;
   --muted: #a0a4a8;
@@ -56,10 +76,10 @@
   --key-text: #f5f5f5;
 }
 
+/* `--mark-text` is already black everywhere, so this pair is the whole swap. */
 :root[data-high-contrast='true'] {
   --mark-correct: #f5793a;
   --mark-present: #85c0f9;
-  --mark-text: #000000;
 }
 
 * {

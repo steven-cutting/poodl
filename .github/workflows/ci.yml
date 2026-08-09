@@ -68,3 +68,41 @@ jobs:
       - run: just lint
       - run: just check-docs
       - run: just check-agents
+
+  # The two story gates need a browser, which no lockfile accounts for, so they
+  # get their own job rather than lengthening `frontend` with a download.
+  stories:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.11.18
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv python install 3.14
+      - run: uv tool install rust-just==1.51.0
+      - run: npm install --global npm@11.17.0
+      # Restored before the install, so a future Playwright that grows an npm
+      # install script cannot download ahead of the cache.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+      - run: just sync
+      # The cache restores the browser binaries but not the apt packages they
+      # link against, so the dependency step runs unconditionally.
+      - run: just storybook-browsers-deps
+      - run: just storybook-browsers
+      - run: just storybook-build
+      - run: just storybook-test

@@ -28,10 +28,12 @@ there is no backend to be a sibling of.
 │   │   └── ports/       Every side effect, each with an in-memory fake
 │   └── routes/          SvelteKit routes, prerendered
 ├── tests/               Vitest suites, never colocated with src/
+├── stories/             Svelte CSF stories, one file per component
 ├── static/              Copied verbatim into the build
-├── scripts/             The four repository checkers
+├── scripts/             The repository checkers, and the browser preflight
 ├── docs/                This handbook, plus specs/
-└── .agents/skills/      Canonical agent procedures
+├── .agents/skills/      Canonical agent procedures
+└── .storybook/          The component workshop, served and built locally
 ```
 
 ## What each part is responsible for
@@ -44,8 +46,10 @@ there is no backend to be a sibling of.
 | `src/routes/` | Assembling components into pages. Prerendered, so nothing here may assume a request. |
 | `src/lib/data/` | Replaceable data, not code. Excluded from spell-checking, and from Prettier. |
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
-| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, and `initialize.sh`. |
+| `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
+| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, and `initialize.sh`. |
 | `docs/specs/` | The Allium specifications. Behaviour is decided here, not in code. |
+| `.storybook/` | The workshop's configuration. Local: it is served and built, and never published. |
 
 Which of these may import which is not a matter of taste; see
 [Layering and dependency direction](../explanation/layering.md).
