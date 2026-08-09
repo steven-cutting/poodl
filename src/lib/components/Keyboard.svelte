@@ -23,6 +23,16 @@
     absent: 'not in the word'
   };
 
+  // The same three shapes a tile carries. AGENTS.md invariant 6 asks for a
+  // non-colour indication on every key state as well as every letter result,
+  // and the accessible name alone leaves a sighted colour-blind reader with no
+  // assistive technology holding only the colour.
+  const GLYPH: Record<LetterMark, string> = {
+    correct: '\u25a0',
+    present: '\u25b2',
+    absent: '\u00d7'
+  };
+
   const status = $derived(new Map(knowledge.map((entry) => [entry.letter, entry.status])));
 
   function labelFor(letter: string): string {
@@ -46,6 +56,9 @@
           onclick={() => onletter?.(letter)}
         >
           {letter.toUpperCase()}
+          {#if status.get(letter) != null}
+            <span class="glyph" aria-hidden="true">{GLYPH[status.get(letter) as LetterMark]}</span>
+          {/if}
         </button>
       {/each}
       {#if index === ROWS.length - 1}
@@ -69,6 +82,7 @@
   }
 
   button {
+    position: relative;
     min-inline-size: 2rem;
     padding: 0.75rem 0.5rem;
     border: 1px solid var(--key-border);
@@ -92,6 +106,23 @@
 
   .wide {
     min-inline-size: 4rem;
+  }
+
+  /*
+   * Fully opaque, for the reason the tile's glyph is: this is what discharges
+   * "colour never carries meaning alone", so it has to be legible to the
+   * readers it exists for. Axe cannot see it — the span is aria-hidden, so the
+   * contrast rule never inspects it at any opacity — and black on each of the
+   * three mark colours is already measured at 5.29, 7.99 and 4.98 to one. See
+   * `docs/decisions/0006-component-workshop.md`.
+   */
+  .glyph {
+    position: absolute;
+    inset-block-start: 1px;
+    inset-inline-end: 2px;
+    font-size: 0.5rem;
+    line-height: 1;
+    opacity: 1;
   }
 
   /* Keys repeat the board's palette, and the mark is in the accessible name

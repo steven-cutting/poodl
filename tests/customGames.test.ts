@@ -75,6 +75,26 @@ describe('making a custom game', () => {
     }
   });
 
+  /*
+   * FullyKeyboardOperable on CustomGameCreation and on ShareCurrentAnswer:
+   * "copying the resulting link can be done from the keyboard alone". The link
+   * is put on the clipboard the same way a grid is, and reports the same way.
+   */
+  it('copies the link it just made', () => {
+    const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const { effects } = reduce(ready, { kind: 'copy_link' }, env);
+
+    expect(effects).toEqual([{ kind: 'copy', text: linkFrom(ready) }]);
+  });
+
+  it('has no link to copy when none was made', () => {
+    const state = fresh();
+    const { effects, state: after } = reduce(state, { kind: 'copy_link' }, env);
+
+    expect(effects).toEqual([]);
+    expect(after).toBe(state);
+  });
+
   // NothingAboutTheLinkIsKept: no game, no history, nothing durable.
   it('records nothing but the notice itself', () => {
     const before = fresh();

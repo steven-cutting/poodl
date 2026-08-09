@@ -89,6 +89,8 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
       return still(newGameRequested(dismiss(state), 'random', env));
     case 'share_results':
       return playerSharesResults(state);
+    case 'copy_link':
+      return copyLink(state);
     case 'clipboard_settled':
       return still(notify(state, { kind: command.copied ? 'results_copied' : 'copy_failed' }));
     case 'dismiss_notice':
@@ -525,6 +527,21 @@ function playerSharesResults(state: AppState): Outcome {
   );
 
   return { state, effects: [{ kind: 'copy', text }] };
+}
+
+/**
+ * Putting the link Poodl has just made on the clipboard.
+ *
+ * `CustomLinkReady` hands the player a link, and `FullyKeyboardOperable` on both
+ * `CustomGameCreation` and `ShareCurrentAnswer` requires copying it to be doable
+ * from the keyboard alone. It travels the same path a shared grid does, so the
+ * outcome is reported the same way.
+ */
+function copyLink(state: AppState): Outcome {
+  if (state.notice?.kind !== 'custom_link_ready') {
+    return still(state);
+  }
+  return { state, effects: [{ kind: 'copy', text: state.notice.url }] };
 }
 
 // ---------------------------------------------------------------- helpers ---

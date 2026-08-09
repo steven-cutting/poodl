@@ -41,6 +41,7 @@ export type Command =
   | { kind: 'open_custom_link'; token: string }
   | { kind: 'accept_random_fallback' }
   | { kind: 'share_results' }
+  | { kind: 'copy_link' }
   | { kind: 'clipboard_settled'; copied: boolean }
   // Dismissing whatever Poodl is currently saying
   | { kind: 'dismiss_notice' };
