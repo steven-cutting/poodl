@@ -103,11 +103,21 @@
     onreset.mockClear();
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole('button', { name: /reset/i }));
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: /reset/i })).toHaveFocus();
 
-    const clear = canvas.getByRole('button', { name: /clear everything/i });
+    await userEvent.keyboard('{Enter}');
 
-    clear.focus();
+    /*
+     * Placing focus by hand here would be doing the one thing the player
+     * cannot: the button they pressed is gone, so unless the panel carries
+     * focus across the swap it is on the body, outside the dialog.
+     */
+    await expect(canvas.getByRole('group', { name: /reset/i })).toHaveFocus();
+
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: /clear everything/i })).toHaveFocus();
+
     await userEvent.keyboard('{Enter}');
 
     await expect(onreset).toHaveBeenCalledTimes(1);

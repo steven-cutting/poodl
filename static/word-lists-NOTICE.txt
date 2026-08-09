@@ -1,6 +1,7 @@
-Poodl's word lists are derived from two collections by Kevin Atkinson.
-See docs/how-to/replace-the-word-lists.md for their provenance and for
-the obligations any replacement has to satisfy.
+Poodl's word lists are derived from two collections: SCOWL, by Kevin
+Atkinson, and 12dicts, by Alan Beale. See
+docs/how-to/replace-the-word-lists.md for their provenance and for the
+obligations any replacement has to satisfy.
 
 
 SCOWL (Spell Checker Oriented Word Lists) 2020.12.07

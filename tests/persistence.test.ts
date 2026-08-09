@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { STORAGE_KEY, loadState, saveState } from '../src/lib/app/persistence';
+import { MAX_ATTEMPTS } from '../src/lib/config';
 import { createInitialState } from '../src/lib/app/state';
 import type { AppState } from '../src/lib/app/state';
 import { createFakeStorage, createWebStorage } from '../src/lib/ports/storage';
@@ -214,6 +215,47 @@ describe('loading from a device that has nothing usable', () => {
     expect(withGame({ guesses: Array.from({ length: 7 }, () => ({})) }).currentGame).toBeNull();
   });
 
+  /*
+   * `Game` says more than its field types do, and a record that satisfies the
+   * types while breaking the invariants is not a game this code can play. An
+   * in-progress game holding every attempt is the sharp one: `AcceptGuess` tests
+   * the count for equality, so it is never lost and goes on spending attempts on
+   * a board that stopped drawing rows.
+   */
+  it('refuses a game the specifications say cannot exist', () => {
+    const storage = createFakeStorage();
+    saveState(storage, lived());
+    const stored = JSON.parse(storage.read(STORAGE_KEY) as string) as {
+      game: Record<string, unknown>;
+    };
+    const played = (stored.game['guesses'] as Record<string, unknown>[])[0];
+
+    const withGame = (patch: Record<string, unknown>): AppState =>
+      loadState(
+        createFakeStorage({
+          [STORAGE_KEY]: JSON.stringify({ ...stored, game: { ...stored.game, ...patch } })
+        })
+      );
+
+    // Poodl never writes one: every retirement path removes the game instead.
+    expect(withGame({ status: 'abandoned' }).currentGame).toBeNull();
+    // NeverMoreThanTheAttemptLimit, with nothing left to play.
+    expect(
+      withGame({
+        guesses: Array.from({ length: MAX_ATTEMPTS }, (_unused, index) => ({
+          ...played,
+          position: index + 1
+        }))
+      }).currentGame
+    ).toBeNull();
+    // LostGamesUsedEveryAttempt.
+    expect(withGame({ status: 'lost', completedAt: 1 }).currentGame).toBeNull();
+    // WonGamesHoldAWinningGuess.
+    expect(withGame({ status: 'won', completedAt: 1 }).currentGame).toBeNull();
+    // completed_at is set exactly when the game is over, and not otherwise.
+    expect(withGame({ status: 'in_progress', completedAt: 1 }).currentGame).toBeNull();
+  });
+
   it('refuses a game whose guesses do not describe a game', () => {
     const storage = createFakeStorage();
     saveState(storage, lived());
@@ -221,12 +263,31 @@ describe('loading from a device that has nothing usable', () => {
     const stored = JSON.parse(storage.read(STORAGE_KEY) as string) as {
       game: Record<string, unknown>;
     };
-    const broken = JSON.stringify({
-      ...stored,
-      game: { ...stored.game, guesses: [{ position: 'first' }] }
-    });
+    const guess = (stored.game['guesses'] as Record<string, unknown>[])[0] as Record<
+      string,
+      unknown
+    >;
+    const results = guess['results'] as Record<string, unknown>[];
 
-    expect(loadState(createFakeStorage({ [STORAGE_KEY]: broken })).currentGame).toBeNull();
+    const withGuesses = (guesses: unknown): AppState =>
+      loadState(
+        createFakeStorage({
+          [STORAGE_KEY]: JSON.stringify({ ...stored, game: { ...stored.game, guesses } })
+        })
+      );
+
+    expect(withGuesses([{ position: 'first' }]).currentGame).toBeNull();
+    // PositionIsAnAttemptNumber: a guess is read against the place it sits in.
+    expect(withGuesses([{ ...guess, position: 99 }]).currentGame).toBeNull();
+    /*
+     * OneResultPerPositionInOrder. Left unchecked, `satisfies_hard_mode`
+     * compares a candidate against a letter the word never had, and refuses
+     * every guess the player can type.
+     */
+    expect(
+      withGuesses([{ ...guess, results: [{ ...results[0], letter: 'zzzz' }, ...results.slice(1)] }])
+        .currentGame
+    ).toBeNull();
   });
 });
 

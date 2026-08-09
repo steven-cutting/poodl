@@ -93,6 +93,31 @@ describe('WelcomeScreen', () => {
     expect(screen.queryByRole('button', { name: /continue/i })).not.toBeInTheDocument();
   });
 
+  /*
+   * ContinuingNeverCostsAGame retires the board "on exactly the terms
+   * GameNavigation states", and those terms are stated where the player acts on
+   * them "so the cost of switching mode mid-game is never a surprise". Choosing
+   * a mode here is acting on them.
+   */
+  it('says what choosing a mode costs the game on the board', () => {
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress'
+    });
+
+    expect(screen.getByText(/counts as a loss/i)).toBeInTheDocument();
+  });
+
+  it('says nothing about a cost when there is no game to lose', () => {
+    render(WelcomeScreen, base);
+
+    expect(screen.queryByText(/counts as a loss/i)).not.toBeInTheDocument();
+  });
+
   // "Continue names the mode it would resume or start, so it never acts on a
   // mode the player cannot see."
   it('names the game it would resume', async () => {
@@ -279,6 +304,32 @@ describe('GameConclusion', () => {
   });
 
   /*
+   * Stopping removes the control that stopped it, and a removed element leaves
+   * focus on the body — outside the panel Modal listens on, so Escape stops
+   * closing and Tab walks the page behind an aria-modal dialog. The keyboard
+   * has to be carried across the swap.
+   */
+  it('keeps the keyboard inside itself when the countdown stops', async () => {
+    const onclose = vi.fn();
+    const { rerender } = render(GameConclusion, {
+      ...base,
+      mode: 'endless' as const,
+      secondsRemaining: 7,
+      onclose
+    });
+    const dialog = screen.getByRole('dialog', { name: /won/i });
+
+    await userEvent.click(screen.getByRole('button', { name: /stop/i }));
+    await rerender({ secondsRemaining: null });
+
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(onclose).toHaveBeenCalledTimes(1);
+  });
+
+  /*
    * Both sharing actions are here, so what they produce has to be here too. The
    * modal traps the keyboard — a link rendered on the board behind it would be
    * unreachable, and during an endless countdown unreachable twice over.
@@ -409,6 +460,39 @@ describe('PhysicalKeyboard', () => {
     expect(handlers.onsubmit).not.toHaveBeenCalled();
     button.remove();
   });
+
+  /*
+   * Only Enter belongs to the control, because only Enter activates it.
+   * `FullyKeyboardOperable` invites the player to tab to the on-screen keyboard
+   * and press a key there, and the letters they type next are still the board's
+   * — `PhysicalKeyboardInput` grants them on the input length alone.
+   */
+  it('still hears letters and Backspace while a control has focus', async () => {
+    render(PhysicalKeyboard, handlers);
+    const button = document.createElement('button');
+    document.body.append(button);
+    button.focus();
+
+    await userEvent.keyboard('a{Backspace}');
+
+    expect(handlers.onletter).toHaveBeenCalledWith('a');
+    expect(handlers.ondelete).toHaveBeenCalledTimes(1);
+    button.remove();
+  });
+
+  it('leaves every key to somewhere the player is typing', async () => {
+    render(PhysicalKeyboard, handlers);
+    const field = document.createElement('input');
+    document.body.append(field);
+    field.focus();
+
+    await userEvent.keyboard('a{Backspace}{Enter}');
+
+    expect(handlers.onletter).not.toHaveBeenCalled();
+    expect(handlers.ondelete).not.toHaveBeenCalled();
+    expect(handlers.onsubmit).not.toHaveBeenCalled();
+    field.remove();
+  });
 });
 
 /*
@@ -499,8 +583,8 @@ describe('GameScreen', () => {
     );
 
     // Two live regions, and deliberately so: the notice is visible text that
-    // announces by being rendered, and the announcer is hidden text that says
-    // what the board already shows.
+    // is its own announcement, and the announcer is hidden text that says what
+    // the board already shows.
     const spoken = screen.getAllByRole('status').map((region) => region.textContent);
 
     expect(spoken.some((text) => text.includes('Not enough letters'))).toBe(true);

@@ -7,8 +7,13 @@
    *
    * `EveryRejectionIsAnnounced` asks for a rejection to be perceivable "both
    * visually and to assistive technology", so this is visible text with
-   * `role="status"` — announced by being rendered, rather than duplicated into
-   * the live region and heard twice.
+   * `role="status"` — the sentence itself is the announcement, rather than
+   * being duplicated into `Announcer` and heard twice.
+   *
+   * The region is mounted whether or not there is anything to say, and only its
+   * contents come and go. A live region is heard when the text inside it
+   * changes; one that arrives already carrying its text has not changed, and is
+   * not reliably announced at all. Empty it is a paragraph with nothing in it.
    *
    * Neither the custom link nor the shared grid is one of these. They are things
    * to copy rather than sentences to read, so `LinkReady` and `ResultsReady`
@@ -39,9 +44,14 @@
   });
 </script>
 
-{#if message !== null}
-  {#key sequence}
-    <p class="notice" role="status">
+<p class="notice" class:silent={message === null} role="status">
+  {#if message !== null}
+    <!--
+      Keyed so a repeat is heard. The same sentence twice would leave the text
+      unchanged, and a live region reacts to nothing else; replacing the nodes
+      is what makes the second one announce as well as the first.
+    -->
+    {#key sequence}
       <span>{message}</span>
       {#if ondismiss !== undefined}
         <button
@@ -51,9 +61,9 @@
           }}>Dismiss</button
         >
       {/if}
-    </p>
-  {/key}
-{/if}
+    {/key}
+  {/if}
+</p>
 
 <style>
   .notice {
@@ -67,6 +77,13 @@
     border: 1px solid var(--tile-border);
     border-radius: 4px;
     text-align: center;
+  }
+
+  /* Present for the sake of being heard, and taking up nothing while silent. */
+  .silent {
+    margin: 0;
+    padding: 0;
+    border: 0;
   }
 
   button {

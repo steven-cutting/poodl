@@ -6,7 +6,7 @@ import type { AnswerPool } from '$lib/domain/answerPool';
 import { EMPTY_STATISTICS } from '$lib/domain/statistics';
 import type { Statistics } from '$lib/domain/statistics';
 import type { Guess, LetterMark, StartableMode } from '$lib/domain/types';
-import { isWordText } from '$lib/domain/words';
+import { isWordText, letterAt } from '$lib/domain/words';
 import type { StoragePort } from '$lib/ports/storage';
 
 /**
@@ -183,6 +183,19 @@ function readPool(value: unknown): AnswerPool {
   return { used: value['used'] as string[], hasRecycled: value['hasRecycled'] };
 }
 
+/**
+ * A stored game, or null unless it is one `game.allium` says can exist.
+ *
+ * The shape is only half of it. `Game` carries invariants relating its status
+ * to its history, and a record that satisfies the types while breaking them is
+ * not a game this code can play: an in-progress game holding every attempt is
+ * never lost, because `AcceptGuess` tests the count for equality, and it goes
+ * on spending attempts on a board that stopped drawing rows.
+ *
+ * `abandoned` is absent from the statuses deliberately. Every retirement path
+ * removes the game it retires, so Poodl never writes one, and
+ * `OnlyTheCurrentGameIsKept` is why it never could.
+ */
 function readGame(value: unknown): GameState | null {
   if (value === null || !isRecord(value)) {
     return null;
@@ -190,11 +203,12 @@ function readGame(value: unknown): GameState | null {
 
   const guesses = readGuesses(value['guesses']);
   const input: unknown = value['currentInput'];
+  const status: unknown = value['status'];
 
   if (
     guesses === null ||
     !isOneOf(value['mode'], ['random', 'endless', 'practice', 'custom'] as const) ||
-    !isOneOf(value['status'], ['in_progress', 'won', 'lost', 'abandoned'] as const) ||
+    !isOneOf(status, ['in_progress', 'won', 'lost'] as const) ||
     typeof value['answer'] !== 'string' ||
     !isWordText(value['answer']) ||
     typeof input !== 'string' ||
@@ -202,7 +216,16 @@ function readGame(value: unknown): GameState | null {
     typeof value['hardModeAtStart'] !== 'boolean' ||
     typeof value['hardModeReleased'] !== 'boolean' ||
     !isCount(value['startedAt']) ||
-    !(value['completedAt'] === null || isCount(value['completedAt']))
+    !(value['completedAt'] === null || isCount(value['completedAt'])) ||
+    // `Game.completed_at: Timestamp when status = won | lost | abandoned`.
+    (value['completedAt'] === null) !== (status === 'in_progress') ||
+    // `NeverMoreThanTheAttemptLimit`, and a game with attempts left to play.
+    (status === 'in_progress' && guesses.length >= MAX_ATTEMPTS) ||
+    // `LostGamesUsedEveryAttempt`.
+    (status === 'lost' && guesses.length !== MAX_ATTEMPTS) ||
+    // `WonGamesHoldAWinningGuess` — any of them, not only the last.
+    (status === 'won' &&
+      !guesses.some((guess) => guess.results.every((result) => result.mark === 'correct')))
   ) {
     return null;
   }
@@ -210,7 +233,7 @@ function readGame(value: unknown): GameState | null {
   return {
     mode: value['mode'],
     answer: value['answer'],
-    status: value['status'],
+    status,
     hardModeAtStart: value['hardModeAtStart'],
     hardModeReleased: value['hardModeReleased'],
     currentInput: input,
@@ -221,44 +244,55 @@ function readGame(value: unknown): GameState | null {
   };
 }
 
-/** Null rather than an empty list: a game whose history is unreadable is not that game. */
+/**
+ * Null rather than an empty list: a game whose history is unreadable is not
+ * that game.
+ *
+ * Each guess is read against the place it sits in, which is what
+ * `PositionIsAnAttemptNumber` and `GuessPositionsAreDistinct` amount to
+ * together, and what `acceptGuess` writes in the first place.
+ */
 function readGuesses(value: unknown): Guess[] | null {
   if (!Array.isArray(value) || value.length > MAX_ATTEMPTS) {
     return null;
   }
 
-  const guesses = value.map((entry) => readGuess(entry));
+  const guesses = value.map((entry, index) => readGuess(entry, index + 1));
 
   return guesses.every((guess) => guess !== null) ? guesses : null;
 }
 
-function readGuess(value: unknown): Guess | null {
-  if (!isRecord(value) || !isCount(value['position']) || typeof value['word'] !== 'string') {
+function readGuess(value: unknown, position: number): Guess | null {
+  if (!isRecord(value) || value['position'] !== position || typeof value['word'] !== 'string') {
     return null;
   }
 
+  const word = value['word'];
   const results: unknown = value['results'];
 
-  if (!Array.isArray(results) || results.length !== WORD_LENGTH) {
+  if (!isWordText(word) || !Array.isArray(results) || results.length !== WORD_LENGTH) {
     return null;
   }
 
+  /*
+   * `OneResultPerPositionInOrder` says each result's letter is the guess's
+   * letter at that position. Checking it is what makes the cast below honest,
+   * and it is not pedantry: `satisfies_hard_mode` compares a candidate's letter
+   * against a stored one, so a result carrying a letter the word does not have
+   * refuses every guess the player can type.
+   */
   const marks: LetterMark[] = ['correct', 'present', 'absent'];
   const readable = results.every(
     (result, index) =>
       isRecord(result) &&
       result['position'] === index + 1 &&
-      typeof result['letter'] === 'string' &&
+      result['letter'] === letterAt(word, index + 1) &&
       isOneOf(result['mark'], marks)
   );
 
-  if (!readable || !isWordText(value['word'])) {
+  if (!readable) {
     return null;
   }
 
-  return {
-    position: value['position'],
-    word: value['word'],
-    results: results as Guess['results']
-  };
+  return { position, word, results: results as Guess['results'] };
 }

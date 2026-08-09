@@ -73,15 +73,41 @@
    * stopping first is what makes closing available.
    */
   const mayClose = $derived(secondsRemaining === null);
+
+  let outcome: HTMLElement | undefined = $state();
+  let wasCountingDown = false;
+
+  /*
+   * Stopping the countdown removes the control that stopped it, and a removed
+   * element leaves focus on the body — outside the panel `Modal` listens on, so
+   * Escape stops closing and Tab walks the page behind. Nothing replaces the
+   * countdown, so focus goes to the outcome, which reads the answer and the
+   * count again on arrival: useful, and nothing a stray Enter can act on.
+   *
+   * Written as a transition rather than as `mayClose`, which starts true in
+   * every other mode and would take focus off the panel the moment the dialog
+   * opened.
+   */
+  $effect(() => {
+    const running = secondsRemaining !== null;
+
+    if (wasCountingDown && !running) {
+      outcome?.focus();
+    }
+    wasCountingDown = running;
+  });
 </script>
 
 <Modal {title} onclose={mayClose ? onclose : undefined}>
-  <p class="answer">The word was <strong>{answer.toUpperCase()}</strong>.</p>
-  <p class="attempts">
-    {attemptsUsed} of {MAX_ATTEMPTS} attempts used{mode === 'custom'
-      ? ', on a word from a link'
-      : ''}.
-  </p>
+  <!-- Focusable, but out of the tab order: `Modal`'s cycle skips it. -->
+  <div class="outcome" tabindex="-1" bind:this={outcome}>
+    <p class="answer">The word was <strong>{answer.toUpperCase()}</strong>.</p>
+    <p class="attempts">
+      {attemptsUsed} of {MAX_ATTEMPTS} attempts used{mode === 'custom'
+        ? ', on a word from a link'
+        : ''}.
+    </p>
+  </div>
 
   {#if secondsRemaining !== null}
     <Countdown seconds={secondsRemaining} {onstop} />
@@ -119,6 +145,10 @@
 </Modal>
 
 <style>
+  .outcome {
+    margin: 0;
+  }
+
   .answer,
   .attempts {
     margin-block: 0 0.5rem;

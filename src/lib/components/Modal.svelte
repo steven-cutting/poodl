@@ -9,6 +9,15 @@
    * true once: the dialog takes focus when it opens, Escape closes it, and Tab
    * cycles inside rather than wandering out to the board behind.
    *
+   * All three depend on focus staying inside the panel, because the handler is
+   * on the panel. A child that removes the control the player just used — the
+   * countdown's stop button, the statistics confirmation — leaves focus on the
+   * body, and from there Escape reaches nothing and Tab walks the page the
+   * dialog has declared hidden. There is no catching that from here: removing a
+   * focused element fires no `focusout` for a handler to answer. So each such
+   * child carries focus across its own swap, and `GameConclusion` and
+   * `StatisticsPanel` both do.
+   *
    * Not a native `<dialog>`. jsdom implements neither `showModal` nor `close`,
    * so a component built on it could not be tested where the rest of the suite
    * runs — and an untestable accessible shell is the wrong trade when the

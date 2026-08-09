@@ -218,6 +218,28 @@ describe('StatisticsPanel', () => {
     expect(props.onreset).not.toHaveBeenCalled();
     expect(screen.queryByRole('group', { name: /reset/i })).not.toBeInTheDocument();
   });
+
+  /*
+   * FullyKeyboardOperable: the confirmation is "reachable and announced". Each
+   * step replaces the control that was pressed, so unless focus is carried
+   * across it lands on the body — outside the panel Escape and the Tab cycle
+   * live on, and with nothing said about the step that just appeared.
+   */
+  it('takes the keyboard to the confirmation and back', async () => {
+    render(StatisticsPanel, statisticsProps());
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: /reset/i })).toHaveFocus();
+
+    await userEvent.keyboard('{Enter}');
+    expect(screen.getByRole('group', { name: /reset/i })).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: /clear everything/i })).toHaveFocus();
+
+    await userEvent.click(screen.getByRole('button', { name: /keep/i }));
+    expect(screen.getByRole('button', { name: /reset/i })).toHaveFocus();
+  });
 });
 
 /*
@@ -256,11 +278,44 @@ describe('CustomGameForm', () => {
   });
 
   // OnlyAcceptedWordsBecomeCustomGames, and the entry stays put to be corrected.
-  it('shows a rejection and keeps the entry', () => {
-    const props = formProps({ notice: { kind: 'custom_answer_rejected', entry: 'qqqqq' } });
-    render(CustomGameForm, props);
+  it('shows a rejection and keeps the entry', async () => {
+    const { rerender } = render(CustomGameForm, formProps());
+    const field = screen.getByRole('textbox', { name: /word/i });
+
+    await userEvent.type(field, 'qqqqq{Enter}');
+    await rerender({ notice: { kind: 'custom_answer_rejected', entry: 'qqqqq' } });
 
     expect(screen.getByRole('status')).toHaveTextContent(/qqqqq/);
+    // Typed first, so this is the field and not the sentence about it.
+    expect(field).toHaveValue('qqqqq');
+  });
+
+  // TheWordIsNotReadableInTheLink: "nor anything shown alongside it".
+  it('takes the word off the screen once the link is made', async () => {
+    const { rerender } = render(CustomGameForm, formProps());
+    const field = screen.getByRole('textbox', { name: /word/i });
+
+    await userEvent.type(field, 'crumb{Enter}');
+    await rerender({
+      shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
+    });
+
+    expect(field).toHaveValue('');
+  });
+
+  /*
+   * The sequence the engine advances is what makes a repeat heard: a live
+   * region reacts to its text changing, and the same refusal twice does not
+   * change it. Every other Notice caller threads it, and this one used not to.
+   */
+  it('announces an identical refusal a second time', async () => {
+    const notice = { kind: 'custom_answer_rejected', entry: 'qqqqq' } as const;
+    const { rerender } = render(CustomGameForm, formProps({ notice, noticeSequence: 1 }));
+    const first = screen.getByRole('status').firstElementChild;
+
+    await rerender({ notice: { ...notice }, noticeSequence: 2 });
+
+    expect(screen.getByRole('status').firstElementChild).not.toBe(first);
   });
 
   it('shows the link once there is one, and copies it', async () => {

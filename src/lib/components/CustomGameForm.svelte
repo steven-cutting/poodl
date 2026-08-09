@@ -13,18 +13,27 @@
    * the creator to correct — which is why the field is not cleared on a
    * rejection.
    *
+   * `TheWordIsNotReadableInTheLink`: "neither the link nor anything shown
+   * alongside it displays the word once the link has been made". The entry is
+   * shown alongside it, so it goes as soon as there is a link — the qualifier
+   * is about exactly this, since the creator obviously typed the word
+   * themselves and the field is the only thing that held it beforehand.
+   *
    * `NothingAboutTheLinkIsKept`: the link is state Poodl holds for as long as it
    * is showing it, and none of that is persisted. Closing this loses it, which
    * is the point.
    */
   let {
     notice = null,
+    noticeSequence = 0,
     shareable = null,
     oncreate,
     oncopy,
     onclose
   }: {
     notice?: NoticeValue | null;
+    /** Advances so that an identical refusal is announced a second time. */
+    noticeSequence?: number;
     shareable?: Shareable | null;
     oncreate: (entry: string) => void;
     oncopy: () => void;
@@ -32,6 +41,17 @@
   } = $props();
 
   let entry = $state('');
+
+  /*
+   * A rejection leaves the field alone — that is the other half of
+   * `OnlyAcceptedWordsBecomeCustomGames` — so this reads the link rather than
+   * the submission, and only a link empties it.
+   */
+  $effect(() => {
+    if (shareable?.kind === 'custom_link') {
+      entry = '';
+    }
+  });
   // One identifier per component, suffixed: `$props.id()` may be called once.
   const uid = $props.id();
   const fieldId = `${uid}-word`;
@@ -65,7 +85,7 @@
     </div>
   </form>
 
-  <Notice {notice} />
+  <Notice {notice} sequence={noticeSequence} />
 
   {#if shareable?.kind === 'custom_link'}
     <LinkReady url={shareable.text} {oncopy} />

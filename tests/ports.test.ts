@@ -5,7 +5,7 @@ import { createFakeClipboard, createNavigatorClipboard } from '../src/lib/ports/
 import { createCryptoRandom, createFakeRandom } from '../src/lib/ports/random';
 import { createFakePreferences, createMediaPreferences } from '../src/lib/ports/preferences';
 import type { MediaQueryListLike } from '../src/lib/ports/preferences';
-import { createFakeStorage, createWebStorage } from '../src/lib/ports/storage';
+import { createFakeStorage, createWebStorage, deviceStore } from '../src/lib/ports/storage';
 import { createFakeTimer, createIntervalTimer } from '../src/lib/ports/timer';
 
 /**
@@ -84,6 +84,25 @@ describe('storage port', () => {
     // The ambient default, in an environment that provides nothing. Losing
     // persistence must not cost the player the game.
     const storage = createWebStorage();
+
+    expect(() => {
+      storage.write('poodl:game', 'anything');
+    }).not.toThrow();
+    expect(storage.read('poodl:game')).toBeNull();
+  });
+
+  /*
+   * Where the origin is opaque or the player has blocked site data, reading
+   * `localStorage` throws rather than returning something unusable — which is
+   * why the read cannot sit in a default argument. Nothing above this port sees
+   * it: the page has to start.
+   */
+  it('stays usable where the store refuses to be read at all', () => {
+    const storage = createWebStorage(
+      deviceStore(() => {
+        throw new DOMException('The operation is insecure.', 'SecurityError');
+      })
+    );
 
     expect(() => {
       storage.write('poodl:game', 'anything');

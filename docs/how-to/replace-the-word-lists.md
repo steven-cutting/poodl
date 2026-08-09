@@ -32,8 +32,9 @@ fail the shape test.
 | SCOWL | 2020.12.07 | Permissive: copy, modify, distribute and sell, with the copyright notice retained. |
 | 12dicts | 6.0.2 | Public domain, with acknowledgment requested. |
 
-Both are Kevin Atkinson's, and both state their terms inside the archive rather than by
-reference. Only the 12dicts lists that are genuinely public domain are used: `2of12inf`
+SCOWL is Kevin Atkinson's and 12dicts is Alan Beale's — 12dicts is distributed from
+Atkinson's site, which is where that gets confused — and both state their terms inside the
+archive rather than by reference. Only the 12dicts lists that are genuinely public domain are used: `2of12inf`
 and the Lemmatized `2+2+3` lists derive from AGID, which the 12dicts ReadMe says prevents
 their release, so Poodl does not read them.
 

@@ -7,7 +7,6 @@ import {
   decodeToken,
   encodeAnswer
 } from '../src/lib/domain/obfuscation';
-import { isWordText } from '../src/lib/domain/words';
 import { createBundledWordList } from '../src/lib/ports/words';
 
 const words = createBundledWordList();
@@ -142,16 +141,23 @@ describe('decoding a token this scheme did not produce', () => {
     expect(accepted).toBeLessThanOrEqual(2);
   });
 
+  /*
+   * DecodeRejectsWhatItDidNotProduce: "it never invents a word."
+   *
+   * The permutation covers all of [0, 2^24) and only its first 26^5 values name
+   * one, so the guard that refuses the rest is the whole of this promise. These
+   * three tokens are the only kind that can reach it: each carries its own
+   * correct checksum, so the integrity tag passes, and each unpermutes to a
+   * value outside the word space — 26^5, the one after it, and the last value
+   * there is. Pinned as literals for the same reason the round-trip above is:
+   * recomputing them here would be asking the codec whether it agrees with
+   * itself. Sweeping constructed tokens cannot stand in for this, because
+   * nothing that fails the checksum ever reaches the guard.
+   */
   it('never invents anything that is not a word', () => {
-    const invented = [...TOKEN_ALPHABET]
-      .flatMap((first) =>
-        [...TOKEN_ALPHABET].map((second) => `${first}${second}wxyz2345`.slice(0, TOKEN_LENGTH))
-      )
-      .map((token) => decodeToken(token))
-      .filter((decoded): decoded is string => decoded !== null)
-      .filter((decoded) => !isWordText(decoded));
-
-    expect(invented).toEqual([]);
+    for (const token of ['9ypykama', 'c68ny5y7', 'sm6wx0j5']) {
+      expect(decodeToken(token)).toBeNull();
+    }
   });
 });
 

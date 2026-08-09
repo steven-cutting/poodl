@@ -2,7 +2,11 @@ import type { Command, Effect } from '$lib/app/commands';
 import { attemptsRemaining, canContinue, isFinishedByPlay, isStatEligible } from '$lib/app/state';
 import type { AppState, GameState, Notice, Settings } from '$lib/app/state';
 import { ENDLESS_COUNTDOWN_MS, MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
-import { describeConclusion, describeSubmission } from '$lib/domain/announcements';
+import {
+  describeConclusion,
+  describeCountdown,
+  describeSubmission
+} from '$lib/domain/announcements';
 import { EMPTY_POOL, drawPooledAnswer } from '$lib/domain/answerPool';
 import { respectsHardMode, satisfiesHardMode } from '$lib/domain/hardMode';
 import { customGameUrl } from '$lib/domain/links';
@@ -341,8 +345,17 @@ function acceptGuess(state: AppState, game: GameState, candidate: string, env: E
     submitted.results,
     attemptsRemaining(played, MAX_ATTEMPTS)
   );
+  /*
+   * `ConclusionIsAnnounced` asks for two things: the outcome, the answer and
+   * the count, "and an armed countdown is announced along with the means to
+   * stop it". The countdown is said here rather than by the modal, because a
+   * sentence rendered inside a dialog is read when the reader gets to it, and
+   * by then the ten seconds may be spent.
+   */
+  const countdown =
+    played.autoContinueAt === null ? '' : ` ${describeCountdown(ENDLESS_COUNTDOWN_MS / 1_000)}`;
   const conclusion = over
-    ? ` ${describeConclusion(won ? 'won' : 'lost', game.answer, guesses.length)}`
+    ? ` ${describeConclusion(won ? 'won' : 'lost', game.answer, guesses.length)}${countdown}`
     : '';
 
   return announce(

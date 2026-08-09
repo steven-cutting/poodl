@@ -55,6 +55,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
   let prefersReducedMotion = $state(ports.preferences.prefersReducedMotion());
 
   let stopTicking: (() => void) | null = null;
+  let discarded = false;
 
   const stopWatchingDevice = ports.preferences.subscribe(() => {
     prefersDark = ports.preferences.prefersDark();
@@ -83,7 +84,19 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     });
   }
 
+  /**
+   * A store that has been thrown away does nothing more.
+   *
+   * The clipboard settles whenever the browser gets to it, and the report comes
+   * back through here. Arriving after `destroy`, it would save to storage on
+   * behalf of a page that has gone and — because every dispatch ends by looking
+   * at the countdown — start a ticker with nothing left to stop it.
+   */
   function dispatch(command: Command): void {
+    if (discarded) {
+      return;
+    }
+
     now = ports.clock.now();
 
     const outcome = reduce(state, command, {
@@ -135,6 +148,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     },
     dispatch,
     destroy(): void {
+      discarded = true;
       stopTicking?.();
       stopTicking = null;
       stopWatchingDevice();

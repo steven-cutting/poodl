@@ -122,6 +122,23 @@ describe('the page', () => {
   });
 
   /*
+   * One notice, one place, for this kind too. The refusal has a surface of its
+   * own that explains it and offers the way out, so passing the same notice on
+   * to whatever else is showing said it a second time, in a second live region,
+   * beside a second control named "Dismiss".
+   */
+  it('explains an undecodable link once, wherever the player then goes', async () => {
+    arriveAt(`?${CUSTOM_GAME_PARAM}=not-a-token`);
+    render(Page);
+
+    await screen.findByRole('alert');
+    await userEvent.click(screen.getByRole('button', { name: 'Set a word' }));
+
+    expect(screen.getAllByText(/not a poodl link/i)).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Dismiss' })).toHaveLength(1);
+  });
+
+  /*
    * A link that lost its token on the way is still a Poodl link, and
    * InvalidLinksAreExplainedAndSurvivable wants it explained rather than passed
    * over in silence: an empty parameter is not the same as no parameter.

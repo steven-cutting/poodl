@@ -120,6 +120,16 @@
   );
 
   /*
+   * One notice, one place, applied to the one kind that has a surface of its
+   * own. `InvalidLinkNotice` explains the refusal and offers the way out of it;
+   * passing the same notice on as well put the sentence on the board a second
+   * time, in a second live region, with a second control named "Dismiss".
+   */
+  const boardNotice = $derived(
+    app?.notice?.kind === 'custom_link_invalid' ? null : (app?.notice ?? null)
+  );
+
+  /*
    * settings.allium — the `Appearance` surface reaching the document. `app.css`
    * keys every palette on `:root`, so the attributes go on the documentElement
    * and nowhere else.
@@ -225,7 +235,7 @@
         {game}
         keyboard={keyboardKnowledge(game.guesses)}
         physicalKeyboard={app.settings.physicalKeyboard && panel === null}
-        notice={panel === null && !conclusionShowing ? app.notice : null}
+        notice={panel === null && !conclusionShowing ? boardNotice : null}
         noticeSequence={app.noticeSequence}
         shareable={panel === null && !conclusionShowing ? app.shareable : null}
         announcement={app.announcement}
@@ -278,7 +288,7 @@
           onclose={() => {
             closedConclusionFor = game.startedAt;
           }}
-          notice={panel === null ? app.notice : null}
+          notice={panel === null ? boardNotice : null}
           noticeSequence={app.noticeSequence}
           shareable={panel === null ? app.shareable : null}
           oncopy={() => {
@@ -330,7 +340,8 @@
     />
   {:else if panel === 'custom'}
     <CustomGameForm
-      notice={app.notice}
+      notice={boardNotice}
+      noticeSequence={app.noticeSequence}
       shareable={app.shareable}
       oncreate={(entry: string) => {
         store?.dispatch({ kind: 'create_custom_game', entry });

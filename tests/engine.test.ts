@@ -48,6 +48,13 @@ describe('arriving', () => {
   // ResumeCurrentGame: nothing is retired, nothing is drawn.
   it('resumes a game already on the board untouched', () => {
     const played = run(env, fresh(), { kind: 'new_game', mode: 'random' }, { kind: 'open' });
+
+    // The first disjunct of ShowWelcomeOnOpening, on its own: the setting is on
+    // and there is a game to continue, so the screen still comes up.
+    // ShownOnEveryArrivalUntilTurnedOff — "every time, including a reload with a
+    // game half played".
+    expect(played.awaitingWelcome).toBe(true);
+
     const state = run(env, played, { kind: 'continue' });
 
     expect(state.awaitingWelcome).toBe(false);

@@ -22,8 +22,21 @@
     onsubmit: () => void;
   } = $props();
 
-  /** Anything that takes keys of its own keeps them. */
-  const INTERACTIVE = 'input, textarea, select, button, a[href], [contenteditable]';
+  /** Somewhere the player is typing. Every key is theirs. */
+  const TEXT_ENTRY = 'input, textarea, select, [contenteditable]';
+
+  /**
+   * Something Enter activates. Only Enter is theirs.
+   *
+   * `FullyKeyboardOperable` invites the player to tab to the on-screen keyboard
+   * and press a key there, and a control that has focus must keep its own
+   * activation. Letters and Backspace are not activation: taking those as well
+   * would stop the board hearing anything for as long as any button held focus,
+   * which the `PhysicalKeyboardInput` surface grants unconditionally on the
+   * input length alone. Space is absent deliberately — this never intercepts
+   * it, so a focused button is activated by the browser as it always was.
+   */
+  const ACTIVATABLE = 'button, a[href]';
 
   function handle(event: KeyboardEvent): void {
     // The browser's own shortcuts stay the browser's.
@@ -32,8 +45,14 @@
     }
 
     const target = event.target;
+    const within = (selector: string): boolean =>
+      target instanceof Element && target.closest(selector) !== null;
 
-    if (target instanceof Element && target.closest(INTERACTIVE) !== null) {
+    if (within(TEXT_ENTRY)) {
+      return;
+    }
+
+    if (event.key === 'Enter' && within(ACTIVATABLE)) {
       return;
     }
 

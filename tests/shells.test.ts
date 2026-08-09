@@ -62,10 +62,32 @@ describe('Notice', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/could not/i);
   });
 
-  it('renders nothing at all when there is no notice', () => {
+  /*
+   * The region has to be there before it says anything, or the first thing it
+   * says arrives with it and a live region that has not changed is not read.
+   * So "nothing to say" is an empty region, not an absent one.
+   */
+  it('keeps an empty region waiting when there is no notice', () => {
     render(Notice, { notice: null });
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('');
+    expect(screen.queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument();
+  });
+
+  /*
+   * Two identical sentences in a row change no text, so the nodes are replaced
+   * instead. The sequence is what the engine advances for exactly this.
+   */
+  it('is heard again when the same thing is said twice', async () => {
+    const notice = { kind: 'guess_rejected', reason: 'incomplete' } as const;
+    const { rerender } = render(Notice, { notice, sequence: 1 });
+    const region = screen.getByRole('status');
+    const said = region.firstElementChild;
+
+    await rerender({ notice: { ...notice }, sequence: 2 });
+
+    expect(screen.getByRole('status')).toBe(region);
+    expect(region.firstElementChild).not.toBe(said);
   });
 
   it('can be dismissed when a caller offers to take it back', async () => {
@@ -207,6 +229,23 @@ describe('Modal', () => {
     await userEvent.tab();
 
     expect(close).toHaveFocus();
+  });
+
+  /*
+   * The trap listens on the panel, so it works only while focus is on it or in
+   * it — and a removed element fires no `focusout` for this to answer. So the
+   * shell cannot catch a child that removes the control the player just used;
+   * each child carries focus across its own swap, and this records why Escape
+   * is worth testing again from wherever focus lands.
+   */
+  it('answers Escape from anywhere inside itself', async () => {
+    const onclose = vi.fn();
+    render(Modal, { title: 'Settings', onclose });
+
+    screen.getByRole('button', { name: 'Close' }).focus();
+    await userEvent.keyboard('{Escape}');
+
+    expect(onclose).toHaveBeenCalledTimes(1);
   });
 });
 

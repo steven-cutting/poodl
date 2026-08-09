@@ -99,6 +99,19 @@
     {/each}
   </ul>
 
+  <!--
+    ContinuingNeverCostsAGame retires the board "on exactly the terms
+    GameNavigation states", and those terms end "this is stated where the player
+    acts on it, so the cost of switching mode mid-game is never a surprise".
+    Choosing a mode here is acting on it, so the same sentence is said here.
+  -->
+  {#if currentStatus === 'in_progress'}
+    <p class="cost">
+      Choosing a mode ends the game on the board. With a guess in it, that counts as a loss in
+      random and endless; with none, it goes without trace.
+    </p>
+  {/if}
+
   {#if isFirstVisit}
     <p class="hint">Pick any of these to start. Practice keeps no record at all.</p>
   {/if}
@@ -170,10 +183,15 @@
     color: var(--mark-text);
   }
 
+  .cost,
   .hint {
     margin: 0;
     color: var(--muted);
     text-align: center;
+  }
+
+  .cost {
+    font-size: 0.9rem;
   }
 
   @media (max-width: 30rem) {

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { tick } from 'svelte';
+
   import DistributionChart from '$lib/components/DistributionChart.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import { losses, winPercentage } from '$lib/domain/statistics';
@@ -14,6 +16,13 @@
    *
    * `ResettingIsDeliberate`: the reset is a two-step, and the confirmation names
    * what will go rather than asking whether the player is sure.
+   *
+   * `FullyKeyboardOperable` asks for the confirmation to be "reachable and
+   * announced". Each step replaces the control that was pressed, so focus is
+   * carried across the swap by hand: onto the confirmation, which announces its
+   * legend and its text on arrival, and back onto the reset button when the
+   * player backs out. Left alone, focus falls to the body — outside the panel
+   * the `Modal` listens on, which is where Escape and the Tab cycle live.
    */
   let {
     statistics,
@@ -30,6 +39,15 @@
   } = $props();
 
   let confirming = $state(false);
+  let confirmation: HTMLElement | undefined = $state();
+  let resetButton: HTMLElement | undefined = $state();
+
+  /** Arm or disarm the two-step, and take focus to whichever step replaced it. */
+  async function setConfirming(next: boolean): Promise<void> {
+    confirming = next;
+    await tick();
+    (next ? confirmation : resetButton)?.focus();
+  }
 
   const numbers = $derived([
     { label: 'Played', value: String(statistics.gamesPlayed) },
@@ -61,7 +79,12 @@
   </p>
 
   {#if confirming}
-    <fieldset class="confirm">
+    <!--
+      Focusable but out of the tab order, so arriving here reads the whole group
+      and the next Tab is still "Clear everything". `Modal`'s cycle skips
+      `[tabindex="-1"]`, so its first and last stops are unchanged.
+    -->
+    <fieldset class="confirm" tabindex="-1" bind:this={confirmation}>
       <legend>Reset everything?</legend>
       <p>
         This clears the numbers, both streaks, the guess distribution and the record of which
@@ -72,16 +95,27 @@
           type="button"
           class="danger"
           onclick={() => {
-            confirming = false;
+            void setConfirming(false);
             onreset();
           }}>Clear everything</button
         >
-        <button type="button" onclick={() => (confirming = false)}>Keep my statistics</button>
+        <button
+          type="button"
+          onclick={() => {
+            void setConfirming(false);
+          }}>Keep my statistics</button
+        >
       </div>
     </fieldset>
   {:else}
     <p class="actions">
-      <button type="button" onclick={() => (confirming = true)}>Reset statistics</button>
+      <button
+        type="button"
+        bind:this={resetButton}
+        onclick={() => {
+          void setConfirming(true);
+        }}>Reset statistics</button
+      >
     </p>
   {/if}
 </Modal>

@@ -228,6 +228,24 @@ describe('the endless countdown', () => {
     );
   });
 
+  /*
+   * ConclusionIsAnnounced: the outcome, the answer and the count, "and an armed
+   * countdown is announced along with the means to stop it". A sentence sitting
+   * in the modal is read when the reader reaches it, and by then the ten
+   * seconds may be gone.
+   */
+  it('is announced, along with how to stop it', () => {
+    const state = winInOne(env, started('endless'));
+
+    expect(state.announcement).toMatch(/You won/);
+    expect(state.announcement).toMatch(/next game starts in 10 seconds/i);
+    expect(state.announcement).toMatch(/stop the countdown/i);
+  });
+
+  it('says nothing about a countdown in a mode that arms none', () => {
+    expect(winInOne(env, started('random')).announcement).not.toMatch(/countdown/i);
+  });
+
   // EndlessCountdownElapses.
   it('starts the next round by itself once it runs out', () => {
     const finished = winInOne(env, started('endless'));

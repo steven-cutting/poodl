@@ -223,6 +223,30 @@ describe('the endless countdown', () => {
     expect(live_.store.state.currentGame?.status).toBe('won');
     live = null;
   });
+
+  /*
+   * The clipboard settles whenever the browser gets to it, which may be after
+   * the page has gone. Every dispatch ends by looking at the countdown, so a
+   * late report would start a ticker that nothing is left holding the stop for.
+   */
+  it('starts nothing on a clipboard report that arrives after it has gone', async () => {
+    const live_ = endlessWin();
+
+    live_.store.dispatch({ kind: 'share_results' });
+
+    const before = live_.store.state;
+
+    live_.store.destroy();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    live_.clock.advance(ENDLESS_COUNTDOWN_MS);
+    live_.timer.advance(1_000);
+
+    expect(live_.store.state).toBe(before);
+    expect(live_.store.state.currentGame?.status).toBe('won');
+    live = null;
+  });
 });
 
 /*
