@@ -64,7 +64,23 @@ contract AnswerObfuscation {
 
     @invariant DecodeRejectsWhatItDidNotProduce
         -- decode returns nothing for a token this scheme did not produce, and
-        -- for a token that has been altered. It never invents a word.
+        -- it never invents a word: whatever decodes at all decodes to
+        -- words/config.word_length letters. An altered token never decodes
+        -- back to the word it was made from, so an alteration is never hidden
+        -- by the game coming out the same.
+
+    @invariant AlterationIsDetectedToABound
+        -- Past those three, refusing an altered token is an integrity check
+        -- and not a proof, because a fixed-length token cannot make it one:
+        -- the tokens that decode are a fixed fraction of the strings the
+        -- alphabet can spell, so some alteration always lands on another one.
+        -- What is promised is the bound. An altered token survives the check
+        -- with probability below one in sixty-five thousand, and one that then
+        -- names a word the guess dictionary holds — the only kind that starts
+        -- a game rather than being refused as an invalid link — below one in a
+        -- hundred million. Every other alteration reaches
+        -- RejectInvalidCustomLink, which already requires the decoded word to
+        -- be in the guess dictionary.
 
     @guidance
         -- This is obfuscation, not security. It has to survive idle curiosity
@@ -394,11 +410,17 @@ surface ShareResults {
         if settings/player_settings.high_contrast: high_contrast
         else: standard
 
+    -- The grid itself, shown and not only copied. TheGridIsAvailableAsText
+    -- asks for it to be readable before it is sent, and a clipboard the
+    -- browser refuses is a clipboard the player has to work around by hand.
+    let text = render_share_grid(finished, palette)
+
     exposes:
         finished.status
         finished.mode
         finished.attempts_used
         palette
+        text
 
     provides:
         PlayerSharesResults(viewer, finished)
@@ -436,7 +458,9 @@ surface ShareResults {
         -- the instant it is abandoned.
 
     @guarantee TheGridIsAvailableAsText
-        -- What gets copied is text. It can be read by assistive technology
-        -- before it is sent, and the action reports whether the copy
+        -- What gets copied is text. It is shown as text as well as placed on
+        -- the clipboard, so it can be read by assistive technology and
+        -- selected by hand before it is sent, and it stays there when the
+        -- clipboard cannot be reached. The action reports whether the copy
         -- succeeded.
 }

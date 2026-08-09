@@ -23,10 +23,13 @@
     '- `@guarantee AnswerIsNeverExposedWhileInProgress`, structurally. A tile is never handed',
     '  the answer, only its own letter and mark.',
     '',
-    'Also a `GameBoard` guarantee, and this component will own it:',
-    '`@guarantee MotionRespectsTheReducedMotionPreference` names tile animations explicitly.',
-    'Poodl has no animation yet, so nothing here discharges it. The reduced-motion toolbar',
-    'control is a simulation and is not evidence for it.'
+    '- `@guarantee MotionRespectsTheReducedMotionPreference`, which names tile animations',
+    '  explicitly. The reveal runs only while `:root` carries `data-animations="on"`, which the',
+    '  route writes from `Appearance.animations_active` — the animations setting and the',
+    "  device's reduced-motion preference taken together, and the device wins. The **Animations**",
+    '  toolbar control writes the same attribute here, so the two stories below are the two',
+    '  paths. The **Reduced motion** control is a simulation of the device half and is evidence',
+    '  for nothing; `tests/appearance.test.ts` holds the derivation itself.'
   ].join('\n');
 
   const { Story } = defineMeta({
@@ -139,6 +142,47 @@
     <Tile position={3} letter="t" mark="absent" />
   </div>
 </Story>
+
+<!--
+  `GameBoard.@guarantee MotionRespectsTheReducedMotionPreference`, both ways.
+
+  A scored tile reveals itself with a rotation, and the reveal is gated on the
+  attribute the route derives rather than on a media query of its own. These two
+  stories pin the attribute either way, so the workshop renders both paths — and
+  without the pin every story would silently take whichever one the toolbar was
+  left on. What the play function can check is the gate; whether the frames are
+  pleasant is what the story is for.
+-->
+<Story
+  name="Scored, with motion"
+  args={{ position: 1, letter: 'a', mark: 'correct' }}
+  globals={{ animations: 'on', reducedMotion: 'follow' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    await expect(document.documentElement).toHaveAttribute('data-animations', 'on');
+
+    const tile = within(canvasElement).getByRole('img', { name: 'Position 1, A, correct' });
+
+    // Svelte scopes the keyframes name, so the assertion is that one is running
+    // rather than which one it is called this build.
+    await expect(getComputedStyle(tile).animationName).not.toBe('none');
+  }}
+/>
+
+<Story
+  name="Scored, motion reduced"
+  args={{ position: 1, letter: 'a', mark: 'correct' }}
+  globals={{ animations: 'on', reducedMotion: 'reduce' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    // The device wins: the attribute is absent even with the setting on.
+    await expect(document.documentElement).not.toHaveAttribute('data-animations');
+
+    const tile = within(canvasElement).getByRole('img', { name: 'Position 1, A, correct' });
+
+    await expect(getComputedStyle(tile).animationName).toBe('none');
+  }}
+/>
 
 <style>
   .marks {

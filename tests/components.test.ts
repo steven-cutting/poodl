@@ -124,6 +124,29 @@ describe('Keyboard', () => {
     expect(screen.getByRole('button', { name: 'Z' })).toBeInTheDocument();
   });
 
+  /*
+   * AGENTS.md invariant 6 and GameBoard.@guarantee
+   * ResultsAreNeverConveyedByColourAlone. The accessible name carries the
+   * status for anyone reading by ear; the glyph carries it for a sighted
+   * colour-blind reader with no assistive technology, who has only the colour
+   * otherwise. A tile has carried one from the start; a key had not.
+   */
+  it('marks a known key with a shape as well as a colour', () => {
+    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])) });
+
+    const glyphs = new Map(
+      screen
+        .getAllByRole('button')
+        .map((key) => [key.getAttribute('data-mark'), key.textContent.trim()])
+    );
+
+    expect(glyphs.get('correct')).toContain('■');
+    expect(glyphs.get('present')).toContain('▲');
+    expect(glyphs.get('absent')).toContain('×');
+    // A key nothing is known about carries its letter and nothing else.
+    expect(glyphs.get('none')).toMatch(/^[A-Z]$/);
+  });
+
   it('reports the letter that was pressed', async () => {
     const onletter = vi.fn();
     render(Keyboard, { onletter });

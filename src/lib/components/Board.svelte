@@ -1,7 +1,8 @@
 <script lang="ts">
   import Tile from '$lib/components/Tile.svelte';
   import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
-  import type { LetterMark, LetterResult, ScoredGuess } from '$lib/domain/types';
+  import { describeAttempt } from '$lib/domain/announcements';
+  import type { LetterMark, ScoredGuess } from '$lib/domain/types';
 
   let {
     guesses = [],
@@ -19,10 +20,6 @@
     cells: Cell[];
   }
 
-  function describe(results: readonly LetterResult[]): string {
-    return results.map((result) => `${result.letter.toUpperCase()} ${result.mark}`).join(', ');
-  }
-
   function blanks(count: number): Cell[] {
     return Array.from({ length: count }, () => ({ letter: '', mark: null }));
   }
@@ -30,7 +27,7 @@
   const rows = $derived.by(() => {
     const built: Row[] = guesses.map((guess, index) => ({
       attempt: index + 1,
-      label: `Attempt ${index + 1}: ${describe(guess.results)}`,
+      label: describeAttempt(index + 1, guess.results),
       cells: guess.results.map((result) => ({ letter: result.letter, mark: result.mark }))
     }));
 

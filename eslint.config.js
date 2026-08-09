@@ -25,7 +25,12 @@ export default tseslint.config(
     }
   },
   {
-    files: ['**/*.svelte'],
+    // `.svelte.ts` is a rune module rather than a component, and
+    // eslint-plugin-svelte hands both to svelte-eslint-parser. That parser only
+    // reads TypeScript when it is given one, so the glob has to name the rune
+    // modules as well as the components or `src/lib/app/store.svelte.ts` fails
+    // to parse at its first `import type`.
+    files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
     languageOptions: {
       parserOptions: {
         extraFileExtensions: ['.svelte'],

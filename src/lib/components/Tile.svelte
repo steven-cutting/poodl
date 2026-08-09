@@ -74,6 +74,27 @@
     --tile-text: var(--mark-text);
   }
 
+  /*
+   * GameBoard.@guarantee MotionRespectsTheReducedMotionPreference. The
+   * attribute is written by the route from `Appearance.animations_active`,
+   * which is the animations setting and the device's reduced-motion preference
+   * taken together — and the device wins. No media query here would be a second
+   * opinion on the same question.
+   */
+  :global(:root[data-animations='on']) .tile[data-mark]:not([data-mark='none']) {
+    animation: reveal 320ms ease-out;
+  }
+
+  @keyframes reveal {
+    from {
+      transform: rotateX(90deg);
+    }
+
+    to {
+      transform: none;
+    }
+  }
+
   .glyph {
     position: absolute;
     inset-block-start: 1px;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { WORD_LENGTH } from '../src/lib/config';
+import { MIN_ANSWER_WORDS, MIN_GUESS_WORDS, WORD_LENGTH } from '../src/lib/config';
 import { createBundledWordList, createFakeWordList } from '../src/lib/ports/words';
 
 const SHAPE = /^[a-z]+$/;
@@ -35,6 +35,14 @@ describe('the bundled word lists', () => {
     const missing = answers.filter((answer) => !guesses.has(answer));
 
     expect(missing).toEqual([]);
+  });
+
+  // AnswerListMeetsItsMinimum and GuessDictionaryMeetsItsMinimum. The floors
+  // are what makes a truncated data file fail rather than ship as a playable
+  // but tiny vocabulary.
+  it('meets both size floors, so a truncated file fails rather than ships', () => {
+    expect(answers.length).toBeGreaterThanOrEqual(MIN_ANSWER_WORDS);
+    expect(guesses.size).toBeGreaterThanOrEqual(MIN_GUESS_WORDS);
   });
 });
 

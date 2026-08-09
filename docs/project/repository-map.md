@@ -21,6 +21,7 @@ there is no backend to be a sibling of.
 │   ├── app.css          Design tokens
 │   ├── app.html         The page shell
 │   ├── lib/
+│   │   ├── app/         The rules as a pure reducer, plus the rune shell
 │   │   ├── components/  PascalCase Svelte components
 │   │   ├── config.ts    The values the specifications declare
 │   │   ├── data/        The two word lists, one word per line
@@ -40,10 +41,11 @@ there is no backend to be a sibling of.
 
 | Directory | Responsibility |
 | --- | --- |
+| `src/lib/app/` | The rules, as one pure reducer over one state value, plus the single rune shell that wires the ports to it. |
 | `src/lib/domain/` | Behaviour with no side effects. Given the same input it returns the same output, always. |
 | `src/lib/ports/` | The only place a browser global is touched. Each port exports an interface, a real adapter, and a fake. |
 | `src/lib/components/` | Rendering and interaction. Components take callbacks as props and hold no application state of their own. |
-| `src/routes/` | Assembling components into pages. Prerendered, so nothing here may assume a request. |
+| `src/routes/` | Assembling components into pages, and the only place a store is built. Prerendered, so nothing here may assume a request. |
 | `src/lib/data/` | Replaceable data, not code. Excluded from spell-checking, and from Prettier. |
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |

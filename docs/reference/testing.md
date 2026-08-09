@@ -33,8 +33,12 @@ the repository root, one file per component.
 | `*.spec.ts` | Playwright directly. Reserved. Playwright itself is installed — it supplies the browser the story run drives — but no suite of this kind exists. |
 
 Files are named for what they cover rather than mirroring a source path:
-`scoring.test.ts`, `keyboard.test.ts`, `ports.test.ts`, `words.test.ts`,
-`components.test.ts`.
+`scoring.test.ts`, `hardMode.test.ts`, `links.test.ts`, `engine.test.ts`, `panels.test.ts`.
+
+One file in `tests/` is not a test. `engineHarness.ts` holds the fixtures the four engine
+suites share — the same fake word list, the same fake randomness, the same way of playing a
+guess — so that they agree on one vocabulary rather than each inventing its own. The `include`
+glob is `tests/**/*.test.ts`, so it is imported and never collected.
 
 ## Conventions
 
@@ -94,10 +98,22 @@ should be deleted rather than covered; see
 | --- | --- |
 | `scoring.test.ts` | The `GuessScoring` contract, including the duplicate-letter cases and the invariants over the whole answer list. |
 | `keyboard.test.ts` | The `KeyboardKnowledge` contract: full alphabet coverage, strongest mark wins, knowledge never weakens. |
+| `hardMode.test.ts` | `Game.satisfies_hard_mode` and the `HardModeAdmission` contract, including its prefix semantics. |
+| `links.test.ts` | The `AnswerObfuscation` codec: the round trip over the whole dictionary, every single-character alteration of every token swept for the two failures `DecodeRejectsWhatItDidNotProduce` forbids outright, and three tokens pinned so the scheme cannot move under links already issued. |
+| `sharing.test.ts` | The `ShareGridFormat` contract, both palettes, and that no letter reaches the grid. |
+| `statistics.test.ts` | The statistics block and the answer pool, including what recycling does and why the flag exists. |
+| `appearance.test.ts`, `announcements.test.ts` | The two `Appearance` derivations, and the sentences the announcement guarantees ask for. |
+| `engine.test.ts` | Arriving, starting and retiring: every path a game leaves by, and what each one costs. |
+| `gameplay.test.ts` | Entering letters, the three rejections, accepting a guess, and the endless countdown. |
+| `settings.test.ts` | Every setter, both hard-mode guards, and resetting the statistics. |
+| `customGames.test.ts` | Making, sharing, opening and refusing a custom link, and sharing a result. |
+| `persistence.test.ts` | The round trip, the schema version, and what a damaged store costs — including a record that satisfies every type while breaking an invariant the specifications state. |
+| `store.test.ts` | The rune shell: dispatch, persistence, the countdown under a fake timer, and both clipboard outcomes. |
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
-| `words.test.ts` | Every `WordListSource` obligation, against the bundled data. |
-| `components.test.ts` | Tile, Board and Keyboard through accessible names. |
-| `stories/` | Each implemented component in the states its surface names, rendered in Chromium with axe over every one. |
+| `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
+| `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
+| `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
+| `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one. |
 
 ## Related pages
 

@@ -161,3 +161,20 @@
     await expect(ondelete).toHaveBeenCalledTimes(1);
   }}
 />
+
+<!--
+  The dark palette, with a keyboard in it. This is the story that had to wait:
+  until the key background was repaired, `#f5f5f5` on `#818384` measured 3.49 to
+  one and axe would have failed this render — which is exactly why no story
+  pinned dark with a keyboard in it, and exactly why the defect survived. The
+  measurement now reads 4.77, and this story is the standing evidence.
+-->
+<Story
+  name="Dark theme"
+  args={{ knowledge: KNOWLEDGE }}
+  globals={{ theme: 'dark' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async () => {
+    await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  }}
+/>
