@@ -1,0 +1,34 @@
+Poodl's word lists are derived from two collections by Kevin Atkinson.
+See docs/how-to/replace-the-word-lists.md for their provenance and for
+the obligations any replacement has to satisfy.
+
+
+SCOWL (Spell Checker Oriented Word Lists) 2020.12.07
+---------------------------------------------------
+
+The collective work is Copyright 2000-2018 by Kevin Atkinson.
+
+Permission to use, copy, modify, distribute and sell these word lists,
+the associated scripts, the output created from the scripts, and its
+documentation for any purpose is hereby granted without fee, provided
+that the above copyright notice appears in all copies and that both
+that copyright notice and this permission notice appear in supporting
+documentation. Kevin Atkinson makes no representations about the
+suitability of this array for any purpose. It is provided "as is"
+without express or implied warranty.
+
+SCOWL incorporates material from the Moby (TM) Words II package by
+Grady Ward and the UK English Wordlist With Frequency Classification
+by Brian Kelk, both of which their authors placed in the public domain.
+
+
+12dicts 6.0.2
+-------------
+
+By Alan Beale. The 12dicts author writes of the lists used here:
+"I explicitly release them to the public domain, but request
+acknowledgment of their use." This notice is that acknowledgment.
+
+Only the public-domain lists are used. The 2of12inf list and the
+Lemmatized 2+2+3 lists derive from AGID, which the 12dicts ReadMe says
+prevents their release into the public domain; Poodl does not read them.
