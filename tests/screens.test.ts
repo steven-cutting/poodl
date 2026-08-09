@@ -260,6 +260,19 @@ describe('GameConclusion', () => {
     expect(onclose).toHaveBeenCalledTimes(1);
   });
 
+  /*
+   * EndlessContinuesUnlessStopped: "stopping the countdown is an action the
+   * player can take at any point while it runs". The stop control lives here,
+   * so while a countdown is running there is no closing this and leaving it
+   * unreachable. Stopping first is what makes closing available.
+   */
+  it('cannot be closed out from under a running countdown', () => {
+    render(GameConclusion, { ...base, mode: 'endless' as const, secondsRemaining: 7 });
+
+    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
+  });
+
   it('offers both kinds of sharing', async () => {
     const onshareresults = vi.fn();
     const onshareanswer = vi.fn();

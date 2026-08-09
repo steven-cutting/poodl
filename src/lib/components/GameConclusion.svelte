@@ -47,9 +47,17 @@
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
+
+  /*
+   * `EndlessContinuesUnlessStopped` asks for stopping to be available "at any
+   * point while it runs", and the control that does it is in here. So while a
+   * countdown is running there is no closing this and leaving it unreachable —
+   * stopping first is what makes closing available.
+   */
+  const mayClose = $derived(secondsRemaining === null);
 </script>
 
-<Modal {title} {onclose}>
+<Modal {title} onclose={mayClose ? onclose : undefined}>
   <p class="answer">The word was <strong>{answer.toUpperCase()}</strong>.</p>
   <p class="attempts">
     {attemptsUsed} of {MAX_ATTEMPTS} attempts used{mode === 'custom'

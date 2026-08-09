@@ -70,10 +70,21 @@
 <!-- Lost, with every attempt spent. The answer is shown either way. -->
 <Story name="Lost" args={{ status: 'lost', attemptsUsed: 6 }} />
 
-<!-- Endless, counting down. Stopping is available while it runs. -->
+<!--
+  Endless, counting down. Stopping is available while it runs, and closing is
+  not: the stop control is in here, so a modal that could be closed out from
+  under a running countdown would put it out of reach.
+-->
 <Story
   name="Endless, counting down"
   args={{ mode: 'endless', repeatMode: 'endless', secondsRemaining: 7 }}
+  play={async ({ canvasElement }) => {
+    // GameConclusion.@guarantee EndlessContinuesUnlessStopped
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('button', { name: /stop/i })).toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
+  }}
 />
 
 <!--
