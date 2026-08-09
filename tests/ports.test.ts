@@ -410,6 +410,29 @@ describe('the timer port', () => {
     expect(ticks).toBe(4);
   });
 
+  /*
+   * The stop above is called between advances, which is the easy half. The
+   * countdown stops itself from inside a tick — `watchCountdown` sees the armed
+   * time gone and clears the ticker on the way out of the dispatch — so the fake
+   * has to honour a stop mid-advance the way `clearInterval` does. A fake that
+   * ran to the end of the advance regardless would report a cancelled timer and
+   * a coincidence identically.
+   */
+  it('honours a stop the tick itself calls', () => {
+    const timer = createFakeTimer();
+    let stop: (() => void) | null = null;
+    let ticks = 0;
+
+    stop = timer.every(250, () => {
+      ticks += 1;
+      stop?.();
+    });
+
+    timer.advance(1_000);
+
+    expect(ticks).toBe(1);
+  });
+
   it('runs every timer the fake is holding', () => {
     const timer = createFakeTimer();
     const ticked: string[] = [];

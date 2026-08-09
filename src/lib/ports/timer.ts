@@ -64,11 +64,20 @@ export function createFakeTimer(): FakeTimer {
 
       return () => repeating.delete(entry);
     },
+    /*
+     * The set is snapshotted, so a timer a tick starts does not fire for time
+     * that passed before it existed — `setInterval` does not either. But
+     * membership is checked again on every pass, because `clearInterval` takes
+     * effect from the moment it is called and a tick that stops its own timer is
+     * how the countdown ends: the store's `watchCountdown` does exactly that.
+     * Without the check a stopped timer would keep firing to the end of the
+     * advance, and no test could tell a cancellation from a coincidence.
+     */
     advance(milliseconds) {
       for (const entry of [...repeating]) {
         entry.elapsed += milliseconds;
 
-        while (entry.elapsed >= entry.intervalMs) {
+        while (repeating.has(entry) && entry.elapsed >= entry.intervalMs) {
           entry.elapsed -= entry.intervalMs;
           entry.tick();
         }

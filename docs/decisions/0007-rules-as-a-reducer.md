@@ -29,9 +29,9 @@ A fifth layer, `src/lib/app/`, holding the rules as one pure function and one ru
 - `engine.ts` — `reduce(state, command, env) -> { state, effects }`. Every rule lives here,
   in a handler named after it.
 - `persistence.ts` — that value to storage and back.
-- `store.svelte.ts` — the only file with runes in it. It holds the state, wires the ports
-  in, and does the two things a pure reducer cannot: write to the clipboard and watch a
-  clock.
+- `store.svelte.ts` — the only rune-bearing file that is not a component or a route, and the
+  only place the application's state lives. It wires the ports in and does the two things a
+  pure reducer cannot: write to the clipboard and watch a clock.
 
 The clock, the randomness and the word lists arrive in `env` rather than being imported, so
 the engine reaches nothing. The one effect that cannot be a value — the clipboard, which is

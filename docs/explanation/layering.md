@@ -22,9 +22,11 @@ Five layers, and imports only ever run downwards.
 
 `src/lib/app/` is the rules. `engine.ts` is one pure function over the whole state, with the
 clock, the randomness and the word lists arriving as an argument rather than as imports, and
-`store.svelte.ts` is the only file in the repository with runes in it. The reasoning is in
-[Decision 0007](../decisions/0007-rules-as-a-reducer.md); the consequence for this page is
-the row above and the sentence below it.
+`store.svelte.ts` is the only rune-bearing file that is not a component or a route — the one
+place the application's state lives. Components and the route take `$props` throughout and
+keep a little view state of their own, but a fact the reducer owns is never among it. The
+reasoning is in [Decision 0007](../decisions/0007-rules-as-a-reducer.md); the consequence for
+this page is the row above and the sentence below it.
 
 A component may name a type from `app/` — `GameState`, `Notice` — because that is the
 vocabulary it renders. It may not call `reduce`, construct a store, or import a port: what a

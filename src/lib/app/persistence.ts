@@ -144,6 +144,20 @@ function readSettings(value: unknown): Settings {
   };
 }
 
+/**
+ * A statistics block, or an empty one unless it is one `statistics.allium` says
+ * can exist.
+ *
+ * Four numbers that are each a count on their own can still be a record no play
+ * could produce, and the panel shows them without arguing: `Statistics.losses`
+ * is `games_played - wins`, so more wins than games renders a negative number of
+ * games lost. So the relations between them are read too, and each one below is
+ * an invariant the specification states by name.
+ *
+ * Nothing Poodl writes can break them — `recordWin` moves the win and its bucket
+ * together and `recordLoss` moves neither — so this costs a stored history
+ * nothing and only refuses one that was never ours.
+ */
 function readStatistics(value: unknown): Statistics {
   if (!isRecord(value)) {
     return EMPTY_STATISTICS;
@@ -161,13 +175,33 @@ function readStatistics(value: unknown): Statistics {
     return EMPTY_STATISTICS;
   }
 
-  return {
+  const statistics: Statistics = {
     gamesPlayed: value['gamesPlayed'] as number,
     wins: value['wins'] as number,
     currentStreak: value['currentStreak'] as number,
     maxStreak: value['maxStreak'] as number,
     distribution: distribution
   };
+
+  // Every count is already known to be a non-negative integer, which is the
+  // other half of the first two invariants and the whole of the buckets'
+  // `WinCountIsNeverNegative`.
+  const counted = statistics.distribution.reduce((total, bucket) => total + bucket, 0);
+
+  if (
+    // `WinsFallWithinGamesPlayed`.
+    statistics.wins > statistics.gamesPlayed ||
+    // `CurrentStreakNeverExceedsMaximum`.
+    statistics.currentStreak > statistics.maxStreak ||
+    // `StreakCannotExceedWins`.
+    statistics.currentStreak > statistics.wins ||
+    // `DistributionAccountsForEveryWin`.
+    counted !== statistics.wins
+  ) {
+    return EMPTY_STATISTICS;
+  }
+
+  return statistics;
 }
 
 function readPool(value: unknown): AnswerPool {

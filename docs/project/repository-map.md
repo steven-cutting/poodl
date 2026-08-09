@@ -21,6 +21,7 @@ there is no backend to be a sibling of.
 │   ├── app.css          Design tokens
 │   ├── app.html         The page shell
 │   ├── lib/
+│   │   ├── app/         The rules as a pure reducer, plus the rune shell
 │   │   ├── components/  PascalCase Svelte components
 │   │   ├── config.ts    The values the specifications declare
 │   │   ├── data/        The two word lists, one word per line

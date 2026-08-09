@@ -47,8 +47,9 @@ The direction is one way and is described in
 `app/` is where the specifications live as code. `engine.ts` is
 `reduce(state, command, env)`: every rule in `docs/specs/` as one pure function, with the
 clock, the randomness and the word lists arriving in `env` rather than being imported.
-`store.svelte.ts` is the only file with runes in it — it holds the state, wires the ports to
-the engine, and performs the one effect a reducer cannot, which is writing to the clipboard.
+`store.svelte.ts` is the only rune-bearing file outside a component or a route — it holds the
+application's state, wires the ports to the engine, and performs the one effect a reducer
+cannot, which is writing to the clipboard.
 See [Decision 0007](../decisions/0007-rules-as-a-reducer.md).
 
 ## State

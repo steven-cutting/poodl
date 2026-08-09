@@ -57,11 +57,16 @@ its former 0.85 opacity the glyph measured 4.43 to 1 against `--mark-absent`, un
 bar. It is now fully opaque. The glyph is what discharges "colour never carries meaning
 alone", so it has to be legible to the readers it exists for.
 
-**One defect remains, recorded rather than repaired.** In the dark theme a plain keyboard
-key is `#f5f5f5` on `#818384`, measured at 3.49 to 1. No story pins the dark theme with a
-keyboard in it and headless Chromium reports a light preference, so the gate is green;
-flipping the Theme control in the workshop shows it. Repairing it means choosing a darker
-key background, which is a design decision this record does not make.
+**A third defect took a second pass, because the gate could not reach it.** In the dark
+theme a plain keyboard key was `#f5f5f5` on `#818384`, measured at 3.49 to 1. No story
+pinned the dark theme with a keyboard in it and headless Chromium reports a light
+preference, so the gate stayed green while the defect was real; flipping the Theme control
+in the workshop showed it. It is repaired: the key background is now `#6b6d6e`, where the
+text measures 4.77 to 1 and the key's own boundary still stands off the page background at
+3.60, over the 3.0 that a control's boundary answers to. No hue moved, and palette mechanics
+are an explicit non-goal in `settings.allium`, so this was a code decision like `--mark-text`
+above. `Keyboard`'s "Dark theme" story now pins the palette that had none, which is what
+turns the measurement from something this record remembers into something the gate holds.
 
 The dependency surface grows sharply in a repository that pins every version by hand. Each
 direct package is pinned exactly, as invariant 4 requires, but the transitive tree under

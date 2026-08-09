@@ -289,6 +289,85 @@ describe('loading from a device that has nothing usable', () => {
         .currentGame
     ).toBeNull();
   });
+
+  /*
+   * `Statistics` says more than its four field types do, and each of the four
+   * clauses below is an invariant `statistics.allium` states by name. Nothing
+   * downstream argues with a block that breaks one: `Statistics.losses` is
+   * `games_played - wins`, so more wins than games renders a negative number of
+   * games lost on the panel.
+   *
+   * Each case breaks exactly one clause and satisfies the other three, so no
+   * clause can be deleted and left covered by its neighbours.
+   */
+  it('refuses statistics the specifications say cannot exist', () => {
+    const storage = createFakeStorage();
+    saveState(storage, lived());
+    const stored = JSON.parse(storage.read(STORAGE_KEY) as string) as Record<string, unknown>;
+    const empty = createInitialState().statistics;
+
+    const withStatistics = (statistics: Record<string, unknown>): AppState =>
+      loadState(createFakeStorage({ [STORAGE_KEY]: JSON.stringify({ ...stored, statistics }) }));
+
+    /** Every win taken in one guess, so the buckets account for the number. */
+    const buckets = (wins: number): number[] =>
+      Array.from({ length: MAX_ATTEMPTS }, (_unused, index) => (index === 0 ? wins : 0));
+
+    // WinsFallWithinGamesPlayed.
+    expect(
+      withStatistics({
+        gamesPlayed: 1,
+        wins: 2,
+        currentStreak: 1,
+        maxStreak: 1,
+        distribution: buckets(2)
+      }).statistics
+    ).toEqual(empty);
+
+    // CurrentStreakNeverExceedsMaximum.
+    expect(
+      withStatistics({
+        gamesPlayed: 3,
+        wins: 2,
+        currentStreak: 2,
+        maxStreak: 1,
+        distribution: buckets(2)
+      }).statistics
+    ).toEqual(empty);
+
+    // StreakCannotExceedWins.
+    expect(
+      withStatistics({
+        gamesPlayed: 3,
+        wins: 1,
+        currentStreak: 2,
+        maxStreak: 2,
+        distribution: buckets(1)
+      }).statistics
+    ).toEqual(empty);
+
+    // DistributionAccountsForEveryWin.
+    expect(
+      withStatistics({
+        gamesPlayed: 3,
+        wins: 2,
+        currentStreak: 1,
+        maxStreak: 2,
+        distribution: buckets(1)
+      }).statistics
+    ).toEqual(empty);
+
+    // And a history that holds all four comes back untouched.
+    const honest = {
+      gamesPlayed: 3,
+      wins: 2,
+      currentStreak: 1,
+      maxStreak: 2,
+      distribution: [1, 1, 0, 0, 0, 0]
+    };
+
+    expect(withStatistics(honest).statistics).toEqual(honest);
+  });
 });
 
 describe('saving on a device that will not have it', () => {

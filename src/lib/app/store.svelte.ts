@@ -12,12 +12,15 @@ import type { TimerPort } from '$lib/ports/timer';
 import type { WordListPort } from '$lib/ports/words';
 
 /**
- * The one file with runes in it.
+ * The only rune-bearing file that is not a component or a route, and the only
+ * place the application's state lives.
  *
  * `engine.ts` holds every rule and reaches nothing; this holds the state, wires
  * the ports to it, and does the two things a pure reducer cannot — write to the
  * clipboard, and watch a clock. Everything above it takes values and callbacks,
- * so no component has to know a port exists.
+ * so no component has to know a port exists. What a component keeps for itself
+ * is the text in a field, or the element focus has to return to — never a fact
+ * the reducer owns.
  */
 
 /** How often the countdown is looked at. Fine enough to read as seconds. */
