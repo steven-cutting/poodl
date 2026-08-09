@@ -1,6 +1,9 @@
 <script lang="ts">
   import Countdown from '$lib/components/Countdown.svelte';
+  import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import Notice from '$lib/components/Notice.svelte';
+  import type { Notice as NoticeValue } from '$lib/app/state';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
 
@@ -31,7 +34,10 @@
     onnewgame,
     onshareresults,
     onshareanswer,
-    onclose
+    onclose,
+    notice = null,
+    noticeSequence = 0,
+    oncopylink
   }: {
     status: 'won' | 'lost';
     mode: GameMode;
@@ -44,6 +50,15 @@
     onshareresults: () => void;
     onshareanswer: () => void;
     onclose: () => void;
+    /**
+     * What either sharing action produced. It belongs in here rather than on the
+     * board, because this dialog keeps the keyboard inside itself: a link
+     * rendered behind it would be unreachable until it was closed, and while a
+     * countdown runs it cannot be.
+     */
+    notice?: NoticeValue | null;
+    noticeSequence?: number;
+    oncopylink: () => void;
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
@@ -67,6 +82,12 @@
 
   {#if secondsRemaining !== null}
     <Countdown seconds={secondsRemaining} {onstop} />
+  {/if}
+
+  <Notice {notice} sequence={noticeSequence} />
+
+  {#if notice?.kind === 'custom_link_ready'}
+    <LinkReady url={notice.url} oncopy={oncopylink} />
   {/if}
 
   <div class="actions">

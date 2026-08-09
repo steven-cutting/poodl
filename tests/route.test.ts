@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -199,6 +199,36 @@ describe('the page', () => {
     await userEvent.click(screen.getByRole('button', { name: /show the result again/i }));
 
     expect(screen.getByRole('dialog', { name: /you won|you lost/i })).toBeInTheDocument();
+  });
+
+  /*
+   * The conclusion traps the keyboard, so a link made from inside it has to
+   * appear inside it. Rendered on the board behind, it would be unreachable
+   * until the modal was closed — and during an endless countdown, not even
+   * then.
+   */
+  it('shows a link made from the conclusion inside the conclusion', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+
+    for (const word of words.answerWords().slice(0, 6)) {
+      if (screen.queryByRole('dialog') !== null) {
+        break;
+      }
+      for (const letter of word.toUpperCase()) {
+        await userEvent.click(screen.getByRole('button', { name: new RegExp(`^${letter}(,|$)`) }));
+      }
+      await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
+    }
+
+    const dialog = screen.getByRole('dialog', { name: /you won|you lost/i });
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /share the word/i }));
+
+    const links = screen.getAllByRole('textbox', { name: /custom game link/i });
+
+    expect(links).toHaveLength(1);
+    expect(dialog).toContainElement(links[0] as HTMLElement);
   });
 
   // GameConclusion is scoped to a game finished by play, so nothing of it is on

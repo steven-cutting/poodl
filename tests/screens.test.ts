@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -199,7 +199,10 @@ describe('GameConclusion', () => {
     onnewgame: vi.fn(),
     onshareresults: vi.fn(),
     onshareanswer: vi.fn(),
-    onclose: vi.fn()
+    onclose: vi.fn(),
+    notice: null,
+    noticeSequence: 0,
+    oncopylink: vi.fn()
   };
 
   // OutcomeAnswerAndAttemptsAreAllShown, on a win as well as on a loss.
@@ -271,6 +274,40 @@ describe('GameConclusion', () => {
 
     expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /stop/i })).toBeInTheDocument();
+  });
+
+  /*
+   * Both sharing actions are here, so what they produce has to be here too. The
+   * modal traps the keyboard — a link rendered on the board behind it would be
+   * unreachable, and during an endless countdown unreachable twice over.
+   */
+  it('shows the link it just made, inside itself', async () => {
+    const oncopylink = vi.fn();
+    render(GameConclusion, {
+      ...base,
+      notice: { kind: 'custom_link_ready', url: 'https://poodl.test/?g=yrqt9rd9' },
+      oncopylink
+    });
+
+    const dialog = screen.getByRole('dialog', { name: /won/i });
+
+    expect(within(dialog).getByRole('textbox', { name: /link/i })).toHaveValue(
+      'https://poodl.test/?g=yrqt9rd9'
+    );
+
+    await userEvent.click(within(dialog).getByRole('button', { name: /copy/i }));
+
+    expect(oncopylink).toHaveBeenCalledTimes(1);
+  });
+
+  // ShareResults.@guarantee TheGridIsAvailableAsText: the action reports whether
+  // the copy succeeded, and it reports it where the action was taken.
+  it('reports the outcome of a copy, inside itself', () => {
+    render(GameConclusion, { ...base, notice: { kind: 'copy_failed' } });
+
+    expect(
+      within(screen.getByRole('dialog', { name: /won/i })).getByRole('status')
+    ).toHaveTextContent(/could not/i);
   });
 
   it('offers both kinds of sharing', async () => {

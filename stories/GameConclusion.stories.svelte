@@ -3,12 +3,14 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameConclusion from '../src/lib/components/GameConclusion.svelte';
+  import { LINK } from './fixtures';
 
   const onstop = fn();
   const onnewgame = fn();
   const onshareresults = fn();
   const onshareanswer = fn();
   const onclose = fn();
+  const oncopylink = fn();
 
   const OVERVIEW = [
     'The end-of-game modal. Random waits here indefinitely; endless counts down and moves on',
@@ -51,14 +53,18 @@
       onnewgame,
       onshareresults,
       onshareanswer,
-      onclose
+      onclose,
+      oncopylink,
+      notice: null,
+      noticeSequence: 0
     },
     argTypes: {
       status: { control: false, description: 'Won or lost. Abandoned never reaches a board.' },
       mode: { control: false, description: 'Named only when it is custom.' },
       answer: { control: 'text', description: 'Shown here and nowhere earlier.' },
       attemptsUsed: { control: { type: 'range', min: 1, max: 6 } },
-      secondsRemaining: { control: false, description: 'Null in every mode but endless.' }
+      secondsRemaining: { control: false, description: 'Null in every mode but endless.' },
+      notice: { control: false, description: 'What either sharing action produced.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
   });
@@ -92,6 +98,25 @@
   came from a link rather than from Poodl.
 -->
 <Story name="A word from a link" args={{ mode: 'custom', attemptsUsed: 4 }} />
+
+<!--
+  The link a share produced, shown in here rather than on the board. This dialog
+  keeps the keyboard inside itself, so a link rendered behind it would be
+  unreachable until it was closed — and while a countdown runs it cannot be.
+-->
+<Story
+  name="A link, made from here"
+  args={{ notice: { kind: 'custom_link_ready', url: LINK }, noticeSequence: 1 }}
+  play={async ({ canvasElement }) => {
+    // ShareCurrentAnswer.@guarantee FullyKeyboardOperable
+    const dialog = within(canvasElement).getByRole('dialog');
+
+    await expect(within(dialog).getByRole('textbox', { name: /link/i })).toHaveValue(LINK);
+  }}
+/>
+
+<!-- And what a copy reports, in the place the copy was asked for. -->
+<Story name="A copy that failed" args={{ notice: { kind: 'copy_failed' }, noticeSequence: 1 }} />
 
 <!-- Every action reachable from the keyboard, and each one doing what it says. -->
 <Story

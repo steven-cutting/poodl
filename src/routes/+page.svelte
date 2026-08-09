@@ -210,16 +210,17 @@
 
     {#if game !== null}
       <!--
-        One notice, one place. A panel that causes a notice shows it itself —
-        the custom game form shows the link it just made — so the board falls
-        silent while a panel is open rather than saying the same thing twice in
-        two places at once.
+        One notice, one place. Whichever surface caused a notice shows it: the
+        custom game form and the end-of-game modal show the links they made, and
+        the board falls silent while either is open rather than saying the same
+        thing twice. It matters most for the modal, which keeps the keyboard
+        inside itself — a link behind it would be unreachable.
       -->
       <GameScreen
         {game}
         keyboard={keyboardKnowledge(game.guesses)}
         physicalKeyboard={app.settings.physicalKeyboard}
-        notice={panel === null ? app.notice : null}
+        notice={panel === null && !conclusionShowing ? app.notice : null}
         noticeSequence={app.noticeSequence}
         announcement={app.announcement}
         announcementSequence={app.announcementSequence}
@@ -270,6 +271,11 @@
           }}
           onclose={() => {
             closedConclusionFor = game.startedAt;
+          }}
+          notice={panel === null ? app.notice : null}
+          noticeSequence={app.noticeSequence}
+          oncopylink={() => {
+            store?.dispatch({ kind: 'copy_link' });
           }}
         />
       {/if}
