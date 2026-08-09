@@ -26,3 +26,12 @@ export interface KeyKnowledge {
 export interface ScoredGuess {
   results: readonly LetterResult[];
 }
+
+/**
+ * `game.allium`'s `Guess` entity, less its back reference to the game.
+ * `position` is the attempt number and counts from one.
+ */
+export interface Guess extends ScoredGuess {
+  position: number;
+  word: string;
+}
