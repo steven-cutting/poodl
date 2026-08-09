@@ -192,6 +192,41 @@ describe('Modal', () => {
     expect(screen.getByRole('dialog', { name: 'Settings' })).toHaveFocus();
   });
 
+  /*
+   * The other half of `FullyKeyboardOperable`: the player is put back where
+   * they were. Closing destroys the element focus is on, and the browser falls
+   * back to the body, so without this the next Tab starts again from the top of
+   * the page.
+   */
+  it('gives focus back to whatever opened it', () => {
+    const opener = document.createElement('button');
+    document.body.append(opener);
+    opener.focus();
+
+    const modal = render(Modal, { title: 'Settings' });
+
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toHaveFocus();
+
+    modal.unmount();
+
+    expect(opener).toHaveFocus();
+    opener.remove();
+  });
+
+  // An opener that has gone in the meantime is left alone rather than chased.
+  it('survives an opener that is no longer there', () => {
+    const opener = document.createElement('button');
+    document.body.append(opener);
+    opener.focus();
+
+    const modal = render(Modal, { title: 'Settings' });
+    opener.remove();
+
+    expect(() => {
+      modal.unmount();
+    }).not.toThrow();
+  });
+
   it('closes on Escape', async () => {
     const onclose = vi.fn();
     render(Modal, { title: 'Settings', onclose });

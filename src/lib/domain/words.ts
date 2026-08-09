@@ -16,6 +16,22 @@ export function isWordText(text: string): boolean {
 }
 
 /**
+ * The same shape, part way through: a word being typed.
+ *
+ * `PlayerEntersLetter` in `game.allium` guards `is_letter(letter)` and appends
+ * `lowercase(letter)`, and `InputNeverExceedsWordLength` bounds the result, so
+ * these are the only values `current_input` can hold. Stated once here for the
+ * same reason the whole word is, and used where input arrives from somewhere
+ * other than that rule — which is only ever storage.
+ */
+const PARTIAL_SHAPE = new RegExp(`^[a-z]{0,${WORD_LENGTH}}$`);
+
+/** Whether this text could be a Poodl word in progress, the empty one included. */
+export function isPartialWordText(text: string): boolean {
+  return PARTIAL_SHAPE.test(text);
+}
+
+/**
  * The letter at a one-based position, as the specifications count them.
  *
  * `letter_at` in `game.allium` is always applied to a word of the right shape,

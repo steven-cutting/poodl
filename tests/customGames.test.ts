@@ -76,6 +76,22 @@ describe('making a custom game', () => {
   });
 
   /*
+   * OnlyAcceptedWordsBecomeCustomGames: "a word that is not in the guess
+   * dictionary produces no link." A link left over from the previous entry is
+   * shown beside the refusal and can still be copied, which reads as the link
+   * for the word that was just refused — so the refusal takes it away. The
+   * entry itself is the one thing that stays, for the creator to correct.
+   */
+  it('takes the previous link away when the next entry is refused', () => {
+    const ready = run(env, fresh(), { kind: 'create_custom_game', entry: 'crumb' });
+    const refused = run(env, ready, { kind: 'create_custom_game', entry: 'qqqqq' });
+
+    expect(refused.notice).toEqual({ kind: 'custom_answer_rejected', entry: 'qqqqq' });
+    expect(refused.shareable).toBeNull();
+    expect(reduce(refused, { kind: 'copy_shareable' }, env).effects).toEqual([]);
+  });
+
+  /*
    * FullyKeyboardOperable on CustomGameCreation and on ShareCurrentAnswer:
    * "copying the resulting link can be done from the keyboard alone". The link
    * is put on the clipboard the same way a grid is, and reports the same way.

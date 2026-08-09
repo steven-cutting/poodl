@@ -57,5 +57,28 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A key on the on-screen keyboard carried its status in colour and in its accessible name
   but in no shape, which left a sighted colour-blind reader with no assistive technology
   holding only the colour. It carries the same glyph a tile does.
+- Closing a panel dropped focus to the document body, so a player who reached Settings by
+  keyboard resumed from the top of the page. `Modal` gives focus back to whatever opened it.
+- A word Poodl refused left the link made from the previous word on screen beside the
+  refusal, still copyable, which read as the link for the word just refused.
+  `OnlyAcceptedWordsBecomeCustomGames` says a refused word produces no link.
+- The custom-game form was handed the notice and the link the board was showing, so both
+  turned up inside a form that made neither — and closing the form threw the board's link
+  away. It opens on a surface of its own.
+- A stored game was believed about its own marks, so a store that had been written to could
+  restore a game that was never won, with a keyboard and a shared grid to match. Every
+  stored guess is scored again on load. Stored input is checked for shape as well as length.
+- The workshop never wrote `data-animations`, so every story rendered the tile reveal's
+  off path whatever the toolbar said. It writes it now, from the same derivation the route
+  uses, and two Tile stories pin the two paths.
+
+### Changed
+
+- `DecodeRejectsWhatItDidNotProduce` promised more than a fixed-length token can deliver:
+  refusing *every* altered token is not achievable when the tokens that decode are a fixed
+  fraction of the strings the alphabet can spell. It now states the three properties that
+  hold outright and, in `AlterationIsDetectedToABound`, the bound on the rest. No code
+  changed; `tests/links.test.ts` sweeps every single-character alteration of every token
+  instead of sampling forty words and tolerating a couple of survivors.
 
 [Unreleased]: https://github.com/steven-cutting/poodl/commits/main/

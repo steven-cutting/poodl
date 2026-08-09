@@ -38,8 +38,27 @@
     '[tabindex]:not([tabindex="-1"])'
   ].join(', ');
 
+  /*
+   * Focus goes in on arrival and comes back on the way out. Without the second
+   * half, dismissing a panel destroys the element focus was on and the browser
+   * falls back to the body: `FullyKeyboardOperable` gets the player into the
+   * dialog and then loses their place in the page behind it, so the next Tab
+   * starts again from the top.
+   *
+   * The opener is checked for still being in the document, because the control
+   * that opened a dialog is not always there when it closes — the conclusion's
+   * "New game" replaces the board it was on.
+   */
   onMount(() => {
+    const opener = document.activeElement;
+
     panel?.focus();
+
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) {
+        opener.focus();
+      }
+    };
   });
 
   function focusable(): HTMLElement[] {

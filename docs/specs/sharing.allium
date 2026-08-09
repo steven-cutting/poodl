@@ -64,7 +64,23 @@ contract AnswerObfuscation {
 
     @invariant DecodeRejectsWhatItDidNotProduce
         -- decode returns nothing for a token this scheme did not produce, and
-        -- for a token that has been altered. It never invents a word.
+        -- it never invents a word: whatever decodes at all decodes to
+        -- words/config.word_length letters. An altered token never decodes
+        -- back to the word it was made from, so an alteration is never hidden
+        -- by the game coming out the same.
+
+    @invariant AlterationIsDetectedToABound
+        -- Past those three, refusing an altered token is an integrity check
+        -- and not a proof, because a fixed-length token cannot make it one:
+        -- the tokens that decode are a fixed fraction of the strings the
+        -- alphabet can spell, so some alteration always lands on another one.
+        -- What is promised is the bound. An altered token survives the check
+        -- with probability below one in sixty-five thousand, and one that then
+        -- names a word the guess dictionary holds — the only kind that starts
+        -- a game rather than being refused as an invalid link — below one in a
+        -- hundred million. Every other alteration reaches
+        -- RejectInvalidCustomLink, which already requires the decoded word to
+        -- be in the guess dictionary.
 
     @guidance
         -- This is obfuscation, not security. It has to survive idle curiosity

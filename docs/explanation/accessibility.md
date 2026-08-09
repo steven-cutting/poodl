@@ -27,6 +27,15 @@ on-screen keyboard, and it holds regardless of the physical-keyboard setting —
 setting governs only whether typing goes straight into the board, never whether the game
 can be played.
 
+Keyboard operability is where a dialog costs the most, so `Modal` carries the whole of it
+once. Focus goes into the panel when it opens, Escape closes it, Tab cycles inside rather
+than wandering out to the board behind, and focus goes back to whatever opened it on the
+way out. That last one is easy to leave out and invisible until someone tries: closing
+destroys the element focus is on, the browser falls back to the document body, and the
+player who tabbed to Settings and pressed Escape resumes from the top of the page. A child
+that removes the control the player just used — the countdown's stop button, the statistics
+confirmation — carries focus across its own swap for the same reason.
+
 **Every submitted guess is announced.** When a guess is accepted, its per-letter results
 reach assistive technology in reading order, along with the attempt number and how many
 attempts remain.
@@ -50,7 +59,11 @@ playable. That is what the setting is for.
 
 **Motion respects the operating system.** Animations run only when the animations setting
 is on *and* the operating system expresses no reduced-motion preference. The operating
-system wins.
+system wins. The route writes that one derived answer onto `:root` as `data-animations`,
+and the tile reveal is gated on the attribute rather than on a media query of its own —
+a second opinion on the same question is how the two come apart. The workshop writes the
+same attribute from its own toolbar, so both paths are rendered there rather than only the
+one the toolbar happens to be left on.
 
 **The distribution is readable without seeing it.** Each statistics bucket's attempt
 number and count are available as text, so the shape is read rather than inferred from

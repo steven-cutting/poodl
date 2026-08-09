@@ -59,7 +59,9 @@ component cannot reach for a shortcut: adding behaviour means adding a command, 
 naming the rule it comes from, which is the discipline the split exists to impose.
 
 The layering page gains a layer, and with it the rule that `app/` may import `domain/` and
-`ports/` but nothing may import `app/` except a route.
+`ports/`, that a component may name a type from `app/` because that is the vocabulary it
+renders, and that only a route reaches the runtime — `reduce`, the store, the ports. The
+page states it; this records that it had to.
 
 ## What would reopen this
 

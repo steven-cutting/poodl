@@ -479,12 +479,20 @@ function playerResetsStatistics(state: AppState): AppState {
 
 // ---------------------------------------------------------------- sharing ---
 
-/** `CreateCustomGameLink` and `RejectCustomAnswer`. */
+/**
+ * `CreateCustomGameLink` and `RejectCustomAnswer`.
+ *
+ * `OnlyAcceptedWordsBecomeCustomGames` says a word Poodl does not accept
+ * "produces no link", so the refusal takes the previous one away rather than
+ * leaving it beside the refusal, where it reads as the link for the word that
+ * was just refused and can still be copied. The entry is the one thing the
+ * guarantee keeps: it "stays put for the creator to correct".
+ */
 function createCustomGameLink(state: AppState, entry: string, env: Env): AppState {
   const text = entry.toLowerCase();
 
   if (!isWordText(text) || !env.words.guessWords().has(text)) {
-    return notify(state, { kind: 'custom_answer_rejected', entry });
+    return notify(putAway(state), { kind: 'custom_answer_rejected', entry });
   }
   return linkReady(state, text, env);
 }

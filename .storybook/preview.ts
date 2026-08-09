@@ -38,6 +38,7 @@ type Motion = (typeof MOTIONS)[number];
 interface Appearance {
   theme: Theme;
   highContrast: Switch;
+  animations: Switch;
   reducedMotion: Motion;
 }
 
@@ -58,6 +59,7 @@ function readAppearance(globals: Record<string, unknown>): Appearance {
   return {
     theme: choose(globals['theme'], THEMES, 'system'),
     highContrast: choose(globals['highContrast'], SWITCHES, 'off'),
+    animations: choose(globals['animations'], SWITCHES, 'on'),
     reducedMotion: choose(globals['reducedMotion'], MOTIONS, 'follow')
   };
 }
@@ -67,9 +69,10 @@ function readAppearance(globals: Record<string, unknown>): Appearance {
  *
  * `prefers-reduced-motion` is a media query. Nothing running inside the page can
  * make `matchMedia` report `reduce`; only the browser can, from outside. This
- * freezes declarative motion so a reviewer sees the still frame. Poodl has no
- * animation at all today, so the control is provisioned rather than useful, and
- * it is evidence for nothing.
+ * freezes declarative motion so a reviewer sees the still frame — the tile
+ * reveal is the one thing it has to freeze. It stands in for the device half of
+ * `Appearance.animations_active`, and because it is a simulation it is not
+ * evidence that the real preference is honoured; `tests/` holds that.
  */
 function applySimulatedReducedMotion(active: boolean): void {
   const existing = document.getElementById(REDUCED_MOTION_STYLE_ID);
@@ -120,6 +123,18 @@ function applyAppearance(appearance: Appearance): void {
     root.removeAttribute('data-high-contrast');
   }
 
+  /*
+   * `Appearance.animations_active`, on the same terms the route writes it: the
+   * setting and the device's reduced-motion preference taken together, and the
+   * device wins. Without this the attribute is never present in the workshop
+   * and every story renders the animation-off path, whatever the toolbar says.
+   */
+  if (appearance.animations === 'on' && appearance.reducedMotion !== 'reduce') {
+    root.setAttribute('data-animations', 'on');
+  } else {
+    root.removeAttribute('data-animations');
+  }
+
   applySimulatedReducedMotion(appearance.reducedMotion === 'reduce');
 }
 
@@ -127,6 +142,7 @@ function clearAppearance(): void {
   const root = document.documentElement;
   root.removeAttribute('data-theme');
   root.removeAttribute('data-high-contrast');
+  root.removeAttribute('data-animations');
   document.getElementById(REDUCED_MOTION_STYLE_ID)?.remove();
 }
 
@@ -152,6 +168,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'system',
     highContrast: 'off',
+    animations: 'on',
     reducedMotion: 'follow'
   },
 
@@ -184,6 +201,20 @@ const preview: Preview = {
         items: [
           { value: 'off', title: 'Off', icon: 'circlehollow' },
           { value: 'on', title: 'On', icon: 'contrast' }
+        ]
+      }
+    },
+
+    animations: {
+      name: 'Animations',
+      description: 'Animations setting',
+      toolbar: {
+        title: 'Animations',
+        icon: 'lightning',
+        dynamicTitle: true,
+        items: [
+          { value: 'on', title: 'On', icon: 'lightning' },
+          { value: 'off', title: 'Off', icon: 'lightningoff' }
         ]
       }
     },

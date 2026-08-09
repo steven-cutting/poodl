@@ -99,7 +99,7 @@ should be deleted rather than covered; see
 | `scoring.test.ts` | The `GuessScoring` contract, including the duplicate-letter cases and the invariants over the whole answer list. |
 | `keyboard.test.ts` | The `KeyboardKnowledge` contract: full alphabet coverage, strongest mark wins, knowledge never weakens. |
 | `hardMode.test.ts` | `Game.satisfies_hard_mode` and the `HardModeAdmission` contract, including its prefix semantics. |
-| `links.test.ts` | The `AnswerObfuscation` codec: the round trip over the whole dictionary, altered tokens refused, and three tokens pinned so the scheme cannot move under links already issued. |
+| `links.test.ts` | The `AnswerObfuscation` codec: the round trip over the whole dictionary, every single-character alteration of every token swept for the two failures `DecodeRejectsWhatItDidNotProduce` forbids outright, and three tokens pinned so the scheme cannot move under links already issued. |
 | `sharing.test.ts` | The `ShareGridFormat` contract, both palettes, and that no letter reaches the grid. |
 | `statistics.test.ts` | The statistics block and the answer pool, including what recycling does and why the flag exists. |
 | `appearance.test.ts`, `announcements.test.ts` | The two `Appearance` derivations, and the sentences the announcement guarantees ask for. |
@@ -107,7 +107,7 @@ should be deleted rather than covered; see
 | `gameplay.test.ts` | Entering letters, the three rejections, accepting a guess, and the endless countdown. |
 | `settings.test.ts` | Every setter, both hard-mode guards, and resetting the statistics. |
 | `customGames.test.ts` | Making, sharing, opening and refusing a custom link, and sharing a result. |
-| `persistence.test.ts` | The round trip, the schema version, and what a damaged store costs. |
+| `persistence.test.ts` | The round trip, the schema version, and what a damaged store costs — including a record that satisfies every type while breaking an invariant the specifications state. |
 | `store.test.ts` | The rune shell: dispatch, persistence, the countdown under a fake timer, and both clipboard outcomes. |
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |

@@ -130,6 +130,27 @@
   );
 
   /*
+   * The custom-game form is handed the notice and the shareable the engine
+   * holds, because both are what it makes. That means whatever the board was
+   * already saying — a guess rejection, a link made from the conclusion —
+   * would appear inside a form it has nothing to do with, and closing the form
+   * discards it. So the form opens on a clean surface.
+   *
+   * Only this panel: `SettingsPanel` and `StatisticsPanel` render neither, and
+   * clearing on their behalf would throw away a link the player is still
+   * looking at. An invalid-link notice is left alone too — `InvalidLinkNotice`
+   * is its surface, it carries the way out of a dead end, and `boardNotice`
+   * has already excluded it from anything the form could inherit.
+   */
+  function openCustomForm(): void {
+    if (boardNotice !== null) {
+      store?.dispatch({ kind: 'dismiss_notice' });
+    }
+    store?.dispatch({ kind: 'dismiss_shareable' });
+    panel = 'custom';
+  }
+
+  /*
    * settings.allium — the `Appearance` surface reaching the document. `app.css`
    * keys every palette on `:root`, so the attributes go on the documentElement
    * and nowhere else.
@@ -180,7 +201,7 @@
   <p class="toolbar">
     <button type="button" onclick={() => (panel = 'settings')}>Settings</button>
     <button type="button" onclick={() => (panel = 'statistics')}>Statistics</button>
-    <button type="button" onclick={() => (panel = 'custom')}>Set a word</button>
+    <button type="button" onclick={openCustomForm}>Set a word</button>
   </p>
 
   {#if app.notice?.kind === 'custom_link_invalid'}

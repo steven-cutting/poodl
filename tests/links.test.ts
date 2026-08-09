@@ -24,12 +24,6 @@ const PINNED_TOKENS: Readonly<Record<string, string>> = {
   aback: 'y9k8jjyh'
 };
 
-/** A spread-out sample, so a failure is not confined to one corner of the space. */
-function sample(size: number): string[] {
-  const step = Math.floor(dictionary.length / size);
-  return dictionary.filter((_, index) => index % step === 0).slice(0, size);
-}
-
 /*
  * sharing.allium — the `AnswerObfuscation` contract. This is obfuscation and
  * not encryption: decision 0005 says so, and anyone who reads the codec holds
@@ -110,35 +104,65 @@ describe('decoding a token this scheme did not produce', () => {
   });
 
   /*
-   * An altered token. The checksum is sixteen bits and the permutation covers a
-   * twenty-four bit space of which 26^5 values name a word, so roughly one
-   * alteration in ninety thousand survives both tests by chance — a fraction of
-   * one expected acceptance over the sweep below. What must never happen is an
-   * alteration decoding back to the word it came from: an altered link becoming
-   * the same game would hide the alteration rather than report it.
+   * `DecodeRejectsWhatItDidNotProduce` and `AlterationIsDetectedToABound`, over
+   * every single-character alteration of every word in the list rather than a
+   * sample: 11,440 words, eight positions, thirty-one substitutions apiece.
+   *
+   * The two counts asserted are the two the specification states absolutely,
+   * and neither is a matter of luck. An altered token cannot decode back to its
+   * own word because the codec is a function — the same word always produces
+   * the same token, so a different token cannot yield it — and an altered link
+   * that became the same game would hide the alteration rather than report it.
+   * A survivor that named a guess word would start a different custom game;
+   * every other survivor reaches `RejectInvalidCustomLink`, which requires the
+   * decoded word to be in the dictionary.
+   *
+   * The survivors themselves are counted rather than forbidden, because
+   * `AlterationIsDetectedToABound` promises a bound and not their absence. The
+   * bound asserted here is far looser than the fourteen this sweep actually
+   * finds, so it reports a scheme that got worse without failing whenever the
+   * check value happens to shift.
    */
-  it('rejects an altered token, and never decodes one back to its own word', () => {
-    let accepted = 0;
+  it('never decodes an altered token to its own word, or to any playable game', () => {
+    const playable = new Set(dictionary);
+    let survivors = 0;
+    let ownWord = 0;
+    let startsAGame = 0;
+    let altered = 0;
 
-    for (const word of sample(40)) {
+    for (const word of dictionary) {
       const token = encodeAnswer(word);
 
       for (let at = 0; at < TOKEN_LENGTH; at += 1) {
+        const before = token.slice(0, at);
+        const after = token.slice(at + 1);
+
         for (const character of TOKEN_ALPHABET) {
           if (character === token[at]) {
             continue;
           }
-          const decoded = decodeToken(`${token.slice(0, at)}${character}${token.slice(at + 1)}`);
+          altered += 1;
+          const decoded = decodeToken(`${before}${character}${after}`);
 
-          expect(decoded).not.toBe(word);
-          if (decoded !== null) {
-            accepted += 1;
+          if (decoded === null) {
+            continue;
+          }
+          survivors += 1;
+          if (decoded === word) {
+            ownWord += 1;
+          }
+          if (playable.has(decoded)) {
+            startsAGame += 1;
           }
         }
       }
     }
 
-    expect(accepted).toBeLessThanOrEqual(2);
+    expect(altered).toBe(dictionary.length * TOKEN_LENGTH * (TOKEN_ALPHABET.length - 1));
+    expect(ownWord).toBe(0);
+    expect(startsAGame).toBe(0);
+    // One in sixty-five thousand is the stated bound; this sweep finds fourteen.
+    expect(survivors).toBeLessThan(altered / 65536);
   });
 
   /*

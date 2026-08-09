@@ -5,8 +5,9 @@ import { EMPTY_POOL } from '$lib/domain/answerPool';
 import type { AnswerPool } from '$lib/domain/answerPool';
 import { EMPTY_STATISTICS } from '$lib/domain/statistics';
 import type { Statistics } from '$lib/domain/statistics';
-import type { Guess, LetterMark, StartableMode } from '$lib/domain/types';
-import { isWordText, letterAt } from '$lib/domain/words';
+import type { Guess, StartableMode } from '$lib/domain/types';
+import { scoreGuess } from '$lib/domain/scoring';
+import { isPartialWordText, isWordText } from '$lib/domain/words';
 import type { StoragePort } from '$lib/ports/storage';
 
 /**
@@ -226,6 +227,10 @@ function readPool(value: unknown): AnswerPool {
  * never lost, because `AcceptGuess` tests the count for equality, and it goes
  * on spending attempts on a board that stopped drawing rows.
  *
+ * The answer is read first because the rest is read against it: every stored
+ * guess is scored again rather than believed, which is what makes the status
+ * checks below mean anything.
+ *
  * `abandoned` is absent from the statuses deliberately. Every retirement path
  * removes the game it retires, so Poodl never writes one, and
  * `OnlyTheCurrentGameIsKept` is why it never could.
@@ -235,7 +240,13 @@ function readGame(value: unknown): GameState | null {
     return null;
   }
 
-  const guesses = readGuesses(value['guesses']);
+  const answer: unknown = value['answer'];
+
+  if (typeof answer !== 'string' || !isWordText(answer)) {
+    return null;
+  }
+
+  const guesses = readGuesses(value['guesses'], answer);
   const input: unknown = value['currentInput'];
   const status: unknown = value['status'];
 
@@ -243,10 +254,12 @@ function readGame(value: unknown): GameState | null {
     guesses === null ||
     !isOneOf(value['mode'], ['random', 'endless', 'practice', 'custom'] as const) ||
     !isOneOf(status, ['in_progress', 'won', 'lost'] as const) ||
-    typeof value['answer'] !== 'string' ||
-    !isWordText(value['answer']) ||
+    // The shape as well as the length. `PlayerEntersLetter` appends
+    // `lowercase(letter)` behind an `is_letter` guard, so uppercase text,
+    // punctuation or a digit is not input this game could have produced, and
+    // the board would draw it as though it were.
     typeof input !== 'string' ||
-    input.length > WORD_LENGTH ||
+    !isPartialWordText(input) ||
     typeof value['hardModeAtStart'] !== 'boolean' ||
     typeof value['hardModeReleased'] !== 'boolean' ||
     !isCount(value['startedAt']) ||
@@ -266,7 +279,7 @@ function readGame(value: unknown): GameState | null {
 
   return {
     mode: value['mode'],
-    answer: value['answer'],
+    answer,
     status,
     hardModeAtStart: value['hardModeAtStart'],
     hardModeReleased: value['hardModeReleased'],
@@ -286,17 +299,30 @@ function readGame(value: unknown): GameState | null {
  * `PositionIsAnAttemptNumber` and `GuessPositionsAreDistinct` amount to
  * together, and what `acceptGuess` writes in the first place.
  */
-function readGuesses(value: unknown): Guess[] | null {
+function readGuesses(value: unknown, answer: string): Guess[] | null {
   if (!Array.isArray(value) || value.length > MAX_ATTEMPTS) {
     return null;
   }
 
-  const guesses = value.map((entry, index) => readGuess(entry, index + 1));
+  const guesses = value.map((entry, index) => readGuess(entry, index + 1, answer));
 
   return guesses.every((guess) => guess !== null) ? guesses : null;
 }
 
-function readGuess(value: unknown, position: number): Guess | null {
+/**
+ * A stored guess, or null unless it is the one `GuessScoring` produces for this
+ * word against this answer.
+ *
+ * The results are recomputed rather than believed. `OneResultPerPositionInOrder`
+ * fixes each result's position and letter, but the mark is the whole of what a
+ * guess says, and a stored mark is the one field storage could change without
+ * breaking any shape: marking an unrelated word correct throughout satisfies
+ * `WonGamesHoldAWinningGuess` and restores a game that was never won, with a
+ * keyboard, a set of hard-mode constraints and a shared grid to match. Scoring
+ * is pure and the answer is already in hand, so asking `scoreGuess` costs a
+ * load nothing and settles all three at once.
+ */
+function readGuess(value: unknown, position: number, answer: string): Guess | null {
   if (!isRecord(value) || value['position'] !== position || typeof value['word'] !== 'string') {
     return null;
   }
@@ -308,25 +334,22 @@ function readGuess(value: unknown, position: number): Guess | null {
     return null;
   }
 
-  /*
-   * `OneResultPerPositionInOrder` says each result's letter is the guess's
-   * letter at that position. Checking it is what makes the cast below honest,
-   * and it is not pedantry: `satisfies_hard_mode` compares a candidate's letter
-   * against a stored one, so a result carrying a letter the word does not have
-   * refuses every guess the player can type.
-   */
-  const marks: LetterMark[] = ['correct', 'present', 'absent'];
-  const readable = results.every(
-    (result, index) =>
+  const scored = scoreGuess(word, answer);
+  const readable = results.every((result, index) => {
+    const expected = scored[index];
+
+    return (
       isRecord(result) &&
-      result['position'] === index + 1 &&
-      result['letter'] === letterAt(word, index + 1) &&
-      isOneOf(result['mark'], marks)
-  );
+      expected !== undefined &&
+      result['position'] === expected.position &&
+      result['letter'] === expected.letter &&
+      result['mark'] === expected.mark
+    );
+  });
 
   if (!readable) {
     return null;
   }
 
-  return { position, word, results: results as Guess['results'] };
+  return { position, word, results: scored };
 }

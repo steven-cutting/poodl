@@ -224,6 +224,27 @@ describe('the page', () => {
     expect(screen.queryByRole('textbox', { name: /custom game link/i })).not.toBeInTheDocument();
   });
 
+  /*
+   * The other half of the same problem. The form reads the notice and the
+   * shareable the engine holds, so a link the board made and a rejection the
+   * board earned both turned up inside a form that made neither — and closing
+   * the form threw the board's link away.
+   */
+  it('opens the custom game form on a surface of its own', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await userEvent.click(screen.getByRole('button', { name: /share the word/i }));
+
+    expect(screen.getAllByRole('textbox', { name: /custom game link/i })).toHaveLength(1);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Set a word' }));
+    const form = screen.getByRole('dialog', { name: /set a word/i });
+
+    expect(
+      within(form).queryByRole('textbox', { name: /custom game link/i })
+    ).not.toBeInTheDocument();
+  });
+
   // ShareCurrentAnswer: the board's own link is shown on the board.
   it('shows a link the board made on the board', async () => {
     render(Page);

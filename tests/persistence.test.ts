@@ -209,6 +209,14 @@ describe('loading from a device that has nothing usable', () => {
     expect(withGame({ mode: 'daily' }).currentGame).toBeNull();
     expect(withGame({ answer: 'apples' }).currentGame).toBeNull();
     expect(withGame({ currentInput: 'toolong' }).currentGame).toBeNull();
+    /*
+     * The shape of the input, not only its length. `PlayerEntersLetter` appends
+     * `lowercase(letter)` behind an `is_letter` guard, so none of these is
+     * input a game produced — and the board draws whatever it is handed.
+     */
+    for (const currentInput of ['AP', 'a p', '12', 'á', 'ap!']) {
+      expect(withGame({ currentInput }).currentGame).toBeNull();
+    }
     expect(withGame({ startedAt: 'yesterday' }).currentGame).toBeNull();
     expect(withGame({ completedAt: 'later' }).currentGame).toBeNull();
     expect(withGame({ guesses: 'none' }).currentGame).toBeNull();
@@ -288,6 +296,53 @@ describe('loading from a device that has nothing usable', () => {
       withGuesses([{ ...guess, results: [{ ...results[0], letter: 'zzzz' }, ...results.slice(1)] }])
         .currentGame
     ).toBeNull();
+    /*
+     * The marks are scored again rather than believed. A mark is the one field
+     * storage could change without breaking a shape, and it is the field the
+     * whole game reads: marking a word correct throughout satisfies
+     * `WonGamesHoldAWinningGuess` and restores a game that was never won.
+     */
+    expect(
+      withGuesses([
+        {
+          ...guess,
+          results: (guess['results'] as Record<string, unknown>[]).map((result) => ({
+            ...result,
+            mark: 'correct'
+          }))
+        }
+      ]).currentGame
+    ).toBeNull();
+    // And any other rewriting of them, whichever way each mark is moved.
+    const rotated: Record<string, string> = {
+      correct: 'present',
+      present: 'absent',
+      absent: 'correct'
+    };
+    expect(
+      withGuesses([
+        {
+          ...guess,
+          results: results.map((result) => ({
+            ...result,
+            mark: rotated[result['mark'] as string]
+          }))
+        }
+      ]).currentGame
+    ).toBeNull();
+  });
+
+  /*
+   * The scoring is the specification's, so a stored game that agrees with it is
+   * restored whole — the check above refuses what was tampered with, not what
+   * was merely written by an earlier session.
+   */
+  it('restores a game whose guesses score as the specifications say they do', () => {
+    const storage = createFakeStorage();
+    const state = lived();
+    saveState(storage, state);
+
+    expect(loadState(storage).currentGame).toEqual(state.currentGame);
   });
 
   /*

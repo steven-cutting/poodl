@@ -24,8 +24,11 @@ achieve:
 - Decoding what was encoded returns the original word.
 - The token does not contain the answer as text and cannot be read off by eye.
 - The link says nothing else about the word — not a letter, not a hint.
-- Decoding rejects a token the scheme did not produce, or one that has been altered, and
-  never invents a word.
+- Decoding rejects a token the scheme did not produce, never invents a word, and never
+  decodes an altered token back to the word it was made from.
+- Past those, an altered token is refused to a stated bound rather than always. A
+  fixed-length token cannot promise more: the tokens that decode are a fixed fraction of
+  the strings the alphabet can spell, so some alteration always lands on another one.
 
 The threat model is idle curiosity and a glance at the address bar. It is not a
 determined attacker, and no claim is made that it withstands one.
@@ -43,6 +46,24 @@ An altered or malformed link must fail cleanly. The specification requires it to
 and to offer a random game rather than leaving the player at a dead end, and requires that
 decoding never invents a word — a token that decodes to arbitrary letters would be worse
 than one that fails.
+
+The bound is measured rather than assumed. Sweeping every single-character alteration of
+every word in the bundled guess list — 11,440 words across eight positions and thirty-one
+substitutions, 2,837,120 altered tokens — 14 survive the check, one in roughly two hundred
+thousand. None decodes back to the word it came from, which the codec makes impossible
+rather than unlikely: the same word always produces the same token, so a different token
+cannot yield it. None names a word the guess dictionary holds, so every one of the fourteen
+reaches `RejectInvalidCustomLink` and is shown as an invalid link rather than starting a
+game. `tests/links.test.ts` holds that sweep, so a change to the permutation, the check
+value or the alphabet has to keep it true.
+
+Strengthening the check was considered and declined. The alphabet is not what decides
+this — the same value is eight Crockford base32 characters, ten hexadecimal ones or seven
+base64 ones, all carrying the same check and the same rate — so a different encoding buys
+nothing. A code with guaranteed detection over a bounded alteration model would buy
+something, at the price of invalidating every link already in somebody's hands, which is
+what the pinned tokens in `tests/links.test.ts` exist to prevent. The threat model does not
+ask for it.
 
 ## What would reopen this
 
