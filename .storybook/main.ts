@@ -1,4 +1,6 @@
 import type { StorybookConfig } from '@storybook/sveltekit';
+import { fileURLToPath } from 'node:url';
+import { mergeConfig } from 'vite';
 
 /**
  * The component workshop.
@@ -41,7 +43,28 @@ const config: StorybookConfig = {
     // script, and the Justfile exports STORYBOOK_DISABLE_TELEMETRY as a belt.
     disableTelemetry: true,
     disableWhatsNewNotifications: true
-  }
+  },
+  /*
+   * `stories/` sits at the repository root, so the dev server has to be told it
+   * may serve it. SvelteKit's Vite plugin narrows `server.fs.allow` to `src`,
+   * `.svelte-kit`, its own runtime and `node_modules`; everything outside that
+   * list is a 403, and a story that will not load is a workshop that shows
+   * nothing. Storybook's builder appends this `configDir` itself, which is why
+   * `.storybook/preview.ts` already served and `stories/` did not.
+   *
+   * `mergeConfig` concatenates arrays, so this entry survives the config
+   * SvelteKit's plugin merges on top of it. A directory rather than a file,
+   * which covers `fixtures.ts` as well as the `*.stories.svelte`.
+   *
+   * Dev only: `fs.allow` guards nothing else. `storybook build` bundles the same
+   * files through Rollup and the story run resolves them through Vitest, which
+   * allows the project root, so both gates stayed green while `just storybook`
+   * served none of them.
+   */
+  viteFinal: (config) =>
+    mergeConfig(config, {
+      server: { fs: { allow: [fileURLToPath(new URL('../stories', import.meta.url))] } }
+    })
 };
 
 export default config;

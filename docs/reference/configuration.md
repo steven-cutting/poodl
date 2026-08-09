@@ -29,7 +29,7 @@ belong in source where they can be reviewed.
 | `vite.config.ts` | The dev server, the jsdom unit suite, and the coverage thresholds. |
 | `tsconfig.json` | Strict TypeScript, plus `noUncheckedIndexedAccess`, `noImplicitOverride`, `noFallthroughCasesInSwitch`, `isolatedModules` and `checkJs`. |
 | `eslint.config.js` | Flat config on `strictTypeChecked`, two documented rule decisions, and the Storybook plugin's preset. |
-| `.storybook/main.ts` | Where stories are found, which addons load, the SvelteKit framework, and telemetry off. |
+| `.storybook/main.ts` | Where stories are found, which addons load, the SvelteKit framework, telemetry off, and the dev server's permission to serve `stories/`. |
 | `.storybook/preview.ts` | The design tokens, the theme, contrast and motion toolbar globals, and the axe run applied to every story. |
 | `vitest.storybook.config.ts` | The story run: browser mode, Chromium, axe. Deliberately separate from `vite.config.ts` so the coverage floor cannot be affected. |
 | `.prettierrc.json` | 100 columns, single quotes, no trailing commas, Svelte block order. |
