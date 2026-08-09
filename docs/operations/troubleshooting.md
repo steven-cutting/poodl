@@ -71,18 +71,24 @@ as a defaulted argument — pass one in. See [Testing](../reference/testing.md).
 
 ## The site works locally but assets 404 once deployed
 
-The base path. A project site is served from a subdirectory, so build the way the
-workflow does before concluding anything:
+The base path. A project site is served from a subdirectory, so serve it from one before
+concluding anything:
 
 ```console
 BASE_PATH=/poodl just frontend-build
-just preview
+BASE_PATH=/poodl just preview
 ```
 
-## The Pages deployment fails with a permissions error
+The second command matters as much as the first. Left off, the preview mounts the site at
+`/` instead of `/poodl/`, and an asset referenced by an absolute path — the usual cause of
+this symptom — resolves there and returns 200. The reproduction has to sit on the
+subdirectory or it cannot show the fault.
 
-Pages has not been switched to the GitHub Actions source in the repository settings. The
-workflow cannot do that for itself; see
+## The Pages deployment fails with a 404
+
+`Failed to create deployment (status: 404)`, with the build job green and its artefact
+uploaded. Pages has not been switched to the GitHub Actions source in the repository
+settings. The workflow cannot do that for itself; see
 [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
 
 ## Something works under `just dev` but not in the build

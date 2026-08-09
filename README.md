@@ -3,6 +3,8 @@
 An unlimited-play, Wordle-style word guessing game. Guess a five-letter word in six
 attempts; play again immediately, however many times you like.
 
+**Play it at <https://stevencutting.com/poodl/>.**
+
 Poodl is a single-page static site with no backend, no accounts and no telemetry. It runs
 entirely in the browser and is published to GitHub Pages.
 

@@ -65,6 +65,22 @@ Playwright cache, installs the browser, then runs `storybook-build` and `storybo
 Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build is
 proved and then discarded: it is uploaded nowhere and published nowhere.
 
+## On `main`
+
+`main` is protected, and `frontend`, `documents` and `stories` must all pass before a
+branch merges into it. Those three names are the CI jobs, and they are the only required
+checks: the Pages workflow's own jobs never run on a pull request, so requiring them would
+block every merge.
+
+The branch is not required to be up to date with `main` first, and no review is required —
+neither earns its cost on a repository with one author. Force pushes and deletion are
+refused. Administrators are not bound by the rule, so the direct push remains available
+when it is genuinely wanted; the protection is there to stop an unproved merge, not to stop
+the author.
+
+This is what keeps a red `main` from publishing. `.github/workflows/pages.yml` deploys on
+every push to `main`, in parallel with CI rather than behind it, so the merge is the gate.
+
 ## Related pages
 
 - [Commands](commands.md)

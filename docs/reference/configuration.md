@@ -15,7 +15,7 @@ everything below is read at build time or is a fixed part of the source.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `BASE_PATH` | empty | The subdirectory the site is served from. Read by `svelte.config.js` into `paths.base`. Set to `/poodl` by the Pages workflow; left empty for local builds and for a custom domain. |
+| `BASE_PATH` | empty | The subdirectory the site is served from. Read by `svelte.config.js` into `paths.base`, and by the preview server, which mounts the site at it. Set to `/poodl` by the Pages workflow; left empty for local builds, and for a domain of Poodl's own that would serve it from a root. |
 
 That is the whole list. SvelteKit's `PUBLIC_` convention is available but unused: a value
 baked into a public static bundle is not configuration, it is a constant, and constants

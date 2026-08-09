@@ -35,7 +35,7 @@ rather than in a shell history.
 | Recipe | Purpose |
 | --- | --- |
 | `just dev` | Vite development server with hot module replacement. |
-| `just preview` | Serve the built output in `build/`. Build first. |
+| `just preview` | Serve the built output in `build/`. Build first, and pass the same `BASE_PATH` the build used: it decides where the site is mounted. |
 | `just storybook` | The component workshop on port 6006, with hot module replacement. |
 
 ## Format and repair

@@ -56,10 +56,13 @@ just frontend-build
 just preview
 ```
 
-To reproduce the published site exactly, build with the base path the project site uses:
+To reproduce the published site exactly, use the base path the project site is served
+from — on both commands, because the preview server reads it too and is what mounts the
+site at `/poodl/`:
 
 ```console
 BASE_PATH=/poodl just frontend-build
+BASE_PATH=/poodl just preview
 ```
 
 ## Before handing work back
