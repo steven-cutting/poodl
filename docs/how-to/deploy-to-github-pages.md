@@ -58,14 +58,8 @@ BASE_PATH=/poodl just frontend-build
 BASE_PATH=/poodl just preview
 ```
 
-Set it on both commands. The preview server reads `paths.base` too, and it is what decides
-where the site is mounted: without it the build is served from `/` rather than `/poodl/`,
-which is not the path Pages serves.
-
-The site still loads either way, because a prerendered page references its assets
-relatively (`./_app/…`) and so is portable between mount points. That is exactly why the
-base path has to be set deliberately: a path that is wrong for production will not
-announce itself here.
+The base path goes on both commands, or the preview mounts at `/` and is not the path
+Pages serves. See [Configuration](../reference/configuration.md).
 
 The output should contain `index.html`, `.nojekyll` and an `_app/` directory. The
 `.nojekyll` file comes from `static/` and stops Pages treating the underscore-prefixed

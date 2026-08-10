@@ -15,11 +15,30 @@ everything below is read at build time or is a fixed part of the source.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `BASE_PATH` | empty | The subdirectory the site is served from. Read by `svelte.config.js` into `paths.base`, and by the preview server, which mounts the site at it. Set to `/poodl` by the Pages workflow; left empty for local builds, and for a domain of Poodl's own that would serve it from a root. |
+| `BASE_PATH` | empty | The subdirectory the site is served from. Read into `paths.base`. Set to `/poodl` by the Pages workflow; left empty for local builds, and for a domain of Poodl's own that would serve it from a root. |
 
 That is the whole list. SvelteKit's `PUBLIC_` convention is available but unused: a value
 baked into a public static bundle is not configuration, it is a constant, and constants
 belong in source where they can be reviewed.
+
+### The base path
+
+`BASE_PATH` is read twice, not once. `svelte.config.js` reads it into `paths.base` for the
+build, and the preview server reads the same value to decide where it mounts the output.
+So it belongs on both commands:
+
+```console
+BASE_PATH=/poodl just frontend-build
+BASE_PATH=/poodl just preview
+```
+
+Build with it and preview without it and the site comes up at `/` rather than `/poodl/` —
+which is not the path Pages serves, so the preview is not the deployment.
+
+Nothing announces the mistake. A prerendered page references its own assets relatively
+(`./_app/…`), so it loads at either mount and no request 404s. Only a path written
+absolutely by hand gives the fault away, and only when the preview sits on the
+subdirectory. That is why the value has to be set deliberately rather than noticed.
 
 ## Configuration files
 

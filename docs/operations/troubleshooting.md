@@ -79,10 +79,10 @@ BASE_PATH=/poodl just frontend-build
 BASE_PATH=/poodl just preview
 ```
 
-The second command matters as much as the first. Left off, the preview mounts the site at
-`/` instead of `/poodl/`, and an asset referenced by an absolute path — the usual cause of
-this symptom — resolves there and returns 200. The reproduction has to sit on the
-subdirectory or it cannot show the fault.
+The second command matters as much as the first. A reproduction mounted at `/` cannot show
+this fault at all: an asset referenced by an absolute path — the usual cause — resolves
+there and returns 200. It has to sit on the subdirectory. See
+[Configuration](../reference/configuration.md).
 
 ## The Pages deployment fails with a 404
 

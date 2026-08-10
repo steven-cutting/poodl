@@ -60,8 +60,8 @@ BASE_PATH=/poodl just frontend-build
 BASE_PATH=/poodl just preview
 ```
 
-The base path goes on both commands: the preview server reads it too, and mounts the site
-at `/poodl/` the way Pages does.
+The base path goes on both commands, so the preview sits where Pages serves. See
+[Configuration](../reference/configuration.md).
 
 If something works under `just dev` but not under `just preview`, suspect prerendering:
 module-scope work runs once at build time, and anything per-visitor must happen in the

@@ -56,9 +56,9 @@ just frontend-build
 just preview
 ```
 
-To reproduce the published site exactly, use the base path the project site is served
-from — on both commands, because the preview server reads it too and is what mounts the
-site at `/poodl/`:
+To reproduce the published site exactly, set the base path the project site is served
+from — on both commands, for the reason [Configuration](../reference/configuration.md)
+gives:
 
 ```console
 BASE_PATH=/poodl just frontend-build

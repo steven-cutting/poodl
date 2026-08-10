@@ -44,8 +44,9 @@ BASE_PATH=/poodl just frontend-build
 BASE_PATH=/poodl just preview
 ```
 
-Both commands, because the preview server reads the base path as well and mounts the site
-at it. See [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
+The base path goes on both commands; see [Configuration](../reference/configuration.md)
+for why, and [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md) for the rest of
+the procedure.
 
 ## Rolling back
 

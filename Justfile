@@ -53,9 +53,8 @@ storybook-browsers-deps:
 dev:
     npm run dev
 
-# Serves the build in build/. The preview server reads BASE_PATH as well as the
-# build does, and it is what decides where the site is mounted, so set it on
-# both to be served at the path Pages serves.
+# Serves the build in build/. BASE_PATH decides the mount as well as the build,
+# so pass the same value here that the build used.
 preview:
     npm run preview
 

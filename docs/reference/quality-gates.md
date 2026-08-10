@@ -78,8 +78,14 @@ refused. Administrators are not bound by the rule, so the direct push remains av
 when it is genuinely wanted; the protection is there to stop an unproved merge, not to stop
 the author.
 
-This is what keeps a red `main` from publishing. `.github/workflows/pages.yml` deploys on
-every push to `main`, in parallel with CI rather than behind it, so the merge is the gate.
+The gate is on the merge, not on the deployment. `.github/workflows/pages.yml` deploys on
+every push to `main`, in parallel with CI rather than behind it, so what the protection
+buys is narrower than it sounds: an unproved branch cannot become `main` through a pull
+request. Two paths still publish ahead of a green run. One is the administrator pushing
+directly. The other is an ordinary merge, because the branch is not required to be up to
+date first — three green checks are green for the branch, not for the `main` the merge
+produces. In both cases the deployment and the CI run start together, so watch the run and
+roll back if it is red.
 
 ## Related pages
 
