@@ -41,8 +41,12 @@ Before pushing anything that changes the build, reproduce it:
 
 ```console
 BASE_PATH=/poodl just frontend-build
-just preview
+BASE_PATH=/poodl just preview
 ```
+
+The base path goes on both commands; see [Configuration](../reference/configuration.md)
+for why, and [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md) for the rest of
+the procedure.
 
 ## Rolling back
 

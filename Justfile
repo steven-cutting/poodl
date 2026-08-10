@@ -53,8 +53,8 @@ storybook-browsers-deps:
 dev:
     npm run dev
 
-# Serves the build in build/. BASE_PATH applies at build time, so preview the
-# same output the Pages workflow would publish by building with it set.
+# Serves the build in build/. BASE_PATH decides the mount as well as the build,
+# so pass the same value here that the build used.
 preview:
     npm run preview
 

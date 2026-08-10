@@ -5,10 +5,11 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
  * Poodl is a static site with no server, so every route is prerendered and the
  * build output is a directory of files a host can serve as-is.
  *
- * `paths.base` is empty by default, which is what local development and a
- * future custom domain both want. The GitHub Pages workflow sets BASE_PATH to
- * `/poodl` because a project site is served from a subdirectory; moving to a
- * custom domain later means deleting that one line from the workflow.
+ * `paths.base` is empty by default. The GitHub Pages workflow sets BASE_PATH to
+ * `/poodl` because a project site is served from a subdirectory of the
+ * account's Pages root — which the account's custom domain does not change.
+ * Only a domain belonging to this repository would serve Poodl from a root, and
+ * that is what emptying it is for.
  */
 
 /** @type {import('@sveltejs/kit').Config} */

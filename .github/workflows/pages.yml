@@ -36,8 +36,10 @@ jobs:
       - name: Build the static site
         run: npm run build
         env:
-          # A project site is served from a subdirectory. Delete this env block
-          # when the site moves to a custom domain, which serves from the root.
+          # A project site is served from a subdirectory of the account's Pages
+          # root, which the account's custom domain does not change. Delete this
+          # env block only for a domain belonging to this repository, which
+          # would serve Poodl from a root.
           BASE_PATH: /${{ github.event.repository.name }}
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

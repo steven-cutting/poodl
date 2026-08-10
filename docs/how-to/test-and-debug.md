@@ -57,8 +57,11 @@ There is no server, so the browser and the build output are the whole system.
 
 ```console
 BASE_PATH=/poodl just frontend-build
-just preview
+BASE_PATH=/poodl just preview
 ```
+
+The base path goes on both commands, so the preview sits where Pages serves. See
+[Configuration](../reference/configuration.md).
 
 If something works under `just dev` but not under `just preview`, suspect prerendering:
 module-scope work runs once at build time, and anything per-visitor must happen in the
