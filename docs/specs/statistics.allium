@@ -274,6 +274,9 @@ surface StatisticsPanel {
     provides:
         PlayerResetsStatistics(viewer)
 
+    contracts:
+        fulfils game/DirectManipulation
+
     @guarantee OnlyRandomAndEndlessAreCounted
         -- Practice and custom games never move any number on this panel.
         -- Practice keeps no record of any kind: no games played, no answers

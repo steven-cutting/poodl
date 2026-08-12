@@ -27,13 +27,6 @@ repos:
         language: system
         types_or: [python, pyi]
 
-      - id: editorconfig-checker
-        name: EditorConfig
-        entry: ec
-        language: node
-        additional_dependencies: [editorconfig-checker@6.1.1]
-        types: [text]
-
       - id: eslint
         name: ESLint and Prettier
         entry: npm run lint
@@ -70,6 +63,25 @@ repos:
       # end-of-file-fixer and trailing-whitespace live in .pre-commit-fix.yaml.
       # This config is the read-only gate, so it may report but never repair;
       # editorconfig-checker and markdownlint report the same defects here.
+
+  # The checker's own repository, not the npm wrapper that shares its name. That
+  # wrapper ships no binary: it fetches the newest release on first run, which is
+  # an unpinned dependency sitting inside the gate, and a race as well. `prek`
+  # gives a hook's files to several processes at once, and the wrapper decides
+  # whether to download by stat-ing a directory that it then creates — so on a
+  # cold cache one process downloads while its siblings walk into the half-made
+  # directory and find no binary in it. CI failed exactly that way: two `ENOENT`
+  # on `bin/latest/bin`, then `ETXTBSY` on the file being extracted under them.
+  # A `rev` pins the checker the way every other third-party hook here is pinned,
+  # and the build happens once, before any file is read.
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker
+    rev: 675b1261a4d9668c357fcd67deb87aed8b881b94 # v3.11.1
+    hooks:
+      # Upstream declares no `types`, which would widen this to every file in the
+      # repository. Text is what this gate has always read.
+      - id: editorconfig-checker
+        name: EditorConfig
+        types: [text]
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: b82a6c8896e491b9cb377a99ff3412131920681b # v0.23.2

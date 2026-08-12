@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameScreen from '../src/lib/components/GameScreen.svelte';
+  import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
   import { keyboardKnowledge } from '../src/lib/domain/keyboard';
   import { CUSTOM_GAME, LINK, LINK_MADE, LOST_GAME, PLAYING, WON_GAME } from './fixtures';
 
@@ -35,6 +36,11 @@
     '- `ShareCurrentAnswer.@guarantee AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard`, and',
     '  `@guarantee TheAnswerIsNeverShownInOrderToShareIt`: making a link displays nothing about',
     '  the word.',
+    '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
+    '  measures what the invariant closes on — that the whole screen is playable at',
+    '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
+    '  it is one a finger can find: top to bottom without exception, and across for everything',
+    '  but the keys the invariant exempts.',
     '',
     'Every board here is scored by the real `scoreGuess`, so no story can show a result the',
     '`GuessScoring` contract would not produce.'
@@ -157,3 +163,54 @@
     await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
   }}
 />
+
+<!--
+  The whole screen at the narrowest viewport the specification supports, framed
+  to exactly that width with the gutters `.shell` gives the page.
+
+  The keyboard stories measure the keys. This one measures the claim the
+  invariant closes on — that at `config.narrowest_supported_width` the game is
+  playable without scrolling sideways — over everything the board puts on the
+  screen at once, which is where a five-tile row, a toolbar and a keyboard get
+  to disagree about the space they have.
+-->
+<Story
+  name="At the narrowest supported width"
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    // game/DirectManipulation.@invariant EveryControlIsAComfortableTarget
+    const frame = canvasElement.querySelector<HTMLElement>('[data-frame]');
+
+    if (frame === null) {
+      throw new Error('This story has no frame to measure the screen against');
+    }
+
+    await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
+
+    /*
+     * And every control on it is one a finger can find. Top to bottom that is
+     * every control without exception; across, the invariant exempts the keys
+     * and only the keys, so the keyboard has to be told apart rather than the
+     * measurement dropped for everything. `app.css` declares no inline-size
+     * floor — deliberately, because one would be wrong for a key — which is
+     * exactly why a narrow toolbar button would otherwise pass here unmeasured.
+     */
+    const keyboard = within(canvasElement).getByRole('group', { name: 'Keyboard' });
+
+    for (const control of within(canvasElement).getAllByRole('button')) {
+      const box = control.getBoundingClientRect();
+
+      await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+
+      if (!keyboard.contains(control)) {
+        await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+      }
+    }
+  }}
+>
+  {#snippet template(args)}
+    <div data-frame style="inline-size: {NARROWEST_SUPPORTED_WIDTH}px; padding-inline: 1rem">
+      <GameScreen {...args} />
+    </div>
+  {/snippet}
+</Story>

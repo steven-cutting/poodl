@@ -76,7 +76,7 @@ go on the preview document's root element, because `src/app.css` keys every pale
 ## Values the specifications decide
 
 `src/lib/config.ts` mirrors the `config` blocks in `docs/specs/`. These are not tunables:
-changing one here without changing it in the specification is drift. All twelve are below,
+changing one here without changing it in the specification is drift. All fourteen are below,
 and the file holds nothing else — a constant that appears there without a `config` entry to
 name is drift in the other direction.
 
@@ -87,6 +87,8 @@ name is drift in the other direction.
 | `MIN_GUESS_WORDS` | 10000 | `words.allium`, `config.min_guess_words` |
 | `MAX_ATTEMPTS` | 6 | `game.allium`, `config.max_attempts` |
 | `ENDLESS_COUNTDOWN_MS` | 10000 | `game.allium`, `config.endless_countdown`, stated there as `10.seconds` |
+| `MINIMUM_TOUCH_TARGET` | 44 | `game.allium`, `config.minimum_touch_target`, in CSS pixels |
+| `NARROWEST_SUPPORTED_WIDTH` | 320 | `game.allium`, `config.narrowest_supported_width`, in CSS pixels |
 | `SHARE_HEADING` | `Poodl` | `sharing.allium`, `config.share_heading` |
 | `CUSTOM_MARKER` | `custom` | `sharing.allium`, `config.custom_marker` |
 | `STANDARD_CORRECT_TILE` | 🟩 | `sharing.allium`, `config.standard_correct_tile` |
@@ -94,6 +96,13 @@ name is drift in the other direction.
 | `HIGH_CONTRAST_CORRECT_TILE` | 🟧 | `sharing.allium`, `config.high_contrast_correct_tile` |
 | `HIGH_CONTRAST_PRESENT_TILE` | 🟦 | `sharing.allium`, `config.high_contrast_present_tile` |
 | `ABSENT_TILE` | ⬛ | `sharing.allium`, `config.absent_tile` |
+
+The last two are the only ones whose real consumer is a stylesheet, and CSS cannot import a
+TypeScript constant. So `44px` is written out in `src/app.css` and `20rem` in
+`Keyboard.svelte`, and the tests are what hold them to the constants: the jsdom suite
+compares the resolved `min-block-size` against `MINIMUM_TOUCH_TARGET`, and the story run
+frames the keyboard at `NARROWEST_SUPPORTED_WIDTH` and measures it there. Change the
+specification and the constant, and the gate names the stylesheet that did not follow.
 
 ## Version pins
 

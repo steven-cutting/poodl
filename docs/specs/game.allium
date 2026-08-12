@@ -176,6 +176,48 @@ contract KeyboardKnowledge {
         -- if a later guess places it wrongly.
 }
 
+-- How a control behaves under a finger rather than a pointer. Touch is the
+-- primary way Poodl is played, and a gesture the platform interprets for
+-- itself is a gesture that did not reach the game. Every surface with a
+-- control the player can tap fulfils this, which is why it lives here rather
+-- than on any one of them.
+contract DirectManipulation {
+    @invariant ATapDoesOnlyWhatTheControlDoes
+        -- A tap on a control performs that control's action and nothing
+        -- besides. The label is not selected, no callout or magnifier is
+        -- raised by holding, and tapping the same control twice in quick
+        -- succession performs it twice rather than zooming the page. Repeated
+        -- fast tapping on the on-screen keyboard is ordinary play, not a
+        -- gesture.
+
+    @invariant DeliberateZoomIsNeverTakenAway
+        -- What the previous invariant removes is the platform's guess, never
+        -- the player's intent. Pinch-zoom still magnifies the page, and the
+        -- page stays usable when the operating system or the browser is
+        -- already magnifying it. Refusing to be zoomed at all would satisfy
+        -- the first invariant and fail this one; the first is not licence
+        -- for it.
+
+    @invariant EveryControlIsAComfortableTarget
+        -- Every control is at least config.minimum_touch_target across, in
+        -- both directions. One layout cannot be: ten keys and nine gaps do
+        -- not fit that side by side across config.narrowest_supported_width.
+        -- There the on-screen keyboard meets the figure top to bottom,
+        -- divides the row equally across, and keeps a gap between keys — so
+        -- what a key gives up is bounded by the width of the screen and by
+        -- nothing else. Every other control meets the figure outright. All of
+        -- this holds down to config.narrowest_supported_width, at which the
+        -- game is playable without scrolling sideways.
+
+    @invariant ATouchIsAcknowledged
+        -- A control shows that it was touched, from the moment of contact,
+        -- whatever the platform's own tap feedback is doing. Suppressing that
+        -- feedback without replacing it leaves a control that reads as dead
+        -- under exactly the finger this contract exists for. The
+        -- acknowledgement is a change the eye catches without motion, so it
+        -- owes nothing to whether animations are running.
+}
+
 ------------------------------------------------------------
 -- Enumerations
 ------------------------------------------------------------
@@ -346,6 +388,17 @@ config {
     -- leave a screen reader room to finish announcing the conclusion, without
     -- making endless feel as though it has stalled.
     endless_countdown: Duration = 10.seconds
+
+    -- CSS pixels across a control, in both directions, for
+    -- DirectManipulation.EveryControlIsAComfortableTarget. The on-screen
+    -- keyboard is the one place this cannot be met in both, which is why that
+    -- invariant says what happens instead rather than stating a size alone.
+    minimum_touch_target: Integer = 44
+
+    -- CSS pixels. The narrowest viewport the game is playable on without
+    -- scrolling sideways, which is the width every target and spacing figure
+    -- has to survive.
+    narrowest_supported_width: Integer = 320
 }
 
 ------------------------------------------------------------
@@ -776,6 +829,9 @@ surface Welcome {
             when viewer.can_continue
         NewGameRequested(viewer, mode)
 
+    contracts:
+        fulfils DirectManipulation
+
     related:
         GameBoard(viewer.current_game)
             when viewer.current_game != null
@@ -835,6 +891,9 @@ surface GameNavigation {
 
     provides:
         NewGameRequested(viewer, mode)
+
+    contracts:
+        fulfils DirectManipulation
 
     related:
         GameBoard(viewer.current_game)
@@ -903,6 +962,9 @@ surface GameBoard {
         PlayerSubmitsGuess(viewer)
             when game.status = in_progress
         NewGameRequested(viewer, mode)
+
+    contracts:
+        fulfils DirectManipulation
 
     related:
         PhysicalKeyboardInput(game)
@@ -1013,6 +1075,9 @@ surface GameConclusion {
         NewGameRequested(viewer, mode)
         PlayerStopsCountdown(viewer, game)
             when game.auto_continue_at != null
+
+    contracts:
+        fulfils DirectManipulation
 
     related:
         GameBoard(game)

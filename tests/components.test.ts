@@ -115,6 +115,30 @@ describe('Keyboard', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
+  /*
+   * DirectManipulation.EveryControlIsAComfortableTarget. A row divided equally
+   * across `narrowest_supported_width` leaves about 27px per control, which the
+   * words "Enter" and "Delete" do not fit at any legible size, so the two
+   * action keys carry the glyph every on-screen keyboard uses. The name is what
+   * the surface promised and it does not change: the glyph is hidden from
+   * assistive technology and the label says the word, so GameBoard.@guarantee
+   * FullyKeyboardOperable reads exactly as it did.
+   */
+  it('names the action keys in words while showing the glyph a finger expects', () => {
+    render(Keyboard);
+
+    for (const [name, glyph] of [
+      ['Enter', '⏎'],
+      ['Delete', '⌫']
+    ] as const) {
+      const key = screen.getByRole('button', { name });
+      const mark = key.querySelector('[aria-hidden="true"]');
+
+      expect(mark?.textContent).toBe(glyph);
+      expect(key.textContent.trim()).toBe(glyph);
+    }
+  });
+
   it('says what is known about a key rather than only colouring it', () => {
     render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])) });
 

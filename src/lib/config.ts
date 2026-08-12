@@ -31,6 +31,24 @@ export const MAX_ATTEMPTS = 6;
  */
 export const ENDLESS_COUNTDOWN_MS = 10_000;
 
+/**
+ * `game.allium` — `config.minimum_touch_target`, in CSS pixels.
+ *
+ * Across a control, in both directions, for
+ * `DirectManipulation.EveryControlIsAComfortableTarget`. The on-screen keyboard
+ * is the one place this cannot be met in both, which is why that invariant says
+ * what happens instead rather than stating a size alone.
+ */
+export const MINIMUM_TOUCH_TARGET = 44;
+
+/**
+ * `game.allium` — `config.narrowest_supported_width`, in CSS pixels.
+ *
+ * The narrowest viewport the game is playable on without scrolling sideways,
+ * which is the width every target and spacing figure has to survive.
+ */
+export const NARROWEST_SUPPORTED_WIDTH = 320;
+
 /** `sharing.allium` — `config.share_heading` and `config.custom_marker`. */
 export const SHARE_HEADING = 'Poodl';
 export const CUSTOM_MARKER = 'custom';

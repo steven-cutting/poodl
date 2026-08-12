@@ -113,7 +113,32 @@ should be deleted rather than covered; see
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
-| `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one. |
+| `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: `src/app.css` read from disk, put in the document, and measured on a real control. |
+| `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one, and the figures only a layout engine can produce. |
+
+`directManipulation.test.ts` reads the stylesheet rather than importing it. `?raw` is the
+idiom `src/lib/ports/words.ts` uses for the word lists, but a `.css` file is claimed by
+Vite's stylesheet pipeline first and comes back as the empty string — a test that injected
+that would assert against an empty cascade and pass on every property at once. It is worth
+knowing about because the failure mode is a green test rather than a red one.
+
+What that file can and cannot see is the whole reason the `DirectManipulation` evidence is
+split across both suites. jsdom resolves `touch-action`, `user-select`, the logical size
+floors and custom properties, so the cascade is real. It has no layout engine, so
+`getBoundingClientRect()` returns zeros and no figure that depends on layout can be taken
+there at all — every one of those goes to the stories, where it is measured in Chromium. Its
+default input font is 16px where a real user agent's is smaller, so the figure that keeps iOS
+Safari from magnifying the page is taken on a rendered input in
+`stories/LinkReady.stories.svelte` rather than on the fixture, where it would pass whether or
+not the stylesheet said anything.
+
+Its CSS parser also drops `-webkit-tap-highlight-color` and `-webkit-touch-callout` on the
+floor, so those resolve to nothing whether or not they were declared. Only the first of the
+two is recovered: `stories/Keyboard.stories.svelte` reads it from Chromium.
+`-webkit-touch-callout` is declared and verified by neither gate, because desktop Chromium
+does not report it and the platform it is for is iOS Safari — it is a manual check on a real
+phone, listed as such in [Accessibility](../explanation/accessibility.md). Neither half is
+the whole contract, and the two halves together are still not all of it.
 
 ## Related pages
 

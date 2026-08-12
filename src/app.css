@@ -113,6 +113,137 @@ body {
 }
 
 /*
+ * `game.allium` — contract DirectManipulation. Ten surfaces fulfil it and not
+ * one of them owns it, which is why the rules sit here rather than in any one
+ * component. Everything below is measured by `tests/directManipulation.test.ts`
+ * and by the width stories in `stories/Keyboard.stories.svelte`.
+ *
+ * ATapDoesOnlyWhatTheControlDoes. `manipulation` declines the platform's guess
+ * at what a second tap meant, which is what makes fast repeated tapping on the
+ * keyboard ordinary play rather than a gesture; the rest stop a held finger
+ * selecting a key's label or raising a callout over it. It is deliberately not
+ * `touch-action: none`, which would take the pinch as well —
+ * DeliberateZoomIsNeverTakenAway says the first invariant is not licence for
+ * that, and `app.html` leaves the viewport scalable for the same reason.
+ */
+button,
+label,
+input[type='checkbox'],
+input[type='radio'] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/*
+ * The same invariant, and the one declaration of it a text control can take. A
+ * second fast tap in the link field or the shared grid is a caret placed twice,
+ * never a zoom, so `manipulation` belongs here as much as it does on a key.
+ *
+ * The other four are deliberately absent rather than forgotten. `sharing.allium`
+ * asks in TheGridIsAvailableAsText for the grid to be "selected by hand before
+ * it is sent", and on a phone the callout is how a selection is copied — so
+ * suppressing either would satisfy this contract by spending that guarantee.
+ * Leaving the tap highlight alone is the same decision seen from the other side:
+ * nothing here removes the platform's acknowledgement, so nothing here owes a
+ * replacement, and the caret and the focus outline arrive on contact anyway.
+ */
+input[type='text'],
+textarea {
+  touch-action: manipulation;
+}
+
+/*
+ * DeliberateZoomIsNeverTakenAway, from the other direction: below 16px iOS
+ * Safari magnifies the page when an input takes focus, which is the platform
+ * zooming on its own initiative rather than the player asking. Every text
+ * control in the app already says this in its own scoped styles, so this rule
+ * changes nothing on the screen today; what it changes is that a control which
+ * arrives without them inherits the body's figure instead of the user agent's
+ * smaller one. Measured in Chromium by `stories/LinkReady.stories.svelte`,
+ * because jsdom's default input font is already 16px and an assertion there
+ * would pass whether or not this rule existed.
+ */
+input,
+textarea {
+  font: inherit;
+}
+
+/*
+ * EveryControlIsAComfortableTarget, top to bottom, where every control meets the
+ * figure outright. 44px is `game.allium`'s `config.minimum_touch_target`;
+ * `MINIMUM_TOUCH_TARGET` in `src/lib/config.ts` is the same number, and the test
+ * compares this resolved value against it so the two cannot drift apart.
+ *
+ * Across is deliberately not declared. The on-screen keyboard is the one place
+ * the figure cannot be met in that direction, so a floor here would be wrong for
+ * a key and would have to be fought back inside `Keyboard.svelte` — the fight
+ * that, lost, is the sideways scroll this rule exists alongside. Every other
+ * control carries a label that takes it past the figure on its own, and the
+ * story run measures that rather than assuming it.
+ *
+ * A text control is included on purpose: a 37px input is as much a target as a
+ * 37px button. It takes only part of the first rule above, and for the opposite
+ * reason — `ShareResults` has to stay selectable by hand.
+ */
+button,
+input[type='text'],
+textarea {
+  min-block-size: 44px;
+}
+
+/*
+ * ATouchIsAcknowledged. The rule above removes the platform's own tap flash, and
+ * removing it without replacing it leaves a control that reads as dead under
+ * exactly the finger this contract exists for.
+ *
+ * The page's own ink drawn inside the key, backed by its own paper. Two tones
+ * rather than one because a key is not one colour: a plain key, five mark
+ * colours and two palettes make twelve backgrounds, and no single tone stands
+ * off all of them — white on a light grey key measures 1.46 to one, and ink on
+ * a high-contrast blue key in the dark theme measures 1.77. Every one of the
+ * twelve has an edge over 4.1 to one this way, the worst being the absent mark
+ * at 4.21, well past the 3.0 a control's boundary answers to.
+ *
+ * A ring rather than a filter, which was the first thing tried. `filter` dims
+ * the letter along with the key, and a 10% shift took black on the absent mark
+ * from 4.99 to one down to 4.15 — buying this invariant by spending
+ * ResultsAreNeverConveyedByColourAlone, which is not a trade that was on offer.
+ * A shadow paints over the background and under the content, so the letter is
+ * untouched at every value.
+ *
+ * No transition and no animation: the acknowledgement "owes nothing to whether
+ * animations are running", so `data-animations` must not reach it the way it
+ * reaches the tile reveal. `box-shadow` is set by no component, so the cue is
+ * not something a key can override by accident.
+ *
+ * Two selectors, because the first rule in this block suppresses the platform's
+ * flash on four kinds of control and a replacement owed to one of them is owed
+ * to all. The row rather than the box: `SettingsPanel` makes the `<label>` the
+ * 44px target precisely because a label bound to its control activates it across
+ * its whole area, so the row is what the finger is aimed at and the row is what
+ * has to answer. A ring drawn on the native box instead would be a cue on the
+ * 13px thing nobody is aiming at, and inset shadow on a native checkbox is the
+ * platform's to paint or ignore.
+ *
+ * `:has(input:not(:disabled))` is the same carve-out `:not(:disabled)` makes on
+ * the button half: the disabled hard-mode row must not report a touch that does
+ * nothing. It also settles which labels are in scope. A label bound by `for` —
+ * `CustomGameForm`, `LinkReady`, `ResultsReady` — matches neither selector and
+ * needs no ring, because pressing it moves focus into the field and the focus
+ * outline above is the acknowledgement, arriving on the control that took the
+ * tap rather than on the words pointing at it.
+ */
+button:active:not(:disabled),
+label:has(input:not(:disabled)):active {
+  box-shadow:
+    inset 0 0 0 2px var(--text),
+    inset 0 0 0 4px var(--background);
+}
+
+/*
  * Present to assistive technology, absent to the eye. The live region uses it,
  * because what it says is already on the screen in another form: the marks are
  * on the board and the conclusion is in the modal.

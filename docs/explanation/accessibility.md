@@ -65,6 +65,61 @@ a second opinion on the same question is how the two come apart. The workshop wr
 same attribute from its own toolbar, so both paths are rendered there rather than only the
 one the toolbar happens to be left on.
 
+**A tap does only what the control does, and says that it landed.** Touch is the primary way
+Poodl is played, and a gesture the platform interprets for itself is a gesture that did not
+reach the game. Every control declines the platform's guess — `touch-action: manipulation`,
+so a second fast tap on a key is a second letter rather than a zoom; no text selection on a
+label; no callout under a held finger. What it declines is the platform's guess and never
+the player's intent: `manipulation` keeps the pinch, and the viewport meta has never carried
+`user-scalable=no` or a `maximum-scale`, both of which would satisfy the first half of this
+by breaking the second.
+
+A text control takes that first declaration and none of the others. Two fast taps in the link
+field are a caret placed twice rather than a zoom, which is the rule exactly; but the grid has
+to be "selected by hand before it is sent", and on a phone the callout is how a selection is
+copied, so suppressing either would buy this guarantee with the one below. Nothing is taken
+from a text control, so nothing is owed back: the caret, the focus outline and the platform's
+own flash all arrive on contact. What it does need is a font no smaller than 16px, below which
+iOS Safari magnifies the page when the field takes focus — the platform zooming on its own
+initiative, which is the thing this refuses.
+
+Removing the platform's tap flash without replacing it would leave a control that reads as
+dead under exactly the finger the rule exists for, so a pressed control draws a ring in the
+page's own ink, backed by its own paper. Two tones rather than one because a key is not one
+colour: a plain key, five mark colours and two palettes make twelve backgrounds, and no
+single tone stands off all of them — white measures 1.46 to one against a light grey key,
+and ink measures 1.77 against a high-contrast blue key in the dark theme. Every one of the
+twelve has an edge over 4.1 this way. A filter was the first thing tried and is the reason
+this is a shadow: `filter` dims the letter along with the key, and a ten per cent shift took
+black on the absent mark from 4.99 to one down to 4.15, buying this guarantee by spending
+the one above it.
+
+The ring goes wherever the flash was taken from, which is a wider set than the keys. A
+preference row in Settings is suppressed along with everything else and would otherwise stay
+visually unchanged until the finger lifted, so the row draws the ring too — the row and not
+the box inside it, for the same reason the row is what grew to 44px. A label that merely
+points at a text field with `for` is left out of both: pressing it moves focus into the field,
+and the focus outline lands on the control that took the tap rather than on the words pointing
+at it.
+
+**Every control is big enough to hit.** 44px, from `config.minimum_touch_target`, in both
+directions and down to the 320px viewport `config.narrowest_supported_width` names. Most of
+that is one base rule in `app.css`, because ten surfaces fulfil this contract and none of
+them owns it. Settings is the exception worth naming: three theme radios and five checkboxes
+render about thirteen pixels across, and what grew is the labelled row rather than the box,
+because a label bound to its control activates it across its whole area and a 44px checkbox
+would be a stranger thing than the problem it solved.
+
+The on-screen keyboard is the one place the figure cannot be met in both directions — ten
+keys and nine gaps do not fit 44px each across 320px, and the specification says so itself.
+There the keys meet it top to bottom, divide each row equally across and keep a gap between
+them, so what a key gives up is bounded by the width of the screen and by nothing else.
+Before this the keys carried width floors of 2rem and 4rem, which defeat flex-shrink: the
+bottom row measured 416px inside a 320px screen and the game scrolled sideways at the width
+it is supposed to be playable at. Enter and Delete are glyphs now, because about 27px is
+what an equal share comes to and neither word fits that at any legible size; each still says
+its word in `aria-label`, so nothing a screen reader hears has changed.
+
 **The distribution is readable without seeing it.** Each statistics bucket's attempt
 number and count are available as text, so the shape is read rather than inferred from
 the length of a bar.
@@ -99,10 +154,35 @@ in it**, so the gate was green and the defect was real. The palette is repaired 
 story that would have caught it now exists — verified by putting the old value back and
 watching axe fail, rather than by reasoning that it would.
 
+Touch is checked in both suites at once, because neither can see the whole of it. jsdom
+resolves `touch-action`, `user-select` and the size floors from the real stylesheet, so
+`tests/directManipulation.test.ts` measures the cascade; it has no layout engine, so every
+figure — a key's height, a row's division, whether anything scrolls sideways at 320px —
+is taken from Chromium by the stories instead. One figure goes to Chromium for a subtler
+reason: jsdom's own input font is already 16px, so an input measured there would clear the
+iOS zoom threshold whether or not the stylesheet said so, and the assertion is taken on a
+rendered field instead.
+
+Three things neither gate reaches, stated rather than left to be assumed:
+
+- `-webkit-touch-callout` is declared and never verified. jsdom's parser drops it, desktop
+  Chromium does not report it, and the platform it is for is iOS Safari. It is the one
+  declaration in this contract that rests on a manual check.
+- `:active` is a state only real input produces. No synthetic event reaches it and no play
+  function can force it, so what the story proves is that the two tones the pressed ring is
+  drawn in resolve to real, different colours, and what the unit test proves is that both
+  the button and the preference row are drawn in them. That the ring is legible on a plain
+  key and on each mark was checked by eye in both palettes and in high contrast, and the
+  contrast figures above were computed rather than eyeballed — but no gate holds either.
+- Whether the ring is what a finger on a real phone actually sees still needs a real phone.
+
 Automated checks still do not cover everything, and silence from one is not a pass. Axe
 skips what it cannot attribute — anything behind `aria-hidden`, which includes the tile's
-mark glyph, is never checked for contrast at any opacity. Focus order, announcement timing
-and whether a description is actually useful still need a person and a screen reader.
+mark glyph and now the keyboard's two action glyphs, is never checked for contrast at any
+opacity. Axe's `target-size` rule answers to 24px, not to the 44 this project states, so a
+control it passes can still fail `EveryControlIsAComfortableTarget`; the story measurements
+are what hold that figure. Focus order, announcement timing and whether a description is
+actually useful still need a person and a screen reader.
 
 ## Related pages
 
