@@ -215,6 +215,9 @@ surface SettingsPanel {
         PlayerDisablesHardMode(viewer)
             when settings.hard_mode
 
+    contracts:
+        fulfils game/DirectManipulation
+
     @guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
         -- hard_mode_may_be_enabled is exposed so that an unavailable
         -- hard-mode control can say which of the two reasons applies: it was

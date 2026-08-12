@@ -281,6 +281,7 @@ surface CustomGameCreation {
 
     contracts:
         fulfils AnswerObfuscation
+        fulfils game/DirectManipulation
 
     @guarantee OnlyAcceptedWordsBecomeCustomGames
         -- A word that is not in the guess dictionary produces no link. The
@@ -327,6 +328,7 @@ surface ShareCurrentAnswer {
 
     contracts:
         fulfils AnswerObfuscation
+        fulfils game/DirectManipulation
 
     related:
         game/GameBoard(current_game)
@@ -386,6 +388,7 @@ surface CustomLinkEntry {
 
     contracts:
         fulfils AnswerObfuscation
+        fulfils game/DirectManipulation
 
     @guarantee OpeningALinkStartsThatGame
         -- A link that decodes starts a custom game on that word straight
@@ -426,6 +429,7 @@ surface ShareResults {
         PlayerSharesResults(viewer, finished)
 
     contracts:
+        fulfils game/DirectManipulation
         fulfils ShareGridFormat
 
     related:
