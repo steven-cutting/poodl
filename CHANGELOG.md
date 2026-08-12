@@ -90,6 +90,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The workshop never wrote `data-animations`, so every story rendered the tile reveal's
   off path whatever the toolbar said. It writes it now, from the same derivation the route
   uses, and two Tile stories pin the two paths.
+- The whitespace hook was the npm wrapper of `editorconfig-checker`, which carries no binary
+  and fetches the newest release on first run — an unpinned dependency inside the gate, and
+  a race besides, since `prek` hands a hook's files to several processes at once and the
+  wrapper decides whether to download by stat-ing a directory it then creates. On a cold
+  cache one process downloaded while its siblings walked into the half-made directory, which
+  is how CI failed on a tree nothing had changed. It is the checker's own repository now,
+  pinned to v3.11.1 by commit SHA as every other third-party hook is, and built once before
+  a file is read.
 
 ### Changed
 
