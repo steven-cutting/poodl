@@ -204,19 +204,39 @@
     list-style: none;
   }
 
+  /*
+   * game/DirectManipulation.EveryControlIsAComfortableTarget. Three radios and
+   * five checkboxes, and left to the user agent each renders about thirteen
+   * pixels across — the smallest targets in the game by a wide margin.
+   *
+   * The row is what grows. A label bound to its control activates that control
+   * across its whole area, so the row is what a finger is actually aimed at,
+   * and a 44px box drawn where the player has only ever seen a native checkbox
+   * would be a stranger thing than the problem it solved. The box grows too,
+   * but only far enough to be aimed at deliberately. Measured in
+   * `stories/SettingsPanel.stories.svelte`.
+   */
   label {
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    min-block-size: 44px;
     font-weight: 600;
+  }
+
+  input[type='radio'],
+  input[type='checkbox'] {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
   }
 
   .theme label {
     font-weight: 400;
   }
 
+  /* Indented past the control and its gap, so the note lines up under the name. */
   p {
-    margin: 0.15rem 0 0 1.6rem;
+    margin: 0.15rem 0 0 2rem;
     color: var(--muted);
     font-size: 0.9rem;
   }

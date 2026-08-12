@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import SettingsPanel from '../src/lib/components/SettingsPanel.svelte';
+  import { MINIMUM_TOUCH_TARGET } from '../src/lib/config';
   import { SETTINGS } from './fixtures';
 
   const handlers = {
@@ -37,6 +38,9 @@
     '- `@guarantee TheWelcomeSettingAppliesAtTheNextArrival`, said on the control itself.',
     '- `@guarantee HighContrastGovernsTheSharedGridToo`: one preference, not two.',
     '- `@guarantee FullyKeyboardOperable`, proved by the play function below.',
+    '- `game/DirectManipulation`, whose `@invariant EveryControlIsAComfortableTarget` is the',
+    '  reason the last story measures every labelled row: nine native radios and checkboxes are',
+    '  the smallest targets in the game, and the row bound to each one is what a finger hits.',
     '',
     '`@guarantee SettingsPersistBetweenSessions` and',
     '`@guarantee TheseSettingsGovernPlayImmediately` are not this component’s to keep — the first',
@@ -140,4 +144,37 @@
   name="High contrast"
   args={{ settings: { ...SETTINGS, highContrast: true } }}
   globals={{ highContrast: 'on' }}
+/>
+
+<!--
+  Nine radios and checkboxes, and left to the user agent they render about
+  thirteen pixels across — the smallest targets in the game by a wide margin.
+
+  What is measured is the labelled row rather than the box inside it. A label
+  bound to its control activates that control across its whole area, so the row
+  is what a finger actually hits, and a 44px box drawn where the player has only
+  ever seen a native checkbox would be a stranger thing than the problem it
+  solved. jsdom can return none of these numbers.
+-->
+<Story
+  name="Every preference is a comfortable target"
+  play={async ({ canvasElement }) => {
+    // game/DirectManipulation.@invariant EveryControlIsAComfortableTarget
+    const controls = canvasElement.querySelectorAll('input[type="radio"], input[type="checkbox"]');
+
+    await expect(controls.length).toBeGreaterThan(0);
+
+    for (const control of controls) {
+      const row = control.closest('label');
+
+      if (row === null) {
+        throw new Error('A preference with no label is a preference with nothing to hit');
+      }
+
+      const box = row.getBoundingClientRect();
+
+      await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+      await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+    }
+  }}
 />

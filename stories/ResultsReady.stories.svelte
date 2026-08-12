@@ -69,3 +69,23 @@
     await expect(oncopy).toHaveBeenCalledTimes(1);
   }}
 />
+
+<!--
+  And selectable by hand, which is the half of that guarantee the keyboard story
+  does not reach.
+
+  `game/DirectManipulation.ATapDoesOnlyWhatTheControlDoes` puts `user-select:
+  none` on every control and on every label, and `user-select` inherits — so a
+  label that wrapped this textarea rather than pointing at it with `for` would
+  make the grid unselectable and satisfy one specification passage by breaking
+  another. Nothing does today. This is what says so if that ever changes.
+-->
+<Story
+  name="The grid can still be selected by hand"
+  play={async ({ canvasElement }) => {
+    // ShareResults.@guarantee TheGridIsAvailableAsText
+    const grid = within(canvasElement).getByRole('textbox', { name: /result/i });
+
+    await expect(getComputedStyle(grid).getPropertyValue('user-select')).not.toBe('none');
+  }}
+/>

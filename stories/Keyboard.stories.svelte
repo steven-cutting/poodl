@@ -3,7 +3,13 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import Keyboard from '../src/lib/components/Keyboard.svelte';
+  import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
   import { IN_PROGRESS, knownFrom } from './fixtures';
+
+  // The gutters `.shell` gives the page at every width, so a frame here leaves
+  // the keyboard exactly the room the route does.
+  const SHELL_GUTTER = '1rem';
+  const SHELL_WIDTH = '34rem';
 
   const KNOWLEDGE = knownFrom(IN_PROGRESS);
 
@@ -30,15 +36,55 @@
     '  Space.',
     '- `PhysicalKeyboardInput.@guarantee TurningThisOffLeavesTheGameFullyPlayable`. Nothing in',
     '  this component consults that setting, so it stays reachable whatever the setting says.',
-    '',
-    'A gap, stated rather than blessed: `@guarantee ResultsAreNeverConveyedByColourAlone` is not',
-    'fully discharged here. A known key says so in its accessible name, but unlike a tile it',
-    'carries no glyph, so a sighted colour-blind reader with no assistive technology has only',
-    'the colour. Closing that is an application change, not a story change.',
+    '- `@guarantee ResultsAreNeverConveyedByColourAlone`. A known key carries the same shape a',
+    '  tile does as well as its colour, and says the mark in its accessible name.',
+    '- `contract DirectManipulation`, which this component is the hardest case for. The two',
+    '  width stories below are the executable evidence for',
+    '  `@invariant EveryControlIsAComfortableTarget`: at',
+    '  `config.narrowest_supported_width` the keyboard meets `config.minimum_touch_target` top',
+    '  to bottom, divides each row equally across and keeps a gap between keys, and at the width',
+    '  the page shell gives it the keys meet the figure in both directions. They are here rather',
+    '  than in `tests/` because jsdom has no layout engine and can return none of these numbers.',
     '',
     'Child-to-parent communication is callback props — `onletter`, `ondelete`, `onsubmit` — as',
     'invariant 2 in AGENTS.md requires. There is no event dispatcher here.'
   ].join('\n');
+
+  /*
+   * Which keys share a line is a rendering fact, so it is read from geometry
+   * rather than from `.row` — a story that measures layout should not also
+   * depend on the class names the layout happens to use.
+   */
+  function keyRows(canvasElement: HTMLElement): DOMRect[][] {
+    const rows: DOMRect[][] = [];
+    let line = Number.NaN;
+
+    // Reading order is row order, so a key that starts on a new line starts a
+    // new row and the rows come out top to bottom without being sorted.
+    for (const key of within(canvasElement).getAllByRole('button')) {
+      const box = key.getBoundingClientRect();
+      const top = Math.round(box.top);
+      const current = rows.at(-1);
+
+      if (current === undefined || top !== line) {
+        rows.push([box]);
+        line = top;
+      } else {
+        current.push(box);
+      }
+    }
+
+    return rows;
+  }
+
+  function frameOf(canvasElement: HTMLElement): HTMLElement {
+    const frame = canvasElement.querySelector<HTMLElement>('[data-frame]');
+
+    if (frame === null) {
+      throw new Error('This story has no frame to measure the keyboard against');
+    }
+    return frame;
+  }
 
   const { Story } = defineMeta({
     title: 'Game/Keyboard',
@@ -159,6 +205,122 @@
     await expect(canvas.getByRole('button', { name: 'Delete' })).toHaveFocus();
     await userEvent.keyboard('[Space]');
     await expect(ondelete).toHaveBeenCalledTimes(1);
+  }}
+/>
+
+<!--
+  The narrowest viewport the specification supports, framed to exactly that
+  width with the gutters the page shell gives at every width.
+
+  `EveryControlIsAComfortableTarget` grants the keyboard the one exemption in
+  the contract, because ten keys and nine gaps cannot be 44px each across
+  320px. What it asks for instead is measured here: the figure met top to
+  bottom, each row divided equally across, a gap surviving between keys, and
+  nothing scrolling sideways. jsdom has no layout engine and can answer none of
+  it, which is why the assertion is here.
+-->
+<Story
+  name="At the narrowest supported width"
+  args={{ knowledge: KNOWLEDGE }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    // DirectManipulation.@invariant EveryControlIsAComfortableTarget
+    const frame = frameOf(canvasElement);
+    const rows = keyRows(canvasElement);
+
+    await expect(rows).toHaveLength(3);
+    await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
+
+    for (const row of rows) {
+      let previous: DOMRect | undefined;
+
+      for (const box of row) {
+        await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+
+        if (previous !== undefined) {
+          // A gap between keys, and an equal division of what is left.
+          await expect(box.left - previous.right).toBeGreaterThan(0);
+          await expect(Math.abs(box.width - previous.width)).toBeLessThan(1);
+        }
+        previous = box;
+      }
+    }
+  }}
+>
+  {#snippet template(args)}
+    <div
+      data-frame
+      style="inline-size: {NARROWEST_SUPPORTED_WIDTH}px; padding-inline: {SHELL_GUTTER}"
+    >
+      <Keyboard {...args} />
+    </div>
+  {/snippet}
+</Story>
+
+<!--
+  The same keyboard at the width `.shell` actually gives it. What a key gives up
+  is bounded by the width of the screen and by nothing else, so where the screen
+  is wide enough it gives up nothing and meets the figure in both directions —
+  the half of the invariant the narrow story cannot show.
+-->
+<Story
+  name="At the width the page gives it"
+  args={{ knowledge: KNOWLEDGE }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    // DirectManipulation.@invariant EveryControlIsAComfortableTarget
+    for (const row of keyRows(canvasElement)) {
+      for (const box of row) {
+        await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+        await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+      }
+    }
+  }}
+>
+  {#snippet template(args)}
+    <div data-frame style="inline-size: {SHELL_WIDTH}; padding-inline: {SHELL_GUTTER}">
+      <Keyboard {...args} />
+    </div>
+  {/snippet}
+</Story>
+
+<!--
+  What a tap does, in an engine that has the properties. Two of these resolve
+  nowhere else: jsdom's CSS parser drops `-webkit-tap-highlight-color` on the
+  floor, so `tests/directManipulation.test.ts` can assert the replacement but
+  never the removal, and this story is the other half of that pair.
+-->
+<Story
+  name="A key answers to a finger"
+  args={{ knowledge: KNOWLEDGE }}
+  play={async ({ canvasElement }) => {
+    // DirectManipulation.@invariant ATapDoesOnlyWhatTheControlDoes
+    // DirectManipulation.@invariant ATouchIsAcknowledged
+    const key = within(canvasElement).getByRole('button', { name: 'Q' });
+    const resolved = getComputedStyle(key);
+
+    // The platform's guess at what a tap meant, declined; the pinch it is not
+    // guessing about, kept.
+    await expect(resolved.getPropertyValue('touch-action')).toBe('manipulation');
+    await expect(resolved.getPropertyValue('user-select')).toBe('none');
+    await expect(resolved.getPropertyValue('-webkit-tap-highlight-color')).toBe('rgba(0, 0, 0, 0)');
+
+    /*
+     * And replaced rather than only removed. `:active` is a state only real
+     * input produces — no synthetic event reaches it and no story can force it
+     * — so what is proved here is that the two tones the replacement is drawn
+     * in resolve to real colours in this engine, and that they differ. Their
+     * measured contrast against all twelve key backgrounds is recorded in
+     * `src/app.css`, and `docs/explanation/accessibility.md` says plainly which
+     * part of this no gate can see.
+     */
+    const palette = getComputedStyle(document.documentElement);
+    const ink = palette.getPropertyValue('--text');
+    const paper = palette.getPropertyValue('--background');
+
+    await expect(ink).not.toBe('');
+    await expect(paper).not.toBe('');
+    await expect(ink).not.toBe(paper);
   }}
 />
 

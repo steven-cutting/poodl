@@ -9,6 +9,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
+  its control's action and nothing besides; pinch-zoom is untouched and the viewport stays
+  scalable; every control meets `config.minimum_touch_target` in both directions down to
+  `config.narrowest_supported_width`, the on-screen keyboard excepted in the one direction
+  the specification exempts it; and a pressed control draws a two-tone ring rather than
+  leaving the platform's suppressed tap flash unreplaced. Enter and Delete become glyphs,
+  keeping the accessible names they had. Evidence is split across both suites, because
+  neither can see the whole contract: `tests/directManipulation.test.ts` measures the
+  cascade, and the width stories measure real geometry in Chromium.
+
 - The game. Every rule in `docs/specs/` is implemented: four modes, the welcome screen and
   the remembered mode, guess submission with its three rejections, hard mode read live at
   submission with both of its guards, the endless countdown, statistics and the no-repeat
@@ -48,6 +58,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- The on-screen keyboard scrolled the game sideways on a narrow phone. Width floors of 2rem
+  on a letter key and 4rem on Enter and Delete defeat flex-shrink, so the bottom row measured
+  416px inside the 320px viewport `game.allium` states as the narrowest supported width. Each
+  row now divides its width equally and keeps a gap between keys, and the story run measures
+  it at that width rather than trusting that it fits.
 - The mark colours failed the WCAG contrast bar against white text, at 3.97, 2.63 and
   4.22 to one. `--mark-text` is now black, measured at 5.29, 7.99 and 4.98, with no hue
   changed. The tile's mark glyph is fully opaque for the same reason.
