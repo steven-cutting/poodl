@@ -39,7 +39,8 @@
     '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
     '  measures what the invariant closes on — that the whole screen is playable at',
     '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
-    '  it save the keys a finger can find.',
+    '  it is one a finger can find: top to bottom without exception, and across for everything',
+    '  but the keys the invariant exempts.',
     '',
     'Every board here is scored by the real `scoreGuess`, so no story can show a result the',
     '`GuessScoring` contract would not produce.'
@@ -186,12 +187,24 @@
 
     await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
 
-    // And every control on it is one a finger can find, the keyboard excepted
-    // by the invariant itself.
+    /*
+     * And every control on it is one a finger can find. Top to bottom that is
+     * every control without exception; across, the invariant exempts the keys
+     * and only the keys, so the keyboard has to be told apart rather than the
+     * measurement dropped for everything. `app.css` declares no inline-size
+     * floor — deliberately, because one would be wrong for a key — which is
+     * exactly why a narrow toolbar button would otherwise pass here unmeasured.
+     */
+    const keyboard = within(canvasElement).getByRole('group', { name: 'Keyboard' });
+
     for (const control of within(canvasElement).getAllByRole('button')) {
-      await expect(control.getBoundingClientRect().height).toBeGreaterThanOrEqual(
-        MINIMUM_TOUCH_TARGET
-      );
+      const box = control.getBoundingClientRect();
+
+      await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+
+      if (!keyboard.contains(control)) {
+        await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+      }
     }
   }}
 >

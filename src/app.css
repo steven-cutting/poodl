@@ -138,6 +138,40 @@ input[type='radio'] {
 }
 
 /*
+ * The same invariant, and the one declaration of it a text control can take. A
+ * second fast tap in the link field or the shared grid is a caret placed twice,
+ * never a zoom, so `manipulation` belongs here as much as it does on a key.
+ *
+ * The other four are deliberately absent rather than forgotten. `sharing.allium`
+ * asks in TheGridIsAvailableAsText for the grid to be "selected by hand before
+ * it is sent", and on a phone the callout is how a selection is copied — so
+ * suppressing either would satisfy this contract by spending that guarantee.
+ * Leaving the tap highlight alone is the same decision seen from the other side:
+ * nothing here removes the platform's acknowledgement, so nothing here owes a
+ * replacement, and the caret and the focus outline arrive on contact anyway.
+ */
+input[type='text'],
+textarea {
+  touch-action: manipulation;
+}
+
+/*
+ * DeliberateZoomIsNeverTakenAway, from the other direction: below 16px iOS
+ * Safari magnifies the page when an input takes focus, which is the platform
+ * zooming on its own initiative rather than the player asking. Every text
+ * control in the app already says this in its own scoped styles, so this rule
+ * changes nothing on the screen today; what it changes is that a control which
+ * arrives without them inherits the body's figure instead of the user agent's
+ * smaller one. Measured in Chromium by `stories/LinkReady.stories.svelte`,
+ * because jsdom's default input font is already 16px and an assertion there
+ * would pass whether or not this rule existed.
+ */
+input,
+textarea {
+  font: inherit;
+}
+
+/*
  * EveryControlIsAComfortableTarget, top to bottom, where every control meets the
  * figure outright. 44px is `game.allium`'s `config.minimum_touch_target`;
  * `MINIMUM_TOUCH_TARGET` in `src/lib/config.ts` is the same number, and the test
@@ -151,8 +185,8 @@ input[type='radio'] {
  * story run measures that rather than assuming it.
  *
  * A text control is included on purpose: a 37px input is as much a target as a
- * 37px button. It is absent from the rule above for the opposite reason —
- * `ShareResults` has to stay selectable by hand.
+ * 37px button. It takes only part of the first rule above, and for the opposite
+ * reason — `ShareResults` has to stay selectable by hand.
  */
 button,
 input[type='text'],
@@ -184,8 +218,26 @@ textarea {
  * animations are running", so `data-animations` must not reach it the way it
  * reaches the tile reveal. `box-shadow` is set by no component, so the cue is
  * not something a key can override by accident.
+ *
+ * Two selectors, because the first rule in this block suppresses the platform's
+ * flash on four kinds of control and a replacement owed to one of them is owed
+ * to all. The row rather than the box: `SettingsPanel` makes the `<label>` the
+ * 44px target precisely because a label bound to its control activates it across
+ * its whole area, so the row is what the finger is aimed at and the row is what
+ * has to answer. A ring drawn on the native box instead would be a cue on the
+ * 13px thing nobody is aiming at, and inset shadow on a native checkbox is the
+ * platform's to paint or ignore.
+ *
+ * `:has(input:not(:disabled))` is the same carve-out `:not(:disabled)` makes on
+ * the button half: the disabled hard-mode row must not report a touch that does
+ * nothing. It also settles which labels are in scope. A label bound by `for` —
+ * `CustomGameForm`, `LinkReady`, `ResultsReady` — matches neither selector and
+ * needs no ring, because pressing it moves focus into the field and the focus
+ * outline above is the acknowledgement, arriving on the control that took the
+ * tap rather than on the words pointing at it.
  */
-button:active:not(:disabled) {
+button:active:not(:disabled),
+label:has(input:not(:disabled)):active {
   box-shadow:
     inset 0 0 0 2px var(--text),
     inset 0 0 0 4px var(--background);

@@ -39,8 +39,8 @@
     '- `@guarantee HighContrastGovernsTheSharedGridToo`: one preference, not two.',
     '- `@guarantee FullyKeyboardOperable`, proved by the play function below.',
     '- `game/DirectManipulation`, whose `@invariant EveryControlIsAComfortableTarget` is the',
-    '  reason the last story measures every labelled row: nine native radios and checkboxes are',
-    '  the smallest targets in the game, and the row bound to each one is what a finger hits.',
+    '  reason the last story measures every labelled row: three theme radios and five checkboxes',
+    '  are the smallest targets in the game, and the row bound to each one is what a finger hits.',
     '',
     '`@guarantee SettingsPersistBetweenSessions` and',
     '`@guarantee TheseSettingsGovernPlayImmediately` are not this component’s to keep — the first',
@@ -147,14 +147,22 @@
 />
 
 <!--
-  Nine radios and checkboxes, and left to the user agent they render about
-  thirteen pixels across — the smallest targets in the game by a wide margin.
+  Three theme radios and five checkboxes, and left to the user agent they render
+  about thirteen pixels across — the smallest targets in the game by a wide
+  margin.
 
   What is measured is the labelled row rather than the box inside it. A label
   bound to its control activates that control across its whole area, so the row
   is what a finger actually hits, and a 44px box drawn where the player has only
   ever seen a native checkbox would be a stranger thing than the problem it
   solved. jsdom can return none of these numbers.
+
+  The row is also what acknowledges the touch, for the same reason: `app.css`
+  draws its pressed ring on `label:has(input:not(:disabled)):active` as well as
+  on a button, because the rule that takes the platform's tap flash away reaches
+  every one of these. `:active` is a state no play function can force, so what
+  is measured here is the target and the cue is asserted in
+  `tests/directManipulation.test.ts` instead.
 -->
 <Story
   name="Every preference is a comfortable target"

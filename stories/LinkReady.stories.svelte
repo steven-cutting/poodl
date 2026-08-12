@@ -20,7 +20,10 @@
     '- `@guarantee FullyKeyboardOperable`. Copying is a real button, and the link is a real text',
     '  box that can be focused and selected, so the keyboard has two ways through.',
     '- `@guarantee NothingAboutTheLinkIsKept`. This lives for as long as the notice does. Nothing',
-    '  is written anywhere, and a reload loses it.'
+    '  is written anywhere, and a reload loses it.',
+    '- `game/DirectManipulation`, both surfaces fulfil it. The link stays selectable by hand, and',
+    '  the last story measures the one figure a text control owes on its own: an input the page',
+    '  is not magnified to read.'
   ].join('\n');
 
   const { Story } = defineMeta({
@@ -58,5 +61,31 @@
 
     await userEvent.keyboard('{Enter}');
     await expect(oncopy).toHaveBeenCalledTimes(1);
+  }}
+/>
+
+<!--
+  `game/DirectManipulation.DeliberateZoomIsNeverTakenAway`, measured on a real
+  text field with its component styles over the base ones.
+
+  Below 16px iOS Safari magnifies the page when an input takes focus — the
+  platform zooming on its own initiative, which is what the invariant refuses.
+  A readonly field is no exception: it still takes focus, and this is the one a
+  player taps deliberately, to select the link and take it by hand. `app.css`
+  and this component both say `font: inherit`, and this is where that becomes a
+  figure, because a user agent's own input font is smaller than the page's and
+  jsdom's is not.
+-->
+<Story
+  name="Reading it does not zoom the page"
+  play={async ({ canvasElement }) => {
+    // game/DirectManipulation.@invariant DeliberateZoomIsNeverTakenAway
+    const field = within(canvasElement).getByRole('textbox', { name: /link/i });
+    const size = Number.parseFloat(getComputedStyle(field).getPropertyValue('font-size'));
+
+    await expect(size).toBeGreaterThanOrEqual(16);
+
+    // And a second fast tap in it places a caret twice rather than zooming.
+    await expect(getComputedStyle(field).getPropertyValue('touch-action')).toBe('manipulation');
   }}
 />

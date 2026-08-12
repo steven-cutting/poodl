@@ -126,10 +126,19 @@ What that file can and cannot see is the whole reason the `DirectManipulation` e
 split across both suites. jsdom resolves `touch-action`, `user-select`, the logical size
 floors and custom properties, so the cascade is real. It has no layout engine, so
 `getBoundingClientRect()` returns zeros and no figure that depends on layout can be taken
-there at all. And its CSS parser drops `-webkit-tap-highlight-color` and
-`-webkit-touch-callout` on the floor, so those resolve to nothing whether or not they were
-declared. Every one of those goes to `stories/Keyboard.stories.svelte` instead, where the
-same properties are read from Chromium. Neither half is the whole contract.
+there at all — every one of those goes to the stories, where it is measured in Chromium. Its
+default input font is 16px where a real user agent's is smaller, so the figure that keeps iOS
+Safari from magnifying the page is taken on a rendered input in
+`stories/LinkReady.stories.svelte` rather than on the fixture, where it would pass whether or
+not the stylesheet said anything.
+
+Its CSS parser also drops `-webkit-tap-highlight-color` and `-webkit-touch-callout` on the
+floor, so those resolve to nothing whether or not they were declared. Only the first of the
+two is recovered: `stories/Keyboard.stories.svelte` reads it from Chromium.
+`-webkit-touch-callout` is declared and verified by neither gate, because desktop Chromium
+does not report it and the platform it is for is iOS Safari — it is a manual check on a real
+phone, listed as such in [Accessibility](../explanation/accessibility.md). Neither half is
+the whole contract, and the two halves together are still not all of it.
 
 ## Related pages
 

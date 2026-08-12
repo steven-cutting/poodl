@@ -11,15 +11,20 @@
  * depends on layout — the keyboard divided across a 320px screen, a key's
  * measured height — is taken in real Chromium by the stories instead. The
  * cascade is real, though: `touch-action`, `user-select`, the logical size
- * floors and custom properties all resolve. Two properties do not survive
- * jsdom's CSS parser at all, `-webkit-tap-highlight-color` and
- * `-webkit-touch-callout`, and those are the story run's to carry.
+ * floors and custom properties all resolve.
+ *
+ * Two properties do not survive jsdom's CSS parser at all, and they are not
+ * covered alike. `-webkit-tap-highlight-color` is the story run's to carry.
+ * `-webkit-touch-callout` is carried by neither gate: desktop Chromium does not
+ * report it and the platform it is declared for is iOS Safari, so it is
+ * declared and never verified. `docs/explanation/accessibility.md` states that
+ * gap rather than leaving it to be discovered.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { MINIMUM_TOUCH_TARGET } from '../src/lib/config';
+import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
 
 /*
  * Read from disk rather than imported. `?raw` is the idiom `src/lib/ports/words.ts`
@@ -80,13 +85,29 @@ function token(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name);
 }
 
-/** The declarations a selector carries, read back from the parsed stylesheet. */
-function declarationsFor(selector: string): CSSStyleDeclaration {
+/**
+ * The rule a selector belongs to, read back from the parsed stylesheet.
+ *
+ * Matched against each selector in a rule's list rather than against the whole
+ * of `selectorText`, because a rule that answers for two kinds of control writes
+ * both of them there and an equality test would stop finding either. The split
+ * is naive about a comma nested inside `:is()` or `:where()`; this stylesheet
+ * has none, and a nested one would fail loudly here rather than quietly pass.
+ * Non-style rules — the dark-theme `@media` block — have no `selectorText` at
+ * all, which is why the read admits `undefined`.
+ *
+ * The first match wins, so a selector named here has to be one this stylesheet
+ * lists once. `textarea` is named by three rules and is asked for through none
+ * of them.
+ */
+function ruleFor(selector: string): CSSStyleRule {
   for (const sheet of Array.from(document.styleSheets)) {
     for (const rule of Array.from(sheet.cssRules)) {
       const styleRule = rule as CSSStyleRule;
-      if (styleRule.selectorText === selector) {
-        return styleRule.style;
+      const selectors = (styleRule.selectorText as string | undefined)?.split(',') ?? [];
+
+      if (selectors.some((one) => one.trim() === selector)) {
+        return styleRule;
       }
     }
   }
@@ -98,6 +119,17 @@ describe('ATapDoesOnlyWhatTheControlDoes', () => {
     expect(resolved('button', 'touch-action')).toBe('manipulation');
     expect(resolved('input[type="checkbox"]', 'touch-action')).toBe('manipulation');
     expect(resolved('input[type="radio"]', 'touch-action')).toBe('manipulation');
+  });
+
+  /*
+   * A text control included, and by a rule of its own. Two fast taps in the link
+   * field are a caret placed twice rather than a zoom, which is this invariant
+   * exactly — what a text control cannot take is the rest of that rule, for the
+   * reason the third case below measures.
+   */
+  it('sends a tap in a text control there too', () => {
+    expect(resolved('input[type="text"]', 'touch-action')).toBe('manipulation');
+    expect(resolved('textarea', 'touch-action')).toBe('manipulation');
   });
 
   /*
@@ -148,15 +180,20 @@ describe('DeliberateZoomIsNeverTakenAway', () => {
 
   /*
    * Below 16px iOS Safari zooms the page when an input takes focus — the
-   * platform magnifying on its own initiative, which is the thing this
-   * invariant protects the player from. Every control here says `font: inherit`
-   * and nothing sets a root font size, so this holds by inheritance today and
-   * this assertion is what keeps it holding.
+   * platform magnifying on its own initiative, which is the thing this invariant
+   * protects the player from. `font: inherit` on every text control is what
+   * holds it, and the declaration is asserted rather than the resolved figure:
+   * jsdom's own default input font is already 16px, so a computed measurement
+   * here would pass whether or not the stylesheet said anything at all. The
+   * figure is measured on a real input in Chromium by
+   * `stories/LinkReady.stories.svelte`, where the user agent's smaller default
+   * is the one being overridden.
    */
   it('does not make the platform zoom to read an input', () => {
-    expect(Number.parseFloat(resolved('input[type="text"]', 'font-size'))).toBeGreaterThanOrEqual(
-      16
-    );
+    const inherited = ruleFor('input');
+
+    expect(inherited.style.getPropertyValue('font')).toBe('inherit');
+    expect(inherited.selectorText).toContain('textarea');
   });
 });
 
@@ -176,8 +213,16 @@ describe('EveryControlIsAComfortableTarget', () => {
     expect(resolved('textarea', 'min-block-size')).toBe(floor);
   });
 
+  /*
+   * Both figures, because the invariant closes on the second: every target holds
+   * "down to config.narrowest_supported_width". Only the stories consume that
+   * one, and a story frames itself to whatever the constant says — so raising it
+   * would widen the frame, keep the run green and leave `config.ts` drifted from
+   * `game.allium` with no gate noticing. Pinned here instead.
+   */
   it('states the two figures once, where the specification can be checked against them', () => {
     expect(MINIMUM_TOUCH_TARGET).toBe(44);
+    expect(NARROWEST_SUPPORTED_WIDTH).toBe(320);
   });
 });
 
@@ -193,8 +238,11 @@ describe('ATouchIsAcknowledged', () => {
    * and no animation, because the acknowledgement "owes nothing to whether
    * animations are running" — `data-animations` must not reach it.
    */
-  it('replaces the platform feedback rather than only removing it', () => {
-    const pressed = declarationsFor('button:active:not(:disabled)');
+  it.each([
+    ['a button', 'button:active:not(:disabled)'],
+    ['a labelled preference row', 'label:has(input:not(:disabled)):active']
+  ])('replaces the platform feedback on %s rather than only removing it', (_what, selector) => {
+    const pressed = ruleFor(selector).style;
     const ring = pressed.getPropertyValue('box-shadow');
 
     expect(ring).toContain('var(--text)');
@@ -204,13 +252,28 @@ describe('ATouchIsAcknowledged', () => {
   });
 
   /*
+   * Every control the suppression reaches, and no more. Removing the platform's
+   * flash is what creates the debt, so the two lists have to answer to each
+   * other: `SettingsPanel`'s rows are suppressed and were once left with nothing
+   * in exchange. A text control is on neither list, because nothing takes its
+   * flash away in the first place.
+   */
+  it('owes an acknowledgement to every control it took one from', () => {
+    const suppressed = ruleFor("input[type='radio']").selectorText;
+    const acknowledged = ruleFor('button:active:not(:disabled)').selectorText;
+
+    expect(suppressed).toContain('label');
+    expect(acknowledged).toContain('label');
+  });
+
+  /*
    * A filter would have been the cheaper cue and it is deliberately absent: it
    * dims the letter along with the key, and on the absent mark that costs
    * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone more than this
    * invariant gains. A shadow paints under the content instead.
    */
   it('does not dim the letter it is acknowledging', () => {
-    expect(declarationsFor('button:active:not(:disabled)').getPropertyValue('filter')).toBe('');
+    expect(ruleFor('button:active:not(:disabled)').style.getPropertyValue('filter')).toBe('');
   });
 
   // Ink and paper, so the cue turns over with the palette rather than carrying
