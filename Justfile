@@ -58,8 +58,8 @@ dev:
 preview:
     npm run preview
 
-# The component workshop on port 6006. Local only: it is served and built, and
-# never published.
+# The component workshop on port 6006. This serves it; `just chromatic` is what
+# publishes a build of it for visual review.
 storybook:
     npm run storybook
 

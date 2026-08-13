@@ -46,7 +46,9 @@ network and a token. The gate stays offline and the ten gates stay ten.
   accumulate the same growing diff against a frozen ancestor.
 - **A `/chromatic` comment on a pull request publishes that branch for review.** This is
   where a change is actually looked at. It is deliberately a thing you ask for: most pushes
-  do not touch a component, and a hundred and five snapshots is a real cost.
+  do not touch a component, and a hundred and five snapshots is a real cost. It publishes
+  for a commenter whose effective repository permission is write or better, and only a head
+  branch in this repository; a fork's pull request is refused rather than published.
 
 A detected change reports and passes. Chromatic is not a required check.
 
@@ -78,12 +80,21 @@ rejected as a step that would be skipped, leaving a baseline that quietly stoppe
 this file's workflow is on the default branch, because GitHub runs `issue_comment` from
 there. The pull request that introduces it cannot trigger itself.
 
-**`issue_comment` is a known privilege-escalation shape**, and the guard is honest about
-its limit. It checks that the commenter has write access; it does not check whose code
-runs. A maintainer typing the word on a fork's pull request runs that fork's `package.json`
-lifecycle scripts, through `just sync`, in a job that can see the token. The mitigation is
-that a person decides, each time, after reading the diff. It is not the same as the runner
-being safe.
+**`issue_comment` is a known privilege-escalation shape, so a fork's pull request gets no
+visual review.** Two questions have to be answered before the token is in reach, and only
+one of them is about the person. Who asked is settled by querying the commenter's effective
+repository permission and requiring write or better — not by `author_association`, which
+reports a relationship rather than a permission, so that an organization member or a
+triage-level collaborator would pass a check on it. Whose code runs is settled by refusing
+a cross-repository head, because `just sync` runs the head's `package.json` lifecycle
+scripts, and a maintainer deciding after reading the diff is judgement, not isolation. Both
+are settled in a job that checks nothing out and holds no secret.
+
+The cost is that a contributor without write access cannot see their own change rendered,
+and neither can anyone reviewing it. On a repository with one author that is a cost nobody
+pays. It is the first thing to revisit if that changes: publishing a fork under Chromatic's
+`owner:branch` form would fix the baseline half of the problem, but the token half needs
+the build to stop being the thing that holds the token.
 
 **The workshop is built twice on a push to `main`** — once by the `stories` job, which
 proves it and throws it away, and once by Chromatic, which publishes it. That is a minute
@@ -93,9 +104,9 @@ independent of each other.
 **The branch name is resolved by hand in the workflow, and the resolution has to hold.** An
 `issue_comment` run reports `GITHUB_REF` as the default branch, so without `--branch-name`
 a review build would file itself under `main` and be auto-accepted as the baseline it was
-meant to be compared against. The step asserts a non-empty name rather than falling back.
-It resolves a bare branch, not the `owner:branch` form Chromatic wants for a cross-fork
-comparison; on a repository with one author that has not come up.
+meant to be compared against. The step asserts a non-empty name rather than falling back,
+and refuses one that is `main` outright — with cross-repository heads already refused there
+is no legitimate way for that name to arrive, and the check costs a line.
 
 TurboSnap (`--only-changed`) is not enabled. It would cut the snapshot count sharply, but
 it depends on the builder's dependency graph and adds a way for the comparison to be wrong

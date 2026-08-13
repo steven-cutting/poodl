@@ -53,10 +53,16 @@ opponent and no leaderboard, so there is nobody to cheat but themselves.
   scopes are visible rather than inherited.
 - **The comment trigger.** `/chromatic` on a pull request starts a job holding the
   Chromatic token, and an `issue_comment` workflow always runs against the base
-  repository. So it runs only for a commenter with write access. Be clear about what that
-  buys and what it does not: it checks who asked, not whose code runs. Typing the word on
-  a fork's pull request still executes that fork's install scripts in a job that can see
-  the token. Read the diff before asking for a review of it.
+  repository with its secrets — including when the comment sits on a fork's pull request.
+  Two checks stand between the comment and the token, and they answer different questions.
+  *Who asked* is the commenter's effective repository permission, queried and required to
+  be write or better; `author_association` is not consulted, because it reports a
+  relationship and an organization member or a triage-level collaborator reports a value
+  that sounds like authority and is not. *Whose code runs* is the head repository: a
+  cross-repository head is refused outright, because `just sync` would otherwise run that
+  fork's install scripts beside the token, and a person deciding to type the word is not
+  isolation. Both are settled in a job that checks nothing out and holds no secret, and
+  the publishing job does not start until they pass.
 - **Credential leakage.** `ripsecrets` scans every commit, and its output is suppressed so
   a match never copies the matched value into a log.
 - **Third-party content at runtime.** There is none. The site loads no external script,

@@ -143,9 +143,12 @@ Chromatic. Why, and what it costs, is in
 ```
 
 That publishes the branch and replies with a link. It is deliberately something you ask
-for, so a change that touches no component spends nothing. Only a commenter with write
-access can start one, and the workflow has to be on `main` before the comment does
-anything at all.
+for, so a change that touches no component spends nothing. It has to be the whole word, on
+a pull request whose branch lives in this repository, from someone whose repository
+permission is write or better — a fork's pull request is refused, for the reason
+[the security model](../explanation/security-model.md) gives. A 🚀 on your comment means it
+was accepted; silence means one of those checks said no, and the reason is a notice on the
+run. The workflow also has to be on `main` before the comment does anything at all.
 
 **From a laptop**, with the project token exported:
 

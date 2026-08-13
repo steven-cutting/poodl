@@ -70,7 +70,10 @@ A separate workflow uploads a different one. `.github/workflows/chromatic.yml` r
 [decision 0008](../decisions/0008-visual-review-in-chromatic.md). It is a workflow rather
 than a fourth `ci.yml` job because it holds a secret nothing else holds and answers to
 triggers the gate has no use for: a push to `main`, which sets the baseline, and a
-`/chromatic` comment on a pull request, which publishes that branch for review.
+`/chromatic` comment on a pull request, which publishes that branch for review. The comment
+publishes for a commenter with write permission or better, and only for a branch in this
+repository; the checks and what they are for are in
+[the security model](../explanation/security-model.md).
 
 ## On `main`
 
