@@ -106,7 +106,7 @@ describe('decoding a token this scheme did not produce', () => {
   /*
    * `DecodeRejectsWhatItDidNotProduce` and `AlterationIsDetectedToABound`, over
    * every single-character alteration of every word in the list rather than a
-   * sample: 11,440 words, eight positions, thirty-one substitutions apiece.
+   * sample: 11,441 words, eight positions, thirty-one substitutions apiece.
    *
    * The two counts asserted are the two the specification states absolutely,
    * and neither is a matter of luck. An altered token cannot decode back to its

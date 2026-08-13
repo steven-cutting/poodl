@@ -13,6 +13,8 @@
 --   - Shape obligations on every entry: exactly five letters, lowercase,
 --     one entry per distinct word.
 --   - The obligation that every answer is itself a valid guess.
+--   - The one word this specification does name: the game's own, which is
+--     always playable and always drawable.
 --   - Size floors on both lists, so a truncated data file fails rather than
 --     ships.
 --   - The provisioning contract through which the lists arrive: they are
@@ -60,6 +62,11 @@ contract WordListSource {
         -- The answer list is curated for familiarity: a player who loses
         -- should recognise the answer. The guess dictionary carries no such
         -- obligation and is expected to contain obscure words.
+
+    @invariant TheGameNameIsAlwaysSupplied
+        -- Every supply of the lists includes config.game_name in
+        -- answer_words, and therefore in guess_words. Curation is otherwise
+        -- free, but it may not drop this one entry.
 
     @invariant ListsAreStableWithinASession
         -- Both lists are fully available before the first game starts and do
@@ -114,6 +121,14 @@ entity Word {
 config {
     word_length: Integer = 5
 
+    -- The game's own name, and the only word this specification names. It is
+    -- a parameter rather than a literal in the invariant below so that the
+    -- name appears once, and so that a fork playing under another name states
+    -- its own here. It is not exempt from anything: like every other entry it
+    -- must be word_length letters and lowercase, which is what makes this
+    -- expressible at all.
+    game_name: String = "poodl"
+
     -- Floors, not targets. They exist so that a truncated or half-written
     -- data file fails outright instead of shipping as a vocabulary small
     -- enough to repeat answers within a sitting.
@@ -145,6 +160,20 @@ invariant GuessDictionaryMeetsItsMinimum {
     filter(Words, w => w.in_guess_dictionary).count >= config.min_guess_words
 }
 
+-- The game's name is an ordinary answer word: it can be typed, it can be
+-- drawn, it can be sent as a custom link. A game named after a word that
+-- Poodl itself rejects would be a strange thing to ship.
+--
+-- This is the one place curation is constrained from inside the
+-- specification, and the familiarity obligation is the reason it is allowed
+-- to be: whoever is looking at the board knows the name of the game they are
+-- playing, so an unfamiliar answer is exactly what this is not. Membership of
+-- the guess dictionary follows from EveryAnswerIsAValidGuess and is not
+-- restated here.
+invariant GameNameIsInTheAnswerList {
+    Words.any(w => w.text = config.game_name and w.in_answer_list)
+}
+
 ------------------------------------------------------------
 -- Surfaces
 ------------------------------------------------------------
@@ -161,11 +190,14 @@ surface WordListProvisioning {
     @guarantee ListsAreReplaceableWithoutSpecChange
         -- Swapping either list for a different set of words that satisfies
         -- WordListSource changes what Poodl plays with and nothing else. No
-        -- rule in any module names a specific word.
+        -- rule in any module names a specific word. The one thing a
+        -- replacement must carry over is config.game_name, which every
+        -- supply is obliged to contain.
 
-    @guarantee NoWordIsAuthoredHere
-        -- This specification contains no word list content. It states only
-        -- what any supplied list must satisfy.
+    @guarantee OnlyTheGameNameIsAuthoredHere
+        -- This specification contains no word list content beyond
+        -- config.game_name. Apart from that single entry it states only what
+        -- any supplied list must satisfy, and it names no other word.
 
     @guarantee ReplacingTheListsBreaksNothingAlreadyInPlay
         -- Because the guess dictionary only ever grows, a release that

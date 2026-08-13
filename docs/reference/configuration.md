@@ -76,13 +76,14 @@ go on the preview document's root element, because `src/app.css` keys every pale
 ## Values the specifications decide
 
 `src/lib/config.ts` mirrors the `config` blocks in `docs/specs/`. These are not tunables:
-changing one here without changing it in the specification is drift. All fourteen are below,
+changing one here without changing it in the specification is drift. All fifteen are below,
 and the file holds nothing else — a constant that appears there without a `config` entry to
 name is drift in the other direction.
 
 | Constant | Value | Specification |
 | --- | --- | --- |
 | `WORD_LENGTH` | 5 | `words.allium`, `config.word_length` |
+| `GAME_NAME` | `poodl` | `words.allium`, `config.game_name`. The one word a specification names, and an ordinary answer word. Not the same entry as `SHARE_HEADING`. |
 | `MIN_ANSWER_WORDS` | 2000 | `words.allium`, `config.min_answer_words` |
 | `MIN_GUESS_WORDS` | 10000 | `words.allium`, `config.min_guess_words` |
 | `MAX_ATTEMPTS` | 6 | `game.allium`, `config.max_attempts` |

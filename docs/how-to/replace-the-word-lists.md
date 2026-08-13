@@ -12,7 +12,7 @@ requires: []
 them changes what the game plays with and nothing else — no rule anywhere names a
 specific word.
 
-The lists in the repository hold 2,393 answers and 11,440 accepted guesses, against a
+The lists in the repository hold 2,394 answers and 11,441 accepted guesses, against a
 design intent of roughly 2,300 and roughly 13,000. `words.allium` states floors beneath
 those figures — `config.min_answer_words` is 2,000 and `config.min_guess_words` is
 10,000 — because the failure worth catching is a half-written file rather than a list of
@@ -47,9 +47,13 @@ commercial word game.
 The answer list was filtered for familiarity: a word reaches it only if two independent
 judgements call it common, and proper nouns, abbreviations, contractions, plain inflections
 of shorter words, and an explicit block list of slurs are all excluded. The guess
-dictionary keeps everything, as `words.allium` says it should. That block list is the one
-place hand-editing word data is legitimate — the question is editorial rather than lexical,
-and it is not a profanity filter.
+dictionary keeps everything, as `words.allium` says it should.
+
+Hand-editing word data is legitimate in exactly two places. The first is that block list —
+the question is editorial rather than lexical, and it is not a profanity filter. The second
+is `poodl` itself, which appears in neither upstream collection: it is `config.game_name`,
+its provenance is the specification rather than a dictionary, and it is added by hand to
+both files after the upstream lists have been normalised and sorted.
 
 ## The obligations
 
@@ -61,6 +65,10 @@ From the `WordListSource` contract in [`words.allium`](../specs/words.allium):
   type the answer.
 - The answer list is curated for familiarity — a losing player should recognise the word.
   The guess dictionary carries no such obligation and is expected to hold obscure words.
+- **Every supply includes `config.game_name`** — `poodl` — in `answers.txt`, and therefore
+  in `guesses.txt`. It is the only word any specification names, and
+  `GameNameIsInTheAnswerList` makes it an ordinary answer: drawable, typable, and sendable
+  as a custom link. Curation is otherwise free, but it may not drop this one entry.
 - Each list meets its floor: at least `min_answer_words` answers and `min_guess_words`
   accepted guesses.
 - **`guesses.txt` is append-only across releases.** A replacement may add words and may
@@ -93,7 +101,17 @@ truncated or malformed list fails the gate rather than shipping.
 
    Any output is an answer a player could not type. Add those words to the guess list.
 
-5. Run `just frontend-unit`, then `just check`.
+5. Add the game's own name back, in both files. No upstream collection carries it, so a
+   fresh pair of lists will not have it and `tests/words.test.ts` will say so:
+
+   ```console
+   printf 'poodl\n' >> src/lib/data/answers.txt
+   printf 'poodl\n' >> src/lib/data/guesses.txt
+   sort -u -o src/lib/data/answers.txt src/lib/data/answers.txt
+   sort -u -o src/lib/data/guesses.txt src/lib/data/guesses.txt
+   ```
+
+6. Run `just frontend-unit`, then `just check`.
 
 ## Two things not to do
 
