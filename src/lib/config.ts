@@ -10,6 +10,16 @@
 export const WORD_LENGTH = 5;
 
 /**
+ * `words.allium` — `config.game_name`.
+ *
+ * The game's own name, and the only word any specification names.
+ * `GameNameIsInTheAnswerList` makes it an ordinary answer word: it can be typed,
+ * drawn and sent as a custom link. It is deliberately not derived from
+ * `SHARE_HEADING`, which is a separate entry in a separate specification.
+ */
+export const GAME_NAME = 'poodl';
+
+/**
  * `words.allium` — `config.min_answer_words` and `config.min_guess_words`.
  *
  * Floors, not targets. They exist so that a truncated or half-written data file

@@ -48,8 +48,8 @@ decoding never invents a word — a token that decodes to arbitrary letters woul
 than one that fails.
 
 The bound is measured rather than assumed. Sweeping every single-character alteration of
-every word in the bundled guess list — 11,440 words across eight positions and thirty-one
-substitutions, 2,837,120 altered tokens — 14 survive the check, one in roughly two hundred
+every word in the bundled guess list — 11,441 words across eight positions and thirty-one
+substitutions, 2,837,368 altered tokens — 14 survive the check, one in roughly two hundred
 thousand. None decodes back to the word it came from, which the codec makes impossible
 rather than unlikely: the same word always produces the same token, so a different token
 cannot yield it. None names a word the guess dictionary holds, so every one of the fourteen

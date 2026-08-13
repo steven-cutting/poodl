@@ -1,7 +1,8 @@
 Poodl's word lists are derived from two collections: SCOWL, by Kevin
-Atkinson, and 12dicts, by Alan Beale. See
-docs/how-to/replace-the-word-lists.md for their provenance and for the
-obligations any replacement has to satisfy.
+Atkinson, and 12dicts, by Alan Beale. One entry comes from neither -- the
+game's own name, "poodl", which the specification requires both lists to
+carry. See docs/how-to/replace-the-word-lists.md for their provenance and
+for the obligations any replacement has to satisfy.
 
 
 SCOWL (Spell Checker Oriented Word Lists) 2020.12.07
