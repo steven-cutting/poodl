@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MIN_ANSWER_WORDS, MIN_GUESS_WORDS, WORD_LENGTH } from '../src/lib/config';
+import { GAME_NAME, MIN_ANSWER_WORDS, MIN_GUESS_WORDS, WORD_LENGTH } from '../src/lib/config';
 import { createBundledWordList, createFakeWordList } from '../src/lib/ports/words';
 
 const SHAPE = /^[a-z]+$/;
@@ -35,6 +35,16 @@ describe('the bundled word lists', () => {
     const missing = answers.filter((answer) => !guesses.has(answer));
 
     expect(missing).toEqual([]);
+  });
+
+  // GameNameIsInTheAnswerList, and TheGameNameIsAlwaysSupplied on the contract.
+  // The one word the specification names has to be an ordinary answer word:
+  // drawable, typable, and sendable as a custom link. Membership of the guess
+  // dictionary follows from EveryAnswerIsAValidGuess, and is asserted anyway
+  // because it is the half a player would notice.
+  it('supplies the game its own name, as an answer and as a guess', () => {
+    expect(answers).toContain(GAME_NAME);
+    expect(guesses.has(GAME_NAME)).toBe(true);
   });
 
   // AnswerListMeetsItsMinimum and GuessDictionaryMeetsItsMinimum. The floors

@@ -36,6 +36,11 @@ both palettes are one click apart before the settings surface exists.
 The workshop is local. A recipe serves it, two recipes gate it, and nothing publishes it.
 The Pages workflow is untouched.
 
+> The last clause is superseded in part by
+> [Decision 0008](0008-visual-review-in-chromatic.md). The workshop is still built and
+> gated locally, and the Pages workflow is still untouched, but `just chromatic` and a
+> workflow of its own now publish it to Chromatic for visual review.
+
 ## Consequences
 
 Every state of a component becomes a thing you can open, in either palette, and the

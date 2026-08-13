@@ -33,9 +33,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Ten components for the ten surfaces that had none, each with its test and its story.
 - Persistence for the game, the settings, the statistics and the answer pool, under one key
   with a schema version, tolerant of a store it cannot read.
-- Real word lists: 2,393 answers and 11,440 accepted guesses, derived from SCOWL 2020.12.07
+- Real word lists: 2,394 answers and 11,441 accepted guesses, derived from SCOWL 2020.12.07
   and 12dicts 6.0.2, with their licences carried into the build. `tests/words.test.ts` gains
   the two size floors `words.allium` states, which the placeholders knowingly failed.
+- The game's own name is a playable word. `words.allium` names it once, as
+  `config.game_name`, and `GameNameIsInTheAnswerList` makes it an ordinary answer: `poodl`
+  can be typed, drawn and sent as a custom link. It comes from neither upstream collection,
+  so `static/word-lists-NOTICE.txt` says where it does come from.
 
 - Project scaffolding: SvelteKit with the static adapter, TypeScript in strict mode,
   Vitest under jsdom, ESLint, Prettier and `svelte-check`.
@@ -52,9 +56,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The documentation handbook, enforced by `scripts/validate_docs.py`.
 - The agent contract, enforced by `scripts/validate_agents.py`, with nine skills and
   their provider bridges.
-- Storybook as a local component workshop, with `storybook-build` and `storybook-test` in
+- Storybook as a component workshop, with `storybook-build` and `storybook-test` in
   `just check`, every story rendered in real Chromium with axe over it, and a `stories`
-  job in continuous integration. It is built locally and published nowhere.
+  job in continuous integration. The build the gate makes is proved and discarded.
+
+- Visual review of that workshop in Chromatic, by `just chromatic` and by
+  `.github/workflows/chromatic.yml`. A push to `main` sets the baseline; a `/chromatic`
+  comment on a pull request publishes that branch for review, for a commenter whose
+  effective repository permission is write or better and on a head in this repository. A
+  detected change reports and passes, so it is not a required check. See
+  [decision 0008](docs/decisions/0008-visual-review-in-chromatic.md).
 
 ### Fixed
 

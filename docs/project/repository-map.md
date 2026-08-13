@@ -51,7 +51,7 @@ there is no backend to be a sibling of.
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
 | `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, and `initialize.sh`. |
 | `docs/specs/` | The Allium specifications. Behaviour is decided here, not in code. |
-| `.storybook/` | The workshop's configuration. Local: it is served and built, and never published. |
+| `.storybook/` | The workshop's configuration. Served locally, and built both by the gate, which discards it, and by `just chromatic`, which publishes it. |
 
 Which of these may import which is not a matter of taste; see
 [Layering and dependency direction](../explanation/layering.md).

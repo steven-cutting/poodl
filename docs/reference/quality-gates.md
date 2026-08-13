@@ -44,11 +44,20 @@ configuration, and it is the one installed as the pre-commit hook.
 | `typos` | Spelling, excluding the lockfiles and the word lists. |
 | `lychee` | Link targets, offline. |
 | `shellcheck` | `scripts/initialize.sh`. |
-| `actionlint` | Both GitHub Actions workflows. |
+| `actionlint` | Every GitHub Actions workflow, its structure only — see below. |
 | `ripsecrets` | Credential material, with its output suppressed so a match is never logged. |
 | Builtin `check-*` | Large files, case conflicts, merge markers, JSON, TOML, YAML, private keys, shebangs. |
 
 Third-party hooks are pinned to commit SHAs with a version comment beside each.
+
+One gap is worth knowing about rather than being surprised by. `actionlint` analyses a
+`run:` block by handing it to `shellcheck`, and it reports nothing at all when it cannot
+find `shellcheck` on its own `PATH`. Under `prek` each hook gets its own environment, so
+the `shellcheck` hook two rows up is not the one `actionlint` can see, and the shell
+embedded in a workflow goes unread. The `authorize` job in
+`.github/workflows/chromatic.yml` is the only place that shell is more than a line, and it
+was checked by extracting it and running `shellcheck` over it by hand. Anything comparable
+added later deserves the same treatment until the gap is closed.
 
 ## The mutating counterpart
 
@@ -62,15 +71,26 @@ installed as a hook and runs only from `just fix`.
 install, the lockfile dry run, `frontend-static`, `frontend-coverage` and `frontend-build`;
 `documents` runs `sync`, `lint`, `check-docs` and `check-agents`; `stories` restores the
 Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
-Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build is
-proved and then discarded: it is uploaded nowhere and published nowhere.
+Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build the
+gate makes is proved and then discarded: that one is uploaded nowhere.
+
+A separate workflow uploads a different one. `.github/workflows/chromatic.yml` runs
+`just chromatic`, which builds the workshop again and publishes it for visual review; see
+[decision 0008](../decisions/0008-visual-review-in-chromatic.md). It is a workflow rather
+than a fourth `ci.yml` job because it holds a secret nothing else holds and answers to
+triggers the gate has no use for: a push to `main`, which sets the baseline, and a
+`/chromatic` comment on a pull request, which publishes that branch for review. The comment
+publishes for a commenter with write permission or better, and only for a branch in this
+repository; the checks and what they are for are in
+[the security model](../explanation/security-model.md).
 
 ## On `main`
 
 `main` is protected, and `frontend`, `documents` and `stories` must all pass before a
 branch merges into it. Those three names are the CI jobs, and they are the only required
 checks: the Pages workflow's own jobs never run on a pull request, so requiring them would
-block every merge.
+block every merge. Chromatic is not among them either, and deliberately so — a visual
+change is a thing to look at, not a thing to fail on, so the job reports and passes.
 
 The branch is not required to be up to date with `main` first, and no review is required —
 neither earns its cost on a repository with one author. Force pushes and deletion are

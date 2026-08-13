@@ -20,8 +20,11 @@ Very little, and that is the point.
   Nothing leaves the browser.
 - **Nothing is stored remotely.** Statistics, settings and the current game live in
   device storage and are never uploaded. There is nowhere to upload them to.
-- **There are no credentials.** No sign-in, no tokens, no secrets in the build. The
-  `ripsecrets` gate exists to keep it that way.
+- **There are no credentials in the product.** No sign-in, no tokens, nothing secret in
+  the build or the bundle. The `ripsecrets` gate exists to keep it that way. The
+  repository has exactly one secret and it belongs to the toolchain, not to Poodl: a
+  Chromatic project token, held as a GitHub Actions secret and read from the environment,
+  written into no file here.
 
 The practical consequence for a user is that clearing browser data destroys their
 statistics irrecoverably. That is a real cost of the design and is stated in
@@ -45,8 +48,23 @@ opponent and no leaderboard, so there is nobody to cheat but themselves.
   fails if a manifest and its lockfile disagree. GitHub Actions are pinned to commit
   SHAs, not to mutable tags.
 - **Workflow permissions.** CI runs with `contents: read`. Only the Pages deployment
-  holds `pages: write` and `id-token: write`, and it lives in its own file so the scopes
-  are visible rather than inherited.
+  holds `pages: write` and `id-token: write`, and only Chromatic holds `issues: write`,
+  which it needs to answer the comment that summoned it. Each lives in its own file so the
+  scopes are visible rather than inherited.
+- **The comment trigger.** `/chromatic` on a pull request starts a job holding the
+  Chromatic token, and an `issue_comment` workflow always runs against the base
+  repository with its secrets — including when the comment sits on a fork's pull request.
+  Two checks stand between the comment and the token, and they answer different questions.
+  *Who asked* is the commenter's effective repository permission, queried and required to
+  be write or better. `author_association` is a prefilter and never the authority: it
+  reports a relationship, so an organization member or a triage-level collaborator reports
+  a value that sounds like authority and is not. It is worth keeping only because it is a
+  superset of write access, which stops a stranger starting a runner at all.
+  *Whose code runs* is the head repository: a
+  cross-repository head is refused outright, because `just sync` would otherwise run that
+  fork's install scripts beside the token, and a person deciding to type the word is not
+  isolation. Both are settled in a job that checks nothing out and holds no secret, and
+  the publishing job does not start until they pass.
 - **Credential leakage.** `ripsecrets` scans every commit, and its output is suppressed so
   a match never copies the matched value into a log.
 - **Third-party content at runtime.** There is none. The site loads no external script,

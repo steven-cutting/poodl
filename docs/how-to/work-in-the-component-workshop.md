@@ -129,8 +129,48 @@ to error; its own default only reports.
    configuration lives, with a stated reason. The rule about suppressions does not bend for
    this tool; see [Quality philosophy](../explanation/quality-philosophy.md).
 
+## Publish it for visual review
+
+Axe answers whether a rule is broken. Whether the thing looks right is a different
+question, and it is answered by comparing the render against the last accepted one, in
+Chromatic. Why, and what it costs, is in
+[Decision 0008](../decisions/0008-visual-review-in-chromatic.md).
+
+**On a pull request**, comment:
+
+```text
+/chromatic
+```
+
+That publishes the branch and replies with a link. It is deliberately something you ask
+for, so a change that touches no component spends nothing. It has to be the whole word, on
+a pull request whose branch lives in this repository, from someone whose repository
+permission is write or better — a fork's pull request is refused, for the reason
+[the security model](../explanation/security-model.md) gives. A 🚀 on your comment means it
+was accepted; silence means one of those checks said no, and the reason is a notice on the
+run. The workflow also has to be on `main` before the comment does anything at all.
+
+**From a laptop**, with the project token exported:
+
+```console
+export CHROMATIC_PROJECT_TOKEN=…
+just chromatic
+```
+
+The recipe builds the workshop and publishes it. It is not part of `just check` — it needs
+the network and a token, so it sits beside `just check-links-online` rather than in the
+gate. It takes one optional argument, the branch name, which only CI passes: it checks a
+pull request out at a detached head and Chromatic would otherwise have no branch to file
+the build under.
+
+A visual change never fails the run. It is recorded for you to look at and accept in
+Chromatic, and a push to `main` accepts its own changes, so the baseline follows the branch
+without anyone maintaining it. The corollary is worth holding on to: a regression that gets
+merged becomes the baseline. The review is the pull request, and there is no second one.
+
 ## Related pages
 
 - [Testing](../reference/testing.md)
 - [Test and debug](test-and-debug.md)
 - [Decision 0006: A component workshop](../decisions/0006-component-workshop.md)
+- [Decision 0008: Visual review in Chromatic](../decisions/0008-visual-review-in-chromatic.md)

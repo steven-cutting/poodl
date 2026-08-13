@@ -17,9 +17,9 @@ everything below is read at build time or is a fixed part of the source.
 | --- | --- | --- |
 | `BASE_PATH` | empty | The subdirectory the site is served from. Read into `paths.base`. Set to `/poodl` by the Pages workflow; left empty for local builds, and for a domain of Poodl's own that would serve it from a root. |
 
-That is the whole list. SvelteKit's `PUBLIC_` convention is available but unused: a value
-baked into a public static bundle is not configuration, it is a constant, and constants
-belong in source where they can be reviewed.
+That is the whole list for the site. SvelteKit's `PUBLIC_` convention is available but
+unused: a value baked into a public static bundle is not configuration, it is a constant,
+and constants belong in source where they can be reviewed.
 
 ### The base path
 
@@ -40,6 +40,17 @@ Nothing announces the mistake. A prerendered page references its own assets rela
 absolutely by hand gives the fault away, and only when the preview sits on the
 subdirectory. That is why the value has to be set deliberately rather than noticed.
 
+## Tooling environment
+
+One variable is read by a tool rather than by the build, and it never reaches the bundle.
+
+| Variable | Read by | Effect |
+| --- | --- | --- |
+| `CHROMATIC_PROJECT_TOKEN` | `just chromatic` | Which Chromatic project the workshop publishes to. Export it locally; CI supplies it from the repository secret of the same name. Without it the recipe fails rather than publishing somewhere unexpected. |
+
+It is the only secret this repository has, and it is deliberately not written into a file —
+see [Security model](../explanation/security-model.md).
+
 ## Configuration files
 
 | File | Governs |
@@ -52,6 +63,7 @@ subdirectory. That is why the value has to be set deliberately rather than notic
 | `.storybook/main.ts` | Where stories are found, which addons load, the SvelteKit framework, telemetry off, and the dev server's permission to serve `stories/`. |
 | `.storybook/preview.ts` | The design tokens, the theme, contrast and motion toolbar globals, and the axe run applied to every story. |
 | `vitest.storybook.config.ts` | The story run: browser mode, Chromium, axe. It declares no coverage block, and the run that measures the floor pins `vite.config.ts`, so a story cannot affect the number. |
+| `chromatic.config.json` | Visual review: the build script to call, that a change reports rather than fails, and that `main` accepts its own changes as the new baseline. It holds no token. |
 | `.prettierrc.json` | 100 columns, single quotes, no trailing commas, Svelte block order. |
 | `.prettierignore` | Notably excludes Markdown, which markdownlint owns, and the word lists. |
 | `.markdownlint-cli2.jsonc` | Markdown rules, including the exemptions the documentation contract needs. |
@@ -76,13 +88,14 @@ go on the preview document's root element, because `src/app.css` keys every pale
 ## Values the specifications decide
 
 `src/lib/config.ts` mirrors the `config` blocks in `docs/specs/`. These are not tunables:
-changing one here without changing it in the specification is drift. All fourteen are below,
+changing one here without changing it in the specification is drift. All fifteen are below,
 and the file holds nothing else — a constant that appears there without a `config` entry to
 name is drift in the other direction.
 
 | Constant | Value | Specification |
 | --- | --- | --- |
 | `WORD_LENGTH` | 5 | `words.allium`, `config.word_length` |
+| `GAME_NAME` | `poodl` | `words.allium`, `config.game_name`. The one word a specification names, and an ordinary answer word. Not the same entry as `SHARE_HEADING`. |
 | `MIN_ANSWER_WORDS` | 2000 | `words.allium`, `config.min_answer_words` |
 | `MIN_GUESS_WORDS` | 10000 | `words.allium`, `config.min_guess_words` |
 | `MAX_ATTEMPTS` | 6 | `game.allium`, `config.max_attempts` |

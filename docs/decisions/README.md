@@ -28,6 +28,7 @@ the specifications under `docs/specs/`, and unresolved ones are recorded there a
 | [0005](0005-obfuscation-not-security.md) | Answer obfuscation is not security |
 | [0006](0006-component-workshop.md) | A component workshop |
 | [0007](0007-rules-as-a-reducer.md) | The rules are a reducer |
+| [0008](0008-visual-review-in-chromatic.md) | Visual review in Chromatic |
 
 ## Writing a new one
 
