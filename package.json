@@ -27,7 +27,8 @@
     "storybook:build": "storybook build --output-dir storybook-static",
     "storybook:test": "node scripts/check_playwright_browsers.js && vitest run --config vitest.storybook.config.ts",
     "storybook:browsers": "playwright install chromium",
-    "storybook:browsers:deps": "playwright install-deps chromium"
+    "storybook:browsers:deps": "playwright install-deps chromium",
+    "chromatic": "chromatic"
   },
   "dependencies": {
     "@sveltejs/kit": "2.70.2",
@@ -50,6 +51,7 @@
     "@vitest/browser": "4.1.10",
     "@vitest/browser-playwright": "4.1.10",
     "@vitest/coverage-v8": "4.1.10",
+    "chromatic": "18.2.0",
     "eslint": "10.8.1",
     "eslint-plugin-storybook": "10.5.7",
     "eslint-plugin-svelte": "3.22.0",

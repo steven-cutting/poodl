@@ -27,6 +27,14 @@ coverage/
 storybook-static/
 *storybook.log
 
+# What `just chromatic` drops in the working directory when a publish goes
+# wrong. `build-storybook.log` is already caught above; these are the rest of
+# the set the CLI names, and the junit report is written wherever it is asked
+# for one.
+chromatic.log
+chromatic-diagnostics.json
+chromatic-build-*.xml
+
 # Vitest browser mode writes failure screenshots and attachments next to the
 # tests it ran. vitest.storybook.config.ts turns screenshots off; these are the
 # net under it.

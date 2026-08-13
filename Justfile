@@ -58,8 +58,8 @@ dev:
 preview:
     npm run preview
 
-# The component workshop on port 6006. Local only: it is served and built, and
-# never published.
+# The component workshop on port 6006. This serves it; `just chromatic` is what
+# publishes a build of it for visual review.
 storybook:
     npm run storybook
 
@@ -126,3 +126,12 @@ check-clean baseline="":
 # The complete gate.
 check:
     uv run --frozen python scripts/run_project_check.py run
+
+# ---------------------------------------------------------------- publish ---
+
+# Publishes the workshop to Chromatic for visual review, building it on the way.
+# Needs the network and CHROMATIC_PROJECT_TOKEN, so it is deliberately outside
+# `just check` — the same reason check-links-online sits outside it. Pass a
+# branch name when HEAD is detached, which is how CI reaches a pull request.
+chromatic branch="":
+    npm run chromatic -- ${1:+--branch-name "$1"}

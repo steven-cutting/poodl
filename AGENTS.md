@@ -111,8 +111,9 @@ carry a stated reason.
   blocks precisely so unresolved product decisions are visible; do not silently
   resolve one.
 
-This repository intentionally generates no license file and no publishing
-workflow beyond the GitHub Pages deployment.
+This repository intentionally generates no license file. Two workflows publish
+and no more: the GitHub Pages deployment, and the Chromatic visual review of the
+component workshop.
 
 ## Documentation and durable context
 
@@ -155,6 +156,9 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
   than the uniformity.
 - Markdown is formatted by `markdownlint-cli2` alone; Prettier ignores it, so
   the two never disagree.
-- Storybook as a local component workshop: stories under `stories/`, each one
-  rendered in Chromium with axe run over it, gated by `just check` and published
-  nowhere. See [decision 0006](docs/decisions/0006-component-workshop.md).
+- Storybook as a component workshop: stories under `stories/`, each one rendered
+  in Chromium with axe run over it, gated by `just check`. See
+  [decision 0006](docs/decisions/0006-component-workshop.md).
+- Chromatic as the visual review of that workshop, run by `just chromatic` and by
+  a workflow the template has no counterpart for. See
+  [decision 0008](docs/decisions/0008-visual-review-in-chromatic.md).

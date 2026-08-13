@@ -56,9 +56,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The documentation handbook, enforced by `scripts/validate_docs.py`.
 - The agent contract, enforced by `scripts/validate_agents.py`, with nine skills and
   their provider bridges.
-- Storybook as a local component workshop, with `storybook-build` and `storybook-test` in
+- Storybook as a component workshop, with `storybook-build` and `storybook-test` in
   `just check`, every story rendered in real Chromium with axe over it, and a `stories`
-  job in continuous integration. It is built locally and published nowhere.
+  job in continuous integration. The build the gate makes is proved and discarded.
+
+- Visual review of that workshop in Chromatic, by `just chromatic` and by
+  `.github/workflows/chromatic.yml`. A push to `main` sets the baseline; a `/chromatic`
+  comment on a pull request publishes that branch for review, for a commenter whose
+  effective repository permission is write or better and on a head in this repository. A
+  detected change reports and passes, so it is not a required check. See
+  [decision 0008](docs/decisions/0008-visual-review-in-chromatic.md).
 
 ### Fixed
 
