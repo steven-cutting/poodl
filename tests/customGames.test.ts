@@ -363,6 +363,22 @@ describe('sharing a result', () => {
     expect((effects[0] as { text: string }).text).toContain('🟧');
   });
 
+  /*
+   * PaletteFollowsHighContrast, following it "as it applies rather than as it
+   * was set". The setting is off here and the device is the one asking, so a
+   * grid rendered from the setting alone would stop matching the board the
+   * moment a device turned the palette on — which is the whole reason
+   * `high_contrast_active` exists on the entity rather than on the surface.
+   */
+  it('uses the high-contrast palette when the device is the one asking', () => {
+    const won = winInOne(env, started());
+    const asking = { ...env, prefersMoreContrast: true };
+    const { effects } = reduce(won, { kind: 'share_results' }, asking);
+
+    expect(won.settings.highContrast).toBe(false);
+    expect((effects[0] as { text: string }).text).toContain('🟧');
+  });
+
   // SharingIsAvailableOnceTheGameIsOver: never while one is in progress.
   it('copies nothing while the game is still being played', () => {
     const playing = playGuess(env, started(), 'crumb');

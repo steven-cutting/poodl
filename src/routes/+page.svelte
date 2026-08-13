@@ -171,7 +171,22 @@
       root.setAttribute('data-theme', current.state.settings.theme);
     }
 
-    if (current.state.settings.highContrast) {
+    /*
+     * The effective value, not the setting. `MoreContrastFromTheDeviceTurnsHighContrastOn`
+     * gives the device the same last word it has over motion, and the store is
+     * where that negotiation is settled.
+     *
+     * Unlike the theme this is not also written as a media query in `app.css`,
+     * and the difference is deliberate. Theme has to carry `color-scheme` to
+     * the platform before hydration, so the query is load-bearing there and the
+     * attribute exists to override it. High contrast overrides nothing — the
+     * device wins outright, which is exactly why a query would be a second
+     * answer to a question the store has already answered, agreeing only for as
+     * long as the cascade order says so. The cost is that a device asking for
+     * more contrast sees the standard palette until the first paint, which is
+     * the same wait a stored setting already has.
+     */
+    if (current.highContrastActive) {
       root.setAttribute('data-high-contrast', 'true');
     } else {
       root.removeAttribute('data-high-contrast');
@@ -323,6 +338,7 @@
   {#if panel === 'settings'}
     <SettingsPanel
       settings={app.settings}
+      highContrastActive={store.highContrastActive}
       hardModeMayBeEnabled={store.hardModeMayBeEnabled}
       hardModeReleased={game?.hardModeReleased ?? false}
       {hardModeCostsThisGame}

@@ -280,15 +280,55 @@ describe('the preferences port', () => {
     return { matchMedia, change };
   }
 
-  it('reads both device preferences', () => {
+  it('reads all three device preferences', () => {
     const media = fakeMatchMedia({
       '(prefers-color-scheme: dark)': true,
-      '(prefers-reduced-motion: reduce)': false
+      '(prefers-reduced-motion: reduce)': false,
+      '(prefers-contrast: more)': true
     });
     const preferences = createMediaPreferences(media.matchMedia);
 
     expect(preferences.prefersDark()).toBe(true);
     expect(preferences.prefersReducedMotion()).toBe(false);
+    expect(preferences.prefersMoreContrast()).toBe(true);
+  });
+
+  /*
+   * Contrast and colour scheme are separate questions, as the spec says
+   * outright: a device can ask for more contrast in either one. A port that
+   * read one query for both would pass every test above and still turn the
+   * high-contrast palette on for anybody in dark mode.
+   */
+  it('asks about contrast separately from the colour scheme', () => {
+    const media = fakeMatchMedia({
+      '(prefers-color-scheme: dark)': true,
+      '(prefers-contrast: more)': false
+    });
+    const preferences = createMediaPreferences(media.matchMedia);
+
+    expect(preferences.prefersDark()).toBe(true);
+    expect(preferences.prefersMoreContrast()).toBe(false);
+  });
+
+  // MoreContrastFromTheDeviceTurnsHighContrastOn is only as live as this: a
+  // device that changes its mind has to be heard, the same as for the theme.
+  it('reports a change of contrast preference', () => {
+    const media = fakeMatchMedia({ '(prefers-contrast: more)': false });
+    const preferences = createMediaPreferences(media.matchMedia);
+    let changes = 0;
+    const stop = preferences.subscribe(() => {
+      changes += 1;
+    });
+
+    media.change('(prefers-contrast: more)', true);
+
+    expect(changes).toBe(1);
+    expect(preferences.prefersMoreContrast()).toBe(true);
+
+    stop();
+    media.change('(prefers-contrast: more)', false);
+
+    expect(changes).toBe(1);
   });
 
   // ThemeFollowsTheDeviceUntilThePlayerChooses: it keeps matching as it changes.
@@ -319,14 +359,19 @@ describe('the preferences port', () => {
       changes += 1;
     });
 
-    preferences.set({ prefersDark: true, prefersReducedMotion: true });
+    preferences.set({ prefersDark: true, prefersReducedMotion: true, prefersMoreContrast: true });
 
     expect(preferences.prefersDark()).toBe(true);
     expect(preferences.prefersReducedMotion()).toBe(true);
+    expect(preferences.prefersMoreContrast()).toBe(true);
     expect(changes).toBe(1);
 
     stop();
-    preferences.set({ prefersDark: false, prefersReducedMotion: false });
+    preferences.set({
+      prefersDark: false,
+      prefersReducedMotion: false,
+      prefersMoreContrast: false
+    });
 
     expect(changes).toBe(1);
   });
@@ -339,6 +384,7 @@ describe('the preferences port', () => {
 
     expect(preferences.prefersDark()).toBe(false);
     expect(preferences.prefersReducedMotion()).toBe(false);
+    expect(preferences.prefersMoreContrast()).toBe(false);
     expect(() => {
       stop();
     }).not.toThrow();

@@ -21,6 +21,40 @@ carries the same glyph and the same name — it did not at first, and a sighted 
 reader with no assistive technology had only the colour to go on. This holds in every theme
 and in both palettes.
 
+**A key nobody has tried is distinguishable from one that has been scored.** By at least
+3 to one, against every one of the three marks — and absent stands off correct by at least
+2 to one. These are `game.allium`'s `config.minimum_state_separation` and
+`config.minimum_mark_separation`, and they are separate from the clause above rather than
+covered by it: the glyph speaks for a mark, and a letter no guess has covered carries no
+mark, so there is no glyph to read. Lightness is all there is, which is why the figures are
+stated as lightness and not left to hue. The report that prompted them was a phone at
+minimum backlight, where an absent key and an untried one were the same object; the pair
+measured 1.23 to one in the dark theme and 2.89 in the light.
+
+One shape carries this in `app.css`, and it is what the range had to be spent on. **A key
+nothing is known about hugs the page and is drawn by its border; a scored key steps away
+from the page** — dark on white, pale on near-black — **and its letter is painted in the
+page's own extreme.** So the marks invert between themes, which they had not before; what
+`sharing.allium` ties to high contrast is which palette is in use, and the emoji "are
+whatever the reader's platform draws, and never were the board's own colours".
+
+**The floor holds in all four combinations of theme and high contrast**, not in the one a
+change happened to be looked at in. Text reaches 4.5 to one, every control's boundary
+reaches 3, and the two figures above hold — in light and dark, standard and high contrast.
+High contrast raises the floor nowhere: it is a second palette that has to clear the same
+bar, not the version where legibility is finally attended to. Whoever tunes a palette should
+satisfy the high-contrast one first, for the reason `game.allium` gives where the figures
+are declared.
+
+**More contrast asked of the operating system turns high contrast on.** The device wins the
+same way it does for motion, so a player who has already asked their system does not have to
+find the setting and ask again. It never overwrites the player's own answer: the setting
+stays as they left it, and `Settings.high_contrast_active` is what everything rendering
+reads — the board, the keyboard and the shared grid alike, so a grid pasted into a message
+still matches the board it came from. The control says which of the two is speaking rather
+than looking as though it had ignored the player. What a player cannot yet do is overrule
+the device, and `settings.allium` carries that as an open question rather than a decision.
+
 **Everything is keyboard operable.** Every operation a surface `provides` can be reached
 and invoked from the keyboard alone, with visible focus. This includes each key of the
 on-screen keyboard, and it holds regardless of the physical-keyboard setting — that
@@ -86,13 +120,14 @@ initiative, which is the thing this refuses.
 Removing the platform's tap flash without replacing it would leave a control that reads as
 dead under exactly the finger the rule exists for, so a pressed control draws a ring in the
 page's own ink, backed by its own paper. Two tones rather than one because a key is not one
-colour: a plain key, five mark colours and two palettes make twelve backgrounds, and no
-single tone stands off all of them — white measures 1.46 to one against a light grey key,
-and ink measures 1.77 against a high-contrast blue key in the dark theme. Every one of the
-twelve has an edge over 4.1 this way. A filter was the first thing tried and is the reason
-this is a shadow: `filter` dims the letter along with the key, and a ten per cent shift took
-black on the absent mark from 4.99 to one down to 4.15, buying this guarantee by spending
-the one above it.
+colour: a plain key, three marks and the two that high contrast replaces make six
+backgrounds per theme and twelve in all, and no single tone stands off every one of them.
+Ink and paper between them always do, because the marks are placed by how far they sit from
+the page and one of the two is therefore always at the far end. The narrowest of the twelve
+edges is 4.63 to one, and the figure is computed by the gate rather than recorded here. A
+filter was the first thing tried and is the reason this is a shadow: `filter` dims the
+letter along with the key, which costs the clause above the contrast it depends on — buying
+this guarantee by spending that one.
 
 The ring goes wherever the flash was taken from, which is a wider set than the keys. A
 preference row in Settings is suppressed along with everything else and would otherwise stay
@@ -148,11 +183,32 @@ changed. Each story is checked in the appearance its globals select, so a palett
 covered when a story pins it rather than automatically. See
 [Decision 0006](../decisions/0006-component-workshop.md).
 
-That last sentence is not a caveat; it is how the second defect survived. The dark-theme
-plain key measured 3.49 to one against its text and no story pinned dark **with a keyboard
-in it**, so the gate was green and the defect was real. The palette is repaired and the
-story that would have caught it now exists — verified by putting the old value back and
-watching axe fail, rather than by reasoning that it would.
+**Axe has never judged a key or a tile, and cannot.** Its contrast rule downgrades any
+element whose visible text is a single character to *incomplete* — `shortTextContent` in
+axe-core — and an incomplete result is reported without failing. Every key on the on-screen
+keyboard shows one letter; so does every tile. The palette repairs axe did find were on
+`WelcomeScreen` and its siblings, which share the mark tokens but carry words. This page
+used to say that pinning a dark keyboard story turned the dark key's measurement into
+something the gate held, and that was simply wrong. It is checkable in a minute: put an
+unreadable `--key-text` in `app.css` and every other component's stories fail while
+`Keyboard`'s stay green.
+
+So the contrast figures are held by `tests/contrast.test.ts` and by nothing else. It reads
+`src/app.css` from disk, drives each of the four combinations of theme and high contrast
+through the root attributes, and recomputes every pair — text on each key, each boundary
+against the page, the focus ring, the pressed ring over every key background, an untried key
+against each mark, and absent against correct. No figure quoted in a comment or on this page
+is load-bearing; each is derived from the colours that actually resolve. It was verified the
+way the rest of this is: by putting the old dark key background back and watching it fail.
+
+All four combinations are covered. What jsdom cannot drive is one of the two *routes* to
+one of them: it answers no media query, so every ratio is taken with the dark theme reached
+by attribute, while `app.css` declares the same palette a second time for the device's own
+colour-scheme preference. That duplication is the only way this palette can drift, so the
+same test reads both blocks as text and holds them equal — which is what makes every figure
+cover both routes rather than the one it can reach. What is left over is not a ratio at all:
+that the palette is legible on a dimmed phone is what prompted this, and it still takes a
+phone.
 
 Touch is checked in both suites at once, because neither can see the whole of it. jsdom
 resolves `touch-action`, `user-select` and the size floors from the real stylesheet, so
@@ -171,18 +227,22 @@ Three things neither gate reaches, stated rather than left to be assumed:
 - `:active` is a state only real input produces. No synthetic event reaches it and no play
   function can force it, so what the story proves is that the two tones the pressed ring is
   drawn in resolve to real, different colours, and what the unit test proves is that both
-  the button and the preference row are drawn in them. That the ring is legible on a plain
-  key and on each mark was checked by eye in both palettes and in high contrast, and the
-  contrast figures above were computed rather than eyeballed — but no gate holds either.
+  the button and the preference row are drawn in them. Whether those two tones are legible
+  over every key is no longer left to the eye — `tests/contrast.test.ts` computes all twelve
+  edges — but that the ring appears at all is still something only a finger can confirm.
 - Whether the ring is what a finger on a real phone actually sees still needs a real phone.
 
 Automated checks still do not cover everything, and silence from one is not a pass. Axe
 skips what it cannot attribute — anything behind `aria-hidden`, which includes the tile's
 mark glyph and now the keyboard's two action glyphs, is never checked for contrast at any
-opacity. Axe's `target-size` rule answers to 24px, not to the 44 this project states, so a
-control it passes can still fail `EveryControlIsAComfortableTarget`; the story measurements
-are what hold that figure. Focus order, announcement timing and whether a description is
-actually useful still need a person and a screen reader.
+opacity — and it declines to judge single-character text at all, which is the whole
+keyboard and the whole board. Axe's `target-size` rule answers to 24px, not to the 44 this
+project states, so a control it passes can still fail
+`EveryControlIsAComfortableTarget`; the story measurements are what hold that figure. No
+rule anywhere knows that one key state must stand off another, because standards ask a
+colour to stand off its background rather than off another state — that pair is stated in
+`game.allium` and held by `tests/contrast.test.ts` alone. Focus order, announcement timing
+and whether a description is actually useful still need a person and a screen reader.
 
 ## Related pages
 

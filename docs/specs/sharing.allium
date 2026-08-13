@@ -31,7 +31,10 @@
 --   game.allium — the finished game a grid is rendered from, the game on the
 --     board whose answer can be passed on, and the AnswerDrawn hand-off that
 --     starts a custom game.
---   settings.allium — high contrast, which chooses the palette.
+--   settings.allium — high contrast as it applies, which chooses the palette.
+--     The effective value, not the raw setting: the device can turn high
+--     contrast on, and a grid that read the setting would stop matching the
+--     board whenever it did.
 
 use "./words.allium" as words
 use "./game.allium" as game
@@ -263,7 +266,7 @@ rule PlayerSharesResults {
 
     requires: finished.is_finished_by_play
 
-    let palette = if settings/player_settings.high_contrast: high_contrast else: standard
+    let palette = if settings/player_settings.high_contrast_active: high_contrast else: standard
     let text = render_share_grid(finished, palette)
 
     ensures: ResultsPlacedOnClipboard(player: player, finished_game: finished, text: text)
@@ -410,7 +413,7 @@ surface ShareResults {
         where player = viewer and is_current and is_finished_by_play
 
     let palette =
-        if settings/player_settings.high_contrast: high_contrast
+        if settings/player_settings.high_contrast_active: high_contrast
         else: standard
 
     -- The grid itself, shown and not only copied. TheGridIsAvailableAsText
@@ -445,8 +448,12 @@ surface ShareResults {
         -- game went rather than becoming a way into it.
 
     @guarantee PaletteFollowsHighContrast
-        -- The tiles match what the player sees: the high-contrast palette
-        -- when that setting is on, the standard palette otherwise.
+        -- The tiles match what the player sees: the high-contrast palette when
+        -- high contrast applies, the standard palette otherwise. It follows
+        -- high contrast as it applies rather than as it was set, so a device
+        -- asking for more contrast moves the board and the grid together. What
+        -- matches is which palette is in use; the emoji are whatever the
+        -- reader's platform draws, and never were the board's own colours.
 
     @guarantee ACustomResultSaysSo
         -- A grid from a custom game is marked as one, so it never reads as

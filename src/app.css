@@ -2,10 +2,29 @@
  * Design tokens.
  *
  * `settings.allium`'s Appearance surface decides which of these apply: theme
- * follows the device until the player chooses, and high contrast swaps the
- * correct and present colours for the orange and blue pair that
- * `sharing.allium` also uses for its emoji grid. Colour never carries meaning
- * on its own — every mark has a shape and an accessible description too.
+ * follows the device until the player chooses, and high contrast — the setting
+ * or the device, whichever asked — swaps the correct and present colours for
+ * the orange and blue pair that `sharing.allium` also uses for its emoji grid.
+ * Colour never carries meaning on its own: every mark has a shape and an
+ * accessible description too.
+ *
+ * One shape governs all four combinations of theme and high contrast, and it
+ * is what `AnUntriedKeyIsDistinguishableFromAScoredOne` costs. **A key nothing
+ * is known about hugs the page and is drawn by its border; a scored key steps
+ * away from the page** — dark on white, pale on near-black — **and its letter
+ * is painted in the page's own extreme.** Nothing else spends the lightness
+ * range on the distinction the player actually reads each turn, and the
+ * distinction survives a screen dimmed far enough to take the hues with it.
+ *
+ * That inverts the marks between themes, which the palette could not do while
+ * `sharing.allium` was read as tying them to the emoji. It no longer is: the
+ * emoji "are whatever the reader's platform draws, and never were the board's
+ * own colours". What follows high contrast is which palette is in use.
+ *
+ * Every figure in this file is enumerated by `tests/contrast.test.ts` over all
+ * four combinations, against the four floors `game.allium` states and
+ * `src/lib/config.ts` mirrors. None of them is a comment to be trusted: change
+ * a colour and the gate recomputes the lot.
  */
 
 :root {
@@ -16,28 +35,47 @@
   --muted: #5f6368;
   --focus: #0b57d0;
 
-  --mark-correct: #538d4e;
-  --mark-present: #b59f3b;
-  --mark-absent: #787c7e;
   /*
-   * Black, not white. Against these three hues white measures 3.97, 2.63 and
-   * 4.22 to one, and the keys that carry them are 16px at weight 600 — below
-   * the bold threshold, so they answer to the 4.5 bar and all three fail it.
-   * Black measures 5.29, 7.99 and 4.98 and changes no hue, so the emoji grid
-   * `sharing.allium` specifies still matches what the player sees. See
-   * `docs/decisions/0006-component-workshop.md`.
+   * Dark marks, and white on them rather than black. On a white page the marks
+   * are what steps away from it, and a mark dark enough for an untried key to
+   * stand 3 to one off it is far too dark to carry black text. White measures
+   * 10.7, 6.3 and 4.8 to one on the three; black would measure 1.9 on correct.
    */
-  --mark-text: #000000;
+  --mark-correct: #154725;
+  --mark-present: #7a5a1a;
+  --mark-absent: #6f7378;
+  --mark-text: #ffffff;
 
   --tile-background: transparent;
-  --tile-border: #d3d6da;
+  /*
+   * The same tone as the key border, and for the same reason: an empty tile
+   * outlined at 1.34 to one against white was a grid that had to be inferred.
+   * A tile is not a control, so `EveryCombinationMeetsTheLegibilityFloor` does
+   * not reach it — this is the floor applied where the guarantee does not
+   * compel it, because the board is the other half of the same complaint.
+   */
+  --tile-border: #818a94;
   --tile-text: var(--text);
 
-  --key-background: #d3d6da;
-  --key-border: #b9bcc0;
+  /*
+   * Nearly the page, and visible by its border. That is the whole trick: the
+   * untried key gives up standing off the background — 1.16 to one, carried by
+   * the border at 3.5 — and spends all of it standing off the marks instead,
+   * at 4.1 on absent and better on the other two. The pair this exists for was
+   * 2.89 before, and 1.23 in the dark theme.
+   */
+  --key-background: #edeef0;
+  --key-border: #818a94;
   --key-text: var(--text);
 }
 
+/*
+ * The dark theme is reached two ways — by the device while no choice is
+ * recorded, and by an explicit choice — and both must carry the same values.
+ * `tests/contrast.test.ts` can only drive the attribute; jsdom answers no media
+ * query, so the block below is the one the gate never sees. Keep them in step
+ * by hand, and change neither alone.
+ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
     --background: #121213;
@@ -45,19 +83,20 @@
     --muted: #a0a4a8;
     --focus: #a8c7fa;
 
-    --tile-border: #3a3a3c;
-    /*
-     * Darker than the grey this palette started with. At #818384 the key text
-     * measured 3.49 to one, under the 4.5 bar that 16px at weight 600 answers
-     * to, and no story pinned the dark theme with a keyboard in it — so the
-     * gate was green and the defect was real. At #6b6d6e the text measures 4.77
-     * and the key still stands off the page background at 3.60, over the 3.0
-     * bar a control's boundary answers to. See
-     * `docs/decisions/0006-component-workshop.md`.
-     */
-    --key-background: #6b6d6e;
-    --key-border: #565758;
-    --key-text: #f5f5f5;
+    --mark-correct: #88ce96;
+    --mark-present: #c59420;
+    --mark-absent: #797f86;
+    --mark-text: #000000;
+
+    --tile-border: #6f7378;
+
+    --key-background: #212326;
+    --key-border: #6f7378;
+  }
+
+  :root:not([data-theme='light'])[data-high-contrast='true'] {
+    --mark-correct: #f8af7d;
+    --mark-present: #53a0ec;
   }
 }
 
@@ -79,17 +118,43 @@
   --muted: #a0a4a8;
   --focus: #a8c7fa;
 
-  --tile-border: #3a3a3c;
-  /* The measured key background, for the reason recorded above. */
-  --key-background: #6b6d6e;
-  --key-border: #565758;
-  --key-text: #f5f5f5;
+  /*
+   * Pale marks and black on them, the light theme's arrangement turned over.
+   * The untried key is the dark one here, at #212326 against a #121213 page,
+   * so what a scored key does is step out into the light: absent at 3.9 to one
+   * from an untried key, correct at 7.9, and 2.2 between those two.
+   */
+  --mark-correct: #88ce96;
+  --mark-present: #c59420;
+  --mark-absent: #797f86;
+  --mark-text: #000000;
+
+  --tile-border: #6f7378;
+
+  --key-background: #212326;
+  --key-border: #6f7378;
 }
 
-/* `--mark-text` is already black everywhere, so this pair is the whole swap. */
+/*
+ * High contrast is a second palette that has to clear the same bar, and it is
+ * two tokens because absent and the untried key already clear it in both. The
+ * theme decides the lightness the pair has to hit and this decides the hue, so
+ * there is a block per theme rather than one that spans both — the orange that
+ * a light theme needs is not the orange a dark one does.
+ *
+ * Order matters and is deliberate. This block is `(0,2,0)`, the same as
+ * `[data-theme='dark']`, so it sits after it to win at equal weight; the dark
+ * pair below is `(0,3,0)` and wins outright. The two dark paths above and here
+ * both carry their own high-contrast block for exactly that reason.
+ */
 :root[data-high-contrast='true'] {
-  --mark-correct: #f5793a;
-  --mark-present: #85c0f9;
+  --mark-correct: #682d0f;
+  --mark-present: #265eb1;
+}
+
+:root[data-theme='dark'][data-high-contrast='true'] {
+  --mark-correct: #f8af7d;
+  --mark-present: #53a0ec;
 }
 
 * {
@@ -200,19 +265,20 @@ textarea {
  * exactly the finger this contract exists for.
  *
  * The page's own ink drawn inside the key, backed by its own paper. Two tones
- * rather than one because a key is not one colour: a plain key, five mark
- * colours and two palettes make twelve backgrounds, and no single tone stands
- * off all of them — white on a light grey key measures 1.46 to one, and ink on
- * a high-contrast blue key in the dark theme measures 1.77. Every one of the
- * twelve has an edge over 4.1 to one this way, the worst being the absent mark
- * at 4.21, well past the 3.0 a control's boundary answers to.
+ * rather than one because a key is not one colour: a plain key, three marks and
+ * the two the high-contrast palette replaces make six backgrounds per theme and
+ * twelve in all, and no single tone stands off every one of them. Ink and paper
+ * between them always do, because the marks are placed by how far they sit from
+ * the page and one of the two is therefore always at the far end. The narrowest
+ * of the twelve edges is 4.63 to one, on the dark theme's absent mark, well past
+ * the 3.0 a control's boundary answers to — and `tests/contrast.test.ts`
+ * recomputes all twelve rather than trusting this sentence.
  *
  * A ring rather than a filter, which was the first thing tried. `filter` dims
- * the letter along with the key, and a 10% shift took black on the absent mark
- * from 4.99 to one down to 4.15 — buying this invariant by spending
- * ResultsAreNeverConveyedByColourAlone, which is not a trade that was on offer.
- * A shadow paints over the background and under the content, so the letter is
- * untouched at every value.
+ * the letter along with the key, which costs
+ * ResultsAreNeverConveyedByColourAlone the contrast that clause depends on —
+ * not a trade that was on offer. A shadow paints over the background and under
+ * the content, so the letter is untouched at every value.
  *
  * No transition and no animation: the acknowledgement "owes nothing to whether
  * animations are running", so `data-animations` must not reach it the way it

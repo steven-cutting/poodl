@@ -3,7 +3,7 @@
 -- Poodl — settings
 --
 -- Scope
---   The player's preferences, when each may be changed, and how two of them
+--   The player's preferences, when each may be changed, and how three of them
 --   negotiate with preferences expressed by the operating system.
 --
 -- Includes
@@ -12,14 +12,19 @@
 --   - The guard on turning hard mode on part way through a game. Turning it
 --     off is never guarded, but during a game that has guesses in it, doing
 --     so is a one-way door: it cannot be turned back on until the next game.
---   - Theme following the system until the player chooses otherwise, and
---     animations deferring to a reduced-motion preference.
+--   - Theme following the system until the player chooses otherwise,
+--     animations deferring to a reduced-motion preference, and high contrast
+--     turning on for a device that asks for more of it.
+--   - The legibility every combination of theme and high contrast has to
+--     reach, stated as ratios rather than as colours.
 --
 -- Excludes
 --   - What hard mode does to a guess. That is game.allium's business; this
 --     module only decides when the flag may change.
 --   - What high contrast does to the shared emoji grid (sharing.allium).
---   - Colour values, palettes, markup and animation mechanics.
+--   - Colour values, palettes, markup and animation mechanics. Naming a floor
+--     the colours have to clear is not the same as choosing them: this module
+--     says how far apart two things must be, never what either one is.
 --
 -- Dependencies
 --   game.allium — the Player, and the game in progress that the hard-mode
@@ -50,6 +55,11 @@ given {
 external entity DevicePreferences {
     prefers_dark_colour_scheme: Boolean
     prefers_reduced_motion: Boolean
+
+    -- The player asked their operating system for more contrast everywhere,
+    -- not Poodl in particular. It is a separate question from the colour
+    -- scheme: a device can ask for more contrast in either one.
+    prefers_more_contrast: Boolean
 }
 
 ------------------------------------------------------------
@@ -76,6 +86,14 @@ entity Settings {
     -- shows the screen regardless rather than stranding a player on an empty
     -- board.
     show_welcome: Boolean
+
+    -- High contrast as it actually applies, which is what everything that
+    -- renders should read. high_contrast above is the player's own answer and
+    -- stays exactly as they left it; a device asking for more contrast turns
+    -- the palette on without overwriting that answer. Derived here rather than
+    -- on the Appearance surface because sharing.allium has to reach it too,
+    -- and one definition is what keeps the board and a shared grid agreeing.
+    high_contrast_active: high_contrast or device.prefers_more_contrast
 }
 
 ------------------------------------------------------------
@@ -198,6 +216,7 @@ surface SettingsPanel {
     exposes:
         settings.theme
         settings.high_contrast
+        settings.high_contrast_active
         settings.hard_mode
         settings.animations
         settings.physical_keyboard
@@ -233,9 +252,18 @@ surface SettingsPanel {
         -- can be turned straight back on.
 
     @guarantee HighContrastGovernsTheSharedGridToo
-        -- One preference, not two. Turning high contrast on changes the
-        -- colours on screen and the emoji in a shared result together, so
-        -- what gets pasted into a message matches the board it came from.
+        -- One preference, not two. High contrast changes the colours on screen
+        -- and the emoji in a shared result together, so what gets pasted into
+        -- a message matches the board it came from. This follows high contrast
+        -- as it applies rather than as it was set, so a grid shared by a
+        -- player whose device asked for more contrast still matches.
+
+    @guarantee TheContrastControlSaysWhenTheDeviceIsAskingForIt
+        -- Both the setting and its effective value are exposed so that a
+        -- control reading as on while the setting is off can say which of the
+        -- two is speaking, rather than looking as though it has ignored the
+        -- player. The explanation is available to assistive technology, not
+        -- only as a visual state.
 
     @guarantee PhysicalKeyboardInputCanBeSurrenderedToAssistiveTechnology
         -- physical_keyboard exists so that Poodl's handling of key presses
@@ -281,7 +309,7 @@ surface Appearance {
     exposes:
         dark_active
         animations_active
-        settings.high_contrast
+        settings.high_contrast_active
 
     @guarantee ThemeFollowsTheDeviceUntilThePlayerChooses
         -- While theme is system, Poodl matches the device's colour scheme and
@@ -294,8 +322,37 @@ surface Appearance {
         -- preference wins: a player who asked their system for less motion
         -- gets none from Poodl, whatever the setting says.
 
+    @guarantee MoreContrastFromTheDeviceTurnsHighContrastOn
+        -- High contrast applies when the setting is on or the device asks for
+        -- more contrast. The device wins the same way it does for motion: a
+        -- player who asked their system for more contrast gets it from Poodl
+        -- without having to find the setting and ask a second time.
+
     @guarantee AppearanceNeverCarriesMeaningAlone
         -- Neither the theme nor high contrast is what makes a result
         -- readable. Letter results stay distinguishable without relying on
         -- colour in any combination of these settings.
+
+    @guarantee EveryCombinationMeetsTheLegibilityFloor
+        -- The floor holds in all four combinations of theme and high
+        -- contrast, not only the one a change happened to be looked at in.
+        -- Text on any control reaches game/config.minimum_text_contrast
+        -- against what is behind it; every control's boundary reaches
+        -- game/config.minimum_boundary_contrast against the page; and the key
+        -- states stay apart by the two figures
+        -- game/GameBoard.AnUntriedKeyIsDistinguishableFromAScoredOne names.
+        -- High contrast raises the floor nowhere: it is a second palette that
+        -- has to clear the same bar, not the version where legibility is
+        -- finally attended to.
 }
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+-- That the device wins is settled, and matches how reduced motion already
+-- behaves. What is not settled is whether it is the last word: a player who
+-- asked their system for more contrast but wants Poodl's palette left alone
+-- has nowhere to say so, because the setting they would reach for is the one
+-- the device is already overriding.
+open question "Contrast escape hatch - may a player turn high contrast off while the device asks for more?"

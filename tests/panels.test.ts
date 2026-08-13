@@ -12,6 +12,7 @@ import { EMPTY_STATISTICS, recordLoss, recordWin } from '../src/lib/domain/stati
 function settingsProps(overrides: Record<string, unknown> = {}) {
   return {
     settings: { ...DEFAULT_SETTINGS },
+    highContrastActive: false,
     hardModeMayBeEnabled: true,
     hardModeReleased: false,
     hardModeCostsThisGame: false,
@@ -53,6 +54,44 @@ describe('SettingsPanel', () => {
 
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked();
+  });
+
+  /*
+   * TheContrastControlSaysWhenTheDeviceIsAskingForIt. The box shows the
+   * effective value, so it never reads as off while the palette is on; and
+   * because the device wins outright, it says which of the two is speaking
+   * rather than offering a switch that would change nothing.
+   */
+  it('says when high contrast is the device asking rather than the player', () => {
+    render(
+      SettingsPanel,
+      settingsProps({
+        settings: { ...DEFAULT_SETTINGS, highContrast: false },
+        highContrastActive: true
+      })
+    );
+    const control = screen.getByRole('checkbox', { name: /high contrast/i });
+
+    expect(control).toBeChecked();
+    expect(control).toBeDisabled();
+    expect(control).toHaveAccessibleDescription(/your device/i);
+  });
+
+  it('leaves high contrast the player’s own to change while the device is silent', async () => {
+    const props = settingsProps({
+      settings: { ...DEFAULT_SETTINGS, highContrast: true },
+      highContrastActive: true
+    });
+    render(SettingsPanel, props);
+    const control = screen.getByRole('checkbox', { name: /high contrast/i });
+
+    expect(control).toBeChecked();
+    expect(control).toBeEnabled();
+    expect(control).not.toHaveAccessibleDescription(/your device/i);
+
+    await userEvent.click(control);
+
+    expect(props.onhighcontrast).toHaveBeenCalledWith(false);
   });
 
   it('turns hard mode on and off through separate rules', async () => {

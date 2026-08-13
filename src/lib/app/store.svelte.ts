@@ -2,7 +2,7 @@ import type { Command } from '$lib/app/commands';
 import { hardModeMayBeEnabled, reduce } from '$lib/app/engine';
 import { loadState, saveState } from '$lib/app/persistence';
 import type { AppState } from '$lib/app/state';
-import { animationsActive, darkActive } from '$lib/domain/appearance';
+import { animationsActive, darkActive, highContrastActive } from '$lib/domain/appearance';
 import type { ClipboardPort } from '$lib/ports/clipboard';
 import type { ClockPort } from '$lib/ports/clock';
 import type { PreferencesPort } from '$lib/ports/preferences';
@@ -42,6 +42,8 @@ export interface Store {
   readonly darkActive: boolean;
   /** `Appearance.animations_active`. */
   readonly animationsActive: boolean;
+  /** `Settings.high_contrast_active`. */
+  readonly highContrastActive: boolean;
   /** `SettingsPanel.hard_mode_may_be_enabled`. */
   readonly hardModeMayBeEnabled: boolean;
   /** Whole seconds left on an armed countdown, or null when none is running. */
@@ -56,6 +58,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
   let now = $state(ports.clock.now());
   let prefersDark = $state(ports.preferences.prefersDark());
   let prefersReducedMotion = $state(ports.preferences.prefersReducedMotion());
+  let prefersMoreContrast = $state(ports.preferences.prefersMoreContrast());
 
   let stopTicking: (() => void) | null = null;
   let discarded = false;
@@ -63,6 +66,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
   const stopWatchingDevice = ports.preferences.subscribe(() => {
     prefersDark = ports.preferences.prefersDark();
     prefersReducedMotion = ports.preferences.prefersReducedMotion();
+    prefersMoreContrast = ports.preferences.prefersMoreContrast();
   });
 
   function countdownAt(): number | null {
@@ -106,7 +110,8 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
       now,
       words: ports.words,
       random: ports.random,
-      pageUrl: options.pageUrl
+      pageUrl: options.pageUrl,
+      prefersMoreContrast
     });
 
     if (outcome.state !== state) {
@@ -141,6 +146,9 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     },
     get animationsActive(): boolean {
       return animationsActive(state.settings.animations, prefersReducedMotion);
+    },
+    get highContrastActive(): boolean {
+      return highContrastActive(state.settings.highContrast, prefersMoreContrast);
     },
     get hardModeMayBeEnabled(): boolean {
       return hardModeMayBeEnabled(state);

@@ -33,6 +33,9 @@ export function createEnv(overrides: Partial<Env> = {}): Env {
     words: createFakeWordList(ANSWERS, EXTRA),
     random: createFakeRandom([0]),
     pageUrl: PAGE,
+    // A device that has asked for nothing, so the share palette follows the
+    // setting alone unless a test says otherwise.
+    prefersMoreContrast: false,
     ...overrides
   };
 }

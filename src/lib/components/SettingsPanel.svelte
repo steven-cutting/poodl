@@ -6,17 +6,20 @@
   /**
    * `settings.allium` — the `SettingsPanel` surface.
    *
-   * Two controls carry more than their label. Hard mode says which of the two
+   * Three controls carry more than their label. Hard mode says which of the two
    * reasons blocks turning it on, and what turning it off will cost before it is
    * used — `HardModeIsExplainedWhenItCannotBeTurnedOn` and
    * `TurningHardModeOffMidGameIsAOneWayDoor`. The physical keyboard says what
    * off surrenders, so it never reads as though it would make the game
-   * unplayable. Both descriptions are bound with `aria-describedby`, because
-   * both guarantees ask for the explanation to reach assistive technology
-   * rather than only the eye.
+   * unplayable. High contrast says when it is the device asking rather than the
+   * player — `TheContrastControlSaysWhenTheDeviceIsAskingForIt`. Every
+   * description is bound with `aria-describedby`, because each of those
+   * guarantees asks for the explanation to reach assistive technology rather
+   * than only the eye.
    */
   let {
     settings,
+    highContrastActive,
     hardModeMayBeEnabled,
     hardModeReleased,
     hardModeCostsThisGame,
@@ -30,6 +33,8 @@
     ondisablehardmode
   }: {
     settings: Settings;
+    /** `Settings.high_contrast_active` — the setting or the device, whichever asked. */
+    highContrastActive: boolean;
     hardModeMayBeEnabled: boolean;
     /** Which of the two reasons blocks re-enabling: switched off, or history. */
     hardModeReleased: boolean;
@@ -53,9 +58,28 @@
 
   // One identifier per component, suffixed: `$props.id()` may be called once.
   const uid = $props.id();
+  const contrastId = `${uid}-contrast`;
   const hardModeId = `${uid}-hard-mode`;
   const keyboardId = `${uid}-keyboard`;
   const welcomeId = `${uid}-welcome`;
+
+  /*
+   * `TheContrastControlSaysWhenTheDeviceIsAskingForIt`. The box shows the
+   * effective value, so it never reads as off while the palette is on — which
+   * would look as though the player had been ignored. When the two disagree it
+   * is because the device asked, and the device wins, so the control says so
+   * and steps aside rather than offering a switch that would change nothing.
+   *
+   * That the player has nowhere to overrule the device is
+   * `settings.allium`'s open question, not an answer given here.
+   */
+  const deviceIsAsking = $derived(highContrastActive && !settings.highContrast);
+
+  const contrastNote = $derived(
+    deviceIsAsking
+      ? 'Your device asks for more contrast everywhere, so this stays on. Changes the board and the emoji in a shared result together.'
+      : 'Changes the board and the emoji in a shared result together.'
+  );
 
   const hardModeNote = $derived.by(() => {
     if (settings.hardMode) {
@@ -104,14 +128,16 @@
       <label>
         <input
           type="checkbox"
-          checked={settings.highContrast}
+          checked={highContrastActive}
+          disabled={deviceIsAsking}
+          aria-describedby={contrastId}
           onchange={(event) => {
             onhighcontrast(event.currentTarget.checked);
           }}
         />
         High contrast
       </label>
-      <p>Changes the board and the emoji in a shared result together.</p>
+      <p id={contrastId}>{contrastNote}</p>
     </li>
 
     <li>

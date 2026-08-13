@@ -29,7 +29,10 @@
 --   - Where the player's settings are stored and changed (settings.allium).
 --     This module reads only what it needs to play, through the PlaySettings
 --     placeholder below.
---   - Screen layout, markup, styling and animation mechanics.
+--   - Screen layout, markup, styling and animation mechanics. The contrast
+--     floors in the config block are not an exception to this: they are
+--     thresholds a rendering either meets or does not, and they name no
+--     colour. Which palette meets them is not this module's business.
 --
 -- Dependencies
 --   words.allium — the Word entity and the two lists.
@@ -399,6 +402,37 @@ config {
     -- scrolling sideways, which is the width every target and spacing figure
     -- has to survive.
     narrowest_supported_width: Integer = 320
+
+    -- Contrast ratios, as WCAG 2.2 computes them, for the guarantees that name
+    -- them. They sit beside minimum_touch_target because they are the same
+    -- kind of figure: a threshold the rendering has to clear, stated once so
+    -- that no page and no comment gets to decide it privately. The first two
+    -- are the AA bars for text and for anything that is not text.
+    minimum_text_contrast: Decimal = 4.5
+    minimum_boundary_contrast: Decimal = 3.0
+
+    -- How far a key nothing is known about has to sit from one that has been
+    -- scored. No standard supplies this figure, because standards ask a colour
+    -- to stand off its background rather than off another state, and a
+    -- keyboard's states sit side by side.
+    minimum_state_separation: Decimal = 3.0
+
+    -- How far absent has to sit from correct. That pair and no other: present
+    -- is left to hue and its own glyph, because it is the mark a player sees
+    -- least and the range is already spent. Lower than the figure above, and
+    -- deliberately so: separating four states by 3 to one each would need a
+    -- range of 27 to one, which no palette has, and forcing it drives absent —
+    -- the state most of a played keyboard is in — to whichever extreme is
+    -- left. This bar is what the range can afford after the one above is paid
+    -- for, and it does not stand alone: these two marks are the pair a
+    -- red-green reader cannot tell apart by hue, so the non-colour indication
+    -- ResultsAreNeverConveyedByColourAlone requires is doing the rest of the
+    -- work here rather than merely confirming it. Whoever tunes a palette
+    -- should satisfy the high-contrast one first: it is what binds, since its
+    -- correct cannot be made as light as the standard palette's can, and a
+    -- palette tuned on the standard colours will clear both figures and then
+    -- fail on high contrast.
+    minimum_mark_separation: Decimal = 2.0
 }
 
 ------------------------------------------------------------
@@ -984,6 +1018,21 @@ surface GameBoard {
         -- Every letter result and every keyboard key status is distinguishable
         -- without colour vision: correct, present and absent each carry a
         -- non-colour indication as well as their colour.
+
+    @guarantee AnUntriedKeyIsDistinguishableFromAScoredOne
+        -- A key for a letter no submitted guess has covered stands off every
+        -- scored key by at least config.minimum_state_separation, and absent
+        -- stands off correct by at least config.minimum_mark_separation. Both
+        -- hold by lightness and not by hue alone: the clause above puts a
+        -- non-colour indication on each of the three marks, but a letter that
+        -- has never been guessed carries no mark and so gets no indication
+        -- from it, and a screen dimmed far enough to make a keyboard hard to
+        -- read takes the hues with it before it takes the lightness. Which
+        -- combinations of appearance these survive is stated where appearance
+        -- is decided. The two figures differ because the range has to be spent
+        -- rather than wished for, and the untried key is what it is spent on:
+        -- that is the distinction a player reads on every turn to know which
+        -- letters are still open, and the one no mark and no glyph speaks for.
 
     @guarantee EverySubmittedGuessIsAnnounced
         -- When a guess is accepted, its per-letter results are announced to

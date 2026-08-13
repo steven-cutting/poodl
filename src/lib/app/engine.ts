@@ -7,6 +7,7 @@ import {
   describeCountdown,
   describeSubmission
 } from '$lib/domain/announcements';
+import { highContrastActive } from '$lib/domain/appearance';
 import { EMPTY_POOL, drawPooledAnswer } from '$lib/domain/answerPool';
 import { respectsHardMode, satisfiesHardMode } from '$lib/domain/hardMode';
 import { customGameUrl } from '$lib/domain/links';
@@ -41,6 +42,16 @@ export interface Env {
   random: RandomPort;
   /** The page Poodl is served at, which a custom link is built from. */
   pageUrl: string;
+  /**
+   * `DevicePreferences.prefers_more_contrast`, as the shell reads it.
+   *
+   * Ambient, like `now`, and here for the same reason: `high_contrast_active`
+   * chooses the share palette, and a device preference is not the player's
+   * answer to remember. It is deliberately not on `Settings`, which is
+   * persisted — storing it would let a preference the device has since
+   * withdrawn outlive the device saying so.
+   */
+  prefersMoreContrast: boolean;
 }
 
 export interface Outcome {
@@ -92,7 +103,7 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
     case 'accept_random_fallback':
       return still(newGameRequested(dismiss(state), 'random', env));
     case 'share_results':
-      return playerSharesResults(state);
+      return playerSharesResults(state, env);
     case 'copy_shareable':
       return copyShareable(state);
     case 'clipboard_settled':
@@ -543,16 +554,17 @@ function openCustomGameLink(state: AppState, token: string, env: Env): AppState 
 }
 
 /**
- * `PlayerSharesResults`. The palette follows high contrast, so what gets pasted
- * matches the board it came from, and the game itself is untouched: no attempt,
- * no status, nothing counted.
+ * `PlayerSharesResults`. The palette follows high contrast as it applies rather
+ * than as it was set, so what gets pasted matches the board it came from even
+ * when it is the device asking for the palette. The game itself is untouched:
+ * no attempt, no status, nothing counted.
  *
  * The grid is kept as well as copied. `TheGridIsAvailableAsText` asks for text
  * that can be read before it is sent and selected by hand when the clipboard
  * cannot be reached, and a grid that only ever existed inside an effect was
  * neither.
  */
-function playerSharesResults(state: AppState): Outcome {
+function playerSharesResults(state: AppState, env: Env): Outcome {
   const game = state.currentGame;
 
   if (game === null || !isFinishedByPlay(game)) {
@@ -561,7 +573,9 @@ function playerSharesResults(state: AppState): Outcome {
 
   const text = renderShareGrid(
     { mode: game.mode, status: game.status === 'won' ? 'won' : 'lost', guesses: game.guesses },
-    state.settings.highContrast ? 'high_contrast' : 'standard'
+    highContrastActive(state.settings.highContrast, env.prefersMoreContrast)
+      ? 'high_contrast'
+      : 'standard'
   );
 
   return copying({ ...dismiss(state), shareable: { kind: 'results', text } }, text);

@@ -53,6 +53,7 @@
     tags: ['autodocs'],
     args: {
       settings: SETTINGS,
+      highContrastActive: false,
       hardModeMayBeEnabled: true,
       hardModeReleased: false,
       hardModeCostsThisGame: false,
@@ -60,6 +61,10 @@
     },
     argTypes: {
       settings: { control: false, description: 'The six preferences, as they stand.' },
+      highContrastActive: {
+        control: 'boolean',
+        description: 'High contrast as it applies: the setting, or the device asking.'
+      },
       hardModeMayBeEnabled: { control: 'boolean' },
       hardModeReleased: { control: 'boolean', description: 'Which of the two reasons applies.' },
       hardModeCostsThisGame: { control: 'boolean', description: 'Whether turning it off bars it.' }
@@ -142,8 +147,31 @@
 <!-- The high-contrast palette, which the shared grid follows too. -->
 <Story
   name="High contrast"
-  args={{ settings: { ...SETTINGS, highContrast: true } }}
+  args={{ settings: { ...SETTINGS, highContrast: true }, highContrastActive: true }}
   globals={{ highContrast: 'on' }}
+/>
+
+<!--
+  The palette on because the device asked, not because the player did. The
+  setting underneath is still off and stays off — `settings.allium` derives
+  `high_contrast_active` precisely so the player's own answer survives being
+  overridden.
+-->
+<Story
+  name="High contrast, asked for by the device"
+  args={{ settings: { ...SETTINGS, highContrast: false }, highContrastActive: true }}
+  globals={{ highContrast: 'on' }}
+  play={async ({ canvasElement }) => {
+    // SettingsPanel.@guarantee TheContrastControlSaysWhenTheDeviceIsAskingForIt
+    // Checked, so it never reads as though the player had been ignored; and it
+    // says which of the two is speaking, to assistive technology and not only
+    // as a visual state.
+    const control = within(canvasElement).getByRole('checkbox', { name: /high contrast/i });
+
+    await expect(control).toBeChecked();
+    await expect(control).toBeDisabled();
+    await expect(control).toHaveAccessibleDescription(/your device/i);
+  }}
 />
 
 <!--

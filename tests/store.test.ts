@@ -283,6 +283,27 @@ describe('appearance', () => {
     expect(store.animationsActive).toBe(false);
   });
 
+  // MoreContrastFromTheDeviceTurnsHighContrastOn, and without overwriting the
+  // player's own answer: the setting stays exactly as they left it.
+  it('turns high contrast on for a device that asks for more of it', () => {
+    const { store, preferences } = harness();
+
+    expect(store.highContrastActive).toBe(false);
+
+    preferences.set({ prefersMoreContrast: true });
+
+    expect(store.highContrastActive).toBe(true);
+    expect(store.state.settings.highContrast).toBe(false);
+  });
+
+  it('keeps high contrast on for a player who asked, on a device that did not', () => {
+    const { store } = harness();
+
+    store.dispatch({ kind: 'set_high_contrast', enabled: true });
+
+    expect(store.highContrastActive).toBe(true);
+  });
+
   it('stops listening to the device once it is thrown away', () => {
     const live_ = harness();
     live_.store.destroy();

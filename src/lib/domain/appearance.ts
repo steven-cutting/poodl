@@ -26,3 +26,17 @@ export function darkActive(theme: ThemeChoice, prefersDark: boolean): boolean {
 export function animationsActive(animations: boolean, prefersReducedMotion: boolean): boolean {
   return animations && !prefersReducedMotion;
 }
+
+/**
+ * `Settings.high_contrast_active`. The device wins the same way it does for
+ * motion, and for the same reason: a player who asked their system for more
+ * contrast should not have to find the setting and ask a second time.
+ *
+ * It never writes back. The player's own answer stays exactly as they left it,
+ * which is what lets `SettingsPanel` say which of the two is speaking. That
+ * also leaves `settings.allium`'s open question genuinely open: there is no way
+ * yet to turn the palette off while the device is asking for it.
+ */
+export function highContrastActive(highContrast: boolean, prefersMoreContrast: boolean): boolean {
+  return highContrast || prefersMoreContrast;
+}
