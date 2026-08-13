@@ -54,7 +54,7 @@ rather than in a shell history.
 | `just frontend-unit` | Vitest, once. |
 | `just frontend-coverage` | Vitest with the 90% floor enforced. |
 | `just frontend-build` | Production build. Honours `BASE_PATH`. |
-| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git, published nowhere. |
+| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. |
 | `just storybook-test` | Every story in real Chromium: axe over each render, play functions as interaction tests. |
 
 ## Documents and agents
@@ -64,6 +64,12 @@ rather than in a shell history.
 | `just check-docs` | markdownlint, `typos`, offline link check, then the documentation contract. |
 | `just check-agents` | The agent contract: inventory, adapters, and skill bridges. |
 | `just check-links-online` | Follow external links. Manual; needs the network. |
+
+## Publish
+
+| Recipe | Purpose |
+| --- | --- |
+| `just chromatic [branch]` | Build the workshop and publish it to Chromatic for visual review. Manual; needs the network and `CHROMATIC_PROJECT_TOKEN`. Never part of `just check`. The argument overrides the branch name, which only CI needs, because it checks a pull request out at a detached head. |
 
 ## Aggregate
 

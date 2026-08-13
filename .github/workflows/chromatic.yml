@@ -1,0 +1,119 @@
+name: Chromatic
+
+# Visual review of the component workshop. It lives apart from `ci.yml` for the
+# same reason the Pages deploy does: it holds a secret nothing else holds, and it
+# answers to triggers the gate has no use for. It is not a required check.
+
+on:
+  # The baseline. `chromatic.config.json` auto-accepts on this branch, so what
+  # lands on main becomes what later builds are compared against.
+  push:
+    branches: ['main']
+  # Review on demand: comment `/chromatic` on a pull request. GitHub runs an
+  # `issue_comment` workflow from the default branch's copy of this file, so the
+  # trigger does nothing until it has been merged.
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # `gh pr view`, to resolve the commit a comment is asking about.
+  pull-requests: read
+  # The reaction and the reply. A pull request's conversation is an issue.
+  issues: write
+
+concurrency:
+  group: chromatic-${{ github.event.issue.number || github.ref }}
+  # Supersede a review run, never a baseline: a cancelled push to main is a
+  # baseline that did not advance.
+  cancel-in-progress: ${{ github.event_name == 'issue_comment' }}
+
+jobs:
+  # Not named after any of the three required checks, which are `frontend`,
+  # `documents` and `stories` in ci.yml.
+  chromatic:
+    # A comment triggers a build only on a pull request, only when it opens with
+    # the word, and only from someone with write access. That last clause is the
+    # load-bearing one: `issue_comment` runs against the base repository, with
+    # its secrets, even when the comment sits on a fork's pull request.
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (github.event.issue.pull_request != null &&
+      startsWith(github.event.comment.body, '/chromatic') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      # An `issue_comment` run never appears in the pull request's checks list,
+      # so acknowledge it where the person who asked is looking.
+      - name: Acknowledge the request and resolve the pull request
+        id: resolve
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh api --silent --method POST \
+            "repos/$GH_REPO/issues/comments/$COMMENT_ID/reactions" -f content=rocket
+          branch=$(gh pr view "$NUMBER" --json headRefName --jq .headRefName)
+          sha=$(gh pr view "$NUMBER" --json headRefOid --jq .headRefOid)
+          # Fail loudly rather than resolving to nothing. On an `issue_comment`
+          # run GITHUB_REF is the default branch, so an empty branch name here
+          # would drop --branch-name below and file a pull request's snapshots
+          # against main — which main auto-accepts.
+          test -n "$branch"
+          test -n "$sha"
+          printf 'branch=%s\nsha=%s\n' "$branch" "$sha" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # Chromatic reads the commit history to pick a baseline, so the shallow
+          # clone the other workflows take would leave it nothing to compare
+          # against. It only reads; no credential is needed for that.
+          fetch-depth: 0
+          # Empty on the push and dispatch paths, where the default ref is right.
+          ref: ${{ steps.resolve.outputs.sha }}
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      # uv and just are here only because the run below is a recipe rather than a
+      # bare command. That is deliberate: nothing in CI runs something you cannot
+      # run yourself.
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: 0.11.18
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv python install 3.14
+      - run: uv tool install rust-just==1.51.0
+      - run: npm install --global npm@11.17.0
+      - run: just sync
+
+      # The branch name arrives through the environment rather than through
+      # `${{ }}` in the command, because an expression is substituted as text
+      # before the shell parses it and a branch name may legally contain `;`,
+      # `&`, `$` or a backtick.
+      - name: Publish the workshop to Chromatic
+        run: just chromatic "$BRANCH"
+        env:
+          BRANCH: ${{ steps.resolve.outputs.branch }}
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+
+      - name: Report back on the pull request
+        if: always() && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api --silent --method POST "repos/$GH_REPO/issues/$NUMBER/comments" \
+            -f "body=Chromatic run finished \`$STATUS\`. The build and its diffs are linked from $RUN_URL"
