@@ -139,9 +139,14 @@ jobs:
           # Acknowledged only once it is going to happen. An `issue_comment` run
           # never appears in the pull request's checks list, so this is where the
           # person who asked finds out — and a reaction to a request that was
-          # refused would tell them the opposite of the truth.
-          gh api --silent --method POST \
-            "repos/$GH_REPO/issues/comments/$COMMENT_ID/reactions" -f content=rocket
+          # refused would tell them the opposite of the truth. The reaction is
+          # only an acknowledgment, though, so a token that cannot add it must
+          # not block the build it is acknowledging.
+          if ! gh api --silent --method POST \
+            "repos/$GH_REPO/issues/comments/$COMMENT_ID/reactions" -f content=rocket; then
+            printf '%s\n' \
+              '::notice::could not add a reaction to the request comment; continuing without it'
+          fi
 
           printf 'proceed=true\nbranch=%s\nsha=%s\n' "$branch" "$sha" >> "$GITHUB_OUTPUT"
 
