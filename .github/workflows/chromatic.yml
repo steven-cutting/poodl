@@ -18,10 +18,15 @@ on:
 
 permissions:
   contents: read
-  # `gh pr view`, to resolve the commit a comment is asking about.
-  pull-requests: read
-  # The reaction and the reply. A pull request's conversation is an issue.
+  # A pull request's conversation is an issue, and both names are load-bearing.
+  # The reaction and the reply are `issues/*` endpoints, so `issues: write` is
+  # the one the paths ask for — but the resource they touch is a pull request,
+  # and that is what the token is weighed against. A token holding
+  # `issues: write` and `pull-requests: read` was refused the reaction with a
+  # 403. Write here subsumes the read `gh pr view` needs to resolve the commit a
+  # comment is asking about.
   issues: write
+  pull-requests: write
 
 concurrency:
   group: chromatic-${{ github.event.issue.number || github.ref }}
@@ -113,7 +118,13 @@ jobs:
             *) deny "$ACTOR holds \`$permission\` on this repository" ;;
           esac
 
-          pr=$(gh pr view "$NUMBER" --json isCrossRepository,headRefName,headRefOid)
+          # Named rather than bare. Every `gh` call in this step reports a
+          # refusal in the same words, so a failure that prints nothing but those
+          # words leaves the reader to guess which call made it.
+          pr=$(gh pr view "$NUMBER" --json isCrossRepository,headRefName,headRefOid) || {
+            printf '::error::could not read pull request #%s\n' "$NUMBER"
+            exit 1
+          }
 
           # A fork's head is refused rather than published. Deciding by hand who
           # asked says nothing about whose code runs: `just sync` would execute
@@ -138,9 +149,14 @@ jobs:
           # Acknowledged only once it is going to happen. An `issue_comment` run
           # never appears in the pull request's checks list, so this is where the
           # person who asked finds out — and a reaction to a request that was
-          # refused would tell them the opposite of the truth.
-          gh api --silent --method POST \
-            "repos/$GH_REPO/issues/comments/$COMMENT_ID/reactions" -f content=rocket
+          # refused would tell them the opposite of the truth. The reaction is
+          # only an acknowledgment, though, so a token that cannot add it must
+          # not block the build it is acknowledging.
+          if ! gh api --silent --method POST \
+            "repos/$GH_REPO/issues/comments/$COMMENT_ID/reactions" -f content=rocket; then
+            printf '%s\n' \
+              '::notice::could not add a reaction to the request comment; continuing without it'
+          fi
 
           printf 'proceed=true\nbranch=%s\nsha=%s\n' "$branch" "$sha" >> "$GITHUB_OUTPUT"
 
@@ -199,5 +215,12 @@ jobs:
           STATUS: ${{ job.status }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh api --silent --method POST "repos/$GH_REPO/issues/$NUMBER/comments" \
-            -f "body=Chromatic run finished \`$STATUS\`. The build and its diffs are linked from $RUN_URL"
+          # The same reasoning as the reaction above, at the other end. This
+          # reply is how an `issue_comment` run reports at all, since it appears
+          # in no checks list — but it reports on a build that has already
+          # happened, and a hundred and five published snapshots must not be
+          # coloured red by the note about them.
+          if ! gh api --silent --method POST "repos/$GH_REPO/issues/$NUMBER/comments" \
+            -f "body=Chromatic run finished \`$STATUS\`. The build and its diffs are linked from $RUN_URL"; then
+            printf '::notice::could not reply on the pull request; the run is at %s\n' "$RUN_URL"
+          fi
