@@ -83,9 +83,11 @@ there. The pull request that introduces it cannot trigger itself.
 **`issue_comment` is a known privilege-escalation shape, so a fork's pull request gets no
 visual review.** Two questions have to be answered before the token is in reach, and only
 one of them is about the person. Who asked is settled by querying the commenter's effective
-repository permission and requiring write or better — not by `author_association`, which
-reports a relationship rather than a permission, so that an organization member or a
-triage-level collaborator would pass a check on it. Whose code runs is settled by refusing
+repository permission and requiring write or better. `author_association` decides nothing,
+because it reports a relationship rather than a permission and an organization member or a
+triage-level collaborator would pass a check on it; it survives as a prefilter on the job
+only because it is a superset of write access, so a stranger cannot start a runner. Whose
+code runs is settled by refusing
 a cross-repository head, because `just sync` runs the head's `package.json` lifecycle
 scripts, and a maintainer deciding after reading the diff is judgement, not isolation. Both
 are settled in a job that checks nothing out and holds no secret.

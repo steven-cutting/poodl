@@ -36,13 +36,18 @@ jobs:
   # request, so the job that can see the token does not start until this one has
   # said who asked and whose code it is.
   authorize:
-    # A cheap prefilter and nothing more. A workflow expression cannot express a
-    # word boundary, and `author_association` is not a permission; both are
-    # decided in the shell below.
+    # A cheap prefilter and nothing more; the shell below decides. Neither clause
+    # is load-bearing: an expression cannot express a word boundary, and
+    # `author_association` is not a permission. The association is kept because
+    # it is a *superset* of write access — an owner, a member of the owning
+    # organization, and a direct or outside collaborator are the only ways to
+    # hold it — so it is safe as a filter and useless as a guard. It keeps a
+    # stranger from spinning up a runner at all.
     if: >-
       github.event_name != 'issue_comment' ||
       (github.event.issue.pull_request != null &&
-      startsWith(github.event.comment.body, '/chromatic'))
+      startsWith(github.event.comment.body, '/chromatic') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -91,7 +96,7 @@ jobs:
           # write and triage onto read, so these two names are the whole list.
           # OWNER short-circuits the call, so the owner is never locked out by it.
           if [ "$ASSOCIATION" = OWNER ]; then
-            permission=admin
+            permission='admin'
           else
             permission=$(gh api "repos/$GH_REPO/collaborators/$ACTOR/permission" \
               --jq .permission || printf 'none')
@@ -121,7 +126,7 @@ jobs:
           test -n "$sha"
           # Belt to the fork check's braces, since that name is precisely what
           # `chromatic.config.json` accepts as the new baseline.
-          [ "$branch" != main ] || deny 'a head named `main` would be auto-accepted'
+          [ "$branch" != main ] || deny "a head named \`main\` would be auto-accepted"
 
           # Acknowledged only once it is going to happen. An `issue_comment` run
           # never appears in the pull request's checks list, so this is where the
