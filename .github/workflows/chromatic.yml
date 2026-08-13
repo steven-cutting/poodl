@@ -20,8 +20,9 @@ permissions:
   contents: read
   # `gh pr view`, to resolve the commit a comment is asking about.
   pull-requests: read
-  # The reaction and the reply. A pull request's conversation is an issue.
+  # The reply, and a best-effort reaction. A pull request's conversation is an issue.
   issues: write
+  members: read  # Add this line to allow reading collaborator permissions
 
 concurrency:
   group: chromatic-${{ github.event.issue.number || github.ref }}
