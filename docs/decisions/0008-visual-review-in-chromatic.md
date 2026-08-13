@@ -101,6 +101,14 @@ someone other than the owner is the test. Its notice says only that the call fai
 than reporting a permission; `gh`'s own error in the run log is what separates a member
 with no access here from a token that cannot read the endpoint at all.
 
+**The first `/chromatic` was refused, but not there.** The permission query was never reached
+— the commenter was the owner, who is answered without the call — and the run died on the
+acknowledging reaction instead, with a 403 to a token holding `issues: write`. A comment on a
+pull request sits on `issues/*` endpoints but is weighed against the pull request, so the
+workflow holds `pull-requests: write` as well. Both the reaction and the closing reply are now
+best-effort: neither is the build, and a note about a hundred and five published snapshots
+must not colour them red.
+
 The cost is that a contributor without write access cannot see their own change rendered,
 and neither can anyone reviewing it. On a repository with one author that is a cost nobody
 pays. It is the first thing to revisit if that changes: publishing a fork under Chromatic's
