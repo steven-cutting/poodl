@@ -44,11 +44,20 @@ configuration, and it is the one installed as the pre-commit hook.
 | `typos` | Spelling, excluding the lockfiles and the word lists. |
 | `lychee` | Link targets, offline. |
 | `shellcheck` | `scripts/initialize.sh`. |
-| `actionlint` | Every GitHub Actions workflow. |
+| `actionlint` | Every GitHub Actions workflow, its structure only — see below. |
 | `ripsecrets` | Credential material, with its output suppressed so a match is never logged. |
 | Builtin `check-*` | Large files, case conflicts, merge markers, JSON, TOML, YAML, private keys, shebangs. |
 
 Third-party hooks are pinned to commit SHAs with a version comment beside each.
+
+One gap is worth knowing about rather than being surprised by. `actionlint` analyses a
+`run:` block by handing it to `shellcheck`, and it reports nothing at all when it cannot
+find `shellcheck` on its own `PATH`. Under `prek` each hook gets its own environment, so
+the `shellcheck` hook two rows up is not the one `actionlint` can see, and the shell
+embedded in a workflow goes unread. The `authorize` job in
+`.github/workflows/chromatic.yml` is the only place that shell is more than a line, and it
+was checked by extracting it and running `shellcheck` over it by hand. Anything comparable
+added later deserves the same treatment until the gap is closed.
 
 ## The mutating counterpart
 

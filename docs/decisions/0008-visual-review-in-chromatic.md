@@ -92,6 +92,15 @@ a cross-repository head, because `just sync` runs the head's `package.json` life
 scripts, and a maintainer deciding after reading the diff is judgement, not isolation. Both
 are settled in a job that checks nothing out and holds no secret.
 
+The permission query has never run, and cannot until this workflow is on `main`, so the
+claim above is a design and not an observation. It is written to fail closed: the owner is
+answered without the call at all, and a call that cannot be made refuses rather than
+guessing — which is also what a `GITHUB_TOKEN` holding no more than `contents: read` would
+produce if the endpoint turns out to need more than that. The first `/chromatic` from
+someone other than the owner is the test. Its notice says only that the call failed rather
+than reporting a permission; `gh`'s own error in the run log is what separates a member
+with no access here from a token that cannot read the endpoint at all.
+
 The cost is that a contributor without write access cannot see their own change rendered,
 and neither can anyone reviewing it. On a repository with one author that is a cost nobody
 pays. It is the first thing to revisit if that changes: publishing a fork under Chromatic's

@@ -95,11 +95,18 @@ jobs:
           # for the effective permission instead — GitHub maps maintain onto
           # write and triage onto read, so these two names are the whole list.
           # OWNER short-circuits the call, so the owner is never locked out by it.
+          #
+          # A failed call is its own answer and not the answer `none`. The job
+          # condition already required an association, so a stranger never gets
+          # here; reaching this branch means an organization member with no
+          # access to this repository, or a token that cannot read the endpoint.
+          # Neither is write access, and reporting the second as the first would
+          # send someone to look for a permission problem they do not have.
           if [ "$ASSOCIATION" = OWNER ]; then
             permission='admin'
-          else
-            permission=$(gh api "repos/$GH_REPO/collaborators/$ACTOR/permission" \
-              --jq .permission || printf 'none')
+          elif ! permission=$(gh api \
+            "repos/$GH_REPO/collaborators/$ACTOR/permission" --jq .permission); then
+            deny "\`$ACTOR\`'s permission on this repository could not be read"
           fi
           case "$permission" in
             admin | write) ;;
