@@ -4,7 +4,7 @@
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
-  import type { Notice as NoticeValue, Shareable } from '$lib/app/state';
+  import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
 
@@ -60,7 +60,7 @@
      */
     notice?: NoticeValue | null;
     noticeSequence?: number;
-    shareable?: Shareable | null;
+    shareable?: ShareableView | null;
     oncopy: () => void;
   } = $props();
 

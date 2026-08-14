@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Env } from '../src/lib/app/engine';
-import { reduce } from '../src/lib/app/engine';
+import { reduce, resultsGrid } from '../src/lib/app/engine';
 import type { AppState } from '../src/lib/app/state';
 import { CUSTOM_GAME_PARAM } from '../src/lib/domain/links';
 import { decodeToken } from '../src/lib/domain/obfuscation';
@@ -323,10 +323,12 @@ describe('sharing a result', () => {
   });
 
   /*
-   * TheGridIsAvailableAsText: the grid is kept as well as copied, so it can be
-   * read before it is sent and selected by hand when the clipboard refuses.
+   * TheGridIsAvailableAsText: the grid is available as well as copied, so it can
+   * be read before it is sent and selected by hand when the clipboard refuses.
+   * What the state keeps is that there is one to show; `resultsGrid` renders it,
+   * and answers the same before and after the refusal.
    */
-  it('keeps the grid as text, and keeps it through a copy that failed', () => {
+  it('keeps the grid available as text, and through a copy that failed', () => {
     const won = winInOne(env, started());
     const shared = run(env, won, { kind: 'share_results' });
     const grid = renderShareGrid(
@@ -334,12 +336,14 @@ describe('sharing a result', () => {
       'standard'
     );
 
-    expect(shared.shareable).toEqual({ kind: 'results', text: grid });
+    expect(shared.shareable).toEqual({ kind: 'results' });
+    expect(resultsGrid(shared, env.prefersMoreContrast)).toEqual(grid);
 
     const failed = run(env, shared, { kind: 'clipboard_settled', id: 1, copied: false });
 
     expect(failed.notice).toEqual({ kind: 'copy_failed' });
-    expect(failed.shareable).toEqual({ kind: 'results', text: grid });
+    expect(failed.shareable).toEqual({ kind: 'results' });
+    expect(resultsGrid(failed, env.prefersMoreContrast)).toEqual(grid);
     expect(reduce(failed, { kind: 'copy_shareable' }, env).effects).toEqual([
       { kind: 'copy', id: 2, text: grid }
     ]);
@@ -377,6 +381,37 @@ describe('sharing a result', () => {
 
     expect(won.settings.highContrast).toBe(false);
     expect((effects[0] as { text: string }).text).toContain('🟧');
+  });
+
+  /*
+   * PaletteFollowsHighContrast again, for a grid that is already on screen. The
+   * palette is `high_contrast_active`, which the specifications state as a
+   * derivation rather than an event, so a grid held as text would be a second
+   * answer to it: the board would repaint under the device's preference and the
+   * grid would not. Nothing keeps the text, so there is nothing to go stale.
+   */
+  it('repaints a grid already shared when the device asks for more contrast', () => {
+    const shared = run(env, winInOne(env, started()), { kind: 'share_results' });
+    const asking = { ...env, prefersMoreContrast: true };
+
+    expect(resultsGrid(shared, env.prefersMoreContrast)).toContain('🟩');
+    expect(resultsGrid(shared, asking.prefersMoreContrast)).toContain('🟧');
+    expect(
+      (reduce(shared, { kind: 'copy_shareable' }, asking).effects[0] as { text: string }).text
+    ).toContain('🟧');
+  });
+
+  // The same, by the route that pre-dates the device preference: the player
+  // turning the setting on while the grid they just shared is still showing.
+  it('repaints a grid already shared when the player turns high contrast on', () => {
+    const shared = run(env, winInOne(env, started()), { kind: 'share_results' });
+    const turned = run(env, shared, { kind: 'set_high_contrast', enabled: true });
+
+    expect(turned.shareable).toEqual({ kind: 'results' });
+    expect(resultsGrid(turned, env.prefersMoreContrast)).toContain('🟧');
+    expect(
+      (reduce(turned, { kind: 'copy_shareable' }, env).effects[0] as { text: string }).text
+    ).toContain('🟧');
   });
 
   // SharingIsAvailableOnceTheGameIsOver: never while one is in progress.

@@ -1,7 +1,7 @@
 import type { Command } from '$lib/app/commands';
-import { hardModeMayBeEnabled, reduce } from '$lib/app/engine';
+import { hardModeMayBeEnabled, reduce, resultsGrid } from '$lib/app/engine';
 import { loadState, saveState } from '$lib/app/persistence';
-import type { AppState } from '$lib/app/state';
+import type { AppState, ShareableView } from '$lib/app/state';
 import { animationsActive, darkActive, highContrastActive } from '$lib/domain/appearance';
 import type { ClipboardPort } from '$lib/ports/clipboard';
 import type { ClockPort } from '$lib/ports/clock';
@@ -44,6 +44,15 @@ export interface Store {
   readonly animationsActive: boolean;
   /** `Settings.high_contrast_active`. */
   readonly highContrastActive: boolean;
+  /**
+   * What Poodl has made to be taken away, with its text.
+   *
+   * A grid is rendered here rather than read out of the state, so
+   * `PaletteFollowsHighContrast` holds while it sits on screen: the board and
+   * the grid answer to the same `high_contrast_active`, and a device that turns
+   * `prefers-contrast` on moves both at once.
+   */
+  readonly shareable: ShareableView | null;
   /** `SettingsPanel.hard_mode_may_be_enabled`. */
   readonly hardModeMayBeEnabled: boolean;
   /** Whole seconds left on an armed countdown, or null when none is running. */
@@ -149,6 +158,21 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     },
     get highContrastActive(): boolean {
       return highContrastActive(state.settings.highContrast, prefersMoreContrast);
+    },
+    get shareable(): ShareableView | null {
+      if (state.shareable === null) {
+        return null;
+      }
+      if (state.shareable.kind === 'custom_link') {
+        return state.shareable;
+      }
+
+      // Nothing to show rather than an empty grid, in the case the rules make
+      // unreachable: only a game finished by play produces a grid, and starting
+      // the next one puts the grid away before it replaces the game.
+      const text = resultsGrid(state, prefersMoreContrast);
+
+      return text === null ? null : { kind: 'results', text };
     },
     get hardModeMayBeEnabled(): boolean {
       return hardModeMayBeEnabled(state);

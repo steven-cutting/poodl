@@ -6,7 +6,7 @@
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
-  import type { GameState, Notice as NoticeValue, Shareable } from '$lib/app/state';
+  import type { GameState, Notice as NoticeValue, ShareableView } from '$lib/app/state';
   import type { KeyKnowledge } from '$lib/domain/types';
 
   /**
@@ -45,7 +45,7 @@
     notice?: NoticeValue | null;
     noticeSequence?: number;
     /** The link or the grid Poodl has just made, for as long as it has one. */
-    shareable?: Shareable | null;
+    shareable?: ShareableView | null;
     announcement?: string | null;
     announcementSequence?: number;
     onletter: (letter: string) => void;

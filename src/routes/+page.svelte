@@ -98,6 +98,13 @@
   const app = $derived(store?.state ?? null);
   const game = $derived(app?.currentGame ?? null);
 
+  /*
+   * From the store rather than from the state, because a results grid is
+   * rendered on the way out: `PaletteFollowsHighContrast` follows high contrast
+   * as it applies, so the grid on screen has to move when the device does.
+   */
+  const shareable = $derived(store?.shareable ?? null);
+
   /** The mode "New game" repeats. Custom is not startable, so it never lands here. */
   const repeatMode = $derived<StartableMode>(
     game !== null && game.mode !== 'custom' ? game.mode : (app?.lastMode ?? 'random')
@@ -273,7 +280,7 @@
         physicalKeyboard={app.settings.physicalKeyboard && panel === null}
         notice={panel === null && !conclusionShowing ? boardNotice : null}
         noticeSequence={app.noticeSequence}
-        shareable={panel === null && !conclusionShowing ? app.shareable : null}
+        shareable={panel === null && !conclusionShowing ? shareable : null}
         announcement={app.announcement}
         announcementSequence={app.announcementSequence}
         onletter={(letter: string) => {
@@ -326,7 +333,7 @@
           }}
           notice={panel === null ? boardNotice : null}
           noticeSequence={app.noticeSequence}
-          shareable={panel === null ? app.shareable : null}
+          shareable={panel === null ? shareable : null}
           oncopy={() => {
             store?.dispatch({ kind: 'copy_shareable' });
           }}
@@ -379,7 +386,7 @@
     <CustomGameForm
       notice={boardNotice}
       noticeSequence={app.noticeSequence}
-      shareable={app.shareable}
+      {shareable}
       oncreate={(entry: string) => {
         store?.dispatch({ kind: 'create_custom_game', entry });
       }}

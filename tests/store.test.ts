@@ -151,6 +151,46 @@ describe('copying a result', () => {
 
     expect(live_.clipboard.writes).toEqual([]);
   });
+
+  it('offers nothing to take away until something has been made', () => {
+    const { store } = harness();
+
+    expect(store.shareable).toBeNull();
+  });
+
+  it('hands a custom link over exactly as the rules made it', async () => {
+    const { store } = harness();
+
+    store.dispatch({ kind: 'create_custom_game', entry: ANSWERS[0] as string });
+    await settle();
+
+    expect(store.shareable?.kind).toBe('custom_link');
+    expect(store.shareable?.text).toContain(PAGE);
+  });
+
+  /*
+   * PaletteFollowsHighContrast, for the grid the player is looking at rather
+   * than the one they copied. The board repaints from `high_contrast_active`
+   * the moment the device asks, and the grid is rendered from the same
+   * derivation, so the two cannot come apart while the grid sits on screen.
+   */
+  it('repaints the grid on screen when the device asks for more contrast', async () => {
+    const { store, preferences, clipboard } = await finishedGame();
+
+    store.dispatch({ kind: 'share_results' });
+    await settle();
+
+    expect(store.shareable?.text).toContain('🟩');
+
+    preferences.set({ prefersMoreContrast: true });
+
+    expect(store.shareable?.text).toContain('🟧');
+
+    store.dispatch({ kind: 'copy_shareable' });
+    await settle();
+
+    expect(clipboard.writes.at(-1)).toContain('🟧');
+  });
 });
 
 /*
