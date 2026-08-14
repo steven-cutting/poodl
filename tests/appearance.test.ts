@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { animationsActive, darkActive } from '../src/lib/domain/appearance';
+import { animationsActive, darkActive, highContrastActive } from '../src/lib/domain/appearance';
 
 /*
  * settings.allium — the `Appearance` surface. It applies everywhere, not only
@@ -33,5 +33,22 @@ describe('animationsActive', () => {
 
   it('gives no motion when the setting is off', () => {
     expect(animationsActive(false, false)).toBe(false);
+  });
+});
+
+describe('highContrastActive', () => {
+  // MoreContrastFromTheDeviceTurnsHighContrastOn: the device wins the same way
+  // it does for motion, and without having to be asked a second time.
+  it('applies when the device asks, whatever the setting says', () => {
+    expect(highContrastActive(false, true)).toBe(true);
+    expect(highContrastActive(true, true)).toBe(true);
+  });
+
+  it('applies when the player asks and the device is silent', () => {
+    expect(highContrastActive(true, false)).toBe(true);
+  });
+
+  it('applies when neither asks', () => {
+    expect(highContrastActive(false, false)).toBe(false);
   });
 });

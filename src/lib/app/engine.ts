@@ -7,6 +7,7 @@ import {
   describeCountdown,
   describeSubmission
 } from '$lib/domain/announcements';
+import { highContrastActive } from '$lib/domain/appearance';
 import { EMPTY_POOL, drawPooledAnswer } from '$lib/domain/answerPool';
 import { respectsHardMode, satisfiesHardMode } from '$lib/domain/hardMode';
 import { customGameUrl } from '$lib/domain/links';
@@ -41,6 +42,16 @@ export interface Env {
   random: RandomPort;
   /** The page Poodl is served at, which a custom link is built from. */
   pageUrl: string;
+  /**
+   * `DevicePreferences.prefers_more_contrast`, as the shell reads it.
+   *
+   * Ambient, like `now`, and here for the same reason: `high_contrast_active`
+   * chooses the share palette, and a device preference is not the player's
+   * answer to remember. It is deliberately not on `Settings`, which is
+   * persisted — storing it would let a preference the device has since
+   * withdrawn outlive the device saying so.
+   */
+  prefersMoreContrast: boolean;
 }
 
 export interface Outcome {
@@ -92,9 +103,9 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
     case 'accept_random_fallback':
       return still(newGameRequested(dismiss(state), 'random', env));
     case 'share_results':
-      return playerSharesResults(state);
+      return playerSharesResults(state, env);
     case 'copy_shareable':
-      return copyShareable(state);
+      return copyShareable(state, env);
     case 'clipboard_settled':
       return still(clipboardSettled(state, command.id, command.copied));
     case 'dismiss_notice':
@@ -543,28 +554,54 @@ function openCustomGameLink(state: AppState, token: string, env: Env): AppState 
 }
 
 /**
- * `PlayerSharesResults`. The palette follows high contrast, so what gets pasted
- * matches the board it came from, and the game itself is untouched: no attempt,
- * no status, nothing counted.
+ * `PlayerSharesResults`. The palette follows high contrast as it applies rather
+ * than as it was set, so what gets pasted matches the board it came from even
+ * when it is the device asking for the palette. The game itself is untouched:
+ * no attempt, no status, nothing counted.
  *
- * The grid is kept as well as copied. `TheGridIsAvailableAsText` asks for text
+ * The grid is shown as well as copied. `TheGridIsAvailableAsText` asks for text
  * that can be read before it is sent and selected by hand when the clipboard
  * cannot be reached, and a grid that only ever existed inside an effect was
- * neither.
+ * neither. What is recorded is that there is one to show; the text itself is
+ * re-rendered whenever it is asked for, so the palette cannot drift away from
+ * the board's while the grid sits on screen.
  */
-function playerSharesResults(state: AppState): Outcome {
+function playerSharesResults(state: AppState, env: Env): Outcome {
+  const text = resultsGrid(state, env.prefersMoreContrast);
+
+  if (text === null) {
+    return still(state);
+  }
+  return copying({ ...dismiss(state), shareable: { kind: 'results' } }, text);
+}
+
+/**
+ * The grid of the game on the board, in the palette that applies right now, or
+ * null when there is no finished game to render.
+ *
+ * Exported because it is read twice more after `PlayerSharesResults`: by
+ * `copyShareable`, so the copy is the grid as it stands rather than the grid as
+ * it stood, and by the store, so the one on screen is too. `high_contrast_active`
+ * is a derivation, so the grid is derived as well — see `Shareable` in
+ * `state.ts` for why nothing keeps the text.
+ *
+ * It takes the device preference rather than the whole `Env`, as
+ * `hardModeMayBeEnabled` takes only the state: the store reads this outside any
+ * dispatch, where there is no `Env` to be had.
+ */
+export function resultsGrid(state: AppState, prefersMoreContrast: boolean): string | null {
   const game = state.currentGame;
 
   if (game === null || !isFinishedByPlay(game)) {
-    return still(state);
+    return null;
   }
 
-  const text = renderShareGrid(
+  return renderShareGrid(
     { mode: game.mode, status: game.status === 'won' ? 'won' : 'lost', guesses: game.guesses },
-    state.settings.highContrast ? 'high_contrast' : 'standard'
+    highContrastActive(state.settings.highContrast, prefersMoreContrast)
+      ? 'high_contrast'
+      : 'standard'
   );
-
-  return copying({ ...dismiss(state), shareable: { kind: 'results', text } }, text);
 }
 
 /**
@@ -575,12 +612,24 @@ function playerSharesResults(state: AppState): Outcome {
  * link and a grid travel the same path, and the outcome is reported the same
  * way; what is copied stays put either way, so a copy the browser refused can be
  * made by hand.
+ *
+ * A grid is rendered again here rather than read back, so a second copy taken
+ * after the palette moved is the grid the player is looking at.
  */
-function copyShareable(state: AppState): Outcome {
+function copyShareable(state: AppState, env: Env): Outcome {
   if (state.shareable === null) {
     return still(state);
   }
-  return copying(state, state.shareable.text);
+
+  const text =
+    state.shareable.kind === 'custom_link'
+      ? state.shareable.text
+      : resultsGrid(state, env.prefersMoreContrast);
+
+  if (text === null) {
+    return still(state);
+  }
+  return copying(state, text);
 }
 
 /** Ask the shell for a copy, and remember which one Poodl is waiting on. */

@@ -35,6 +35,14 @@ function storedText(state: AppState): string {
   return storage.read(STORAGE_KEY) ?? '';
 }
 
+/** The link a rule has just handed the player. Only a link carries its text. */
+function linkFrom(state: AppState): string {
+  if (state.shareable?.kind !== 'custom_link') {
+    throw new Error(`expected a link, got ${state.shareable?.kind ?? 'nothing'}`);
+  }
+  return state.shareable.text;
+}
+
 /*
  * Four guarantees ask for this between them: `InProgressGameSurvivesReload`,
  * `ThePreviousModeSurvivesBetweenSessions`, `SettingsPersistBetweenSessions`
@@ -117,7 +125,7 @@ describe('saving and loading', () => {
     expect(shared.shareable).not.toBeNull();
     expect(roundTrip(made).shareable).toBeNull();
     expect(roundTrip(shared).shareable).toBeNull();
-    expect(storedText(made)).not.toContain(made.shareable?.text);
+    expect(storedText(made)).not.toContain(linkFrom(made));
   });
 
   // Arriving is decided by ShowWelcomeOnOpening on every arrival, so a stored

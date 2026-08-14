@@ -70,8 +70,26 @@ in the workshop showed it. It is repaired: the key background is now `#6b6d6e`, 
 text measures 4.77 to 1 and the key's own boundary still stands off the page background at
 3.60, over the 3.0 that a control's boundary answers to. No hue moved, and palette mechanics
 are an explicit non-goal in `settings.allium`, so this was a code decision like `--mark-text`
-above. `Keyboard`'s "Dark theme" story now pins the palette that had none, which is what
-turns the measurement from something this record remembers into something the gate holds.
+above. `Keyboard`'s "Dark theme" story now pins the palette that had none.
+
+**That last sentence was wrong, and the way it was wrong is the most useful thing in this
+record.** Pinning the dark theme in a keyboard story did not turn the measurement into
+something the gate holds, because axe was never going to judge a key either way. Its
+contrast rule downgrades any element whose visible text is a single character to
+*incomplete* — `shortTextContent` in axe-core — and reports incomplete without failing.
+Every key shows one letter. So does every tile. Both of the palette repairs above were
+found on `WelcomeScreen` and its siblings, which share the mark tokens but carry words;
+the keyboard and the board were never in scope for the rule at all. This is checkable in
+about a minute: put an unreadable `--key-text` in `app.css` and every other component's
+stories fail while `Keyboard`'s stay green.
+
+Two lessons, and the second is the one worth keeping. A gate's silence is not a pass — the
+same lesson the `aria-hidden` glyph taught, arriving by a different route. And a figure
+recorded in prose beside a colour will drift from the colour: the contrast figures are now
+computed by `tests/contrast.test.ts` over all four combinations of theme and high contrast,
+from the stylesheet on disk, so no number in a comment or a decision record is load-bearing.
+The keyboard stories still pin all four palettes, and what they are evidence of is that each
+combination renders and is looked at.
 
 The dependency surface grows sharply in a repository that pins every version by hand. Each
 direct package is pinned exactly, as invariant 4 requires, but the transitive tree under

@@ -1,8 +1,8 @@
 import type { Command } from '$lib/app/commands';
-import { hardModeMayBeEnabled, reduce } from '$lib/app/engine';
+import { hardModeMayBeEnabled, reduce, resultsGrid } from '$lib/app/engine';
 import { loadState, saveState } from '$lib/app/persistence';
-import type { AppState } from '$lib/app/state';
-import { animationsActive, darkActive } from '$lib/domain/appearance';
+import type { AppState, ShareableView } from '$lib/app/state';
+import { animationsActive, darkActive, highContrastActive } from '$lib/domain/appearance';
 import type { ClipboardPort } from '$lib/ports/clipboard';
 import type { ClockPort } from '$lib/ports/clock';
 import type { PreferencesPort } from '$lib/ports/preferences';
@@ -42,6 +42,17 @@ export interface Store {
   readonly darkActive: boolean;
   /** `Appearance.animations_active`. */
   readonly animationsActive: boolean;
+  /** `Settings.high_contrast_active`. */
+  readonly highContrastActive: boolean;
+  /**
+   * What Poodl has made to be taken away, with its text.
+   *
+   * A grid is rendered here rather than read out of the state, so
+   * `PaletteFollowsHighContrast` holds while it sits on screen: the board and
+   * the grid answer to the same `high_contrast_active`, and a device that turns
+   * `prefers-contrast` on moves both at once.
+   */
+  readonly shareable: ShareableView | null;
   /** `SettingsPanel.hard_mode_may_be_enabled`. */
   readonly hardModeMayBeEnabled: boolean;
   /** Whole seconds left on an armed countdown, or null when none is running. */
@@ -56,6 +67,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
   let now = $state(ports.clock.now());
   let prefersDark = $state(ports.preferences.prefersDark());
   let prefersReducedMotion = $state(ports.preferences.prefersReducedMotion());
+  let prefersMoreContrast = $state(ports.preferences.prefersMoreContrast());
 
   let stopTicking: (() => void) | null = null;
   let discarded = false;
@@ -63,6 +75,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
   const stopWatchingDevice = ports.preferences.subscribe(() => {
     prefersDark = ports.preferences.prefersDark();
     prefersReducedMotion = ports.preferences.prefersReducedMotion();
+    prefersMoreContrast = ports.preferences.prefersMoreContrast();
   });
 
   function countdownAt(): number | null {
@@ -106,7 +119,8 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
       now,
       words: ports.words,
       random: ports.random,
-      pageUrl: options.pageUrl
+      pageUrl: options.pageUrl,
+      prefersMoreContrast
     });
 
     if (outcome.state !== state) {
@@ -141,6 +155,24 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     },
     get animationsActive(): boolean {
       return animationsActive(state.settings.animations, prefersReducedMotion);
+    },
+    get highContrastActive(): boolean {
+      return highContrastActive(state.settings.highContrast, prefersMoreContrast);
+    },
+    get shareable(): ShareableView | null {
+      if (state.shareable === null) {
+        return null;
+      }
+      if (state.shareable.kind === 'custom_link') {
+        return state.shareable;
+      }
+
+      // Nothing to show rather than an empty grid, in the case the rules make
+      // unreachable: only a game finished by play produces a grid, and starting
+      // the next one puts the grid away before it replaces the game.
+      const text = resultsGrid(state, prefersMoreContrast);
+
+      return text === null ? null : { kind: 'results', text };
     },
     get hardModeMayBeEnabled(): boolean {
       return hardModeMayBeEnabled(state);

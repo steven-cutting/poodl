@@ -98,6 +98,13 @@
   const app = $derived(store?.state ?? null);
   const game = $derived(app?.currentGame ?? null);
 
+  /*
+   * From the store rather than from the state, because a results grid is
+   * rendered on the way out: `PaletteFollowsHighContrast` follows high contrast
+   * as it applies, so the grid on screen has to move when the device does.
+   */
+  const shareable = $derived(store?.shareable ?? null);
+
   /** The mode "New game" repeats. Custom is not startable, so it never lands here. */
   const repeatMode = $derived<StartableMode>(
     game !== null && game.mode !== 'custom' ? game.mode : (app?.lastMode ?? 'random')
@@ -171,7 +178,22 @@
       root.setAttribute('data-theme', current.state.settings.theme);
     }
 
-    if (current.state.settings.highContrast) {
+    /*
+     * The effective value, not the setting. `MoreContrastFromTheDeviceTurnsHighContrastOn`
+     * gives the device the same last word it has over motion, and the store is
+     * where that negotiation is settled.
+     *
+     * Unlike the theme this is not also written as a media query in `app.css`,
+     * and the difference is deliberate. Theme has to carry `color-scheme` to
+     * the platform before hydration, so the query is load-bearing there and the
+     * attribute exists to override it. High contrast overrides nothing — the
+     * device wins outright, which is exactly why a query would be a second
+     * answer to a question the store has already answered, agreeing only for as
+     * long as the cascade order says so. The cost is that a device asking for
+     * more contrast sees the standard palette until the first paint, which is
+     * the same wait a stored setting already has.
+     */
+    if (current.highContrastActive) {
       root.setAttribute('data-high-contrast', 'true');
     } else {
       root.removeAttribute('data-high-contrast');
@@ -258,7 +280,7 @@
         physicalKeyboard={app.settings.physicalKeyboard && panel === null}
         notice={panel === null && !conclusionShowing ? boardNotice : null}
         noticeSequence={app.noticeSequence}
-        shareable={panel === null && !conclusionShowing ? app.shareable : null}
+        shareable={panel === null && !conclusionShowing ? shareable : null}
         announcement={app.announcement}
         announcementSequence={app.announcementSequence}
         onletter={(letter: string) => {
@@ -311,7 +333,7 @@
           }}
           notice={panel === null ? boardNotice : null}
           noticeSequence={app.noticeSequence}
-          shareable={panel === null ? app.shareable : null}
+          shareable={panel === null ? shareable : null}
           oncopy={() => {
             store?.dispatch({ kind: 'copy_shareable' });
           }}
@@ -323,6 +345,7 @@
   {#if panel === 'settings'}
     <SettingsPanel
       settings={app.settings}
+      highContrastActive={store.highContrastActive}
       hardModeMayBeEnabled={store.hardModeMayBeEnabled}
       hardModeReleased={game?.hardModeReleased ?? false}
       {hardModeCostsThisGame}
@@ -363,7 +386,7 @@
     <CustomGameForm
       notice={boardNotice}
       noticeSequence={app.noticeSequence}
-      shareable={app.shareable}
+      {shareable}
       oncreate={(entry: string) => {
         store?.dispatch({ kind: 'create_custom_game', entry });
       }}

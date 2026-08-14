@@ -2,7 +2,7 @@
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
-  import type { Notice as NoticeValue, Shareable } from '$lib/app/state';
+  import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
   import { WORD_LENGTH } from '$lib/config';
 
   /**
@@ -34,7 +34,7 @@
     notice?: NoticeValue | null;
     /** Advances so that an identical refusal is announced a second time. */
     noticeSequence?: number;
-    shareable?: Shareable | null;
+    shareable?: ShareableView | null;
     oncreate: (entry: string) => void;
     oncopy: () => void;
     onclose: () => void;

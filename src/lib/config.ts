@@ -59,6 +59,36 @@ export const MINIMUM_TOUCH_TARGET = 44;
  */
 export const NARROWEST_SUPPORTED_WIDTH = 320;
 
+/**
+ * `game.allium` — the four contrast floors, as WCAG 2.2 computes a ratio.
+ *
+ * The first two are the AA bars: text against what is behind it, and anything
+ * that is not text — a control's boundary, a state indicator — against what is
+ * adjacent to it.
+ */
+export const MINIMUM_TEXT_CONTRAST = 4.5;
+export const MINIMUM_BOUNDARY_CONTRAST = 3.0;
+
+/**
+ * `game.allium` — `config.minimum_state_separation`.
+ *
+ * How far a key nothing is known about sits from one that has been scored. No
+ * standard supplies this figure, because standards ask a colour to stand off
+ * its background rather than off another state, and a keyboard's states sit
+ * side by side.
+ */
+export const MINIMUM_STATE_SEPARATION = 3.0;
+
+/**
+ * `game.allium` — `config.minimum_mark_separation`.
+ *
+ * How far absent sits from correct, and that pair only. Lower than the figure
+ * above deliberately: four states 3 to one apart would need a range of 27 to
+ * one, which no palette has. The specification's own reasoning for the gap is
+ * worth reading before either number is touched.
+ */
+export const MINIMUM_MARK_SEPARATION = 2.0;
+
 /** `sharing.allium` — `config.share_heading` and `config.custom_marker`. */
 export const SHARE_HEADING = 'Poodl';
 export const CUSTOM_MARKER = 'custom';

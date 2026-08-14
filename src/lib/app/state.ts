@@ -83,9 +83,27 @@ export type Notice =
  * Not durable either: `NothingAboutTheLinkIsKept` asks for exactly as long as it
  * takes to copy, so nothing here is written to storage and nothing survives a
  * reload.
+ *
+ * Only the link carries its text. A link is settled the moment it is made — the
+ * answer is in it and nothing later changes it — whereas a grid's palette is
+ * `Settings.high_contrast_active`, which `settings.allium` states as a
+ * derivation rather than an event. Kept as text, a grid would be a second
+ * answer to that question, and would stop matching the board the moment the
+ * device or the setting moved under it; so what is kept is that there is a grid
+ * to show, and `engine.resultsGrid` renders it from the game whenever it is
+ * wanted. `PaletteFollowsHighContrast` then holds by construction.
  */
-export interface Shareable {
-  kind: 'custom_link' | 'results';
+export type Shareable = { kind: 'custom_link'; text: string } | { kind: 'results' };
+
+/**
+ * A shareable as a surface receives it: something to show, and the text to show.
+ *
+ * `GameScreen`, `GameConclusion` and `CustomGameForm` are handed finished text
+ * and never learn that one kind of it is rendered on the way past. The store
+ * derives this; nothing writes it.
+ */
+export interface ShareableView {
+  kind: Shareable['kind'];
   text: string;
 }
 

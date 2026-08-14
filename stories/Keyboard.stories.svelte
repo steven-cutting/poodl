@@ -310,9 +310,9 @@
      * input produces — no synthetic event reaches it and no story can force it
      * — so what is proved here is that the two tones the replacement is drawn
      * in resolve to real colours in this engine, and that they differ. Their
-     * measured contrast against all twelve key backgrounds is recorded in
-     * `src/app.css`, and `docs/explanation/accessibility.md` says plainly which
-     * part of this no gate can see.
+     * measured contrast against all twelve key backgrounds is computed by
+     * `tests/contrast.test.ts`, and `docs/explanation/accessibility.md` says
+     * plainly which part of this no gate can see.
      */
     const palette = getComputedStyle(document.documentElement);
     const ink = palette.getPropertyValue('--text');
@@ -325,11 +325,28 @@
 />
 
 <!--
-  The dark palette, with a keyboard in it. This is the story that had to wait:
-  until the key background was repaired, `#f5f5f5` on `#818384` measured 3.49 to
-  one and axe would have failed this render — which is exactly why no story
-  pinned dark with a keyboard in it, and exactly why the defect survived. The
-  measurement now reads 4.77, and this story is the standing evidence.
+  All four combinations of theme and high contrast, each with a keyboard in it
+  and each carrying keys in every state.
+
+  `settings.allium` — Appearance.@guarantee EveryCombinationMeetsTheLegibilityFloor
+  asks for the floor "in all four combinations … not only the one a change
+  happened to be looked at in", so all four are pinned. Headless Chromium
+  reports a light preference, so the dark theme exists here only where a story
+  says so.
+
+  What these do not do is hold the contrast figures, and it is worth being exact
+  about why, because the opposite was believed for a while. Axe downgrades any
+  element whose visible text is a single character to "incomplete" — axe-core's
+  `shortTextContent` — and every key on this keyboard shows exactly one, as does
+  every tile. So the contrast rule has never once judged a key, in any theme; it
+  was `WelcomeScreen` and its siblings, which share the mark tokens but carry
+  words, that failed and got the palette repaired. Put an unreadable `--key-text`
+  in `app.css` and every other component's stories fail while these stay green.
+
+  `tests/contrast.test.ts` is what holds every figure, including the ones axe
+  cannot reach and the pair — an untried key against a scored one — that no
+  accessibility engine has a rule for. These stories are the standing evidence
+  that all four combinations render, and that each is looked at.
 -->
 <Story
   name="Dark theme"
@@ -338,5 +355,34 @@
   parameters={{ docs: { story: { inline: false } } }}
   play={async () => {
     await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  }}
+/>
+
+<Story
+  name="Light theme, high contrast"
+  args={{ knowledge: KNOWLEDGE }}
+  globals={{ theme: 'light', highContrast: 'on' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async () => {
+    await expect(document.documentElement).toHaveAttribute('data-high-contrast', 'true');
+    await expect(document.documentElement).not.toHaveAttribute('data-theme', 'dark');
+  }}
+/>
+
+<!--
+  The combination no story pinned before, which is how the dark plain key
+  shipped at 3.49 to one with a green gate. High contrast replaces correct and
+  present in every theme, so a palette tuned on the standard colours can clear
+  both figures and still fail here — `game.allium` says as much where the
+  figures are declared.
+-->
+<Story
+  name="Dark theme, high contrast"
+  args={{ knowledge: KNOWLEDGE }}
+  globals={{ theme: 'dark', highContrast: 'on' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async () => {
+    await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    await expect(document.documentElement).toHaveAttribute('data-high-contrast', 'true');
   }}
 />
