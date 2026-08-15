@@ -8,9 +8,9 @@ requires: []
 
 # Design direction
 
-This page decides how Biscuit Games looks, sounds and behaves, and why. It is the owning
+This page decides how Biscuit Games looks, sounds and feels, and why. It is the owning
 page for the platform's aesthetic: its identity, palette, typography, density, motion,
-mascot and voice. It does not decide behaviour — the Allium specifications under
+mascot and voice. It does not decide gameplay behaviour — the Allium specifications under
 `docs/specs/` do that, and where the two ever appear to disagree, the specifications win.
 
 It supersedes an earlier brand guide that assumed accounts, profiles, achievements and a

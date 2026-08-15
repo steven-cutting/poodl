@@ -36,7 +36,7 @@ how the two relate.
 
 ## Design
 
-- [Design direction](design/direction.md) — how Biscuit Games looks and behaves, and why.
+- [Design direction](design/direction.md) — how Biscuit Games looks and feels, and why.
 - [Design resource index](design/resource-index.md) — research, standards, tools and public
   systems for mobile-web, game and component design.
 
