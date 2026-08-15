@@ -34,6 +34,12 @@ how the two relate.
 - [Maintain dependencies](how-to/maintain-dependencies.md)
 - [Deploy to GitHub Pages](how-to/deploy-to-github-pages.md)
 
+## Design
+
+- [Design direction](design/direction.md) — how Biscuit Games looks and feels, and why.
+- [Design resource index](design/resource-index.md) — research, standards, tools and public
+  systems for mobile-web, game and component design.
+
 ## Understand
 
 - [Architecture](explanation/architecture.md) — how a static site with no server is put together.

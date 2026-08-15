@@ -9,6 +9,9 @@
 
     {"path": "tutorials/first-change.md", "title": "Make your first change", "kind": "tutorial", "audience": ["contributor", "agent"], "canonical_for": ["first_change_tutorial"], "requires": []},
 
+    {"path": "design/direction.md", "title": "Design direction", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_direction"], "requires": []},
+    {"path": "design/resource-index.md", "title": "Design resource index", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_resource_index"], "requires": []},
+
     {"path": "how-to/develop-locally.md", "title": "Develop locally", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["local_development"], "requires": []},
     {"path": "how-to/test-and-debug.md", "title": "Test and debug", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["test_workflow"], "requires": []},
     {"path": "how-to/work-in-the-component-workshop.md", "title": "Work in the component workshop", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["component_workshop"], "requires": []},
