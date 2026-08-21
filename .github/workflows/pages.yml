@@ -13,6 +13,14 @@ permissions:
   pages: write
   id-token: write
 
+# Where Poodl sits inside its own domain, and it is a decision rather than a
+# constraint. This repository owns pnut.fans, so Pages serves it from the root
+# of that domain; the root is a landing page and the game lives beneath it. See
+# decision 0009. Both the build and the staging read this, which is what keeps
+# `paths.base` and the directory the build is moved into from drifting apart.
+env:
+  BASE_PATH: /poodl
+
 # One deployment at a time, and never cancel one that is already running: a
 # half-published site is worse than a slightly stale one.
 concurrency:
@@ -35,15 +43,13 @@ jobs:
       - run: npm ci --no-audit
       - name: Build the static site
         run: npm run build
-        env:
-          # A project site is served from a subdirectory of the account's Pages
-          # root, which the account's custom domain does not change. Delete this
-          # env block only for a domain belonging to this repository, which
-          # would serve Poodl from a root.
-          BASE_PATH: /${{ github.event.repository.name }}
+      - name: Stage the domain root around it
+        run: npm run stage
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
-          path: build
+          # The whole domain, not just the app: site/ is the landing page with
+          # the build moved in beneath it at BASE_PATH.
+          path: site
 
   deploy:
     needs: build
