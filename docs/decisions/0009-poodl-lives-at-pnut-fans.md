@@ -66,6 +66,16 @@ user domain. It is checked after the change instead of assumed, and a redirect p
 user-site repository is the fix if it ever stops holding. This is a promise made about
 somebody else's software.
 
+**It was checked, and it holds with a wrinkle.** `stevencutting.com/poodl/<path>` returns
+`301` to `https://pnut.fans/<path>`: the prefix is stripped and the path is mapped to the
+root of the new domain rather than to `/poodl/` inside it. So an old bare link lands on the
+landing page — one click from the game — and an old custom game link arrives at the root
+with its token intact but no app to read it, which loses the word. A forwarder on the
+landing page would rescue those, and was declined: it would put behaviour on the one page
+nothing here renders or tests, which is the cost this decision already names. The
+measurement is recorded in
+[the deployment page](../how-to/deploy-to-github-pages.md).
+
 **The landing page is outside every gate that means anything.** `just storybook-test` runs
 axe over each story; the landing page has no story and no component, so nothing renders it,
 nothing measures its contrast, and nothing types at it. Linking `src/app.css` instead of

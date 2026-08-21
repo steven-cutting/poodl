@@ -88,6 +88,21 @@ If the landing page at the domain root is what looks wrong, neither command can 
 both mount `build/`, which is the app alone. Use `just stage` and `just stage-preview`, and
 see [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
 
+## A deployed change is not visible, or an old URL still serves the old body
+
+The CDN, not the deployment. GitHub Pages serves HTML with `cache-control: max-age=600`, so
+for ten minutes a page can keep answering with what it held before the deploy — with the
+`age` header climbing towards 600 to say so.
+
+**The cache key ignores the query string**, so appending `?cachebust=1` proves nothing: it
+returns the same cached body. To read the current behaviour, request a path that has never
+been requested before and check that the response says `age: 0`.
+
+This matters most right after a domain change, where the question being asked is whether an
+old address redirects. A cached `200` from before the change looks exactly like a redirect
+that is not happening. See
+[Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
+
 ## The Pages deployment fails with a 404
 
 `Failed to create deployment (status: 404)`, with the build job green and its artefact
