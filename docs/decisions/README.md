@@ -29,6 +29,7 @@ the specifications under `docs/specs/`, and unresolved ones are recorded there a
 | [0006](0006-component-workshop.md) | A component workshop |
 | [0007](0007-rules-as-a-reducer.md) | The rules are a reducer |
 | [0008](0008-visual-review-in-chromatic.md) | Visual review in Chromatic |
+| [0009](0009-poodl-lives-at-pnut-fans.md) | Poodl lives at pnut.fans |
 
 ## Writing a new one
 

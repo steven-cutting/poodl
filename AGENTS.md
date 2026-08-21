@@ -143,6 +143,10 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
 
 - `adapter-static` instead of `adapter-node`, and a GitHub Pages deploy
   workflow the template has no counterpart for.
+- The repository owns its own domain, so what the deploy uploads is a domain and
+  not an application: `site-root/` is the landing page at the root and the game
+  is staged beneath it at `/poodl/`. See
+  [decision 0009](docs/decisions/0009-poodl-lives-at-pnut-fans.md).
 - No backend, database, OpenAPI or Python application code; the app sits at the
   repository root rather than under `frontend/`.
 - Ports and fakes adapted from the template's HTTP `Api` boundary to this app's

@@ -58,6 +58,19 @@ dev:
 preview:
     npm run preview
 
+# Assembles what Pages serves: the domain root from site-root/, with the built
+# app moved beneath it at BASE_PATH. Pass the same value the build used, or the
+# app lands somewhere the landing page does not link to.
+stage:
+    npm run stage
+
+# Serves the staged tree in site/, which is the whole domain and not just the
+# app. `just preview` cannot show it: that one mounts build/ at BASE_PATH and
+# knows nothing about the root around it. Python is already in the toolchain,
+# so this needs no dependency; the port is not 4173 so the two can run at once.
+stage-preview:
+    uv run --frozen python -m http.server --bind 127.0.0.1 --directory site 4174
+
 # The component workshop on port 6006. This serves it; `just chromatic` is what
 # publishes a build of it for visual review.
 storybook:

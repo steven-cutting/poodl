@@ -6,10 +6,12 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
  * build output is a directory of files a host can serve as-is.
  *
  * `paths.base` is empty by default. The GitHub Pages workflow sets BASE_PATH to
- * `/poodl` because a project site is served from a subdirectory of the
- * account's Pages root — which the account's custom domain does not change.
- * Only a domain belonging to this repository would serve Poodl from a root, and
- * that is what emptying it is for.
+ * `/poodl`, and that is now a decision rather than a constraint. This repository
+ * owns pnut.fans, so Pages serves it from the root of that domain and nothing
+ * forces a subdirectory any more; the root is a landing page and the game sits
+ * beneath it. See decision 0009. Emptying this would move the game to the root
+ * and take the landing page's address with it, which is why it is set rather
+ * than deleted.
  */
 
 /** @type {import('@sveltejs/kit').Config} */

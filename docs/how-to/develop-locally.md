@@ -56,13 +56,21 @@ just frontend-build
 just preview
 ```
 
-To reproduce the published site exactly, set the base path the project site is served
-from — on both commands, for the reason [Configuration](../reference/configuration.md)
-gives:
+To reproduce the published site exactly, set the base path Poodl is served from inside its
+own domain — on both commands, for the reason
+[Configuration](../reference/configuration.md) gives:
 
 ```console
 BASE_PATH=/poodl just frontend-build
 BASE_PATH=/poodl just preview
+```
+
+That is the app. The deployment is the whole domain, landing page included, and two more
+commands reach it:
+
+```console
+BASE_PATH=/poodl just stage
+just stage-preview
 ```
 
 ## Before handing work back
