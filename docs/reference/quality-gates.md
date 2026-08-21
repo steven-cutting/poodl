@@ -24,6 +24,13 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 9 | `check-agents` | The agent contract holds. |
 | 10 | `check-clean` | The run changed nothing. |
 
+One check is deliberately missing from that table. `just check-specs` runs `allium` over
+the specifications, and it reports rather than gates: `allium check` exits non-zero on
+warnings as well as errors, it offers no way to waive one, and the modules carry a known
+baseline. `check-links-online` sits outside the aggregate for the same class of reason.
+Both are listed in [Commands](commands.md), and the baseline is in
+[Work with the specifications](../how-to/work-with-the-specs.md).
+
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure
 screenshots. All of them are ignored by Git, because a gate that changes one byte of the
 worktree fails before its own exit code is read. Gate 7 needs a browser that no lockfile

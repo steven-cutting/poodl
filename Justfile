@@ -36,6 +36,13 @@ install-hooks:
     test -f uv.lock || { printf '%s\n' 'uv.lock is missing; run just initialize first' >&2; exit 2; }
     uv run --frozen prek install --overwrite --hook-type=pre-commit
 
+# The Allium checker for docs/specs/, pinned and checksummed in the script.
+# Downloads over the network into .tools/bin, which Git ignores. It is not part
+# of `just sync` for the same reason the browser below is not: sync installs
+# exactly what the lockfiles say, and no lockfile can name a binary.
+install-allium:
+    uv run --frozen python scripts/install_allium.py
+
 # The Chromium build the story tests render in. Downloads over the network into
 # a per-user cache outside the repository, so the worktree never sees it.
 # `just initialize` runs this; `just sync` deliberately does not, because sync
@@ -114,6 +121,14 @@ check-docs:
 
 check-agents:
     uv run --frozen python scripts/validate_agents.py
+
+# The specifications, checked mechanically rather than by review. Deliberately
+# outside `just check`: `allium check` exits non-zero on warnings as well as
+# errors, and the modules carry a known baseline of them. See
+# docs/how-to/work-with-the-specs.md for what that baseline is.
+check-specs:
+    uv run --frozen python scripts/install_allium.py --check
+    .tools/bin/allium check docs/specs/
 
 check-links-online:
     uv run --frozen prek run --all-files --hook-stage manual lychee-online

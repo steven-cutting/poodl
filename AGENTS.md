@@ -156,6 +156,12 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
   than the uniformity.
 - Markdown is formatted by `markdownlint-cli2` alone; Prettier ignores it, so
   the two never disagree.
+- The Allium checker for `docs/specs/` as a project-managed binary: pinned by
+  version and SHA-256 in `scripts/install_allium.py`, installed into the
+  gitignored `.tools/bin/` by `just install-allium`, and run by
+  `just check-specs`. It reports rather than gates, and is deliberately not part
+  of `just check`. See
+  [decision 0009](docs/decisions/0009-project-managed-allium-cli.md).
 - Storybook as a component workshop: stories under `stories/`, each one rendered
   in Chromium with axe run over it, gated by `just check`. See
   [decision 0006](docs/decisions/0006-component-workshop.md).

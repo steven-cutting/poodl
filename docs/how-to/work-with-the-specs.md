@@ -32,7 +32,8 @@ another module's `Excludes`, it belongs there.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
-5. Run `just frontend-unit`, then `just check`.
+5. Run `just check-specs` and confirm the count below has not risen.
+6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
 
@@ -48,9 +49,40 @@ stop adding them.
 
 ## Tooling
 
-The `allium` command-line tool validates and analyses these files. It is not installed
-here, so the specifications are checked by review rather than mechanically. The
-`spec-change` skill in `.agents/skills/` carries the procedure for agents.
+The `allium` command-line tool validates and analyses these files, and this project owns a
+pinned copy of it. `just initialize` installs it; afterwards, or after a version change,
+`just install-allium` puts it in the gitignored `.tools/bin/`. It is a checksummed binary
+rather than a package in either lockfile — see
+[decision 0009](../decisions/0009-project-managed-allium-cli.md).
+
+```console
+just check-specs
+```
+
+That runs `allium check` over every module. The `spec-change` skill in `.agents/skills/`
+carries the procedure for agents.
+
+### The current baseline
+
+`check-specs` is **not** part of `just check`. `allium check` exits non-zero on warnings as
+well as errors, and offers no configuration file, no severity threshold and no way to waive
+a diagnostic — so the recipe reports rather than gates until the count below reaches zero.
+
+| Module | Diagnostics |
+| --- | --- |
+| `words.allium` | 0 |
+| `settings.allium` | 0 |
+| `statistics.allium` | 5 |
+| `sharing.allium` | 3 |
+| `game.allium` | 17 |
+
+Twenty-five in total: sixteen warnings and nine informational. Fourteen are
+`allium.reference.unknownName` against `words/config`, where a module reaches for a name
+that `words.allium` does not define.
+
+**Read the count, not the exit code.** A change to a specification should add no new
+diagnostic. If a module's number goes up, the change caused it; if one goes down, say so,
+because that is progress worth recording here.
 
 ## Related pages
 

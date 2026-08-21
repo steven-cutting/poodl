@@ -31,7 +31,7 @@ there is no backend to be a sibling of.
 ├── tests/               Vitest suites, never colocated with src/
 ├── stories/             Svelte CSF stories, one file per component
 ├── static/              Copied verbatim into the build
-├── scripts/             The repository checkers, and the browser preflight
+├── scripts/             The repository checkers, the tool installers, the browser preflight
 ├── docs/                This handbook, plus specs/
 ├── .agents/skills/      Canonical agent procedures
 └── .storybook/          The component workshop, served and built locally
@@ -49,7 +49,7 @@ there is no backend to be a sibling of.
 | `src/lib/data/` | Replaceable data, not code. Excluded from spell-checking, and from Prettier. |
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
-| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, and `initialize.sh`. |
+| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `install_allium.py`, `check_playwright_browsers.js`, and `initialize.sh`. |
 | `docs/specs/` | The Allium specifications. Behaviour is decided here, not in code. |
 | `.storybook/` | The workshop's configuration. Served locally, and built both by the gate, which discards it, and by `just chromatic`, which publishes it. |
 

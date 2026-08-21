@@ -50,6 +50,37 @@ relocking.
    The binary is versioned by that pin and is in neither lockfile — see
    [Work in the component workshop](work-in-the-component-workshop.md).
 
+## Moving the Allium binary
+
+`allium` is a checksummed binary, not a package, so no lockfile accounts for it and
+`just lock-check` cannot speak for it. `scripts/install_allium.py` holds the version and
+the SHA-256 of each supported artefact; see
+[decision 0009](../decisions/0009-project-managed-allium-cli.md).
+
+Upstream publishes no checksums for these files — its `SHA256SUMS.txt` covers only the
+editor extension and the language server — so all four have to be recomputed by hand:
+
+```console
+V=3.5.3
+for t in aarch64-apple-darwin x86_64-apple-darwin \
+         aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu; do
+  printf '%s  ' "$t"
+  curl -sL "https://github.com/juxt/allium-tools/releases/download/v$V/allium-$t.tar.gz" \
+    | shasum -a 256 | awk '{print $1}'
+done
+```
+
+Replace `VERSION` and all four entries in `CHECKSUMS`, then reinstall and confirm:
+
+```console
+just install-allium
+just check-specs
+```
+
+A version change can move the diagnostic baseline recorded in
+[Work with the specifications](work-with-the-specs.md). Update that table in the same
+commit, so a later reader can tell a new finding from an old one.
+
 ## Actions in the workflows
 
 GitHub Actions are pinned to commit SHAs with a version comment, not to tags. To move
