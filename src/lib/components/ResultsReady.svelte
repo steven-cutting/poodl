@@ -11,6 +11,8 @@
    * `SharedTextGivesNothingAway`: what is shown is exactly what is copied, and
    * the grid names no letter of any word.
    */
+  import Button from '$lib/components/Button.svelte';
+
   let { text, oncopy }: { text: string; oncopy?: () => void } = $props();
 
   const fieldId = $props.id();
@@ -21,26 +23,32 @@
   <label for={fieldId}>Shared result</label>
   <textarea id={fieldId} readonly {rows} value={text}></textarea>
   <div class="row">
-    <button type="button" onclick={() => oncopy?.()}>Copy result</button>
+    <Button onclick={() => oncopy?.()}>Copy result</Button>
   </div>
 </div>
 
 <style>
   .result {
     display: grid;
-    gap: 0.35rem;
-    margin-block: 1rem;
+    gap: var(--s-2);
+    margin-block: var(--s-6);
   }
 
   label {
     font-weight: 600;
   }
 
+  /*
+   * A control's boundary, not a decorative rule, and `font: inherit` on
+   * purpose twice over: 16px is what iOS will not zoom on, and the grid stays
+   * selectable by hand — `TheGridIsAvailableAsText` is why nothing here
+   * suppresses selection.
+   */
   textarea {
     inline-size: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 4px;
+    padding: var(--s-4);
+    border: var(--rule-w) solid var(--key-untried-rule);
+    border-radius: var(--radius-card);
     background: var(--background);
     color: var(--text);
     font: inherit;
@@ -51,16 +59,5 @@
   .row {
     display: flex;
     justify-content: flex-end;
-  }
-
-  button {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
   }
 </style>

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
+  import Button from '$lib/components/Button.svelte';
+  import HowToPlay from '$lib/components/HowToPlay.svelte';
   import type { GameMode, GameStatus, StartableMode } from '$lib/domain/types';
 
   /**
@@ -61,38 +62,28 @@
 <div class="welcome">
   <p class="lead">An unlimited-play word game. Guess the word; play as many as you like.</p>
 
-  <fieldset class="how">
-    <legend>How to play</legend>
-    <ul>
-      <li>The word is {WORD_LENGTH} letters long and you have {MAX_ATTEMPTS} attempts.</li>
-      <li>
-        Each letter comes back correct, in the word but in the wrong place, or not in the word.
-      </li>
-      <li>Every result is named as well as coloured, so nothing depends on seeing a colour.</li>
-      <li>Poodl never withholds a game. There is no daily word and no limit.</li>
-    </ul>
-  </fieldset>
+  <HowToPlay />
 
   <ul class="choices">
     {#if canContinue}
       <li>
-        <button
-          type="button"
-          class="primary"
+        <Button
+          variant="primary"
+          size="md"
           onclick={() => {
             oncontinue();
-          }}>{continueLabel}</button
+          }}>{continueLabel}</Button
         >
         <span>{continueDescription}</span>
       </li>
     {/if}
     {#each MODES as choice (choice.mode)}
       <li>
-        <button
-          type="button"
+        <Button
+          size="md"
           onclick={() => {
             onnewgame(choice.mode);
-          }}>{choice.label}</button
+          }}>{choice.label}</Button
         >
         <span>{choice.description}</span>
       </li>
@@ -120,7 +111,7 @@
 <style>
   .welcome {
     display: grid;
-    gap: 1.25rem;
+    gap: var(--s-7);
   }
 
   .lead {
@@ -128,28 +119,9 @@
     text-align: center;
   }
 
-  .how {
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 6px;
-  }
-
-  legend {
-    padding-inline: 0.35rem;
-    font-weight: 600;
-  }
-
-  .how ul {
-    margin: 0;
-    padding-inline-start: 1.1rem;
-    display: grid;
-    gap: 0.35rem;
-  }
-
   .choices {
     display: grid;
-    gap: 0.75rem;
+    gap: var(--s-5);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -157,47 +129,31 @@
 
   .choices li {
     display: grid;
-    grid-template-columns: 12rem 1fr;
-    gap: 0.75rem;
+    grid-template-columns: 14rem 1fr;
+    gap: var(--s-5);
     align-items: center;
   }
 
   .choices span {
-    color: var(--muted);
-  }
-
-  button {
-    padding: 0.65rem 0.9rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .primary {
-    border-color: var(--mark-correct);
-    background: var(--mark-correct);
-    color: var(--mark-text);
+    color: var(--text-2);
+    font-size: var(--fs-small);
   }
 
   .cost,
   .hint {
     margin: 0;
-    color: var(--muted);
+    color: var(--text-2);
     text-align: center;
   }
 
   .cost {
-    font-size: 0.9rem;
+    font-size: var(--fs-small);
   }
 
   @media (max-width: 30rem) {
     .choices li {
       grid-template-columns: 1fr;
-      gap: 0.25rem;
+      gap: var(--s-2);
     }
   }
 </style>

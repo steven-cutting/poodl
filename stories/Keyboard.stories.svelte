@@ -36,41 +36,53 @@
     '  Space.',
     '- `PhysicalKeyboardInput.@guarantee TurningThisOffLeavesTheGameFullyPlayable`. Nothing in',
     '  this component consults that setting, so it stays reachable whatever the setting says.',
-    '- `@guarantee ResultsAreNeverConveyedByColourAlone`. A known key carries the same shape a',
-    '  tile does as well as its colour, and says the mark in its accessible name.',
+    '- `@guarantee ResultsAreNeverConveyedByColourAlone`. A known key carries the same marker',
+    '  bar a tile does as well as its colour, and says the mark in its accessible name.',
     '- `contract DirectManipulation`, which this component is the hardest case for. The two',
     '  width stories below are the executable evidence for',
     '  `@invariant EveryControlIsAComfortableTarget`: at',
     '  `config.narrowest_supported_width` the keyboard meets `config.minimum_touch_target` top',
-    '  to bottom, divides each row equally across and keeps a gap between keys, and at the width',
-    '  the page shell gives it the keys meet the figure in both directions. They are here rather',
-    '  than in `tests/` because jsdom has no layout engine and can return none of these numbers.',
+    '  to bottom, divides each row equally among its letter keys — the two action keys may be',
+    '  wider, never narrower — and keeps a gap between keys, and at the width the page shell',
+    '  gives it the keys meet the figure in both directions. They are here rather than in',
+    '  `tests/` because jsdom has no layout engine and can return none of these numbers.',
     '',
     'Child-to-parent communication is callback props — `onletter`, `ondelete`, `onsubmit` — as',
     'invariant 2 in AGENTS.md requires. There is no event dispatcher here.'
   ].join('\n');
+
+  interface MeasuredKey {
+    box: DOMRect;
+    /*
+     * A letter key's accessible name starts with its single letter; the two
+     * action keys are named "Enter" and "Delete". The equal-division clause
+     * binds the letters alone, so the measurement has to know which is which.
+     */
+    isLetter: boolean;
+  }
 
   /*
    * Which keys share a line is a rendering fact, so it is read from geometry
    * rather than from `.row` — a story that measures layout should not also
    * depend on the class names the layout happens to use.
    */
-  function keyRows(canvasElement: HTMLElement): DOMRect[][] {
-    const rows: DOMRect[][] = [];
+  function keyRows(canvasElement: HTMLElement): MeasuredKey[][] {
+    const rows: MeasuredKey[][] = [];
     let line = Number.NaN;
 
     // Reading order is row order, so a key that starts on a new line starts a
     // new row and the rows come out top to bottom without being sorted.
     for (const key of within(canvasElement).getAllByRole('button')) {
       const box = key.getBoundingClientRect();
+      const isLetter = /^[A-Z](,|$)/.test(key.getAttribute('aria-label') ?? '');
       const top = Math.round(box.top);
       const current = rows.at(-1);
 
       if (current === undefined || top !== line) {
-        rows.push([box]);
+        rows.push([{ box, isLetter }]);
         line = top;
       } else {
-        current.push(box);
+        current.push({ box, isLetter });
       }
     }
 
@@ -215,9 +227,10 @@
   `EveryControlIsAComfortableTarget` grants the keyboard the one exemption in
   the contract, because ten keys and nine gaps cannot be 44px each across
   320px. What it asks for instead is measured here: the figure met top to
-  bottom, each row divided equally across, a gap surviving between keys, and
-  nothing scrolling sideways. jsdom has no layout engine and can answer none of
-  it, which is why the assertion is here.
+  bottom, each row divided equally among its letter keys with the two action
+  keys wider and never narrower, a gap surviving between keys, and nothing
+  scrolling sideways. jsdom has no layout engine and can answer none of it,
+  which is why the assertion is here.
 -->
 <Story
   name="At the narrowest supported width"
@@ -232,17 +245,32 @@
     await expect(frame.scrollWidth).toBeLessThanOrEqual(frame.clientWidth);
 
     for (const row of rows) {
-      let previous: DOMRect | undefined;
+      let previous: MeasuredKey | undefined;
+      let letterWidth: number | undefined;
 
-      for (const box of row) {
-        await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
+      for (const key of row) {
+        await expect(key.box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
 
         if (previous !== undefined) {
-          // A gap between keys, and an equal division of what is left.
-          await expect(box.left - previous.right).toBeGreaterThan(0);
-          await expect(Math.abs(box.width - previous.width)).toBeLessThan(1);
+          // A gap between keys, whatever kinds they are.
+          await expect(key.box.left - previous.box.right).toBeGreaterThan(0);
         }
-        previous = box;
+
+        if (key.isLetter) {
+          // An equal division of what is left, among the letter keys.
+          if (letterWidth !== undefined) {
+            await expect(Math.abs(key.box.width - letterWidth)).toBeLessThan(1);
+          }
+          letterWidth = key.box.width;
+        }
+        previous = key;
+      }
+
+      // The action keys may be wider than a letter key, and never narrower.
+      for (const key of row) {
+        if (!key.isLetter && letterWidth !== undefined) {
+          await expect(key.box.width).toBeGreaterThanOrEqual(letterWidth);
+        }
       }
     }
   }}
@@ -270,7 +298,7 @@
   play={async ({ canvasElement }) => {
     // DirectManipulation.@invariant EveryControlIsAComfortableTarget
     for (const row of keyRows(canvasElement)) {
-      for (const box of row) {
+      for (const { box } of row) {
         await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
         await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
       }
@@ -339,9 +367,9 @@
   element whose visible text is a single character to "incomplete" — axe-core's
   `shortTextContent` — and every key on this keyboard shows exactly one, as does
   every tile. So the contrast rule has never once judged a key, in any theme; it
-  was `WelcomeScreen` and its siblings, which share the mark tokens but carry
-  words, that failed and got the palette repaired. Put an unreadable `--key-text`
-  in `app.css` and every other component's stories fail while these stay green.
+  was `WelcomeScreen` and its siblings, which share the palette but carry words,
+  that failed and got it repaired. Put an unreadable letter ink in `app.css` and
+  every other component's stories fail while these stay green.
 
   `tests/contrast.test.ts` is what holds every figure, including the ones axe
   cannot reach and the pair — an untried key against a scored one — that no

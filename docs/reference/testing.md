@@ -75,6 +75,14 @@ And axe is not exhaustive: it skips what it cannot attribute, including anything
 `aria-hidden`, so a guarantee resting on such an element still has to be measured by hand.
 The procedure is in [Work in the component workshop](../how-to/work-in-the-component-workshop.md).
 
+The marker bars are the worked example of the split. The bar that discharges
+`ResultsAreNeverConveyedByColourAlone` is aria-hidden decoration with no role and no name,
+so the role-and-name convention cannot reach it and it is queried by `[data-marker]` — the
+same class of structural hook as the grandfathered `data-mark`, granted for the same
+reason. jsdom holds its presence (a bar on correct and present, none on absent); Chromium
+holds its geometry (the two bars differ in length), because only a layout engine can
+measure a width.
+
 ## Coverage
 
 v8 provider, measured over `src/lib/**`, with a 90% floor on branches, functions, lines

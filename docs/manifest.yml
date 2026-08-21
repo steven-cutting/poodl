@@ -15,6 +15,7 @@
     {"path": "how-to/develop-locally.md", "title": "Develop locally", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["local_development"], "requires": []},
     {"path": "how-to/test-and-debug.md", "title": "Test and debug", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["test_workflow"], "requires": []},
     {"path": "how-to/work-in-the-component-workshop.md", "title": "Work in the component workshop", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["component_workshop"], "requires": []},
+    {"path": "how-to/port-a-design-system-component.md", "title": "Port a design system component", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_system_porting"], "requires": []},
     {"path": "how-to/maintain-dependencies.md", "title": "Maintain dependencies", "kind": "how-to", "audience": ["maintainer", "agent"], "canonical_for": ["dependency_maintenance"], "requires": []},
     {"path": "how-to/deploy-to-github-pages.md", "title": "Deploy to GitHub Pages", "kind": "how-to", "audience": ["maintainer", "operator", "agent"], "canonical_for": ["deployment_procedure"], "requires": []},
     {"path": "how-to/replace-the-word-lists.md", "title": "Replace the word lists", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["word_list_provisioning"], "requires": []},
@@ -45,6 +46,7 @@
     {"path": "decisions/0005-obfuscation-not-security.md", "title": "Decision 0005: Answer obfuscation is not security", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_obfuscation_not_security"], "requires": []},
     {"path": "decisions/0006-component-workshop.md", "title": "Decision 0006: A component workshop", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_component_workshop"], "requires": []},
     {"path": "decisions/0007-rules-as-a-reducer.md", "title": "Decision 0007: The rules are a reducer", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_rules_as_a_reducer"], "requires": []},
-    {"path": "decisions/0008-visual-review-in-chromatic.md", "title": "Decision 0008: Visual review in Chromatic", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_visual_review"], "requires": []}
+    {"path": "decisions/0008-visual-review-in-chromatic.md", "title": "Decision 0008: Visual review in Chromatic", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_visual_review"], "requires": []},
+    {"path": "decisions/0009-biscuit-games-design-system.md", "title": "Decision 0009: The Biscuit Games design system", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_design_system"], "requires": []}
   ]
 }

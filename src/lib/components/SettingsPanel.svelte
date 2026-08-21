@@ -136,6 +136,7 @@
           }}
         />
         High contrast
+        <span class="state" aria-hidden="true">{highContrastActive ? 'On' : 'Off'}</span>
       </label>
       <p id={contrastId}>{contrastNote}</p>
     </li>
@@ -150,6 +151,7 @@
           onchange={toggleHardMode}
         />
         Hard mode
+        <span class="state" aria-hidden="true">{settings.hardMode ? 'On' : 'Off'}</span>
       </label>
       <p id={hardModeId}>{hardModeNote}</p>
     </li>
@@ -164,6 +166,7 @@
           }}
         />
         Animations
+        <span class="state" aria-hidden="true">{settings.animations ? 'On' : 'Off'}</span>
       </label>
       <p>Off whenever your system asks for reduced motion, whatever this says.</p>
     </li>
@@ -179,6 +182,7 @@
           }}
         />
         Physical keyboard
+        <span class="state" aria-hidden="true">{settings.physicalKeyboard ? 'On' : 'Off'}</span>
       </label>
       <p id={keyboardId}>
         Off hands every key back — letters, Enter and Backspace — so a screen reader can navigate by
@@ -197,6 +201,7 @@
           }}
         />
         Welcome screen
+        <span class="state" aria-hidden="true">{settings.showWelcome ? 'On' : 'Off'}</span>
       </label>
       <p id={welcomeId}>Takes effect the next time you open Poodl, not on this game.</p>
     </li>
@@ -205,29 +210,38 @@
 
 <style>
   fieldset {
-    margin: 0 0 1rem;
-    padding: 0.6rem 0.9rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 6px;
+    margin: 0 0 var(--s-6);
+    padding: var(--s-4) var(--s-5);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
   }
 
   legend {
-    padding-inline: 0.35rem;
+    padding-inline: var(--s-2);
     font-weight: 600;
   }
 
   .theme {
     display: flex;
-    gap: 1rem;
+    gap: var(--s-6);
     flex-wrap: wrap;
   }
 
+  /* Rule-separated rows, in the design system's manner. */
   .switches {
     display: grid;
-    gap: 0.9rem;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .switches li {
+    padding-block: var(--s-3);
+    border-block-start: var(--rule-w) solid var(--rule);
+  }
+
+  .switches li:first-child {
+    border-block-start: 0;
   }
 
   /*
@@ -237,21 +251,18 @@
    *
    * The row is what grows. A label bound to its control activates that control
    * across its whole area, so the row is what a finger is actually aimed at,
-   * and a 44px box drawn where the player has only ever seen a native checkbox
-   * would be a stranger thing than the problem it solved. The box grows too,
-   * but only far enough to be aimed at deliberately. Measured in
-   * `stories/SettingsPanel.stories.svelte`.
+   * and the switch drawn below is sized to be aimed at deliberately. Measured
+   * in `stories/SettingsPanel.stories.svelte`.
    */
   label {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-5);
     align-items: center;
     min-block-size: 44px;
     font-weight: 600;
   }
 
-  input[type='radio'],
-  input[type='checkbox'] {
+  input[type='radio'] {
     inline-size: 1.5rem;
     block-size: 1.5rem;
   }
@@ -260,14 +271,62 @@
     font-weight: 400;
   }
 
-  /* Indented past the control and its gap, so the note lines up under the name. */
-  p {
-    margin: 0.15rem 0 0 2rem;
-    color: var(--muted);
-    font-size: 0.9rem;
+  /*
+   * The design system's switch, drawn on the native checkbox itself so the
+   * role, the focus outline, the label binding and every `aria-describedby`
+   * sentence survive untouched. State is carried by the knob's position, by
+   * the aria-hidden On/Off word beside the row, and by the checked state
+   * assistive technology already reads — never by colour alone.
+   */
+  input[type='checkbox'] {
+    appearance: none;
+    position: relative;
+    flex: 0 0 auto;
+    inline-size: 44px;
+    block-size: 26px;
+    margin: 0;
+    border: var(--rule-w) solid var(--key-untried-rule);
+    border-radius: 2px;
+    background: transparent;
   }
 
-  input:disabled + :global(*) {
-    opacity: 0.7;
+  input[type='checkbox']::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 3px;
+    inset-inline-start: 3px;
+    inline-size: 18px;
+    block-size: 18px;
+    border-radius: 2px;
+    background: var(--key-untried-rule);
+    transition: transform var(--dur-1) var(--ease);
+  }
+
+  input[type='checkbox']:checked {
+    border-color: var(--text);
+    background: var(--text);
+  }
+
+  input[type='checkbox']:checked::after {
+    background: var(--background);
+    transform: translateX(18px);
+  }
+
+  .state {
+    margin-inline-start: auto;
+    color: var(--text-2);
+    font-size: var(--fs-small);
+    font-weight: 400;
+  }
+
+  label:has(input:disabled) {
+    color: var(--text-disabled);
+  }
+
+  /* Indented past the control and its gap, so the note lines up under the name. */
+  p {
+    margin: 0.15rem 0 0 calc(44px + var(--s-5));
+    color: var(--text-2);
+    font-size: var(--fs-small);
   }
 </style>

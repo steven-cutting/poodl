@@ -15,26 +15,33 @@ touches a surface.
 ## The obligations
 
 **Results are never conveyed by colour alone.** Correct, present and absent each carry a
-non-colour indication as well as a colour. In the implementation a tile has a shape
-glyph, and an accessible name that says the mark in words. A key on the on-screen keyboard
-carries the same glyph and the same name — it did not at first, and a sighted colour-blind
-reader with no assistive technology had only the colour to go on. This holds in every theme
-and in both palettes.
+non-colour indication as well as a colour. In the implementation that indication is a
+marker bar: correct fills most of a tile or key's bottom edge, present shows a short
+centred fraction of it, and absent carries no bar at all — the absence, beside a dimmed
+letter and a lighter-weight rule, is itself the indication, so a reader without hue tells
+the three states apart as bar, shorter bar and no bar. Every mark also has an accessible
+name that says it in words. A key on the on-screen keyboard carries the same bar and the
+same name as a tile — it once carried neither shape, and a sighted colour-blind reader
+with no assistive technology had only the colour to go on. This holds in every theme and
+in both palettes.
 
 **A key nobody has tried is distinguishable from one that has been scored.** By at least
-3 to one, against every one of the three marks — and absent stands off correct by at least
-2 to one. These are `game.allium`'s `config.minimum_state_separation` and
-`config.minimum_mark_separation`, and they are separate from the clause above rather than
-covered by it: the glyph speaks for a mark, and a letter no guess has covered carries no
-mark, so there is no glyph to read. Lightness is all there is, which is why the figures are
-stated as lightness and not left to hue. The report that prompted them was a phone at
-minimum backlight, where an absent key and an untried one were the same object; the pair
-measured 1.23 to one in the dark theme and 2.89 in the light.
+3 to one, and absent stands off correct by at least 2 to one. These are `game.allium`'s
+`config.minimum_state_separation` and `config.minimum_mark_separation`, and they are
+separate from the clause above rather than covered by it: the bar speaks for a mark, and a
+letter no guess has covered carries no mark, so there is no bar to read. Lightness is all
+there is, which is why the figures are stated as lightness and not left to hue. The report
+that prompted them was a phone at minimum backlight, where an absent key and an untried
+one were the same object; the pair once measured 1.23 to one in the dark theme.
 
 One shape carries this in `app.css`, and it is what the range had to be spent on. **A key
-nothing is known about hugs the page and is drawn by its border; a scored key steps away
-from the page** — dark on white, pale on near-black — **and its letter is painted in the
-page's own extreme.** So the marks invert between themes, which they had not before; what
+nothing is known about hugs the page**: its ground is the page's own, its border draws it,
+and its letter is the page's ink. A scored key steps onto the raised ground and answers in
+the way its state affords — correct and present paint their result ink through the letter,
+the border and the bar together, standing off the ground the untried key hugs; absent,
+with no hue and no bar, holds its dimmed letter apart from the untried letter; and absent
+stands off correct by the border each of the two draws, a distance with no direction —
+absent's border is the lighter of the pair in dark and the darker in light. What
 `sharing.allium` ties to high contrast is which palette is in use, and the emoji "are
 whatever the reader's platform draws, and never were the board's own colours".
 
@@ -119,15 +126,14 @@ initiative, which is the thing this refuses.
 
 Removing the platform's tap flash without replacing it would leave a control that reads as
 dead under exactly the finger the rule exists for, so a pressed control draws a ring in the
-page's own ink, backed by its own paper. Two tones rather than one because a key is not one
-colour: a plain key, three marks and the two that high contrast replaces make six
-backgrounds per theme and twelve in all, and no single tone stands off every one of them.
-Ink and paper between them always do, because the marks are placed by how far they sit from
-the page and one of the two is therefore always at the far end. The narrowest of the twelve
-edges is 4.63 to one, and the figure is computed by the gate rather than recorded here. A
-filter was the first thing tried and is the reason this is a shadow: `filter` dims the
-letter along with the key, which costs the clause above the contrast it depends on — buying
-this guarantee by spending that one.
+page's own ink, backed by its own paper. Two tones rather than one because no single tone
+stands off every ground a control can carry — the untried key sits on the page, a scored
+key on the raised surface, a primary button on the ink itself — and ink and paper between
+them always do, because one of the two is always at the far end of the range. The figures
+are computed by the gate over both key grounds rather than recorded here. A filter was the
+first thing tried and is the reason this is a shadow: `filter` dims the letter along with
+the key, which costs the clause above the contrast it depends on — buying this guarantee
+by spending that one.
 
 The ring goes wherever the flash was taken from, which is a wider set than the keys. A
 preference row in Settings is suppressed along with everything else and would otherwise stay
@@ -147,13 +153,15 @@ would be a stranger thing than the problem it solved.
 
 The on-screen keyboard is the one place the figure cannot be met in both directions — ten
 keys and nine gaps do not fit 44px each across 320px, and the specification says so itself.
-There the keys meet it top to bottom, divide each row equally across and keep a gap between
-them, so what a key gives up is bounded by the width of the screen and by nothing else.
-Before this the keys carried width floors of 2rem and 4rem, which defeat flex-shrink: the
-bottom row measured 416px inside a 320px screen and the game scrolled sideways at the width
-it is supposed to be playable at. Enter and Delete are glyphs now, because about 27px is
-what an equal share comes to and neither word fits that at any legible size; each still says
-its word in `aria-label`, so nothing a screen reader hears has changed.
+There the keys meet it top to bottom, divide each row equally among its letter keys and
+keep a gap between them, so what a letter key gives up is bounded by the width of the
+screen and by nothing else. Before this the keys carried width floors of 2rem and 4rem,
+which defeat flex-shrink: the bottom row measured 416px inside a 320px screen and the game
+scrolled sideways at the width it is supposed to be playable at. Enter and Delete are
+icons, because about 27px is what an equal share comes to and neither word fits that at
+any legible size — and they take a wider share than a letter key, never a narrower one,
+exactly as the invariant now words it; each still says its word in `aria-label`, so
+nothing a screen reader hears has changed.
 
 **The distribution is readable without seeing it.** Each statistics bucket's attempt
 number and count are available as text, so the shape is read rather than inferred from
@@ -187,19 +195,21 @@ covered when a story pins it rather than automatically. See
 element whose visible text is a single character to *incomplete* — `shortTextContent` in
 axe-core — and an incomplete result is reported without failing. Every key on the on-screen
 keyboard shows one letter; so does every tile. The palette repairs axe did find were on
-`WelcomeScreen` and its siblings, which share the mark tokens but carry words. This page
+`WelcomeScreen` and its siblings, which share the palette but carry words. This page
 used to say that pinning a dark keyboard story turned the dark key's measurement into
 something the gate held, and that was simply wrong. It is checkable in a minute: put an
-unreadable `--key-text` in `app.css` and every other component's stories fail while
+unreadable letter ink in `app.css` and every other component's stories fail while
 `Keyboard`'s stay green.
 
 So the contrast figures are held by `tests/contrast.test.ts` and by nothing else. It reads
 `src/app.css` from disk, drives each of the four combinations of theme and high contrast
-through the root attributes, and recomputes every pair — text on each key, each boundary
-against the page, the focus ring, the pressed ring over every key background, an untried key
-against each mark, and absent against correct. No figure quoted in a comment or on this page
-is load-bearing; each is derived from the colours that actually resolve. It was verified the
-way the rest of this is: by putting the old dark key background back and watching it fail.
+through the root attributes, and recomputes every pair — every reading ink on the page and
+the raised surfaces, every letter on its key ground, each control's boundary against the
+page, the focus ring, the pressed ring over both key grounds, the untried letter against
+the absent letter, each hue result against the ground the untried key hugs, and absent's
+border against correct's. No figure quoted in a comment or on this page is load-bearing;
+each is derived from the colours that actually resolve. It was verified the way the rest
+of this is: by running the reworked test against the old palette and watching it fail.
 
 All four combinations are covered. What jsdom cannot drive is one of the two *routes* to
 one of them: it answers no media query, so every ratio is taken with the dark theme reached
@@ -233,10 +243,10 @@ Three things neither gate reaches, stated rather than left to be assumed:
 - Whether the ring is what a finger on a real phone actually sees still needs a real phone.
 
 Automated checks still do not cover everything, and silence from one is not a pass. Axe
-skips what it cannot attribute — anything behind `aria-hidden`, which includes the tile's
-mark glyph and now the keyboard's two action glyphs, is never checked for contrast at any
-opacity — and it declines to judge single-character text at all, which is the whole
-keyboard and the whole board. Axe's `target-size` rule answers to 24px, not to the 44 this
+skips what it cannot attribute — anything behind `aria-hidden`, which includes every
+marker bar and the two action keys' icons, is never checked for contrast at any opacity —
+and it declines to judge single-character text at all, which is the whole keyboard and the
+whole board. Axe's `target-size` rule answers to 24px, not to the 44 this
 project states, so a control it passes can still fail
 `EveryControlIsAComfortableTarget`; the story measurements are what hold that figure. No
 rule anywhere knows that one key state must stand off another, because standards ask a

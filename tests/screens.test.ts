@@ -153,11 +153,29 @@ describe('WelcomeScreen', () => {
 });
 
 /*
- * game.allium — the `GameNavigation` surface. Nothing here depends on a game
- * being under way.
+ * game.allium — the `GameNavigation` surface, presented as the dialog the
+ * header's mode chip opens. Nothing here depends on a game being under way.
  */
 describe('GameNavigation', () => {
-  const base = { mode: null, status: null, repeatMode: 'random' as const, onnewgame: vi.fn() };
+  const base = {
+    mode: null,
+    status: null,
+    repeatMode: 'random' as const,
+    onnewgame: vi.fn(),
+    onclose: vi.fn()
+  };
+
+  // The surface is a dialog now, with Modal's whole keyboard contract behind it.
+  it('is a dialog, and Escape closes it', async () => {
+    const onclose = vi.fn();
+    render(GameNavigation, { ...base, onclose });
+
+    expect(screen.getByRole('dialog', { name: 'Games' })).toBeInTheDocument();
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(onclose).toHaveBeenCalledTimes(1);
+  });
 
   // AvailableWhetherOrNotAGameExists and CurrentModeIsPerceivable.
   it('says no game is under way when none is', () => {

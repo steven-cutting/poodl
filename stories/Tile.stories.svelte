@@ -14,9 +14,11 @@
     'Guarantees this component carries today:',
     '',
     '- `@guarantee ResultsAreNeverConveyedByColourAlone`. A tile says the same thing three ways:',
-    '  a colour, a glyph, and an accessible name ending in *correct*, *in the word, wrong place*',
-    '  or *not in the word*. The **Every mark side by side** story is the only place all three',
-    '  sit together, which is the only way to see that the difference is not the colour.',
+    '  a colour, a marker bar — full-width for correct, a short centred one for present, and for',
+    '  absent the absence of one beside a dimmed letter — and an accessible name ending in',
+    '  *correct*, *in the word, wrong place* or *not in the word*. The **Every mark side by',
+    '  side** story is the only place all three sit together, which is the only way to see that',
+    '  the difference is not the colour.',
     '- `@guarantee EverySubmittedGuessIsAnnounced`, in part. The tile is an image whose',
     '  accessible name carries the position, the letter and the mark. The row label and the',
     '  attempt count belong to **Board**.',
@@ -73,28 +75,32 @@
 
 <!--
   All three marks at once. Read this story in greyscale and it stays readable:
-  each tile carries a different glyph, and each says what it is when read aloud.
-  One mark on its own proves nothing; three side by side is what makes the
-  guarantee visible.
+  correct carries a wide bar, present a short one, absent none beside a dimmed
+  letter, and each says what it is when read aloud. One mark on its own proves
+  nothing; three side by side is what makes the guarantee visible.
 -->
 <Story
   name="Every mark side by side"
   asChild
   play={async ({ canvasElement }) => {
     // GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone
-    // The accessible names are covered by tests/components.test.ts. What only a
-    // rendered story can show is the second, visual signal.
+    // The accessible names and the bars' presence are covered by
+    // tests/components.test.ts. What only a rendered story can measure is the
+    // geometry: the two bars differ in length by enough to tell apart.
     const canvas = within(canvasElement);
+    const bar = (name: string) => canvas.getByRole('img', { name }).querySelector('[data-marker]');
 
-    await expect(canvas.getByRole('img', { name: 'Position 1, A, correct' })).toHaveTextContent(
-      '■'
-    );
-    await expect(
-      canvas.getByRole('img', { name: 'Position 2, P, in the word, wrong place' })
-    ).toHaveTextContent('▲');
-    await expect(
-      canvas.getByRole('img', { name: 'Position 3, T, not in the word' })
-    ).toHaveTextContent('×');
+    const correct = bar('Position 1, A, correct');
+    const present = bar('Position 2, P, in the word, wrong place');
+
+    await expect(correct).not.toBeNull();
+    await expect(present).not.toBeNull();
+    await expect(bar('Position 3, T, not in the word')).toBeNull();
+
+    const wide = (correct as Element).getBoundingClientRect().width;
+    const short = (present as Element).getBoundingClientRect().width;
+
+    await expect(wide).toBeGreaterThan(short * 2);
   }}
 >
   <div class="marks">
@@ -107,8 +113,8 @@
 <!--
   The same three marks under the high-contrast palette, which `settings.allium`
   puts behind one preference. `Appearance.@guarantee AppearanceNeverCarriesMeaningAlone`:
-  swapping the palette changes the colours and nothing else — the glyphs and the
-  accessible names are unchanged, because they were never the colour.
+  swapping the palette changes the colours and nothing else — the marker bars
+  and the accessible names are unchanged, because they were never the colour.
 
   Pinned with `globals`, which beats the toolbar and disables the matching
   control while this story is selected. `docs.story.inline` is false so the docs
@@ -123,17 +129,19 @@
   play={async ({ canvasElement }) => {
     // Appearance.@guarantee AppearanceNeverCarriesMeaningAlone
     // The palette reaches :root, and swapping it changes the colours and
-    // nothing else — the same glyphs and the same names as the story above.
+    // nothing else — the same bars and the same names as the story above.
     await expect(document.documentElement).toHaveAttribute('data-high-contrast', 'true');
 
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole('img', { name: 'Position 1, A, correct' })).toHaveTextContent(
-      '■'
-    );
     await expect(
-      canvas.getByRole('img', { name: 'Position 3, T, not in the word' })
-    ).toHaveTextContent('×');
+      canvas.getByRole('img', { name: 'Position 1, A, correct' }).querySelector('[data-marker]')
+    ).not.toBeNull();
+    await expect(
+      canvas
+        .getByRole('img', { name: 'Position 3, T, not in the word' })
+        .querySelector('[data-marker]')
+    ).toBeNull();
   }}
 >
   <div class="marks">

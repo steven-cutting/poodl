@@ -5,7 +5,10 @@
   import GameConclusion from '$lib/components/GameConclusion.svelte';
   import GameNavigation from '$lib/components/GameNavigation.svelte';
   import GameScreen from '$lib/components/GameScreen.svelte';
+  import HeaderBar from '$lib/components/HeaderBar.svelte';
+  import HowToPlay from '$lib/components/HowToPlay.svelte';
   import InvalidLinkNotice from '$lib/components/InvalidLinkNotice.svelte';
+  import Modal from '$lib/components/Modal.svelte';
   import SettingsPanel from '$lib/components/SettingsPanel.svelte';
   import StatisticsPanel from '$lib/components/StatisticsPanel.svelte';
   import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
@@ -47,7 +50,7 @@
    * inside `onMount`, which is a callback control-flow analysis does not follow.
    */
   let store = $state<Store | null>(null);
-  let panel = $state<'settings' | 'statistics' | 'custom' | null>(null);
+  let panel = $state<'settings' | 'statistics' | 'custom' | 'modes' | 'help' | null>(null);
 
   onMount(() => {
     const created = createStore(
@@ -212,57 +215,60 @@
   <meta name="description" content="An unlimited-play, Wordle-style word guessing game." />
 </svelte:head>
 
-{#if store === null || app === null}
+<div class="shell">
   <!--
-    What the prerendered file contains, and what a reader sees for the moment
-    before hydration. It cannot be a board: the game is drawn per visitor, and
-    module-scope work here runs once at build time.
+    Above the hydration branch, so the prerendered document already carries the
+    header, the h1 and the chip. Before the store exists the chip says no game
+    is under way and every control only moves the local panel state.
   -->
-  <p class="starting">Poodl is starting. Five letters, six attempts, as many games as you like.</p>
-{:else}
-  <p class="toolbar">
-    <button type="button" onclick={() => (panel = 'settings')}>Settings</button>
-    <button type="button" onclick={() => (panel = 'statistics')}>Statistics</button>
-    <button type="button" onclick={openCustomForm}>Set a word</button>
-  </p>
+  <HeaderBar
+    mode={game?.mode ?? null}
+    status={game?.status ?? null}
+    onopenmodes={() => (panel = 'modes')}
+    onopensettings={() => (panel = 'settings')}
+    onopenstatistics={() => (panel = 'statistics')}
+    onopenshare={openCustomForm}
+    onopenhelp={() => (panel = 'help')}
+  />
 
-  {#if app.notice?.kind === 'custom_link_invalid'}
-    <InvalidLinkNotice
-      onaccept={() => {
-        store?.dispatch({ kind: 'accept_random_fallback' });
-      }}
-      ondismiss={() => {
-        store?.dispatch({ kind: 'dismiss_notice' });
-      }}
-    />
-  {/if}
-
-  {#if app.awaitingWelcome}
-    <WelcomeScreen
-      isFirstVisit={app.lastMode === null && game === null}
-      canContinue={canContinue(app)}
-      lastMode={app.lastMode}
-      currentMode={game?.mode ?? null}
-      currentStatus={game?.status ?? null}
-      oncontinue={() => {
-        store?.dispatch({ kind: 'continue' });
-      }}
-      onnewgame={(mode: StartableMode) => {
-        store?.dispatch({ kind: 'new_game', mode });
-      }}
-    />
-  {:else}
-    <GameNavigation
-      mode={game?.mode ?? null}
-      status={game?.status ?? null}
-      {repeatMode}
-      onnewgame={(mode: StartableMode) => {
-        store?.dispatch({ kind: 'new_game', mode });
-      }}
-    />
-
-    {#if game !== null}
+  <main>
+    {#if store === null || app === null}
       <!--
+        What the prerendered file contains, and what a reader sees for the moment
+        before hydration. It cannot be a board: the game is drawn per visitor, and
+        module-scope work here runs once at build time.
+      -->
+      <p class="starting">
+        Poodl is starting. Five letters, six attempts, as many games as you like.
+      </p>
+    {:else}
+      {#if app.notice?.kind === 'custom_link_invalid'}
+        <InvalidLinkNotice
+          onaccept={() => {
+            store?.dispatch({ kind: 'accept_random_fallback' });
+          }}
+          ondismiss={() => {
+            store?.dispatch({ kind: 'dismiss_notice' });
+          }}
+        />
+      {/if}
+
+      {#if app.awaitingWelcome}
+        <WelcomeScreen
+          isFirstVisit={app.lastMode === null && game === null}
+          canContinue={canContinue(app)}
+          lastMode={app.lastMode}
+          currentMode={game?.mode ?? null}
+          currentStatus={game?.status ?? null}
+          oncontinue={() => {
+            store?.dispatch({ kind: 'continue' });
+          }}
+          onnewgame={(mode: StartableMode) => {
+            store?.dispatch({ kind: 'new_game', mode });
+          }}
+        />
+      {:else if game !== null}
+        <!--
         One notice, one place. Whichever surface caused a notice shows it: the
         custom game form and the end-of-game modal show the links they made, and
         the board falls silent while either is open rather than saying the same
@@ -274,157 +280,166 @@
         window listener mounted let letters, Enter and Backspace reach a board
         nobody could see, and spend an attempt on it.
       -->
-      <GameScreen
-        {game}
-        keyboard={keyboardKnowledge(game.guesses)}
-        physicalKeyboard={app.settings.physicalKeyboard && panel === null}
-        notice={panel === null && !conclusionShowing ? boardNotice : null}
-        noticeSequence={app.noticeSequence}
-        shareable={panel === null && !conclusionShowing ? shareable : null}
-        announcement={app.announcement}
-        announcementSequence={app.announcementSequence}
-        onletter={(letter: string) => {
-          store?.dispatch({ kind: 'enter_letter', letter });
-        }}
-        ondelete={() => {
-          store?.dispatch({ kind: 'delete_letter' });
-        }}
-        onsubmit={() => {
-          store?.dispatch({ kind: 'submit_guess' });
-        }}
-        onshareanswer={() => {
-          store?.dispatch({ kind: 'share_current_answer' });
-        }}
-        oncopy={() => {
-          store?.dispatch({ kind: 'copy_shareable' });
-        }}
-        ondismissnotice={() => {
-          store?.dispatch({ kind: 'dismiss_notice' });
-        }}
-        onshowresult={isFinishedByPlay(game) && !conclusionShowing
-          ? () => {
-              closedConclusionFor = null;
-            }
-          : undefined}
-      />
-
-      {#if conclusionShowing}
-        <GameConclusion
-          status={game.status === 'won' ? 'won' : 'lost'}
-          mode={game.mode}
-          answer={game.answer}
-          attemptsUsed={game.guesses.length}
-          secondsRemaining={store.secondsRemaining}
-          {repeatMode}
-          onstop={() => {
-            store?.dispatch({ kind: 'stop_countdown' });
+        <GameScreen
+          {game}
+          keyboard={keyboardKnowledge(game.guesses)}
+          physicalKeyboard={app.settings.physicalKeyboard && panel === null}
+          notice={panel === null && !conclusionShowing ? boardNotice : null}
+          noticeSequence={app.noticeSequence}
+          shareable={panel === null && !conclusionShowing ? shareable : null}
+          announcement={app.announcement}
+          announcementSequence={app.announcementSequence}
+          onletter={(letter: string) => {
+            store?.dispatch({ kind: 'enter_letter', letter });
           }}
-          onnewgame={(mode: StartableMode) => {
-            store?.dispatch({ kind: 'new_game', mode });
+          ondelete={() => {
+            store?.dispatch({ kind: 'delete_letter' });
           }}
-          onshareresults={() => {
-            store?.dispatch({ kind: 'share_results' });
+          onsubmit={() => {
+            store?.dispatch({ kind: 'submit_guess' });
           }}
           onshareanswer={() => {
             store?.dispatch({ kind: 'share_current_answer' });
           }}
-          onclose={() => {
-            closedConclusionFor = game.startedAt;
-          }}
-          notice={panel === null ? boardNotice : null}
-          noticeSequence={app.noticeSequence}
-          shareable={panel === null ? shareable : null}
           oncopy={() => {
             store?.dispatch({ kind: 'copy_shareable' });
           }}
+          ondismissnotice={() => {
+            store?.dispatch({ kind: 'dismiss_notice' });
+          }}
+          onshowresult={isFinishedByPlay(game) && !conclusionShowing
+            ? () => {
+                closedConclusionFor = null;
+              }
+            : undefined}
         />
+
+        {#if conclusionShowing}
+          <GameConclusion
+            status={game.status === 'won' ? 'won' : 'lost'}
+            mode={game.mode}
+            answer={game.answer}
+            attemptsUsed={game.guesses.length}
+            secondsRemaining={store.secondsRemaining}
+            {repeatMode}
+            onstop={() => {
+              store?.dispatch({ kind: 'stop_countdown' });
+            }}
+            onnewgame={(mode: StartableMode) => {
+              store?.dispatch({ kind: 'new_game', mode });
+            }}
+            onshareresults={() => {
+              store?.dispatch({ kind: 'share_results' });
+            }}
+            onshareanswer={() => {
+              store?.dispatch({ kind: 'share_current_answer' });
+            }}
+            onclose={() => {
+              closedConclusionFor = game.startedAt;
+            }}
+            notice={panel === null ? boardNotice : null}
+            noticeSequence={app.noticeSequence}
+            shareable={panel === null ? shareable : null}
+            oncopy={() => {
+              store?.dispatch({ kind: 'copy_shareable' });
+            }}
+          />
+        {/if}
+      {/if}
+
+      {#if panel === 'settings'}
+        <SettingsPanel
+          settings={app.settings}
+          highContrastActive={store.highContrastActive}
+          hardModeMayBeEnabled={store.hardModeMayBeEnabled}
+          hardModeReleased={game?.hardModeReleased ?? false}
+          {hardModeCostsThisGame}
+          onclose={() => (panel = null)}
+          onchoosetheme={(choice: ThemeChoice) => {
+            store?.dispatch({ kind: 'choose_theme', choice });
+          }}
+          onhighcontrast={(enabled: boolean) => {
+            store?.dispatch({ kind: 'set_high_contrast', enabled });
+          }}
+          onanimations={(enabled: boolean) => {
+            store?.dispatch({ kind: 'set_animations', enabled });
+          }}
+          onphysicalkeyboard={(enabled: boolean) => {
+            store?.dispatch({ kind: 'set_physical_keyboard', enabled });
+          }}
+          onshowwelcome={(enabled: boolean) => {
+            store?.dispatch({ kind: 'set_show_welcome', enabled });
+          }}
+          onenablehardmode={() => {
+            store?.dispatch({ kind: 'enable_hard_mode' });
+          }}
+          ondisablehardmode={() => {
+            store?.dispatch({ kind: 'disable_hard_mode' });
+          }}
+        />
+      {:else if panel === 'statistics'}
+        <StatisticsPanel
+          statistics={app.statistics}
+          answersUnseen={answersUnseen(app.pool, words.answerWords())}
+          answersMayRepeat={app.pool.hasRecycled}
+          onreset={() => {
+            store?.dispatch({ kind: 'reset_statistics' });
+          }}
+          onclose={() => (panel = null)}
+        />
+      {:else if panel === 'custom'}
+        <CustomGameForm
+          notice={boardNotice}
+          noticeSequence={app.noticeSequence}
+          {shareable}
+          oncreate={(entry: string) => {
+            store?.dispatch({ kind: 'create_custom_game', entry });
+          }}
+          oncopy={() => {
+            store?.dispatch({ kind: 'copy_shareable' });
+          }}
+          onclose={() => {
+            panel = null;
+            store?.dispatch({ kind: 'dismiss_notice' });
+            // The link was made in here, so closing this is the end of it.
+            store?.dispatch({ kind: 'dismiss_shareable' });
+          }}
+        />
+      {:else if panel === 'modes'}
+        <GameNavigation
+          mode={game?.mode ?? null}
+          status={game?.status ?? null}
+          {repeatMode}
+          onnewgame={(mode: StartableMode) => {
+            store?.dispatch({ kind: 'new_game', mode });
+            // The dialog must not sit over the fresh board it just asked for.
+            panel = null;
+          }}
+          onclose={() => (panel = null)}
+        />
+      {:else if panel === 'help'}
+        <Modal title="How to play" onclose={() => (panel = null)}>
+          <HowToPlay />
+        </Modal>
       {/if}
     {/if}
-  {/if}
-
-  {#if panel === 'settings'}
-    <SettingsPanel
-      settings={app.settings}
-      highContrastActive={store.highContrastActive}
-      hardModeMayBeEnabled={store.hardModeMayBeEnabled}
-      hardModeReleased={game?.hardModeReleased ?? false}
-      {hardModeCostsThisGame}
-      onclose={() => (panel = null)}
-      onchoosetheme={(choice: ThemeChoice) => {
-        store?.dispatch({ kind: 'choose_theme', choice });
-      }}
-      onhighcontrast={(enabled: boolean) => {
-        store?.dispatch({ kind: 'set_high_contrast', enabled });
-      }}
-      onanimations={(enabled: boolean) => {
-        store?.dispatch({ kind: 'set_animations', enabled });
-      }}
-      onphysicalkeyboard={(enabled: boolean) => {
-        store?.dispatch({ kind: 'set_physical_keyboard', enabled });
-      }}
-      onshowwelcome={(enabled: boolean) => {
-        store?.dispatch({ kind: 'set_show_welcome', enabled });
-      }}
-      onenablehardmode={() => {
-        store?.dispatch({ kind: 'enable_hard_mode' });
-      }}
-      ondisablehardmode={() => {
-        store?.dispatch({ kind: 'disable_hard_mode' });
-      }}
-    />
-  {:else if panel === 'statistics'}
-    <StatisticsPanel
-      statistics={app.statistics}
-      answersUnseen={answersUnseen(app.pool, words.answerWords())}
-      answersMayRepeat={app.pool.hasRecycled}
-      onreset={() => {
-        store?.dispatch({ kind: 'reset_statistics' });
-      }}
-      onclose={() => (panel = null)}
-    />
-  {:else if panel === 'custom'}
-    <CustomGameForm
-      notice={boardNotice}
-      noticeSequence={app.noticeSequence}
-      {shareable}
-      oncreate={(entry: string) => {
-        store?.dispatch({ kind: 'create_custom_game', entry });
-      }}
-      oncopy={() => {
-        store?.dispatch({ kind: 'copy_shareable' });
-      }}
-      onclose={() => {
-        panel = null;
-        store?.dispatch({ kind: 'dismiss_notice' });
-        // The link was made in here, so closing this is the end of it.
-        store?.dispatch({ kind: 'dismiss_shareable' });
-      }}
-    />
-  {/if}
-{/if}
+  </main>
+</div>
 
 <style>
+  .shell {
+    max-inline-size: var(--shell-max);
+    margin-inline: auto;
+    padding: 0 var(--shell-pad) var(--s-11);
+  }
+
+  main {
+    padding-block-start: var(--s-6);
+  }
+
   .starting {
     margin-block: 2rem;
-    color: var(--muted);
+    color: var(--text-2);
     text-align: center;
-  }
-
-  .toolbar {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-block: 0 1.25rem;
-  }
-
-  button {
-    padding: 0.4rem 0.75rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    cursor: pointer;
   }
 </style>
