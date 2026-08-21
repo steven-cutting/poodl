@@ -103,9 +103,24 @@ to the game and the wrong one for a change to the domain.
 
 Poodl was served at `https://stevencutting.com/poodl/`, as a project site under the
 account's user domain. GitHub redirects a project site's former addresses to its custom
-domain, so old links should arrive. That is behaviour GitHub does not document for the
-user-domain path in particular, so it is a thing to check after a domain change rather than
-a thing to assume; if it ever stops holding, a redirect page at `poodl/index.html` in the
+domain, and what that means exactly was measured on 2026-08-21 rather than assumed, because
+GitHub documents it nowhere for the user-domain path:
+
+`https://stevencutting.com/poodl/<path>` returns `301` to `https://pnut.fans/<path>`.
+**The `/poodl/` prefix is stripped and the path is mapped to the root of the custom domain,
+not to `/poodl/` within it.** `https://steven-cutting.github.io/poodl/` behaves the same.
+
+Two consequences follow, and neither is a defect to fix:
+
+- The bare old address lands on the landing page rather than on the game. That is one click
+  from where it was going, and the landing page exists to make that click obvious.
+- An old custom game link — `stevencutting.com/poodl/?g=TOKEN` — arrives as
+  `pnut.fans/?g=TOKEN`, where the root is a landing page and not the app, so the word is
+  lost. Rescuing those would mean a forwarder on the landing page, which was declined: it
+  would put behaviour on the one page nothing in this repository renders or tests. See
+  [decision 0009](../decisions/0009-poodl-lives-at-pnut-fans.md).
+
+If the redirect ever stops holding altogether, a redirect page at `poodl/index.html` in the
 `steven-cutting.github.io` repository is the fix.
 
 ## Rolling back
