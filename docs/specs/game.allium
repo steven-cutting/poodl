@@ -206,11 +206,14 @@ contract DirectManipulation {
         -- both directions. One layout cannot be: ten keys and nine gaps do
         -- not fit that side by side across config.narrowest_supported_width.
         -- There the on-screen keyboard meets the figure top to bottom,
-        -- divides the row equally across, and keeps a gap between keys — so
-        -- what a key gives up is bounded by the width of the screen and by
-        -- nothing else. Every other control meets the figure outright. All of
-        -- this holds down to config.narrowest_supported_width, at which the
-        -- game is playable without scrolling sideways.
+        -- divides the row equally among its letter keys, and keeps a gap
+        -- between keys — so what a letter key gives up is bounded by the
+        -- width of the screen and by nothing else. The two action keys may
+        -- be wider than a letter key, and never narrower: they end a turn
+        -- rather than build one, so they are the last place to save width.
+        -- Every other control meets the figure outright. All of this holds
+        -- down to config.narrowest_supported_width, at which the game is
+        -- playable without scrolling sideways.
 
     @invariant ATouchIsAcknowledged
         -- A control shows that it was touched, from the moment of contact,
@@ -418,18 +421,19 @@ config {
     minimum_state_separation: Decimal = 3.0
 
     -- How far absent has to sit from correct. That pair and no other: present
-    -- is left to hue and its own glyph, because it is the mark a player sees
-    -- least and the range is already spent. Lower than the figure above, and
-    -- deliberately so: separating four states by 3 to one each would need a
-    -- range of 27 to one, which no palette has, and forcing it drives absent —
-    -- the state most of a played keyboard is in — to whichever extreme is
-    -- left. This bar is what the range can afford after the one above is paid
-    -- for, and it does not stand alone: these two marks are the pair a
-    -- red-green reader cannot tell apart by hue, so the non-colour indication
-    -- ResultsAreNeverConveyedByColourAlone requires is doing the rest of the
-    -- work here rather than merely confirming it. Whoever tunes a palette
-    -- should satisfy the high-contrast one first: it is what binds, since its
-    -- correct cannot be made as light as the standard palette's can, and a
+    -- is left to hue and its own marker bar, because it is the mark a player
+    -- sees least and the range is already spent. Lower than the figure above,
+    -- and deliberately so: separating four states by 3 to one each would need
+    -- a range of 27 to one, which no palette has, and forcing it drives
+    -- absent — the state most of a played keyboard is in — to whichever
+    -- extreme is left. This bar is what the range can afford after the one
+    -- above is paid for, and it does not stand alone: these two marks are the
+    -- pair a red-green reader cannot tell apart by hue, so the non-colour
+    -- indication ResultsAreNeverConveyedByColourAlone requires is doing the
+    -- rest of the work here rather than merely confirming it. Whoever tunes a
+    -- palette should satisfy the high-contrast palettes first: they are what
+    -- binds, because pushing a mark further from the page for contrast's sake
+    -- spends the same lightness range this separation is paid from, and a
     -- palette tuned on the standard colours will clear both figures and then
     -- fail on high contrast.
     minimum_mark_separation: Decimal = 2.0
@@ -1015,24 +1019,35 @@ surface GameBoard {
         -- creator's word is hidden the moment the game starts.
 
     @guarantee ResultsAreNeverConveyedByColourAlone
-        -- Every letter result and every keyboard key status is distinguishable
-        -- without colour vision: correct, present and absent each carry a
-        -- non-colour indication as well as their colour.
+        -- Every letter result and every keyboard key status is
+        -- distinguishable without colour vision. Correct and present each
+        -- carry a marker bar — a shape, not a hue — and the bars differ in
+        -- length by enough to tell the two apart at a glance. Absent carries
+        -- no bar, and the absence is itself the indication, read with its
+        -- dimmed letter and the weight of its rule; a reader without hue
+        -- tells the three states apart as bar, shorter bar and no bar. Each
+        -- result also carries an accessible description, so what shape says
+        -- to the eye a screen reader says in words.
 
     @guarantee AnUntriedKeyIsDistinguishableFromAScoredOne
-        -- A key for a letter no submitted guess has covered stands off every
-        -- scored key by at least config.minimum_state_separation, and absent
-        -- stands off correct by at least config.minimum_mark_separation. Both
-        -- hold by lightness and not by hue alone: the clause above puts a
-        -- non-colour indication on each of the three marks, but a letter that
-        -- has never been guessed carries no mark and so gets no indication
-        -- from it, and a screen dimmed far enough to make a keyboard hard to
-        -- read takes the hues with it before it takes the lightness. Which
-        -- combinations of appearance these survive is stated where appearance
-        -- is decided. The two figures differ because the range has to be spent
-        -- rather than wished for, and the untried key is what it is spent on:
-        -- that is the distinction a player reads on every turn to know which
-        -- letters are still open, and the one no mark and no glyph speaks for.
+        -- A key for a letter no submitted guess has covered hugs the page:
+        -- its ground is the page's own, its border draws it, and its letter
+        -- is painted in the page's ink. A scored key answers in the way its
+        -- state affords. Correct and present paint their result ink —
+        -- letter, border and marker bar together — at least
+        -- config.minimum_state_separation off the ground the untried key
+        -- hugs. Absent, which has no hue and no bar to speak for it, holds
+        -- its letter at least config.minimum_state_separation from the
+        -- untried letter. And absent stands off correct by at least
+        -- config.minimum_mark_separation, carried by the border each of the
+        -- two draws — a distance, not a direction: which of the pair is the
+        -- lighter is the theme's to decide. Every figure holds by lightness
+        -- and not by hue alone, because the distinction a player reads each
+        -- turn to know which letters are still open must survive a screen
+        -- dimmed far enough to take the hues with it — and the figures
+        -- differ because the range has to be spent rather than wished for.
+        -- Which combinations of appearance these survive is stated where
+        -- appearance is decided.
 
     @guarantee EverySubmittedGuessIsAnnounced
         -- When a guess is accepted, its per-letter results are announced to
