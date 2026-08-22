@@ -1,5 +1,5 @@
 /*
- * Design tokens, from the Biscuit Games design system (decision 0009).
+ * Design tokens, from the Biscuit Games design system (decision 0010).
  *
  * `settings.allium`'s Appearance surface decides which of these apply: theme
  * follows the device until the player chooses, and high contrast — the setting
@@ -32,7 +32,7 @@
  */
 
 /*
- * Committed latin-subset variable fonts, per decision 0009. Extracted from the
+ * Committed latin-subset variable fonts, per decision 0010. Extracted from the
  * pinned fontsource packages (the `latin-standard` build, which carries every
  * axis the font ships):
  *
@@ -47,6 +47,12 @@
  * beside the files as `src/lib/assets/fonts/OFL-*.txt`. The relative URLs
  * resolve through Vite's graph, so the files are hashed into the build and
  * follow the `/poodl/` base path without knowing it.
+ *
+ * This file has a second consumer that Vite never sees: `scripts/stage_site.sh`
+ * copies it raw to the domain root for the landing page, where those same URLs
+ * are resolved by the browser instead. That is why the script mirrors this
+ * directory beside the copy, and why moving these files means moving them
+ * there too. See decision 0009 for the page, decision 0010 for the faces.
  */
 @font-face {
   font-family: 'Bricolage Grotesque';
@@ -207,7 +213,7 @@
    * the interface. --fs-body is copy only: a text control below 16px invites
    * iOS to zoom on focus, which DeliberateZoomIsNeverTakenAway forbids, so
    * inputs and textareas keep `font: inherit` off the 16px body. --fs-board
-   * is the tile letter, sized to the 48px cell decision 0009 records rather
+   * is the tile letter, sized to the 48px cell decision 0010 records rather
    * than the reference's 56px — the letter scales with the cell.
    */
   --font-ui: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;

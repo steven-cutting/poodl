@@ -130,7 +130,7 @@ subset, so the static-site story stays intact and the page has nothing to fetch 
 anywhere.
 
 The candidates were rendered and compared, and the selection landed with
-[decision 0009](../decisions/0009-biscuit-games-design-system.md): **Bricolage Grotesque**
+[decision 0010](../decisions/0010-biscuit-games-design-system.md): **Bricolage Grotesque**
 carries display, the brand and the board — the risk the shortlist named, that it might be
 too strange inside a tile, did not survive seeing it there — and **Instrument Sans**
 carries the interface. Two families rather than one, bought deliberately: the display

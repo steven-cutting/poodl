@@ -10,7 +10,7 @@ requires: []
 
 The Biscuit Games design system lives in a Claude Design project ("Copy of Biscuit Games
 Design"), as React reference components over the token vocabulary `src/app.css` now
-carries. [Decision 0009](../decisions/0009-biscuit-games-design-system.md) ported what the
+carries. [Decision 0010](../decisions/0010-biscuit-games-design-system.md) ported what the
 app consumes; this page is the procedure for porting the rest, one component at a time,
 and the ledger of what remains.
 
@@ -76,7 +76,7 @@ non-44 boxes, the twelve unimported icons.
 
 ## Related pages
 
-- [Decision 0009: The Biscuit Games design system](../decisions/0009-biscuit-games-design-system.md)
+- [Decision 0010: The Biscuit Games design system](../decisions/0010-biscuit-games-design-system.md)
 - [Design direction](../design/direction.md)
 - [Work in the component workshop](work-in-the-component-workshop.md)
 - [Testing](../reference/testing.md)

@@ -14,7 +14,7 @@
     '',
     'No governing surface: an icon is decoration, which is the point. Every one is',
     '`aria-hidden`, draws in `currentColor`, and takes its name from the control it sits in —',
-    'an `IconButton` label, a keyboard key, a toast sentence. Adopted by decision 0009; adding',
+    'an `IconButton` label, a keyboard key, a toast sentence. Adopted by decision 0010; adding',
     'an icon is walked in `docs/how-to/port-a-design-system-component.md`.'
   ].join('\n');
 

@@ -1,12 +1,12 @@
 ---
-title: "Decision 0009: The Biscuit Games design system"
+title: "Decision 0010: The Biscuit Games design system"
 kind: "decision"
 audience: [contributor, maintainer, agent]
 canonical_for: [decision_design_system]
 requires: []
 ---
 
-# Decision 0009: The Biscuit Games design system
+# Decision 0010: The Biscuit Games design system
 
 ## Context
 
@@ -117,6 +117,16 @@ file called "a grid that had to be inferred". It follows the design system delib
 and is a thing to look at in Chromatic; the escape hatch, promoting empty tiles to
 `--rule-strong`, costs no test churn because tiles sit outside the measured floors.
 
+**The system reaches one surface no gate renders.** The landing page at the domain root
+wears `src/app.css`, so it moved with everything else — the renamed tokens it used are
+now `--rule` and `--text-2`, and it is set in the display face rather than in a system
+sans. [Decision 0009](0009-poodl-lives-at-pnut-fans.md) already records that nothing
+renders, measures or types at that page, and this decision makes the coupling wider than
+colour: `scripts/stage_site.sh` now has to copy the fonts to the path the stylesheet
+names, and a token renamed here can leave a rule there resolving to nothing without any
+gate saying so. Until that page is inside a gate, renaming a token means grepping
+`site-root/` as well as `src/`.
+
 ## What would reopen this
 
 The mascot arriving, which brings `MascotSlot` and the favicon in from the porting guide.
@@ -130,3 +140,4 @@ ahead of this repository — the sync is manual, and the porting guide is the pr
 - [Port a design system component](../how-to/port-a-design-system-component.md)
 - [Accessibility](../explanation/accessibility.md)
 - [Decision 0008: Visual review in Chromatic](0008-visual-review-in-chromatic.md)
+- [Decision 0009: Poodl lives at pnut.fans](0009-poodl-lives-at-pnut-fans.md)

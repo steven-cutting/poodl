@@ -9,7 +9,7 @@
     'always in the display face.',
     '',
     'No governing surface — this is brand, from `docs/design/direction.md` by way of decision',
-    '0009. The mark is the brand initial in a ruled square whose fourth corner is the one soft',
+    '0010. The mark is the brand initial in a ruled square whose fourth corner is the one soft',
     'break ("perfect, broken once"), set in type until an illustrator draws the real one, and',
     'it is `aria-hidden`: the words are the whole accessible text, which the play holds.'
   ].join('\n');

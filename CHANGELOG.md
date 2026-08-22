@@ -10,7 +10,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - The Biscuit Games design system, ported from its Claude Design project per
-  [decision 0009](docs/decisions/0009-biscuit-games-design-system.md). `src/app.css`
+  [decision 0010](docs/decisions/0010-biscuit-games-design-system.md). `src/app.css`
   carries the full token vocabulary — pure neutrals and the biscuit ramp, result hues
   chosen dark-first, type, space, form and motion scales — with Bricolage Grotesque and
   Instrument Sans committed as latin-subset variable woff2 files and 22 restroked Lucide
@@ -22,7 +22,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `GameNavigation` becomes the dialog the chip opens, keeping its surface and its
   guarantees. A `Foundations` story documents the tokens, and
   [Port a design system component](docs/how-to/port-a-design-system-component.md) records
-  the procedure and the ledger of what remains.
+  the procedure and the ledger of what remains. The landing page at the domain root moves
+  with it: it already wore `src/app.css`, so it takes the new tokens and the display face,
+  and `scripts/stage_site.sh` copies the three font files beside the stylesheet it copies.
 
 - `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
   its control's action and nothing besides; pinch-zoom is untouched and the viewport stays

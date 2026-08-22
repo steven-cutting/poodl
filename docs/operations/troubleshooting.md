@@ -71,8 +71,8 @@ as a defaulted argument — pass one in. See [Testing](../reference/testing.md).
 
 ## The site works locally but assets 404 once deployed
 
-The base path. A project site is served from a subdirectory, so serve it from one before
-concluding anything:
+The base path. Poodl sits at `/poodl/` inside its own domain, so serve it from there
+before concluding anything:
 
 ```console
 BASE_PATH=/poodl just frontend-build
@@ -81,8 +81,27 @@ BASE_PATH=/poodl just preview
 
 The second command matters as much as the first. A reproduction mounted at `/` cannot show
 this fault at all: an asset referenced by an absolute path — the usual cause — resolves
-there and returns 200. It has to sit on the subdirectory. See
+there and returns 200. It has to sit on the base path. See
 [Configuration](../reference/configuration.md).
+
+If the landing page at the domain root is what looks wrong, neither command can show it:
+both mount `build/`, which is the app alone. Use `just stage` and `just stage-preview`, and
+see [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
+
+## A deployed change is not visible, or an old URL still serves the old body
+
+The CDN, not the deployment. GitHub Pages serves HTML with `cache-control: max-age=600`, so
+for ten minutes a page can keep answering with what it held before the deploy — with the
+`age` header climbing towards 600 to say so.
+
+**The cache key ignores the query string**, so appending `?cachebust=1` proves nothing: it
+returns the same cached body. To read the current behaviour, request a path that has never
+been requested before and check that the response says `age: 0`.
+
+This matters most right after a domain change, where the question being asked is whether an
+old address redirects. A cached `200` from before the change looks exactly like a redirect
+that is not happening. See
+[Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md).
 
 ## The Pages deployment fails with a 404
 

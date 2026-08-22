@@ -15,7 +15,7 @@ everything below is read at build time or is a fixed part of the source.
 
 | Variable | Default | Effect |
 | --- | --- | --- |
-| `BASE_PATH` | empty | The subdirectory the site is served from. Read into `paths.base`. Set to `/poodl` by the Pages workflow; left empty for local builds, and for a domain of Poodl's own that would serve it from a root. |
+| `BASE_PATH` | empty | Where Poodl sits inside its own domain. Read into `paths.base`, and read again by `just stage` to decide where the build is moved to. Set to `/poodl` by the Pages workflow; left empty for local builds. |
 
 That is the whole list for the site. SvelteKit's `PUBLIC_` convention is available but
 unused: a value baked into a public static bundle is not configuration, it is a constant,
@@ -23,22 +23,29 @@ and constants belong in source where they can be reviewed.
 
 ### The base path
 
-`BASE_PATH` is read twice, not once. `svelte.config.js` reads it into `paths.base` for the
-build, and the preview server reads the same value to decide where it mounts the output.
-So it belongs on both commands:
+`BASE_PATH` is read three times, not once. `svelte.config.js` reads it into `paths.base` for
+the build; `just stage` reads it to decide which directory the build is moved into; and the
+preview server reads it to decide where it mounts the output. So it belongs on every command
+that touches the deployment:
 
 ```console
 BASE_PATH=/poodl just frontend-build
+BASE_PATH=/poodl just stage
 BASE_PATH=/poodl just preview
 ```
 
-Build with it and preview without it and the site comes up at `/` rather than `/poodl/` —
-which is not the path Pages serves, so the preview is not the deployment.
+`just stage` refuses an empty value rather than guessing, because an empty one would move the
+build over the domain root it is meant to sit beneath. The other two do not: build with it
+and preview without it and the site comes up at `/` rather than `/poodl/` — which is not the
+path Pages serves, so the preview is not the deployment.
 
 Nothing announces the mistake. A prerendered page references its own assets relatively
 (`./_app/…`), so it loads at either mount and no request 404s. Only a path written
 absolutely by hand gives the fault away, and only when the preview sits on the
 subdirectory. That is why the value has to be set deliberately rather than noticed.
+
+`just stage-preview` is the one command that needs no value, because it serves the staged
+tree whole and the mount is already baked into it.
 
 ## Tooling environment
 

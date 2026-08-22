@@ -13,7 +13,7 @@
     'What a specimen is for is looking — which is why the palette is pinned in its dark and',
     'high-contrast forms below, where the values were designed first.',
     '',
-    'Provenance: decision 0009, from the Claude Design project this system was ported from,',
+    'Provenance: decision 0010, from the Claude Design project this system was ported from,',
     'itself generated from `docs/design/direction.md`.'
   ].join('\n');
 

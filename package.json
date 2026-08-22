@@ -17,6 +17,7 @@
     "dev": "vite dev --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "stage": "sh scripts/stage_site.sh",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
     "lint": "svelte-kit sync && eslint . && prettier --check .",
     "lint:fix": "svelte-kit sync && eslint . --fix && prettier --write .",

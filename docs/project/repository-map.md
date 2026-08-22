@@ -32,7 +32,8 @@ there is no backend to be a sibling of.
 ├── tests/               Vitest suites, never colocated with src/
 ├── stories/             Svelte CSF stories, one per component plus the token specimens
 ├── static/              Copied verbatim into the build
-├── scripts/             The repository checkers, and the browser preflight
+├── site-root/           What sits at the domain root, around the built app
+├── scripts/             The repository checkers, the browser preflight, staging
 ├── docs/                This handbook, plus specs/
 ├── .agents/skills/      Canonical agent procedures
 └── .storybook/          The component workshop, served and built locally
@@ -48,10 +49,11 @@ there is no backend to be a sibling of.
 | `src/lib/components/` | Rendering and interaction. Components take callbacks as props and hold no application state of their own. |
 | `src/routes/` | Assembling components into pages, and the only place a store is built. Prerendered, so nothing here may assume a request. |
 | `src/lib/data/` | Replaceable data, not code. Excluded from spell-checking, and from Prettier. |
-| `src/lib/assets/` | Vendored fonts and icons with their licence texts, per [decision 0009](../decisions/0009-biscuit-games-design-system.md); provenance sits in the `src/app.css` header. |
+| `src/lib/assets/` | Vendored fonts and icons with their licence texts, per [decision 0010](../decisions/0010-biscuit-games-design-system.md); provenance sits in the `src/app.css` header. |
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
-| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, and `initialize.sh`. |
+| `site-root/` | The landing page at `pnut.fans/`, and the `.nojekyll` beside it. Not part of the app: `just stage` assembles it around the build. |
+| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, `initialize.sh`, and `stage_site.sh`. |
 | `docs/specs/` | The Allium specifications. Behaviour is decided here, not in code. |
 | `.storybook/` | The workshop's configuration. Served locally, and built both by the gate, which discards it, and by `just chromatic`, which publishes it. |
 
