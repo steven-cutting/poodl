@@ -10,7 +10,6 @@
   const onletter = fn();
   const ondelete = fn();
   const onsubmit = fn();
-  const onshareanswer = fn();
   const oncopy = fn();
   const ondismissnotice = fn();
   const onshowresult = fn();
@@ -33,9 +32,10 @@
     '- `@guarantee EveryRejectionIsAnnounced`, by way of **Notice**, with the typed letters still',
     '  on the board to be corrected.',
     '- `@guarantee EverySubmittedGuessIsAnnounced`, by way of **Announcer**.',
-    '- `ShareCurrentAnswer.@guarantee AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard`, and',
-    '  `@guarantee TheAnswerIsNeverShownInOrderToShareIt`: making a link displays nothing about',
-    '  the word.',
+    '- `ShareCurrentAnswer.@guarantee TheAnswerIsNeverShownInOrderToShareIt`: a link the board is',
+    '  holding — made in the conclusion, and still here once that is closed — displays nothing',
+    '  about the word. Passing the word on is asked for elsewhere: in the share dialog the header',
+    '  opens, and in the conclusion.',
     '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
     '  measures what the invariant closes on — that the whole screen is playable at',
     '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
@@ -62,7 +62,6 @@
       onletter,
       ondelete,
       onsubmit,
-      onshareanswer,
       oncopy,
       ondismissnotice
     },
@@ -71,7 +70,7 @@
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
       notice: { control: false, description: 'What Poodl is saying, if anything.' },
-      shareable: { control: false, description: 'The link or the grid this board just made.' },
+      shareable: { control: false, description: 'The link or the grid the board is holding.' },
       onshowresult: { control: false, description: 'Offered only once a conclusion is closed.' }
     },
     parameters: { docs: { description: { component: OVERVIEW } } }
@@ -141,9 +140,9 @@
   }}
 />
 
-<!-- The link this board just made, ready to hand on. -->
+<!-- A link made in the conclusion, still on the board after the conclusion was put away. -->
 <Story
-  name="Passing the word on"
+  name="Holding a link to pass on"
   args={{ shareable: LINK_MADE }}
   play={async ({ canvasElement }) => {
     // ShareCurrentAnswer.@guarantee TheAnswerIsNeverShownInOrderToShareIt

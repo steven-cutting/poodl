@@ -33,7 +33,6 @@ function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
     onletter: vi.fn(),
     ondelete: vi.fn(),
     onsubmit: vi.fn(),
-    onshareanswer: vi.fn(),
     oncopy: vi.fn(),
     ondismissnotice: vi.fn(),
     ...overrides
@@ -637,15 +636,5 @@ describe('GameScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: /copy result/i }));
 
     expect(shared.oncopy).toHaveBeenCalledTimes(1);
-  });
-
-  // ShareCurrentAnswer.AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard.
-  it('offers to pass the word on, before a guess has been made', async () => {
-    const props = screenProps(gameAfter());
-    render(GameScreen, props);
-
-    await userEvent.click(screen.getByRole('button', { name: /share the word/i }));
-
-    expect(props.onshareanswer).toHaveBeenCalledTimes(1);
   });
 });

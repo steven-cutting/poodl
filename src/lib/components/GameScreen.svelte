@@ -34,7 +34,6 @@
     onletter,
     ondelete,
     onsubmit,
-    onshareanswer,
     oncopy,
     ondismissnotice,
     onshowresult
@@ -45,14 +44,17 @@
     physicalKeyboard?: boolean;
     notice?: NoticeValue | null;
     noticeSequence?: number;
-    /** The link or the grid Poodl has just made, for as long as it has one. */
+    /**
+     * The link or the grid Poodl is holding, for as long as it has one. Made in
+     * the conclusion, and still here once that is closed: `TheGridIsAvailableAsText`
+     * wants the grid where the player is looking.
+     */
     shareable?: ShareableView | null;
     announcement?: string | null;
     announcementSequence?: number;
     onletter: (letter: string) => void;
     ondelete: () => void;
     onsubmit: () => void;
-    onshareanswer: () => void;
     oncopy: () => void;
     ondismissnotice: () => void;
     /** Offered only while the conclusion of a finished game is closed. */
@@ -79,24 +81,19 @@
 <Keyboard knowledge={keyboard} disabled={!playing} {onletter} {ondelete} {onsubmit} />
 
 <!--
-  ShareCurrentAnswer: available in every mode and for as long as the game is on
-  the board, from before the first guess through to after the game is over.
-  Making a link shows nothing about the word.
+  The way back to a conclusion the player closed. Passing the word on is not
+  offered from here: `ShareCurrentAnswer` is reached from the dialog the
+  header's share button opens, and from the conclusion while it is showing.
 -->
-<p class="share">
-  {#if onshowresult !== undefined}
+{#if onshowresult !== undefined}
+  <p class="share">
     <Button
       onclick={() => {
         onshowresult();
       }}>Show the result again</Button
     >
-  {/if}
-  <Button
-    onclick={() => {
-      onshareanswer();
-    }}>Share the word as a custom game</Button
-  >
-</p>
+  </p>
+{/if}
 
 <Announcer message={announcement} sequence={announcementSequence} />
 

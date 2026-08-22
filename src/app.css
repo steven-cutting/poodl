@@ -627,7 +627,7 @@ textarea {
  * `:has(input:not(:disabled))` is the same carve-out `:not(:disabled)` makes on
  * the button half: the disabled hard-mode row must not report a touch that does
  * nothing. It also settles which labels are in scope. A label bound by `for` —
- * `CustomGameForm`, `LinkReady`, `ResultsReady` — matches neither selector and
+ * `SharePanel`, `LinkReady`, `ResultsReady` — matches neither selector and
  * needs no ring, because pressing it moves focus into the field and the focus
  * outline above is the acknowledgement, arriving on the control that took the
  * tap rather than on the words pointing at it.
