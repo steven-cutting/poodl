@@ -1,44 +1,105 @@
 <script lang="ts">
+  import Tile from '$lib/components/Tile.svelte';
   import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
+  import type { LetterMark } from '$lib/domain/types';
 
   /**
-   * What Poodl is, in four sentences.
+   * What Poodl is — the body of the explanation, and only the body.
    *
-   * Extracted from `WelcomeScreen` so the header's info button can offer the
-   * same explanation from anywhere — `Welcome.@guarantee AFirstVisitIsExplained`
-   * asks for it to be "reachable again afterwards rather than being shown once
-   * and lost". The fieldset keeps the `group` role and the "How to play" name
-   * the tests and the welcome screen already rely on.
+   * `Welcome.@guarantee AFirstVisitIsExplained` asks for five letters, six
+   * attempts and as many games as they like, "reachable again afterwards
+   * rather than being shown once and lost". Two surfaces say it — `WelcomeScreen`
+   * inside a framed group on arrival, `HowToPlayPanel` inside the dialog the
+   * header's info button opens from anywhere — so the words live here once and
+   * each consumer supplies its own frame and its own name.
+   *
+   * The example beside each mark is the board's own `Tile`, so the bar a player
+   * is told about is the bar the board draws, in every theme and both palettes
+   * (`GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone`). The words
+   * for the three are that guarantee's own — bar, shorter bar and no bar —
+   * because the bar correct draws is most of a tile's bottom edge rather than
+   * all of it, and calling it full would set the sentence against the tile
+   * beside it.
+   *
+   * The tiles are hidden from assistive technology: the sentence beside each
+   * one is the content, and "Position 1, C, correct" read out before it would
+   * be noise. That leaves the sentences carrying the whole explanation on
+   * their own, so `tests/primitives.test.ts` holds each one by the row it sits
+   * in, and the bars beside them through `[data-marker]` — the structural hook
+   * `docs/reference/testing.md` records for exactly this kind of aria-hidden
+   * decoration.
    */
+  const MARKS: readonly { mark: LetterMark; letter: string; sentence: string }[] = [
+    {
+      mark: 'correct',
+      letter: 'c',
+      sentence: 'Correct — right letter, right place. Marker bar.'
+    },
+    {
+      mark: 'present',
+      letter: 'r',
+      sentence: 'Present — right letter, wrong place. Shorter marker bar.'
+    },
+    { mark: 'absent', letter: 'n', sentence: 'Absent — not in the word. No marker bar.' }
+  ];
 </script>
 
-<fieldset class="how">
-  <legend>How to play</legend>
-  <ul>
-    <li>The word is {WORD_LENGTH} letters long and you have {MAX_ATTEMPTS} attempts.</li>
-    <li>Each letter comes back correct, in the word but in the wrong place, or not in the word.</li>
-    <li>Every result is named as well as coloured, so nothing depends on seeing a colour.</li>
-    <li>Poodl never withholds a game. There is no daily word and no limit.</li>
+<div class="how">
+  <p>
+    Guess the word in {MAX_ATTEMPTS} attempts. Every guess is a real
+    <span class="nowrap">{WORD_LENGTH}-letter</span> word.
+  </p>
+  <ul class="marks">
+    {#each MARKS as example, index (example.mark)}
+      <li>
+        <span class="example" aria-hidden="true">
+          <Tile position={index + 1} letter={example.letter} mark={example.mark} />
+        </span>
+        <span>{example.sentence}</span>
+      </li>
+    {/each}
   </ul>
-</fieldset>
+  <p class="note">Play as many as you like. Your statistics are saved in this browser.</p>
+</div>
 
 <style>
+  /*
+   * `text-wrap: pretty` is inherited by every sentence here. At the dialog's
+   * width a row's sentence runs to two lines, and without it the second line
+   * is as likely as not to be one word; where the browser does not know the
+   * value it wraps as it always did. The word length and its hyphen are kept
+   * together so the intro never breaks after "5-".
+   */
   .how {
-    margin: 0;
-    padding: var(--s-5) var(--s-6);
-    border: var(--rule-w) solid var(--rule-strong);
-    border-radius: var(--radius-card);
-  }
-
-  legend {
-    padding-inline: var(--s-2);
-    font-weight: 600;
-  }
-
-  .how ul {
     display: grid;
-    gap: var(--s-3);
+    gap: var(--s-6);
+    text-wrap: pretty;
+  }
+
+  p {
     margin: 0;
-    padding-inline-start: var(--s-6);
+  }
+
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  .marks {
+    display: grid;
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .marks li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--s-5);
+    align-items: center;
+  }
+
+  .note {
+    color: var(--text-2);
   }
 </style>

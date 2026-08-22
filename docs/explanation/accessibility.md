@@ -206,11 +206,18 @@ So the contrast figures are held by `tests/contrast.test.ts` and by nothing else
 `src/app.css` from disk, drives each of the four combinations of theme and high contrast
 through the root attributes, and recomputes every pair — every reading ink on the page and
 the raised surfaces, every letter on its key ground, each control's boundary against the
-page, the focus ring, the pressed ring over both key grounds, the untried letter against
-the absent letter, each hue result against the ground the untried key hugs, and absent's
-border against correct's. No figure quoted in a comment or on this page is load-bearing;
-each is derived from the colours that actually resolve. It was verified the way the rest
-of this is: by running the reworked test against the old palette and watching it fail.
+page, the example tiles How to play draws on a dialog's own surface, the focus ring, the
+pressed ring over both key grounds, the untried letter against the absent letter, each hue
+result against the ground the untried key hugs, and absent's border against correct's.
+Every one of them is a pair something actually paints, which is what decides how far the
+dialog's tiles are measured: their borders answer to it in all four combinations, and
+their letters only where that surface is in fact what lies behind the letter. The light
+themes fill a hue result's tile, so there the letter answers to its own fill and the
+dialog is measured against the border alone. A pair nothing paints would pin the palette
+to a distance no eye ever judges. No figure quoted in a comment or on this page is
+load-bearing; each is derived from the colours that actually resolve. It was verified the
+way the rest of this is: by running the reworked test against the old palette and watching
+it fail.
 
 **One state is exempt, and the exemption is narrow.** A control the player cannot operate
 is held to none of those figures — `Appearance.@guarantee AnUnavailableControlIsExempt`,

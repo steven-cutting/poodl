@@ -414,7 +414,8 @@ describe('the page', () => {
 
     const help = screen.getByRole('dialog', { name: 'How to play' });
 
-    expect(within(help).getByRole('group', { name: /how to play/i })).toBeInTheDocument();
+    expect(help).toHaveTextContent(/6 attempts/);
+    expect(within(help).getAllByRole('listitem')).toHaveLength(3);
 
     await userEvent.click(within(help).getByRole('button', { name: 'Close' }));
 

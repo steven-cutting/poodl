@@ -146,6 +146,18 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The How to play explanation takes the design system's dialog shape and says less, more
+  plainly. `HowToPlay` is now the body alone — one sentence for the attempts and the word
+  length, the board's own `Tile` beside each of the three marks with its marker bar, and a
+  muted closing line — shared by the welcome screen, which frames it as the group it always
+  was, and by the new `HowToPlayPanel`, the dialog the header's info button opens, in the
+  same shell as every other panel. The example tiles are hidden from assistive technology
+  because the sentence beside each is the content, so each sentence is held by the row it
+  sits in, and the three describe their bars in the words the guarantee itself uses — bar,
+  shorter bar and no bar. `tests/contrast.test.ts` measures those tiles against the dialog
+  surface, the one ground they had not been drawn on: every border there, and every letter
+  the surface is in fact behind — which in the light themes is absent's alone, the two hue
+  letters sitting on their own fills and answering to those instead.
 - Passing on the word of the game being played moves from a button under the keyboard into
   the dialog the header's share action opens, renamed "Share a game" from "Set a word". The
   dialog now holds both ways of making a link — **This game**, offered for as long as a game

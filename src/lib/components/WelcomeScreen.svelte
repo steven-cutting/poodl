@@ -12,8 +12,9 @@
    *
    * `AFirstVisitIsExplained`: a player with nothing played is told what Poodl is
    * before being asked to choose, and the explanation stays reachable rather
-   * than being shown once and lost — which is why it is a disclosure that starts
-   * open on a first visit rather than a paragraph that only a first visit sees.
+   * than being shown once and lost — so it is a framed group present on every
+   * visit, around the `HowToPlay` body the header's dialog shows from anywhere,
+   * rather than a paragraph that only a first visit sees.
    */
   let {
     isFirstVisit,
@@ -60,9 +61,12 @@
 </script>
 
 <div class="welcome">
-  <p class="lead">An unlimited-play word game. Guess the word; play as many as you like.</p>
+  <p class="lead">An unlimited-play word game.</p>
 
-  <HowToPlay />
+  <fieldset class="how">
+    <legend>How to play</legend>
+    <HowToPlay />
+  </fieldset>
 
   <ul class="choices">
     {#if canContinue}
@@ -117,6 +121,19 @@
   .lead {
     margin: 0;
     text-align: center;
+  }
+
+  .how {
+    min-inline-size: 0;
+    margin: 0;
+    padding: var(--s-5) var(--s-6);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
+  }
+
+  legend {
+    padding-inline: var(--s-2);
+    font-weight: 600;
   }
 
   .choices {
