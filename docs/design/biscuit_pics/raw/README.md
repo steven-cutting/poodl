@@ -791,5 +791,9 @@ sleep and low affect, which have to be caught rather than posed.
 
 - [Design direction](../../direction.md) — what the mascot is for, and the pose set this
   material feeds.
+- [Biscuit character bible](../../biscuit-character-bible.md) — the rules drawn from this
+  evidence, and the decisions it says must be made.
+- [Biscuit image backlog](../../biscuit-image-backlog.md) — each image, with the frames
+  here it is drawn from.
 - [Design resource index](../../resource-index.md) — the research behind the design
   vocabulary.
