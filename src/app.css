@@ -479,6 +479,24 @@ body {
 }
 
 /*
+ * The one place the interface spends its warm family, and the design system's
+ * own. Biscuit is rationed to the brand, and a selection is where the ration is
+ * affordable: `sharing.allium`'s TheGridIsAvailableAsText asks for the grid to
+ * be "selected by hand before it is sent", so this paints an interaction a
+ * specification names rather than a decoration. `background-color` rather than
+ * the shorthand because that is the property that applies to `::selection`.
+ *
+ * The pair is pinned once on bare `:root` rather than answered per theme, and
+ * measures 6.93 in all four combinations. `tests/contrast.test.ts` recomputes
+ * that figure and asserts this rule is what spends it — a token measured and
+ * never rendered is a figure that cannot regress where anyone would see it.
+ */
+::selection {
+  background-color: var(--brand-warm);
+  color: var(--brand-warm-ink);
+}
+
+/*
  * `game.allium` — contract DirectManipulation. Ten surfaces fulfil it and not
  * one of them owns it, which is why the rules sit here rather than in any one
  * component. Everything below is measured by `tests/directManipulation.test.ts`

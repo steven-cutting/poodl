@@ -347,6 +347,30 @@ describe('the palette these floors are met by', () => {
       document.documentElement.removeAttribute('data-high-contrast');
     }
   });
+
+  /*
+   * The warm family is the one colour rationed to the brand, and the pair is
+   * measured at 6.93 above in every palette. A measured token nothing renders
+   * is a figure that cannot regress where anyone would see it, though — which
+   * is how this pair reached the branch defined, tested and unspent — so what
+   * is left to state is that the stylesheet still spends it. Read as text for
+   * the reason the drift check below records: a rule the engine declined to
+   * parse becomes an empty declaration list, and an empty block agrees with
+   * anything.
+   */
+  it('spends the warm family on the selection', () => {
+    const stripped = appCss.replaceAll(/\/\*[\s\S]*?\*\//g, '');
+    const at = stripped.indexOf('::selection');
+    if (at === -1) {
+      throw new Error('app.css no longer spends the warm family on ::selection');
+    }
+
+    const opens = stripped.indexOf('{', at);
+    const body = stripped.slice(opens + 1, stripped.indexOf('}', opens));
+
+    expect(body).toContain('var(--brand-warm)');
+    expect(body).toContain('var(--brand-warm-ink)');
+  });
 });
 
 /*

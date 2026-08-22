@@ -53,8 +53,8 @@
    * The ink carries the result three ways at once — the letter, the border and
    * the marker bar are all painted in it — which is what lets the bar draw in
    * `currentColor` and stay right in every palette. Empty is the faintest rule
-   * on the page; a typed letter thickens it; a scored tile answers in its
-   * result's ink; absent keeps a plain drawn border and dims its letter.
+   * on the page; a typed letter thickens it and no more; a scored tile answers
+   * in its result's ink; absent keeps a plain drawn border and dims its letter.
    */
   .tile {
     position: relative;
@@ -75,7 +75,7 @@
   }
 
   .pending {
-    border: var(--rule-w-strong) solid var(--rule-strong);
+    border: var(--rule-w-strong) solid var(--rule);
   }
 
   .tile[data-mark='correct'] {

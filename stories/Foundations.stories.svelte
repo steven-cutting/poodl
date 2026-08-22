@@ -35,7 +35,8 @@
         '--result-present',
         '--result-absent',
         '--result-absent-text',
-        '--brand-warm'
+        '--brand-warm',
+        '--brand-warm-ink'
       ]
     }
   ];

@@ -36,7 +36,10 @@ as the app consumes, with the rest recorded in
   result hues chosen dark-first), the semantic vocabulary (`--surface*`, `--rule*`,
   `--text*`, `--result-*`, the key grounds), and the type, space, form and motion scales.
   The legacy names the pinned rules depend on — `--background`, `--text`, `--focus` —
-  survive, so `tests/directManipulation.test.ts` and the pressed ring needed no edit.
+  survive, so `tests/directManipulation.test.ts` and the pressed ring needed no edit. The
+  warm family is spent in exactly one place, and it is the design system's own: `::selection`
+  paints `--brand-warm-ink` on `--brand-warm`. A token measured and never rendered is a
+  figure that cannot regress where anyone would see it, so the gate asserts the rule exists.
 - **Fonts.** Bricolage Grotesque for display and the board, Instrument Sans for the
   interface: committed latin-subset variable woff2 files under `src/lib/assets/fonts/`,
   extracted from the pinned fontsource 5.3.0 packages (provenance, URLs and checksums in
@@ -81,11 +84,23 @@ computed by `tests/contrast.test.ts` against the floors `game.allium` states.
 - **The untried key's border is neutral-7, not `--rule`.** Same reason as the absent
   border: a control's boundary, not a decoration, and the design system's `--rule` is 1.30
   against the dark page.
+- **Typed tiles are drawn in `--rule`, not `--rule-strong`.** The design system firms the
+  border the moment a letter lands. Here the whole grid stays on the faintest rule and a
+  typed cell separates by weight alone — `--rule-w-strong` against `--rule-w` — so the
+  board is lighter than the system draws it, which is the point: the grid recedes and the
+  letters carry it. No guarantee reads the step, because a typed tile carries its letter
+  at 19.68 and an accessible name of its own.
 - **No destructive button variant.** "Clear everything" is a secondary button;
   `ResettingIsDeliberate` puts the weight on the two-step confirmation and the sentence
   naming what will go, not on a colour a colour-blind reader would miss.
-- **The brand mark's ink is biscuit-1, not biscuit-2**, which measures 4.25 on biscuit-6
-  against the 4.5 text floor.
+- **The warm pair is one pinned pair, not four.** The brand ink is biscuit-1, not
+  biscuit-2, which measures 4.25 on biscuit-6 against the 4.5 text floor; and
+  `--brand-warm`/`--brand-warm-ink` are declared once on bare `:root` rather than answered
+  per theme the way the design system answers them. Two of its four pairs measure under
+  that floor — biscuit-2 on biscuit-6 at 4.25 in dark, biscuit-7 on biscuit-3 at 4.40 in
+  light — where the pinned pair measures 6.93 in every palette. The mark itself stays
+  neutral, as the design system's own `Mark` does at its default tone: the wordmark carries
+  the warmth, and the mark's one break is the fourth corner, not a colour.
 - **The shell is 34rem, not 480px.** The bottom keyboard row is ten flex shares and eight
   gaps plus the gutters; a 480px shell caps a letter key at about 40px on a screen with
   room for 44, and `EveryControlIsAComfortableTarget` lets only the screen take that away.
@@ -112,10 +127,13 @@ the app draws.
 That is a contract widening accepted knowingly; the alternative was `StatisticsPanel`
 keeping a hand-styled native button forever.
 
-The empty dark board is drawn in `--rule` at 1.30 against the page — the figure the old
-file called "a grid that had to be inferred". It follows the design system deliberately
-and is a thing to look at in Chromatic; the escape hatch, promoting empty tiles to
-`--rule-strong`, costs no test churn because tiles sit outside the measured floors.
+The board is drawn in `--rule` throughout — 1.30 against the dark page and 1.48 against
+the light one, the figure the old file called "a grid that had to be inferred". The design
+system draws its empty cell there and firms the typed one; this board keeps both on the
+faint rule, so the grid recedes further than the system's own and the letters carry it.
+No gate can settle whether that reads, because tiles sit outside the measured floors — it
+is a thing to look at in Chromatic, and the way back is `--rule-strong`, which costs no
+test churn for the same reason.
 
 **The system reaches one surface no gate renders.** The landing page at the domain root
 wears `src/app.css`, so it moved with everything else — the renamed tokens it used are
