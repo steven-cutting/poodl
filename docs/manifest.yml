@@ -11,6 +11,7 @@
 
     {"path": "design/direction.md", "title": "Design direction", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_direction"], "requires": []},
     {"path": "design/resource-index.md", "title": "Design resource index", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_resource_index"], "requires": []},
+    {"path": "design/biscuit_pics/raw/README.md", "title": "Biscuit reference photography", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_reference_photography"], "requires": []},
 
     {"path": "how-to/develop-locally.md", "title": "Develop locally", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["local_development"], "requires": []},
     {"path": "how-to/test-and-debug.md", "title": "Test and debug", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["test_workflow"], "requires": []},

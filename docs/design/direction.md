@@ -263,6 +263,10 @@ A character reference sheet defines her proportions, colouring, face, ears, tail
 before any pose is drawn, so the character cannot drift between illustrations. She stays
 recognisably brown; drifting toward cream or white is a defect, not a variation.
 
+Raw reference photography of the real dog — puppy through adolescent — lives in
+[Biscuit reference photography](biscuit_pics/raw/README.md), gathered for this reference
+sheet to draw from.
+
 ### Where she does not go
 
 Beside every button, on every game tile, inside every modal, behind the interface as
