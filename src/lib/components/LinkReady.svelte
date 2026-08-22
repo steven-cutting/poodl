@@ -7,8 +7,9 @@
    * doable from the keyboard alone, so the link is a real text box that can be
    * focused and selected, and the button beside it is the shortcut.
    *
-   * `NothingAboutTheLinkIsKept`: this exists for as long as the notice does and
-   * no longer. Nothing is written anywhere.
+   * `NothingAboutTheLinkIsKept`: this exists for as long as the surface that
+   * made it — the share dialog or the conclusion — and no longer. Nothing is
+   * written anywhere.
    */
   import Button from '$lib/components/Button.svelte';
 

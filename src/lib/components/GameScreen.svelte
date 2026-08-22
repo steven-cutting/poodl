@@ -3,7 +3,6 @@
   import Board from '$lib/components/Board.svelte';
   import Button from '$lib/components/Button.svelte';
   import Keyboard from '$lib/components/Keyboard.svelte';
-  import LinkReady from '$lib/components/LinkReady.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
@@ -45,9 +44,11 @@
     notice?: NoticeValue | null;
     noticeSequence?: number;
     /**
-     * The link or the grid Poodl is holding, for as long as it has one. Made in
-     * the conclusion, and still here once that is closed: `TheGridIsAvailableAsText`
-     * wants the grid where the player is looking.
+     * The grid Poodl is holding, for as long as it has one. Made in the
+     * conclusion, and still here once that is closed: `TheGridIsAvailableAsText`
+     * wants the grid where the player is looking. A link is never held here —
+     * it lives inside the surface that made it, the share dialog or the
+     * conclusion, and goes when that closes.
      */
     shareable?: ShareableView | null;
     announcement?: string | null;
@@ -72,9 +73,7 @@
 
 <Notice {notice} sequence={noticeSequence} ondismiss={ondismissnotice} />
 
-{#if shareable?.kind === 'custom_link'}
-  <LinkReady url={shareable.text} {oncopy} />
-{:else if shareable?.kind === 'results'}
+{#if shareable?.kind === 'results'}
   <ResultsReady text={shareable.text} {oncopy} />
 {/if}
 

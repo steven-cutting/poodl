@@ -609,19 +609,18 @@ describe('GameScreen', () => {
   });
 
   /*
-   * Whatever Poodl has made is shown where the player is looking, and the board
-   * is where they are looking once a dialog is closed: a grid shared from the
-   * conclusion is still theirs to copy after they put the conclusion away.
+   * The grid is shown where the player is looking, and the board is where they
+   * are looking once a dialog is closed: a grid shared from the conclusion is
+   * still theirs to copy after they put the conclusion away. A link is not —
+   * it lives inside the surface that made it, so a link handed here is nothing.
    */
-  it('shows the link or the grid it is holding', async () => {
+  it('shows the grid it is holding, and never a link', async () => {
     const props = screenProps(gameAfter(), {
       shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
     });
     const { unmount } = render(GameScreen, props);
 
-    expect(screen.getByRole('textbox', { name: /custom game link/i })).toHaveValue(
-      'https://poodl.test/?g=yrqt9rd9'
-    );
+    expect(screen.queryByRole('textbox', { name: /custom game link/i })).not.toBeInTheDocument();
     unmount();
 
     const shared = screenProps(gameAfter(), {

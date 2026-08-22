@@ -19,8 +19,9 @@
     '  nothing here has it — only the token. The URL below is one the real codec produced.',
     '- `@guarantee FullyKeyboardOperable`. Copying is a real button, and the link is a real text',
     '  box that can be focused and selected, so the keyboard has two ways through.',
-    '- `@guarantee NothingAboutTheLinkIsKept`. This lives for as long as the notice does. Nothing',
-    '  is written anywhere, and a reload loses it.',
+    '- `@guarantee NothingAboutTheLinkIsKept`. This lives for as long as the surface that made',
+    '  it — the share dialog or the conclusion — and closes with it. Nothing is written anywhere,',
+    '  and a reload loses it.',
     '- `game/DirectManipulation`, both surfaces fulfil it. The link stays selectable by hand, and',
     '  the last story measures the one figure a text control owes on its own: an input the page',
     '  is not magnified to read.'

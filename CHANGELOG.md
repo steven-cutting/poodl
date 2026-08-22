@@ -134,9 +134,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   dialog now holds both ways of making a link — **This game**, offered for as long as a game
   is on the board and saying which game it means, and **Your own word** — restyled to the
   design system's eyebrows, copy and filled primary. A link a section makes is shown inside
-  the dialog and goes when it closes; the end-of-game modal keeps its own "Share results" and
-  "Share the word", and the board shows only a link or a grid the conclusion made, once the
-  conclusion is put away. `CustomGameForm` is `SharePanel`. `sharing.allium`'s rules and
+  the dialog and goes when it closes, and a link made in the end-of-game modal now goes the
+  same way when the modal is closed; the modal keeps its own "Share results" and "Share the
+  word", and the board no longer shows a custom-game link at all — only the shared grid, once
+  the conclusion is put away. `CustomGameForm` is `SharePanel`. `sharing.allium`'s rules and
   guarantees are unchanged; the prose naming the way in moved with the control, and
   `CustomGameCreation` now relates to `ShareCurrentAnswer`.
 - The non-colour indication on results is a marker bar rather than a corner glyph:

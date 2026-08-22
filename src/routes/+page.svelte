@@ -142,8 +142,8 @@
   /*
    * The share dialog is handed the notice and the shareable the engine holds,
    * because both are what it makes. That means whatever the board was already
-   * saying — a guess rejection, a link made from the conclusion — would appear
-   * inside a dialog that made neither, and closing the dialog discards it. So
+   * saying — a guess rejection, the grid the conclusion made — would be
+   * inherited by a dialog that made neither and discarded when it closes. So
    * the dialog opens on a clean surface.
    *
    * Only this panel: `SettingsPanel` and `StatisticsPanel` render neither, and
@@ -333,6 +333,14 @@
             }}
             onclose={() => {
               closedConclusionFor = game.startedAt;
+              // A link made in here ends with it, as one made in the share
+              // dialog does: passing the word on belongs to the surfaces that
+              // offer it, and the board offers it no longer. The grid stays —
+              // `TheGridIsAvailableAsText` wants it where the player is looking.
+              if (shareable?.kind === 'custom_link') {
+                store?.dispatch({ kind: 'dismiss_notice' });
+                store?.dispatch({ kind: 'dismiss_shareable' });
+              }
             }}
             notice={panel === null ? boardNotice : null}
             noticeSequence={app.noticeSequence}

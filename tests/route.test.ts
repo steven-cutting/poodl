@@ -233,10 +233,40 @@ describe('the page', () => {
   });
 
   /*
-   * The other half of the same problem. The dialog reads the notice and the
-   * shareable the engine holds, so a link the conclusion made — still on the
-   * board once the conclusion is closed — and a rejection the board earned
-   * both turned up inside a dialog that made neither.
+   * The same rule from the conclusion: a link made in there ends with it.
+   * Passing the word on belongs to the surfaces that offer it, and the board is
+   * no longer one of them — so nothing is left behind for the board to hold, or
+   * for the share dialog to inherit.
+   */
+  it('takes the link the conclusion made with it when the conclusion closes', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await playItOut();
+
+    const conclusion = screen.getByRole('dialog', { name: /you won|you lost/i });
+
+    await userEvent.click(within(conclusion).getByRole('button', { name: /share the word/i }));
+    expect(within(conclusion).getByRole('textbox', { name: /custom game link/i })).toBeVisible();
+
+    await userEvent.click(within(conclusion).getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('textbox', { name: /custom game link/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Show the result again' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Share a game' }));
+    const dialog = screen.getByRole('dialog', { name: /share a game/i });
+
+    expect(
+      within(dialog).queryByRole('textbox', { name: /custom game link/i })
+    ).not.toBeInTheDocument();
+  });
+
+  /*
+   * The grid is the one thing the board keeps after the conclusion is put away
+   * — `TheGridIsAvailableAsText` wants it where the player is looking — and the
+   * share dialog never shows a grid, so opening it starts on a surface of its
+   * own rather than carrying the board's grid into a dialog that made neither it
+   * nor what the board was saying.
    */
   it('opens the share dialog on a surface of its own', async () => {
     render(Page);
@@ -245,18 +275,17 @@ describe('the page', () => {
 
     const conclusion = screen.getByRole('dialog', { name: /you won|you lost/i });
 
-    await userEvent.click(within(conclusion).getByRole('button', { name: /share the word/i }));
+    await userEvent.click(within(conclusion).getByRole('button', { name: /share results/i }));
     await userEvent.click(within(conclusion).getByRole('button', { name: 'Close' }));
 
-    // The board is holding the conclusion's link now.
-    expect(screen.getAllByRole('textbox', { name: /custom game link/i })).toHaveLength(1);
+    // The board is holding the conclusion's grid now.
+    expect(screen.getByRole('textbox', { name: /shared result/i })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Share a game' }));
     const dialog = screen.getByRole('dialog', { name: /share a game/i });
 
-    expect(
-      within(dialog).queryByRole('textbox', { name: /custom game link/i })
-    ).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('textbox', { name: /result/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: /shared result/i })).not.toBeInTheDocument();
   });
 
   /*
