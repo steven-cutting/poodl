@@ -32,7 +32,8 @@ another module's `Excludes`, it belongs there.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
-5. Run `just check-specs` and confirm the count below has not risen.
+5. Run `just check-specs` and confirm it reports no diagnostic the baseline below does
+   not already record.
 6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
@@ -71,29 +72,45 @@ findings on top — data flow, edge reachability, deadlocks, conflicts and invar
 Neither recipe is part of `just check`. `allium check` exits non-zero on warnings as well
 as errors, and offers no configuration file, no severity threshold and no way to waive a
 diagnostic; `allium analyse` exits non-zero while any finding remains. So both report
-rather than gate until the counts below reach zero.
+rather than gate until the tables below are empty.
 
-| Module | Diagnostics | Findings |
-| --- | --- | --- |
-| `words.allium` | 0 | 0 |
-| `settings.allium` | 0 | 0 |
-| `statistics.allium` | 5 | 0 |
-| `sharing.allium` | 3 | 0 |
-| `game.allium` | 17 | 4 |
+Each diagnostic is recorded by the code that raised it rather than only counted, because a
+total that has not moved is no evidence that nothing was added: one diagnostic can arrive
+as another leaves. `words.allium` and `settings.allium` raise none.
 
-Twenty-five diagnostics in total: sixteen warnings and nine informational. Fourteen are
+| Module | Code | Severity | Count |
+| --- | --- | --- | --- |
+| `statistics.allium` | `allium.reference.unknownName` | warning | 3 |
+| `statistics.allium` | `allium.field.unused` | info | 1 |
+| `statistics.allium` | `allium.rule.unreachableTrigger` | info | 1 |
+| `sharing.allium` | `allium.reference.unknownName` | warning | 3 |
+| `game.allium` | `allium.reference.unknownName` | warning | 8 |
+| `game.allium` | `allium.field.unused` | info | 4 |
+| `game.allium` | `allium.rule.unreachableTrigger` | info | 3 |
+| `game.allium` | `allium.definition.unused` | warning | 1 |
+| `game.allium` | `allium.status.unreachableValue` | warning | 1 |
+
+Twenty-five in total: sixteen warnings and nine informational. Fourteen are
 `allium.reference.unknownName`, where a module reaches for a name its import does not
 define — half of those against `words/config`, the rest against `words/Words`,
 `game/config`, `game/GameBoard` and `game/GameConclusion`.
 
-Four findings, all of them in `game.allium`. Two are `missing_producer`: nothing
-establishes `Game.mode = endless`, which `ArmEndlessCountdown` and
-`EndlessCountdownElapses` both require. Two are `unreachable_trigger`: no surface provides
-`GameAbandoned` or `PlayerOpensPoodl`, though rules listen for both.
+`allium analyse` adds four findings on top, all of them in `game.allium`, each named here
+for the same reason:
 
-**Read the count, not the exit code.** A change to a specification should add no new
-diagnostic and no new finding. If a module's number goes up, the change caused it; if one
-goes down, say so, because that is progress worth recording here.
+| Type | Subject |
+| --- | --- |
+| `missing_producer` | Nothing establishes `Game.mode = endless`, which `ArmEndlessCountdown` requires. |
+| `missing_producer` | The same absence, reached from `EndlessCountdownElapses`. |
+| `unreachable_trigger` | No surface provides `GameAbandoned`, though `DiscardAbandonedGame` listens for it. |
+| `unreachable_trigger` | No surface provides `PlayerOpensPoodl`, though `ShowWelcomeOnOpening` and `ContinueOnOpeningWithoutWelcome` listen for it. |
+
+**Compare the diagnostics, not the count — and never the exit code.** Both
+recipes print JSON, and every diagnostic in it carries a `code` and a `severity`. Read
+those and match them against the tables above, ignoring `line` and `col`, which any edit to
+a module shifts. A change should raise no count here, introduce no code these tables do not
+list, and add no finding. If one goes down, say so and edit this page in the same commit,
+because that is progress worth recording.
 
 ## Related pages
 

@@ -31,6 +31,12 @@ RELEASE = (
     "https://github.com/juxt/allium-tools/releases/download/v{version}/allium-{target}.tar.gz"
 )
 
+# Bounds each socket operation -- the connect, and every read -- rather than the
+# download as a whole. A peer that accepts the connection and then stops sending
+# would otherwise hold `just install-allium`, and so a first `just initialize`,
+# open for as long as it cared to.
+DOWNLOAD_TIMEOUT_SECONDS = 30
+
 # Produced by downloading each artefact and hashing it, because there is no
 # upstream manifest to copy. The release's own SHA256SUMS.txt covers only the
 # editor extension and the language server, and the Homebrew formula leaves both
@@ -69,11 +75,19 @@ def _target() -> str:
     return target
 
 
-def _installed_version() -> str | None:
-    """Report the version the installed binary claims, or None if there is none."""
-    if not BINARY.is_file():
+def _version_of(binary: Path) -> str | None:
+    """Report the version the binary at this path claims, or None if it cannot say."""
+    if not binary.is_file():
         return None
-    result = subprocess.run([str(BINARY), "--version"], check=False, capture_output=True)
+    try:
+        result = subprocess.run([str(binary), "--version"], check=False, capture_output=True)
+    except OSError:
+        # A file that will not launch -- one that is not executable, or the
+        # truncated remains of an interrupted write -- is an installation to
+        # replace, not a reason to abort. Saying None lets install mode replace
+        # it; a caller that needs to tell an unusable binary from an absent one
+        # asks whether the file is there at all.
+        return None
     if result.returncode != 0:
         return None
     # `allium 3.5.3 (language versions: 1, 2, 3)`
@@ -87,8 +101,12 @@ def _download(url: str, destination: Path) -> str:
     # The suppression below is deliberate. S310 fires because the URL reaches
     # urlopen as a variable, and it is built from the literal RELEASE template
     # and a target drawn from the fixed TARGETS table, so no caller-supplied
-    # scheme can reach it. Ruff cannot see that through a variable.
-    with urllib.request.urlopen(url) as response, destination.open("wb") as stream:  # noqa: S310
+    # scheme can reach it. Ruff cannot see that through a variable. The timeout
+    # beside it turns a stall into the OSError that main already handles.
+    with (
+        urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT_SECONDS) as response,  # noqa: S310
+        destination.open("wb") as stream,
+    ):
         while chunk := response.read(65536):
             digest.update(chunk)
             stream.write(chunk)
@@ -114,42 +132,67 @@ def _extract(archive: Path, destination: Path) -> None:
     destination.chmod(0o755)
 
 
+def _stage(url: str, target: str, staged: Path) -> None:
+    """Download the release for target into staged, and vet it there: checksum, then version."""
+    with tempfile.TemporaryDirectory() as directory:
+        archive = Path(directory) / "allium.tar.gz"
+        actual = _download(url, archive)
+        expected = CHECKSUMS[target]
+        if actual != expected:
+            raise RuntimeError(
+                f"checksum mismatch for {target}\n  expected {expected}\n  actual   {actual}"
+            )
+        _extract(archive, staged)
+    confirmed = _version_of(staged)
+    if confirmed != VERSION:
+        raise RuntimeError(f"the downloaded binary reports {confirmed!r}, not {VERSION!r}")
+
+
 def _install() -> int:
-    present = _installed_version()
+    present = _version_of(BINARY)
     if present == VERSION:
         print(f"allium {VERSION} is already installed at {BINARY}")
         return 0
     if present is not None:
         print(f"replacing allium {present} with {VERSION}")
+    elif BINARY.is_file():
+        print(f"replacing the file at {BINARY}, which does not run as allium")
 
     target = _target()
     url = RELEASE.format(version=VERSION, target=target)
-    expected = CHECKSUMS[target]
 
     INSTALL_DIRECTORY.mkdir(parents=True, exist_ok=True)
     print(f"downloading {url}")
-    with tempfile.TemporaryDirectory() as directory:
-        archive = Path(directory) / "allium.tar.gz"
-        actual = _download(url, archive)
-        if actual != expected:
-            raise RuntimeError(
-                f"checksum mismatch for {target}\n  expected {expected}\n  actual   {actual}"
-            )
-        _extract(archive, BINARY)
+    # Land the download beside the installed copy and put every question to it
+    # there, so an interrupted write, a failed chmod or a version that disagrees
+    # with the pin leaves the working installation exactly as it was. The last
+    # step is the only one that touches it, and Path.replace is atomic within a
+    # filesystem -- which both paths share, being in INSTALL_DIRECTORY.
+    with tempfile.NamedTemporaryFile(
+        dir=INSTALL_DIRECTORY, prefix="allium.", suffix=".partial", delete=False
+    ) as handle:
+        staged = Path(handle.name)
+    try:
+        _stage(url, target, staged)
+        staged.replace(BINARY)
+    finally:
+        staged.unlink(missing_ok=True)
 
-    confirmed = _installed_version()
-    if confirmed != VERSION:
-        raise RuntimeError(f"installed binary reports {confirmed!r}, not {VERSION!r}")
     print(f"installed allium {VERSION} at {BINARY}")
     return 0
 
 
 def _check() -> int:
-    present = _installed_version()
+    present = _version_of(BINARY)
     if present == VERSION:
         return 0
-    missing = "allium is not installed" if present is None else f"allium {present} is installed"
-    print(f"{missing}; this project pins {VERSION}. Run just install-allium", file=sys.stderr)
+    if present is not None:
+        state = f"allium {present} is installed"
+    elif BINARY.is_file():
+        state = f"the file at {BINARY} does not run as allium"
+    else:
+        state = "allium is not installed"
+    print(f"{state}; this project pins {VERSION}. Run just install-allium", file=sys.stderr)
     return 1
 
 
@@ -165,9 +208,10 @@ def main() -> int:
     try:
         return _check() if arguments.check else _install()
     except (RuntimeError, OSError, tarfile.TarError) as error:
-        # OSError covers urllib's URLError and HTTPError, so a refused
-        # connection or a moved release reports itself rather than arriving as
-        # a traceback in the middle of `just initialize`.
+        # OSError covers urllib's URLError and HTTPError, and the TimeoutError a
+        # stalled download raises, so a refused connection, a moved release or a
+        # peer that goes quiet reports itself rather than arriving as a
+        # traceback in the middle of `just initialize`.
         print(f"install_allium: {error}", file=sys.stderr)
         return 1
 

@@ -77,9 +77,16 @@ just install-allium
 just check-specs
 ```
 
+Reinstalling is always safe to retry. The download lands beside the installed copy under a
+temporary name and is asked for both its checksum and its version there, so a failed
+download, a mismatched checksum or a binary that will not run leaves the working
+installation exactly where it was. `just install-allium` also replaces a binary that no
+longer runs, so an installation damaged by other means repairs itself rather than needing
+`.tools/` cleared by hand.
+
 A version change can move the diagnostic baseline recorded in
-[Work with the specifications](work-with-the-specs.md). Update that table in the same
-commit, so a later reader can tell a new finding from an old one.
+[Work with the specifications](work-with-the-specs.md). Update those tables in the same
+commit, so a later reader can tell a new diagnostic from an old one.
 
 ## Actions in the workflows
 

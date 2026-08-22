@@ -29,7 +29,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The Allium checker is a project dependency rather than something a contributor is
   assumed to have. `scripts/install_allium.py` pins version 3.5.3 by SHA-256 for each of
   the four supported unix targets and installs the release binary into the gitignored
-  `.tools/bin/`; `just install-allium` runs it, `just initialize` calls it,
+  `.tools/bin/`, staging the download beside the installed copy and swapping it in only
+  once both its checksum and the version it reports agree with the pin, so a failed install
+  leaves a working one alone; `just install-allium` runs it, `just initialize` calls it,
   `just check-specs` runs `allium check` over `docs/specs/`, and `just analyse-specs` runs
   `allium analyse` over them for process completeness — data flow, reachability, deadlocks
   and conflicts. The checksums are computed by hand because upstream publishes none for
