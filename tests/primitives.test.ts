@@ -230,11 +230,11 @@ describe('HeaderBar', () => {
     };
   }
 
-  it('offers the four actions under the names the page always used', async () => {
+  it('offers the four actions under the names the page uses', async () => {
     const props = headerProps();
     render(HeaderBar, props);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Set a word' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Share a game' }));
     await userEvent.click(screen.getByRole('button', { name: 'Statistics' }));
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(screen.getByRole('button', { name: 'How to play' }));
@@ -245,7 +245,7 @@ describe('HeaderBar', () => {
     expect(props.onopenhelp).toHaveBeenCalledTimes(1);
 
     // Each action opens a dialog and announces it, exactly as the chip does.
-    for (const name of ['Set a word', 'Statistics', 'Settings', 'How to play']) {
+    for (const name of ['Share a game', 'Statistics', 'Settings', 'How to play']) {
       expect(screen.getByRole('button', { name })).toHaveAttribute('aria-haspopup', 'dialog');
     }
   });

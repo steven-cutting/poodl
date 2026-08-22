@@ -26,6 +26,23 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with it: it already wore `src/app.css`, so it takes the new tokens and the display face,
   and `scripts/stage_site.sh` copies the three font files beside the stylesheet it copies.
 
+- The Allium checker is a project dependency rather than something a contributor is
+  assumed to have. `scripts/install_allium.py` pins version 3.5.3 by SHA-256 for each of
+  the four supported unix targets and installs the release binary into the gitignored
+  `.tools/bin/`, staging the download beside the installed copy and swapping it in only
+  once both its checksum and the version it reports agree with the pin, so a failed install
+  leaves a working one alone; `just install-allium` runs it, `just initialize` calls it,
+  `just check-specs` runs `allium check` over `docs/specs/`, and `just analyse-specs` runs
+  `allium analyse` over them for process completeness — data flow, reachability, deadlocks
+  and conflicts. The checksums are computed by hand because upstream publishes none for
+  these files, and the two the Homebrew formula does publish were cross-checked against
+  them. Both recipes report rather than gate and are deliberately absent from `just check`:
+  `allium check` fails on warnings as well as errors and `allium analyse` fails while any
+  finding remains, neither offers a way to waive one, and the modules carry a baseline of
+  twenty-five diagnostics and four findings — recorded in
+  `docs/how-to/work-with-the-specs.md` so a new one can be told from an old one. See
+  [decision 0011](docs/decisions/0011-project-managed-allium-cli.md).
+
 - `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
   its control's action and nothing besides; pinch-zoom is untouched and the viewport stays
   scalable; every control meets `config.minimum_touch_target` in both directions down to
@@ -105,9 +122,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A word Poodl refused left the link made from the previous word on screen beside the
   refusal, still copyable, which read as the link for the word just refused.
   `OnlyAcceptedWordsBecomeCustomGames` says a refused word produces no link.
-- The custom-game form was handed the notice and the link the board was showing, so both
-  turned up inside a form that made neither — and closing the form threw the board's link
-  away. It opens on a surface of its own.
+- The share dialog (then the custom-game form) was handed the notice and the link the board
+  was showing, so both turned up inside a dialog that made neither — and closing the dialog
+  threw the board's link away. It opens on a surface of its own.
 - A stored game was believed about its own marks, so a store that had been written to could
   restore a game that was never won, with a keyboard and a shared grid to match. Every
   stored guess is scored again on load. Stored input is checked for shape as well as length.
@@ -141,6 +158,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surface, the one ground they had not been drawn on: every border there, and every letter
   the surface is in fact behind — which in the light themes is absent's alone, the two hue
   letters sitting on their own fills and answering to those instead.
+- Passing on the word of the game being played moves from a button under the keyboard into
+  the dialog the header's share action opens, renamed "Share a game" from "Set a word". The
+  dialog now holds both ways of making a link — **This game**, offered for as long as a game
+  is on the board and saying which game it means, and **Your own word** — restyled to the
+  design system's eyebrows, copy and filled primary. A link a section makes is shown inside
+  the dialog and goes when it closes, and a link made in the end-of-game modal now goes the
+  same way when the modal is closed; the modal keeps its own "Share results" and "Share the
+  word", and the board no longer shows a custom-game link at all — only the shared grid, once
+  the conclusion is put away. `CustomGameForm` is `SharePanel`. `sharing.allium`'s rules and
+  guarantees are unchanged; the prose naming the way in moved with the control, and
+  `CustomGameCreation` now relates to `ShareCurrentAnswer`.
 - The non-colour indication on results is a marker bar rather than a corner glyph:
   correct fills most of a tile or key's bottom edge, present shows a short centred
   fraction, absent carries no bar beside a dimmed letter. `game.allium`'s

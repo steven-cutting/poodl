@@ -19,6 +19,7 @@ rather than in a shell history.
 | `just initialize` | One explicit first run. Creates both lockfiles, installs both toolchains and the browser the story tests need, normalises formatting, installs the hook. Never stages, commits, tags or pushes. |
 | `just sync` | Install exactly what the lockfiles say. Run after pulling. |
 | `just install-hooks` | Install the read-only pre-commit gate. |
+| `just install-allium` | Download, verify and install the pinned `allium` binary into `.tools/bin/`. Over the network; no lockfile can name a binary. |
 | `just storybook-browsers` | Download the Chromium the story tests render in. Over the network, into a cache outside the repository. |
 | `just storybook-browsers-deps` | The system libraries Chromium links against. Linux only; CI runs it first. |
 
@@ -65,6 +66,8 @@ rather than in a shell history.
 | --- | --- |
 | `just check-docs` | markdownlint, `typos`, offline link check, then the documentation contract. |
 | `just check-agents` | The agent contract: inventory, adapters, and skill bridges. |
+| `just check-specs` | `allium check` over `docs/specs/`. Reports rather than gates; see [Work with the specifications](../how-to/work-with-the-specs.md) for the baseline. |
+| `just analyse-specs` | `allium analyse` over `docs/specs/`: the same structural diagnostics plus data flow, reachability, deadlocks and conflicts. Reports rather than gates; same baseline page. |
 | `just check-links-online` | Follow external links. Manual; needs the network. |
 
 ## Publish

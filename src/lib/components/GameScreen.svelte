@@ -3,7 +3,6 @@
   import Board from '$lib/components/Board.svelte';
   import Button from '$lib/components/Button.svelte';
   import Keyboard from '$lib/components/Keyboard.svelte';
-  import LinkReady from '$lib/components/LinkReady.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
@@ -34,7 +33,6 @@
     onletter,
     ondelete,
     onsubmit,
-    onshareanswer,
     oncopy,
     ondismissnotice,
     onshowresult
@@ -45,14 +43,19 @@
     physicalKeyboard?: boolean;
     notice?: NoticeValue | null;
     noticeSequence?: number;
-    /** The link or the grid Poodl has just made, for as long as it has one. */
+    /**
+     * The grid Poodl is holding, for as long as it has one. Made in the
+     * conclusion, and still here once that is closed: `TheGridIsAvailableAsText`
+     * wants the grid where the player is looking. A link is never held here —
+     * it lives inside the surface that made it, the share dialog or the
+     * conclusion, and goes when that closes.
+     */
     shareable?: ShareableView | null;
     announcement?: string | null;
     announcementSequence?: number;
     onletter: (letter: string) => void;
     ondelete: () => void;
     onsubmit: () => void;
-    onshareanswer: () => void;
     oncopy: () => void;
     ondismissnotice: () => void;
     /** Offered only while the conclusion of a finished game is closed. */
@@ -70,33 +73,26 @@
 
 <Notice {notice} sequence={noticeSequence} ondismiss={ondismissnotice} />
 
-{#if shareable?.kind === 'custom_link'}
-  <LinkReady url={shareable.text} {oncopy} />
-{:else if shareable?.kind === 'results'}
+{#if shareable?.kind === 'results'}
   <ResultsReady text={shareable.text} {oncopy} />
 {/if}
 
 <Keyboard knowledge={keyboard} disabled={!playing} {onletter} {ondelete} {onsubmit} />
 
 <!--
-  ShareCurrentAnswer: available in every mode and for as long as the game is on
-  the board, from before the first guess through to after the game is over.
-  Making a link shows nothing about the word.
+  The way back to a conclusion the player closed. Passing the word on is not
+  offered from here: `ShareCurrentAnswer` is reached from the dialog the
+  header's share button opens, and from the conclusion while it is showing.
 -->
-<p class="share">
-  {#if onshowresult !== undefined}
+{#if onshowresult !== undefined}
+  <p class="share">
     <Button
       onclick={() => {
         onshowresult();
       }}>Show the result again</Button
     >
-  {/if}
-  <Button
-    onclick={() => {
-      onshareanswer();
-    }}>Share the word as a custom game</Button
-  >
-</p>
+  </p>
+{/if}
 
 <Announcer message={announcement} sequence={announcementSequence} />
 

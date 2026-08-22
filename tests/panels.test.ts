@@ -2,10 +2,10 @@ import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import CustomGameForm from '../src/lib/components/CustomGameForm.svelte';
 import HowToPlayPanel from '../src/lib/components/HowToPlayPanel.svelte';
 import InvalidLinkNotice from '../src/lib/components/InvalidLinkNotice.svelte';
 import SettingsPanel from '../src/lib/components/SettingsPanel.svelte';
+import SharePanel from '../src/lib/components/SharePanel.svelte';
 import StatisticsPanel from '../src/lib/components/StatisticsPanel.svelte';
 import { DEFAULT_SETTINGS } from '../src/lib/app/state';
 import { EMPTY_STATISTICS, recordLoss, recordWin } from '../src/lib/domain/statistics';
@@ -287,13 +287,15 @@ describe('StatisticsPanel', () => {
 });
 
 /*
- * sharing.allium — the `CustomGameCreation` surface.
+ * sharing.allium — the `CustomGameCreation` surface, and the way in to
+ * `ShareCurrentAnswer` while a game is on the board.
  */
-describe('CustomGameForm', () => {
-  function formProps(overrides: Record<string, unknown> = {}) {
+describe('SharePanel', () => {
+  function panelProps(overrides: Record<string, unknown> = {}) {
     return {
       notice: null,
       shareable: null,
+      onshareanswer: vi.fn(),
       oncreate: vi.fn(),
       oncopy: vi.fn(),
       onclose: vi.fn(),
@@ -302,19 +304,19 @@ describe('CustomGameForm', () => {
   }
 
   it('takes a word and asks for a link', async () => {
-    const props = formProps();
-    render(CustomGameForm, props);
+    const props = panelProps();
+    render(SharePanel, props);
 
     await userEvent.type(screen.getByRole('textbox', { name: /word/i }), 'crumb');
-    await userEvent.click(screen.getByRole('button', { name: /make a link/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Make a link' }));
 
     expect(props.oncreate).toHaveBeenCalledWith('crumb');
   });
 
   // FullyKeyboardOperable: entering a word and submitting it, from the keyboard.
   it('submits from the keyboard alone', async () => {
-    const props = formProps();
-    render(CustomGameForm, props);
+    const props = panelProps();
+    render(SharePanel, props);
 
     await userEvent.type(screen.getByRole('textbox', { name: /word/i }), 'crumb{Enter}');
 
@@ -323,7 +325,7 @@ describe('CustomGameForm', () => {
 
   // OnlyAcceptedWordsBecomeCustomGames, and the entry stays put to be corrected.
   it('shows a rejection and keeps the entry', async () => {
-    const { rerender } = render(CustomGameForm, formProps());
+    const { rerender } = render(SharePanel, panelProps());
     const field = screen.getByRole('textbox', { name: /word/i });
 
     await userEvent.type(field, 'qqqqq{Enter}');
@@ -336,7 +338,7 @@ describe('CustomGameForm', () => {
 
   // TheWordIsNotReadableInTheLink: "nor anything shown alongside it".
   it('takes the word off the screen once the link is made', async () => {
-    const { rerender } = render(CustomGameForm, formProps());
+    const { rerender } = render(SharePanel, panelProps());
     const field = screen.getByRole('textbox', { name: /word/i });
 
     await userEvent.type(field, 'crumb{Enter}');
@@ -354,7 +356,7 @@ describe('CustomGameForm', () => {
    */
   it('announces an identical refusal a second time', async () => {
     const notice = { kind: 'custom_answer_rejected', entry: 'qqqqq' } as const;
-    const { rerender } = render(CustomGameForm, formProps({ notice, noticeSequence: 1 }));
+    const { rerender } = render(SharePanel, panelProps({ notice, noticeSequence: 1 }));
     const first = screen.getByRole('status').firstElementChild;
 
     await rerender({ notice: { ...notice }, noticeSequence: 2 });
@@ -363,10 +365,10 @@ describe('CustomGameForm', () => {
   });
 
   it('shows the link once there is one, and copies it', async () => {
-    const props = formProps({
+    const props = panelProps({
       shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
     });
-    render(CustomGameForm, props);
+    render(SharePanel, props);
 
     expect(screen.getByRole('textbox', { name: /link/i })).toHaveValue(
       'https://poodl.test/?g=yrqt9rd9'
@@ -375,6 +377,67 @@ describe('CustomGameForm', () => {
     await userEvent.click(screen.getByRole('button', { name: /copy/i }));
 
     expect(props.oncopy).toHaveBeenCalledTimes(1);
+  });
+
+  // ShareCurrentAnswer.AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard: the
+  // caller says whether there is a game, and this offers it whenever there is.
+  it('offers to pass the word on while a game is on the board', async () => {
+    const props = panelProps();
+    render(SharePanel, props);
+
+    await userEvent.click(screen.getByRole('button', { name: /make a link to this game/i }));
+
+    expect(props.onshareanswer).toHaveBeenCalledTimes(1);
+    // Making the link is the engine's; nothing is copied from here.
+    expect(props.oncopy).not.toHaveBeenCalled();
+  });
+
+  // ShareCurrentAnswer.FullyKeyboardOperable: asking for the link from the keyboard
+  // alone. Close is the dialog's first stop, and this game comes before the field.
+  it('asks for the link from the keyboard alone', async () => {
+    const props = panelProps();
+    render(SharePanel, props);
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Make a link to this game' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    expect(props.onshareanswer).toHaveBeenCalledTimes(1);
+
+    await userEvent.tab();
+    expect(screen.getByRole('textbox', { name: /word/i })).toHaveFocus();
+  });
+
+  // ShareCurrentAnswer exposes current_game.mode and current_game.status, and a
+  // modal hides the header chip that says them — so the section says which game.
+  it('names the game it would pass on', () => {
+    const playing = render(SharePanel, panelProps({ mode: 'practice', status: 'in_progress' }));
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Playing practice.');
+    playing.unmount();
+
+    const finished = render(SharePanel, panelProps({ mode: 'practice', status: 'won' }));
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Practice game finished.');
+    finished.unmount();
+
+    // No game, no section — whatever the caller left in the props.
+    render(SharePanel, panelProps({ mode: 'random', status: 'won', onshareanswer: undefined }));
+
+    expect(screen.getByRole('dialog')).not.toHaveTextContent(/finished/i);
+  });
+
+  it('offers nothing to pass on when there is no game', () => {
+    render(SharePanel, panelProps({ onshareanswer: undefined }));
+
+    expect(
+      screen.queryByRole('button', { name: /make a link to this game/i })
+    ).not.toBeInTheDocument();
+    // The other half of the dialog is unaffected.
+    expect(screen.getByRole('textbox', { name: /word/i })).toBeInTheDocument();
   });
 });
 

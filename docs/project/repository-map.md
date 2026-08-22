@@ -33,7 +33,7 @@ there is no backend to be a sibling of.
 ├── stories/             Svelte CSF stories, one per component plus the token specimens
 ├── static/              Copied verbatim into the build
 ├── site-root/           What sits at the domain root, around the built app
-├── scripts/             The repository checkers, the browser preflight, staging
+├── scripts/             The repository checkers, the installers, the preflight, staging
 ├── docs/                This handbook, plus specs/
 ├── .agents/skills/      Canonical agent procedures
 └── .storybook/          The component workshop, served and built locally
@@ -53,7 +53,7 @@ there is no backend to be a sibling of.
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
 | `site-root/` | The landing page at `pnut.fans/`, and the `.nojekyll` beside it. Not part of the app: `just stage` assembles it around the build. |
-| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `check_playwright_browsers.js`, `initialize.sh`, and `stage_site.sh`. |
+| `scripts/` | `validate_docs.py`, `validate_agents.py`, `run_project_check.py`, `run_ripsecrets_redacted.py`, `install_allium.py`, `check_playwright_browsers.js`, `initialize.sh`, and `stage_site.sh`. |
 | `docs/specs/` | The Allium specifications. Behaviour is decided here, not in code. |
 | `.storybook/` | The workshop's configuration. Served locally, and built both by the gate, which discards it, and by `just chromatic`, which publishes it. |
 

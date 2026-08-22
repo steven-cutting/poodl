@@ -12,7 +12,8 @@
     'Governing surfaces: `GameBoard` in `docs/specs/game.allium` for',
     '`@guarantee EveryRejectionIsAnnounced`, `CustomGameCreation` in `docs/specs/sharing.allium`',
     'for `@guarantee OnlyAcceptedWordsBecomeCustomGames`, and `ShareResults` for',
-    '`@guarantee TheGridIsAvailableAsText`, which asks the copy to report whether it worked.',
+    '`@guarantee TheGridIsAvailableAsText` and `ShareCurrentAnswer` for',
+    '`@guarantee FullyKeyboardOperable`, both of which ask the copy to report whether it worked.',
     '',
     'It is visible text inside a `role="status"` region, so the sentence itself is the',
     'announcement rather than being duplicated into `Announcer` and heard twice. That split is the',
@@ -60,8 +61,8 @@
 />
 
 <!--
-  A word somebody tried to set for a friend that Poodl does not accept. The entry
-  is named so it can be corrected rather than retyped from memory.
+  A word of the player's own that Poodl does not accept. The entry is named so it
+  can be corrected rather than retyped from memory.
 -->
 <Story
   name="Custom answer refused"

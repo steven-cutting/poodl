@@ -13,4 +13,5 @@ The specifications under `docs/specs/` decide behaviour. Code that disagrees wit
 4. Check that dependent modules still hold. `game.allium` is depended on by the other three, so a change to a trigger or an entity ripples.
 5. Derive the tests from the changed clauses before writing implementation, and confirm they fail first. A test that is already green proves nothing about the new behaviour.
 6. Implement until the tests pass. Never weaken a test to make it pass — fix the specification and re-derive instead.
-7. Run `just frontend-unit`, then `just check` before handoff.
+7. Run `just check-specs`. It exits non-zero on an untouched checkout, because the modules carry a baseline of warnings that `allium` has no way to waive — so read the diagnostics it prints, not the exit code. Compare each one's `code` and `severity` against the per-code table in `docs/how-to/work-with-the-specs.md` rather than comparing totals: a count holds steady when one diagnostic replaces another, so an unmoved total proves nothing. Your change should raise no count in that table and introduce no code it does not list. If it removes one, update the table in the same commit.
+8. Run `just frontend-unit`, then `just check` before handoff.
