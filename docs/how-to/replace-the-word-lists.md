@@ -12,7 +12,7 @@ requires: []
 them changes what the game plays with and nothing else — no rule anywhere names a
 specific word.
 
-The lists in the repository hold 1,123 answers and 15,029 accepted guesses, against a
+The lists in the repository hold 1,122 answers and 15,029 accepted guesses, against a
 design intent of roughly 1,100 and roughly 15,000. `words.allium` states floors beneath
 those figures — `config.min_answer_words` is 1,000 and `config.min_guess_words` is
 10,000 — because the failure worth catching is a half-written file rather than a list of
@@ -61,17 +61,31 @@ pre-empts.
 
 The shipped answer list is the maintainer-supplied easier list, trimmed by hand before it
 was sorted: duplicates and entries that were not five letters were dropped, as were one
-trademark (`skype`, which no dictionary here holds) and fifteen words too obscure to call
+trademark (`skype`, which no dictionary here holds), fifteen words too obscure to call
 familiar — `agaze`, `aimer`, `airts`, `areal`, `blent`, `breve`, `bruit`, `clave`, `donee`,
-`drupe`, `eclat`, `plasm`, `resew`, `thane` and `tromp`. Plain inflections such as `acids`
-and `tried` were deliberately kept. `answers-scowl.txt` was filtered differently, for
-familiarity by rule: a word reached it only if two independent judgements called it common,
-and proper nouns, abbreviations, contractions, plain inflections of shorter words, and an
-explicit block list of slurs were all excluded. The guess dictionary keeps everything, as
-`words.allium` says it should: it is the union of every list it has ever been given.
+`drupe`, `eclat`, `plasm`, `resew`, `thane` and `tromp` — and one ethnic slur, `gypsy`,
+which the supplied list carried and the block list described below has always kept out of
+`answers-scowl.txt`. A losing player is shown the answer, so the answer pool is where that
+judgement has to be made; `gypsy` stays in `guesses.txt`, where it already was before this
+list arrived, because that file is append-only. It can still be typed, and is simply never
+drawn. Plain inflections such as `acids` and `tried` were deliberately kept.
 
-Hand-editing word data is legitimate in exactly two places. The first is that block list —
-the question is editorial rather than lexical, and it is not a profanity filter. The second
+`answers-scowl.txt` was filtered differently, for familiarity by rule: a word reached it
+only if two independent judgements called it common, and proper nouns, abbreviations,
+contractions, plain inflections of shorter words, and an explicit block list of slurs were
+all excluded. The guess dictionary keeps everything, as `words.allium` says it should: it
+is the union of every list it has ever been given.
+
+That split is deliberate, and it is the whole of the policy. A slur is kept out of
+`answers.txt` because a losing player is shown the answer and never chose to see it. The
+same word stays in `guesses.txt` because a player who types a real word should not be told
+it is not one, and because the append-only obligation means anything the dictionary has
+ever carried stays. Curating the answer pool is therefore the only lever; expect the
+dictionary to hold words the answer pool would never show.
+
+Hand-editing word data is legitimate in exactly two places. The first is that block list,
+and the same judgement applied by hand when a supplied list arrives without one — the
+question is editorial rather than lexical, and it is not a profanity filter. The second
 is `poodl` itself, which appears in neither upstream collection: it is `config.game_name`,
 its provenance is the specification rather than a dictionary, and it is added by hand to
 both files after the upstream lists have been normalised and sorted.

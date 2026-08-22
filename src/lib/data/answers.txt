@@ -517,7 +517,6 @@ guile
 guise
 gusto
 gutsy
-gypsy
 halve
 handy
 happy

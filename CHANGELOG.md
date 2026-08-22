@@ -146,9 +146,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- The default answer list is an easier one: 1,123 words supplied by the maintainer, trimmed
-  by hand (duplicates, entries that were not five letters, one trademark and fifteen obscure
-  words) and carrying `poodl`. The 2,394-word SCOWL/12dicts curation stays in the
+- The default answer list is an easier one: 1,122 words supplied by the maintainer, trimmed
+  by hand (duplicates, entries that were not five letters, one trademark, fifteen obscure
+  words and one ethnic slur, which stays in the append-only guess dictionary and is simply
+  never drawn) and carrying `poodl`. The 2,394-word SCOWL/12dicts curation stays in the
   repository as `src/lib/data/answers-scowl.txt`, unimported and unbundled, so it can be
   restored by swapping the file names. `words.allium` lowers `config.min_answer_words` from
   2,000 to 1,000 and restates its design intent as roughly 1,100 answers and roughly 15,000

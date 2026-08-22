@@ -16,7 +16,7 @@ import { encodeAnswer } from '../src/lib/domain/obfuscation';
 import { createFakeRandom } from '../src/lib/ports/random';
 import { createFakeWordList } from '../src/lib/ports/words';
 
-/** Three answers, so exhausting the pool takes three games rather than 1,123. */
+/** Three answers, so exhausting the pool takes three games rather than 1,122. */
 export const ANSWERS = ['apple', 'adopt', 'alarm'];
 
 /** Words Poodl accepts as guesses but never sets as answers. */
