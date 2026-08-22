@@ -24,7 +24,9 @@ see. Both recipes pass `--config` themselves, so neither depends on that discove
 ## Layout
 
 Tests live in `tests/`, never colocated with `src/`. Stories live in `stories/`, also at
-the repository root, one file per component.
+the repository root, one file per component — plus the one stated exception,
+`Foundations.stories.svelte`, which documents the design tokens rather than a component;
+[Work in the component workshop](../how-to/work-in-the-component-workshop.md) records why.
 
 | Suffix | Runner |
 | --- | --- |
@@ -75,6 +77,16 @@ And axe is not exhaustive: it skips what it cannot attribute, including anything
 `aria-hidden`, so a guarantee resting on such an element still has to be measured by hand.
 The procedure is in [Work in the component workshop](../how-to/work-in-the-component-workshop.md).
 
+The marker bars are the worked example of the split. The bar that discharges
+`ResultsAreNeverConveyedByColourAlone` is aria-hidden decoration with no role and no name,
+so the role-and-name convention cannot reach it and it is queried by `[data-marker]` — the
+same class of structural hook as the grandfathered `data-mark`, granted for the same
+reason. jsdom holds its presence (a bar on correct and present, none on absent); Chromium
+holds its geometry (the two bars differ in length), because only a layout engine can
+measure a width. The decorative icons are the same class of exception: an icon has no
+role and no name by design, so a test that needs to see one queries `svg` — or
+`aria-hidden` — inside a control it found by role and name.
+
 ## Coverage
 
 v8 provider, measured over `src/lib/**`, with a 90% floor on branches, functions, lines
@@ -112,8 +124,10 @@ should be deleted rather than covered; see
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
+| `primitives.test.ts` | The six design-system primitives — `Icon`, `IconButton`, `Button`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
 | `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: `src/app.css` read from disk, put in the document, and measured on a real control. |
+| `contrast.test.ts` | Every measured colour pair in `src/app.css`, read from disk and recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |
 | `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one, and the figures only a layout engine can produce. |
 
 `directManipulation.test.ts` reads the stylesheet rather than importing it. `?raw` is the

@@ -1,30 +1,40 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
+  import Modal from '$lib/components/Modal.svelte';
   import type { GameMode, GameStatus, StartableMode } from '$lib/domain/types';
 
   /**
-   * `game.allium` — the `GameNavigation` surface. Starting and switching games.
+   * `game.allium` — the `GameNavigation` surface. Starting and switching
+   * games, opened from the header's mode chip and presented as a dialog.
    *
-   * `AvailableWhetherOrNotAGameExists`: nothing here depends on a game being
-   * under way, so it is present on a first visit and can still start one.
+   * `AvailableWhetherOrNotAGameExists`: the chip that opens this is in the
+   * header unconditionally, so the surface is reachable on a first visit with
+   * no game and no history — and can still start one.
    *
-   * `ThreeModesCanBeStartedFromHere`: custom is not among them, because a custom
-   * game exists only because someone made a link.
+   * `ThreeModesCanBeStartedFromHere`: custom is not among them, because a
+   * custom game exists only because someone made a link.
    *
    * `CurrentModeIsPerceivable`: which mode is being played, and whether a game
-   * is under way at all, are readable as text rather than signalled only by
-   * which control looks selected.
+   * is under way at all, are readable as text — the chip's word in the header
+   * and the sentence here — rather than signalled only by which control looks
+   * selected. The selected mode carries `aria-current` too, so the two agree.
+   *
+   * `FullyKeyboardOperable` rides on `Modal`: focus arrives inside, Escape
+   * closes, Tab cycles, and closing returns focus to the chip that opened it.
    */
   let {
     mode = null,
     status = null,
     repeatMode,
-    onnewgame
+    onnewgame,
+    onclose
   }: {
     mode?: GameMode | null;
     status?: GameStatus | null;
     /** The mode "New game" repeats. Custom is not startable, so it never lands here. */
     repeatMode: StartableMode;
     onnewgame: (mode: StartableMode) => void;
+    onclose: () => void;
   } = $props();
 
   const MODES: readonly StartableMode[] = ['random', 'endless', 'practice'];
@@ -43,28 +53,27 @@
   }
 </script>
 
-<nav aria-label="Games">
+<Modal title="Games" {onclose}>
   <p class="current">{current}</p>
   <div class="controls">
     {#each MODES as startable (startable)}
-      <button
-        type="button"
-        aria-current={mode === startable ? 'true' : undefined}
+      <Button
+        current={mode === startable}
         onclick={() => {
           onnewgame(startable);
-        }}>{label(startable)}</button
+        }}>{label(startable)}</Button
       >
     {/each}
-    <button
-      type="button"
+    <Button
       onclick={() => {
         onnewgame(repeatMode);
-      }}>New game</button
+      }}>New game</Button
     >
   </div>
   <!--
     StartingAGameEndsTheOneUnderWay, stated where the player acts on it so the
-    cost of switching mode mid-game is never a surprise.
+    cost of switching mode mid-game is never a surprise: beside the mode
+    buttons, exactly while there is something to lose.
   -->
   {#if status === 'in_progress'}
     <p class="cost">
@@ -72,50 +81,23 @@
       endless; with none, it goes without trace.
     </p>
   {/if}
-</nav>
+</Modal>
 
 <style>
-  nav {
-    display: grid;
-    gap: 0.5rem;
-    justify-items: center;
-    margin-block-end: 1.25rem;
-  }
-
   .current {
-    margin: 0;
+    margin-block: 0 var(--s-5);
     font-weight: 600;
   }
 
   .controls {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
     flex-wrap: wrap;
-    justify-content: center;
   }
 
   .cost {
-    margin: 0;
-    max-inline-size: 30rem;
-    color: var(--muted);
-    font-size: 0.9rem;
-    text-align: center;
-  }
-
-  button {
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  button[aria-current='true'] {
-    border-color: var(--mark-correct);
-    background: var(--mark-correct);
-    color: var(--mark-text);
+    margin-block: var(--s-5) 0;
+    color: var(--text-2);
+    font-size: var(--fs-small);
   }
 </style>

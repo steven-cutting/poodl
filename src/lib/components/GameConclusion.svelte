@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import Countdown from '$lib/components/Countdown.svelte';
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
@@ -121,27 +122,28 @@
     <ResultsReady text={shareable.text} {oncopy} />
   {/if}
 
-  <div class="actions">
-    <button
-      type="button"
-      class="primary"
+  <!--
+    The action row rides in the dialog's footer, rule-separated from the
+    outcome: content first, then commitment.
+  -->
+  {#snippet footer()}
+    <Button
+      variant="primary"
       onclick={() => {
         onnewgame(repeatMode);
-      }}>New game</button
+      }}>New game</Button
     >
-    <button
-      type="button"
+    <Button
       onclick={() => {
         onshareresults();
-      }}>Share results</button
+      }}>Share results</Button
     >
-    <button
-      type="button"
+    <Button
       onclick={() => {
         onshareanswer();
-      }}>Share the word</button
+      }}>Share the word</Button
     >
-  </div>
+  {/snippet}
 </Modal>
 
 <style>
@@ -155,32 +157,14 @@
     text-align: center;
   }
 
-  .attempts {
-    color: var(--muted);
-  }
-
-  .actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-block-start: 1rem;
-  }
-
-  button {
-    padding: 0.5rem 0.9rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
+  .answer strong {
+    font-family: var(--font-display);
+    font-size: var(--fs-display-3);
     font-weight: 600;
-    cursor: pointer;
+    letter-spacing: var(--track-title);
   }
 
-  .primary {
-    border-color: var(--mark-correct);
-    background: var(--mark-correct);
-    color: var(--mark-text);
+  .attempts {
+    color: var(--text-2);
   }
 </style>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Announcer from '$lib/components/Announcer.svelte';
   import Board from '$lib/components/Board.svelte';
+  import Button from '$lib/components/Button.svelte';
   import Keyboard from '$lib/components/Keyboard.svelte';
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Notice from '$lib/components/Notice.svelte';
@@ -84,18 +85,16 @@
 -->
 <p class="share">
   {#if onshowresult !== undefined}
-    <button
-      type="button"
+    <Button
       onclick={() => {
         onshowresult();
-      }}>Show the result again</button
+      }}>Show the result again</Button
     >
   {/if}
-  <button
-    type="button"
+  <Button
     onclick={() => {
       onshareanswer();
-    }}>Share the word as a custom game</button
+    }}>Share the word as a custom game</Button
   >
 </p>
 
@@ -104,19 +103,9 @@
 <style>
   .share {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
     flex-wrap: wrap;
     justify-content: center;
-    margin-block-start: 1.25rem;
-  }
-
-  button {
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    cursor: pointer;
+    margin-block-start: var(--s-7);
   }
 </style>

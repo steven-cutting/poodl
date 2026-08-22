@@ -129,18 +129,24 @@ No recurring licence and no third-party font host. The file lives in the reposit
 subset, so the static-site story stays intact and the page has nothing to fetch from
 anywhere.
 
-Candidates to render and compare, at tile size and at display size, before choosing:
+The candidates were rendered and compared, and the selection landed with
+[decision 0010](../decisions/0010-biscuit-games-design-system.md): **Bricolage Grotesque**
+carries display, the brand and the board — the risk the shortlist named, that it might be
+too strange inside a tile, did not survive seeing it there — and **Instrument Sans**
+carries the interface. Two families rather than one, bought deliberately: the display
+face's fingerprints are the differentiation, and the interface face's plainer figures are
+what keep a settings row from shouting.
 
-| Candidate | Why it is on the list |
-| --- | --- |
-| Instrument Sans | Variable with a width axis, strong interface figures, quirk without shouting |
-| Familjen Grotesk | The most fingerprints of the four; strongest at display size |
-| Bricolage Grotesque | Optical-size and width axes, unmistakably authored — possibly too strange inside a tile |
-| Schibsted Grotesk | Warmer and safer; the fallback if the others are too loud in gameplay |
+| Face | Carries | Axes in the committed build |
+| --- | --- | --- |
+| Bricolage Grotesque | Display, wordmark, board letters, statistics figures | optical size, width, weight 200–800 |
+| Instrument Sans | Interface copy, controls, labels | width, weight 400–700, plus italic |
 
-Confirm licence terms and available axes at selection rather than trusting this table.
-Statistics need tabular figures; most of these carry them, which is a thing to verify
-rather than assume, and a second family should only be added if none does.
+Both are OFL, self-hosted as latin-subset variable woff2 files in
+`src/lib/assets/fonts/` with the licence texts beside them and provenance in the
+`src/app.css` header — no font host, nothing fetched from anywhere, exactly as this page
+required. Both files carry the `tnum` feature the statistics need, verified from the
+committed files rather than from the foundry's page.
 
 ### Density
 

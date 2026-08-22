@@ -5,38 +5,43 @@
   import GameNavigation from '../src/lib/components/GameNavigation.svelte';
 
   const onnewgame = fn();
+  const onclose = fn();
 
   const OVERVIEW = [
-    'Starting and switching games. The one surface that is not scoped to a game.',
+    'Starting and switching games: the dialog the header’s mode chip opens. The one surface',
+    'that is not scoped to a game.',
     '',
     'Governing surface: `GameNavigation` in `docs/specs/game.allium`.',
     '',
     'Guarantees this component carries:',
     '',
-    '- `@guarantee AvailableWhetherOrNotAGameExists`. The **No game yet** story is a first visit:',
-    '  no game, no history, and it can still start one.',
+    '- `@guarantee AvailableWhetherOrNotAGameExists`. The chip that opens this is in the header',
+    '  unconditionally — see **HeaderBar** — so the **No game yet** story is a first visit: no',
+    '  game, no history, and it can still start one.',
     '- `@guarantee ThreeModesCanBeStartedFromHere`. Random, endless and practice. Custom is not',
     '  among them — a custom game exists only because someone made a link — which the',
     '  **Playing a custom game** story shows by offering no control for it.',
     '- `@guarantee CurrentModeIsPerceivable`. Which mode is being played, and whether a game is',
-    '  under way at all, are a sentence rather than a control that looks selected. The selected',
-    '  control is `aria-current` as well, so the two agree.',
-    '- `@guarantee StartingAGameEndsTheOneUnderWay`, stated where the player acts on it and only',
+    '  under way at all, are a sentence here and the chip’s word in the header, rather than a',
+    '  control that looks selected. The selected control is `aria-current` as well, so they',
+    '  agree.',
+    '- `@guarantee StartingAGameEndsTheOneUnderWay`, stated beside the mode buttons and only',
     '  while there is something to lose.',
-    '- `@guarantee FullyKeyboardOperable`, proved by the play function below.'
+    '- `@guarantee FullyKeyboardOperable`, by way of **Modal**: focus arrives inside, Escape',
+    '  closes, Tab cycles, and closing returns focus to the chip. The play below walks it.'
   ].join('\n');
 
   const { Story } = defineMeta({
     title: 'Game/GameNavigation',
     component: GameNavigation,
     tags: ['autodocs'],
-    args: { mode: null, status: null, repeatMode: 'random', onnewgame },
+    args: { mode: null, status: null, repeatMode: 'random', onnewgame, onclose },
     argTypes: {
       mode: { control: false, description: 'The mode of the game on the board, if any.' },
       status: { control: false, description: 'Whether that game is still being played.' },
       repeatMode: { control: false, description: 'What New game repeats. Never custom.' }
     },
-    parameters: { docs: { description: { component: OVERVIEW } } }
+    parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
   });
 </script>
 
@@ -52,20 +57,20 @@
 <!-- A custom game: named in the sentence, absent from the controls. -->
 <Story name="Playing a custom game" args={{ mode: 'custom', status: 'in_progress' }} />
 
-<!-- Every control reachable, and New game repeating the mode it says it will. -->
+<!-- Close first, then every mode and New game, and the last one doing what it says. -->
 <Story
   name="Every control is reachable by Tab"
   args={{ mode: 'endless', status: 'won', repeatMode: 'endless' }}
   play={async ({ canvasElement }) => {
     // GameNavigation.@guarantee FullyKeyboardOperable
     onnewgame.mockClear();
-    const controls = within(canvasElement).getAllByRole('button');
+    const canvas = within(canvasElement);
 
-    await expect(controls).toHaveLength(4);
+    await expect(canvas.getByRole('dialog', { name: 'Games' })).toHaveFocus();
 
-    for (const control of controls) {
+    for (const name of ['Close', 'Random', 'Endless', 'Practice', 'New game']) {
       await userEvent.tab();
-      await expect(control).toHaveFocus();
+      await expect(canvas.getByRole('button', { name })).toHaveFocus();
     }
 
     await userEvent.keyboard('[Space]');

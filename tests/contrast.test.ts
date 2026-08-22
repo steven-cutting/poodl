@@ -11,10 +11,30 @@
  * and recomputes every pair. No figure quoted in a comment or a documentation
  * page is trusted; each is derived here from the colours that actually resolve.
  *
+ * The pairs follow the shape the amended guarantee states. The untried key
+ * hugs the page, so the ground it hugs is what a hue result must stand off;
+ * absent has no hue and no bar, so its letter answers to the untried letter;
+ * and the mark separation between absent and correct rides the border each of
+ * the two draws — a distance, not a direction. What the marker bars carry —
+ * shape, not lightness — is asserted where the bars are rendered, in the
+ * component tests and stories, because a stylesheet cannot say whether a bar
+ * exists.
+ *
  * Axe cannot stand in for this, and the two gates fail differently. Axe checks
- * what it can attribute to painted text, so it never sees the mark glyphs —
- * they are `aria-hidden` — and it has no notion at all of one key state
- * standing off another, which is the pair the whole change is about.
+ * what it can attribute to painted text, so it never sees a marker bar — they
+ * are `aria-hidden` — and it has no notion at all of one key state standing
+ * off another, which is the pair the whole palette is built around.
+ *
+ * What is deliberately absent below is any disabled pair.
+ * `Appearance.@guarantee AnUnavailableControlIsExempt` holds a control the
+ * player cannot operate to none of these figures, exactly as WCAG 2.2 exempts
+ * an inactive component from 1.4.3 and 1.4.11 — so `--text-disabled`, the
+ * disabled button's `--rule` border and the keyboard a finished game dims are
+ * measured nowhere here, and adding them would assert a floor the
+ * specification does not state. The half of that guarantee which does bind is
+ * not a ratio at all, so it is held where the keys are rendered instead:
+ * `tests/components.test.ts` proves a switched-off key still reports as
+ * disabled and still carries the marker bar its live form carried.
  *
  * All four combinations are covered; what is not is one of the two *routes* to
  * one of them. jsdom answers no media query, so the ratios below are all taken
@@ -59,9 +79,9 @@ afterEach(() => {
  * A token's value, following `var()` to whatever it names.
  *
  * jsdom resolves the cascade but not custom-property substitution: it reports
- * `--key-text` as the literal string `var(--text)`. A browser would have
- * substituted already, so the chain is walked here rather than every token in
- * `app.css` being written out longhand to suit the test.
+ * `--key-untried-bg` as the literal string `var(--background)`. A browser
+ * would have substituted already, so the chain is walked here rather than
+ * every token in `app.css` being written out longhand to suit the test.
  */
 function token(name: string): string {
   const root = document.documentElement;
@@ -94,11 +114,11 @@ function ratio(one: string, other: string): number {
 }
 
 /**
- * The two tones `app.css` draws the pressed ring in, against one key.
+ * The two tones `app.css` draws the pressed ring in, against one ground.
  *
  * The cue is a pair of rings, so the edge the eye catches is the better of the
- * two — asserting both would demand a single tone that stands off every key,
- * which is the thing a two-tone ring exists because no colour does.
+ * two — asserting both would demand a single tone that stands off every
+ * ground, which is the thing a two-tone ring exists because no colour does.
  */
 function ringEdge(over: string): number {
   return Math.max(ratio(token('--text'), over), ratio(token('--background'), over));
@@ -106,7 +126,7 @@ function ringEdge(over: string): number {
 
 interface Combination {
   name: string;
-  theme: 'light' | 'dark' | null;
+  theme: 'light' | 'dark';
   highContrast: boolean;
 }
 
@@ -117,16 +137,16 @@ const COMBINATIONS: readonly Combination[] = [
   { name: 'dark, high contrast', theme: 'dark', highContrast: true }
 ];
 
-const MARKS = ['--mark-correct', '--mark-present', '--mark-absent'] as const;
+// The two inks a scored key or tile is painted in. Absent is deliberately not
+// here: it has no ink of its own, and the two assertions it answers — its
+// letter against the untried letter, its border against correct's — are
+// stated individually below.
+const HUE_RESULTS = ['--result-exact', '--result-present'] as const;
 
 function apply({ theme, highContrast }: Combination): void {
   const root = document.documentElement;
 
-  if (theme === null) {
-    root.removeAttribute('data-theme');
-  } else {
-    root.setAttribute('data-theme', theme);
-  }
+  root.setAttribute('data-theme', theme);
 
   if (highContrast) {
     root.setAttribute('data-high-contrast', 'true');
@@ -142,52 +162,79 @@ describe('EveryCombinationMeetsTheLegibilityFloor', () => {
         apply(combination);
       });
 
-      // Every key on the on-screen keyboard is 16px at weight 600, below the
-      // large-text threshold, so all of them answer to the 4.5 bar rather than
-      // the 3.0 one.
-      it('paints legible text on every key', () => {
-        expect(ratio(token('--key-text'), token('--key-background'))).toBeGreaterThanOrEqual(
-          MINIMUM_TEXT_CONTRAST
-        );
-
-        for (const mark of MARKS) {
-          expect(ratio(token('--mark-text'), token(mark))).toBeGreaterThanOrEqual(
+      /*
+       * The plainest pairs in the stylesheet, and the easiest to leave out of
+       * a test about keys. `--text` on `--background` is every sentence on the
+       * page; `--text-2` is the attempt count under the board and the note
+       * under a preference; `--text-3` is the absent letter's grey doing duty
+       * as tertiary text. All of it is text a player reads rather than
+       * decoration, on the page and on the raised surfaces the dialogs and
+       * scored keys sit on, so it all answers to the same bar.
+       */
+      it('paints legible text on the page and its surfaces', () => {
+        for (const ink of ['--text', '--text-2', '--text-3'] as const) {
+          expect(ratio(token(ink), token('--background'))).toBeGreaterThanOrEqual(
+            MINIMUM_TEXT_CONTRAST
+          );
+        }
+        for (const ink of ['--text', '--text-2'] as const) {
+          expect(ratio(token(ink), token('--surface-raised'))).toBeGreaterThanOrEqual(
             MINIMUM_TEXT_CONTRAST
           );
         }
       });
 
       /*
-       * The plainest pair in the stylesheet, and the easiest to leave out of a
-       * test about keys. `--text` on `--background` is the letter in an
-       * unscored tile and every sentence on the page; `--muted` is the attempt
-       * count under the board and the note under a preference, which is text a
-       * player reads rather than decoration, so it answers to the same bar.
+       * Every key letter is 16px at weight 600, below the large-text
+       * threshold, so all of them answer to the 4.5 bar rather than the 3.0
+       * one. The tile fills are held to the same 4.5 although a tile's letter
+       * is 24px at 600 — WCAG large text, where 3.0 would be the honest bar —
+       * so a future palette pinned by a fill may re-derive that pair at 3.0
+       * rather than quietly weakening this file.
        */
-      it('paints legible text on the page itself', () => {
-        expect(ratio(token('--text'), token('--background'))).toBeGreaterThanOrEqual(
+      it('paints legible text on every key', () => {
+        expect(ratio(token('--text'), token('--key-untried-bg'))).toBeGreaterThanOrEqual(
           MINIMUM_TEXT_CONTRAST
         );
-        expect(ratio(token('--muted'), token('--background'))).toBeGreaterThanOrEqual(
+
+        for (const ink of [...HUE_RESULTS, '--result-absent-text'] as const) {
+          expect(ratio(token(ink), token('--key-scored-bg'))).toBeGreaterThanOrEqual(
+            MINIMUM_TEXT_CONTRAST
+          );
+        }
+
+        for (const result of HUE_RESULTS) {
+          expect(ratio(token(`${result}-ink`), token(result))).toBeGreaterThanOrEqual(
+            MINIMUM_TEXT_CONTRAST
+          );
+        }
+
+        expect(ratio(token('--brand-warm-ink'), token('--brand-warm'))).toBeGreaterThanOrEqual(
           MINIMUM_TEXT_CONTRAST
         );
+
+        // The fills are light-only: the dark themes stay fill-free, the
+        // tokens resolve to `transparent` there, and `token()` would rightly
+        // refuse to measure a colour that is not one.
+        if (combination.theme === 'light') {
+          for (const result of HUE_RESULTS) {
+            expect(ratio(token(result), token(`${result}-fill`))).toBeGreaterThanOrEqual(
+              MINIMUM_TEXT_CONTRAST
+            );
+          }
+        }
       });
 
       /*
        * The untried key is the one control whose boundary is not its own fill:
-       * it hugs the page deliberately, so the border answers for it. A scored
-       * key paints its border in its mark, so the fill answers for both — and
-       * the same colours are the primary button in `WelcomeScreen`,
-       * `GameConclusion`, `GameNavigation` and `InvalidLinkNotice`, and the
-       * destructive one in `StatisticsPanel`.
+       * it hugs the page deliberately, so `--key-untried-rule` answers for it —
+       * and for every other control drawn as a hairline on the page, which is
+       * why no control may borrow `--rule` or `--rule-strong` instead. A hue
+       * result's border is its ink, and absent's is the one border it draws.
        */
       it('draws every control against the page', () => {
-        expect(ratio(token('--key-border'), token('--background'))).toBeGreaterThanOrEqual(
-          MINIMUM_BOUNDARY_CONTRAST
-        );
-
-        for (const mark of MARKS) {
-          expect(ratio(token(mark), token('--background'))).toBeGreaterThanOrEqual(
+        for (const boundary of ['--key-untried-rule', ...HUE_RESULTS, '--result-absent'] as const) {
+          expect(ratio(token(boundary), token('--background'))).toBeGreaterThanOrEqual(
             MINIMUM_BOUNDARY_CONTRAST
           );
         }
@@ -199,11 +246,12 @@ describe('EveryCombinationMeetsTheLegibilityFloor', () => {
         );
       });
 
-      // ATouchIsAcknowledged: the ring replaces the platform's tap flash, so it
-      // is a state indicator and answers to the non-text bar like any other.
+      // ATouchIsAcknowledged: the ring replaces the platform's tap flash, so
+      // it is a state indicator and answers to the non-text bar like any
+      // other. Two grounds, because every key sits on one of the two.
       it('acknowledges a touch on every key it can land on', () => {
-        for (const background of ['--key-background', ...MARKS]) {
-          expect(ringEdge(token(background))).toBeGreaterThanOrEqual(MINIMUM_BOUNDARY_CONTRAST);
+        for (const ground of ['--key-untried-bg', '--key-scored-bg'] as const) {
+          expect(ringEdge(token(ground))).toBeGreaterThanOrEqual(MINIMUM_BOUNDARY_CONTRAST);
         }
       });
     });
@@ -218,24 +266,34 @@ describe('AnUntriedKeyIsDistinguishableFromAScoredOne', () => {
       });
 
       /*
-       * The pair the whole change answers for. A letter no guess has covered
-       * carries no mark, so the glyph that discharges
-       * ResultsAreNeverConveyedByColourAlone speaks for none of this: lightness
-       * is the only thing left, and it is the one a dimmed screen keeps
-       * longest.
+       * The pair with no hue and no bar on either side, which is why lightness
+       * alone must carry it: an untried key and an absent key are both a
+       * bordered letter, and the letters are what differ. This is the wall the
+       * app.css header names — 3.28 against 3.0 in the dark themes — and the
+       * figure `--n-75`'s constraint window exists to hold.
        */
-      it('holds an untried key apart from each scored one', () => {
-        for (const mark of MARKS) {
-          expect(ratio(token('--key-background'), token(mark))).toBeGreaterThanOrEqual(
+      it('holds the untried letter apart from the absent letter', () => {
+        expect(ratio(token('--text'), token('--result-absent-text'))).toBeGreaterThanOrEqual(
+          MINIMUM_STATE_SEPARATION
+        );
+      });
+
+      // A hue result answers with its ink — letter, border and bar together —
+      // standing off the ground the untried key hugs, which is the page.
+      it('holds each hue result off the ground the untried key hugs', () => {
+        for (const result of HUE_RESULTS) {
+          expect(ratio(token(result), token('--key-untried-bg'))).toBeGreaterThanOrEqual(
             MINIMUM_STATE_SEPARATION
           );
         }
       });
 
-      // Absent against correct, and that pair only. Present is left to hue and
-      // its own glyph, because the range is already spent.
-      it('holds absent apart from correct', () => {
-        expect(ratio(token('--mark-absent'), token('--mark-correct'))).toBeGreaterThanOrEqual(
+      // Absent against correct, and that pair only, carried by the border
+      // each of the two draws. A distance, not a direction: absent's border is
+      // the lighter of the pair in dark and the darker in light, and the
+      // symmetric ratio is indifferent to which.
+      it('holds absent apart from correct by the border each draws', () => {
+        expect(ratio(token('--result-absent'), token('--result-exact'))).toBeGreaterThanOrEqual(
           MINIMUM_MARK_SEPARATION
         );
       });
@@ -245,44 +303,84 @@ describe('AnUntriedKeyIsDistinguishableFromAScoredOne', () => {
 
 describe('the palette these floors are met by', () => {
   /*
-   * High contrast "raises the floor nowhere: it is a second palette that has to
-   * clear the same bar". Every assertion above already runs against both, so
-   * what is left to state is that they are in fact two — a high-contrast
-   * palette that quietly resolved to the standard one would satisfy all of it.
+   * The shape stated at the top of `app.css`, asserted rather than described
+   * because it is what makes the separation figures reachable at all. The
+   * untried key does not sit near the page: it sits on it, which is what
+   * lets a hue result's distance from that ground be the same figure as its
+   * boundary against the page.
    */
-  it('changes the marks a colour-blind reader cannot separate by hue', () => {
+  it('keeps the untried key on the page itself', () => {
+    for (const combination of COMBINATIONS) {
+      apply(combination);
+      expect(token('--key-untried-bg')).toBe(token('--background'));
+    }
+  });
+
+  /*
+   * A scored key is a quiet ground marked by a loud ink, never the other way
+   * around. If the ground shouted — a filled key in the old manner — the ink
+   * would have nowhere to stand, and the state separations above would be
+   * paid twice.
+   */
+  it('keeps every scored ground nearer the page than the ink that marks it', () => {
+    for (const combination of COMBINATIONS) {
+      apply(combination);
+      const page = token('--background');
+      const ground = ratio(token('--key-scored-bg'), page);
+
+      for (const result of HUE_RESULTS) {
+        expect(ratio(token(result), page)).toBeGreaterThan(ground);
+      }
+    }
+  });
+
+  /*
+   * High contrast "raises the floor nowhere: it is a second palette that has
+   * to clear the same bar". Every assertion above already runs against both,
+   * so what is left to state is that they are in fact two — a high-contrast
+   * palette that quietly resolved to the standard one would satisfy all of
+   * it. Absent changes too, because its borders and greys are pinned by the
+   * same windows; nothing outside this file depends on any of these hexes,
+   * since the shared emoji grid follows the setting rather than the board's
+   * colours.
+   */
+  it('changes the hue results when high contrast asks', () => {
     for (const theme of ['light', 'dark'] as const) {
       document.documentElement.setAttribute('data-theme', theme);
-      const standard = MARKS.map(token);
+      const standard = HUE_RESULTS.map(token);
 
       document.documentElement.setAttribute('data-high-contrast', 'true');
-      const high = MARKS.map(token);
+      const high = HUE_RESULTS.map(token);
 
       expect(high[0]).not.toBe(standard[0]);
       expect(high[1]).not.toBe(standard[1]);
-      // Absent is the same in both palettes, as it is in the shared emoji grid.
-      expect(high[2]).toBe(standard[2]);
 
       document.documentElement.removeAttribute('data-high-contrast');
     }
   });
 
   /*
-   * The shape stated at the top of `app.css`: the untried key hugs the page and
-   * the marks step away from it. Asserted rather than described because it is
-   * what makes the separation figures reachable at all — a palette that put the
-   * untried key between two marks could not clear 3 to one on both.
+   * The warm family is the one colour rationed to the brand, and the pair is
+   * measured at 6.93 above in every palette. A measured token nothing renders
+   * is a figure that cannot regress where anyone would see it, though — which
+   * is how this pair reached the branch defined, tested and unspent — so what
+   * is left to state is that the stylesheet still spends it. Read as text for
+   * the reason the drift check below records: a rule the engine declined to
+   * parse becomes an empty declaration list, and an empty block agrees with
+   * anything.
    */
-  it('keeps the untried key nearer the page than any mark', () => {
-    for (const combination of COMBINATIONS) {
-      apply(combination);
-      const page = token('--background');
-      const untried = ratio(token('--key-background'), page);
-
-      for (const mark of MARKS) {
-        expect(ratio(token(mark), page)).toBeGreaterThan(untried);
-      }
+  it('spends the warm family on the selection', () => {
+    const stripped = appCss.replaceAll(/\/\*[\s\S]*?\*\//g, '');
+    const at = stripped.indexOf('::selection');
+    if (at === -1) {
+      throw new Error('app.css no longer spends the warm family on ::selection');
     }
+
+    const opens = stripped.indexOf('{', at);
+    const body = stripped.slice(opens + 1, stripped.indexOf('}', opens));
+
+    expect(body).toContain('var(--brand-warm)');
+    expect(body).toContain('var(--brand-warm-ink)');
   });
 });
 
@@ -349,5 +447,22 @@ describe('the two ways the dark theme is reached', () => {
     expect(
       declarationsAfter(":root:not([data-theme='light'])[data-high-contrast='true'] {")
     ).toEqual(declarationsAfter(":root[data-theme='dark'][data-high-contrast='true'] {"));
+  });
+
+  /*
+   * Set parity between the two high-contrast palettes, which is load-bearing
+   * rather than tidy. The light block is (0,2,0) and sits later in the sheet
+   * than the media-path dark base at the same weight, so any token it alone
+   * declared would leak into a device-dark player who asked for high
+   * contrast. The values differ by design; the names must not.
+   */
+  it('declares the same tokens down both high-contrast palettes', () => {
+    const light = Object.keys(declarationsAfter(":root[data-high-contrast='true'] {")).sort();
+    const dark = Object.keys(
+      declarationsAfter(":root[data-theme='dark'][data-high-contrast='true'] {")
+    ).sort();
+
+    expect(light.length).toBeGreaterThan(0);
+    expect(light).toEqual(dark);
   });
 });

@@ -103,6 +103,10 @@
     onreset.mockClear();
     const canvas = within(canvasElement);
 
+    // Close sits in the dialog's header row, so it is the first stop.
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
+
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: /reset/i })).toHaveFocus();
 

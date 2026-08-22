@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
 
+  import IconButton from '$lib/components/IconButton.svelte';
+
   /**
    * The shell every panel and the end-of-game modal sit in.
    *
@@ -18,13 +20,26 @@
    * child carries focus across its own swap, and `GameConclusion` and
    * `StatisticsPanel` both do.
    *
+   * Close sits in the header row, which makes it the dialog's first tab stop:
+   * the way out is the first thing the keyboard meets, and every story that
+   * walks a panel's tab order counts it first. A caller that supplies no
+   * `onclose` still gets no control that pretends otherwise.
+   *
+   * `footer` is where a caller's actions go — rule-separated from the body, so
+   * a dialog reads as content and then commitment. Optional, because most
+   * panels have no action row.
+   *
    * Not a native `<dialog>`. jsdom implements neither `showModal` nor `close`,
    * so a component built on it could not be tested where the rest of the suite
    * runs — and an untestable accessible shell is the wrong trade when the
    * behaviour it provides is this small.
    */
-  let { title, onclose, children }: { title: string; onclose?: () => void; children?: Snippet } =
-    $props();
+  let {
+    title,
+    onclose,
+    children,
+    footer
+  }: { title: string; onclose?: () => void; children?: Snippet; footer?: Snippet } = $props();
 
   const titleId = $props.id();
   let panel: HTMLElement | undefined = $state();
@@ -110,16 +125,18 @@
     bind:this={panel}
     {onkeydown}
   >
-    <h2 id={titleId}>{title}</h2>
-    {@render children?.()}
-    {#if onclose !== undefined}
-      <div class="close">
-        <button
-          type="button"
-          onclick={() => {
-            onclose();
-          }}>Close</button
-        >
+    <div class="head">
+      <h2 id={titleId}>{title}</h2>
+      {#if onclose !== undefined}
+        <IconButton icon="x" label="Close" onclick={onclose} />
+      {/if}
+    </div>
+    <div class="body">
+      {@render children?.()}
+    </div>
+    {#if footer !== undefined}
+      <div class="foot">
+        {@render footer()}
       </div>
     {/if}
   </div>
@@ -131,8 +148,8 @@
     inset: 0;
     display: grid;
     place-items: center;
-    padding: 1rem;
-    background: rgb(0 0 0 / 55%);
+    padding: var(--s-6);
+    background: var(--scrim);
     z-index: 10;
   }
 
@@ -140,31 +157,62 @@
     inline-size: min(28rem, 100%);
     max-block-size: 90vh;
     overflow-y: auto;
-    padding: 1.25rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 8px;
-    background: var(--background);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface);
     color: var(--text);
+    box-shadow: var(--lift-dialog);
+  }
+
+  /*
+   * `GameConclusion.@guarantee`s ride on this dialog being calm: a fade and a
+   * 4px lift, no scale and no spring, and only while the route says animations
+   * are on. The gate is the attribute rather than a zeroed duration, because a
+   * 0ms animation still fires its events and can flash its from-frame.
+   */
+  :global(:root[data-animations='on']) .panel {
+    animation: enter var(--dur-3) var(--ease) both;
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .head {
+    display: flex;
+    gap: var(--s-5);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--s-5) var(--s-5) var(--s-5) var(--s-6);
+    border-block-end: var(--rule-w) solid var(--rule);
   }
 
   h2 {
-    margin-block: 0 1rem;
-    font-size: 1.25rem;
-  }
-
-  .close {
-    margin-block-start: 1.25rem;
-    text-align: end;
-  }
-
-  button {
-    padding: 0.5rem 0.9rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-title);
     font-weight: 600;
-    cursor: pointer;
+    letter-spacing: var(--track-title);
+  }
+
+  .body {
+    padding: var(--s-6);
+  }
+
+  .foot {
+    display: flex;
+    gap: var(--s-4);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding: var(--s-5) var(--s-6);
+    border-block-start: var(--rule-w) solid var(--rule);
   }
 </style>

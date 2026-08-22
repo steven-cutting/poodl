@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
+  import Icon from '$lib/components/Icon.svelte';
   import type { Notice } from '$lib/app/state';
   import { describeRejection } from '$lib/domain/announcements';
 
@@ -42,6 +44,11 @@
         return 'Poodl could not reach the clipboard. Select the text and copy it yourself.';
     }
   });
+
+  // A shape beside the sentence, never instead of it: the toast's meaning is
+  // its words, so the icon is decoration and the good-news kind is the only
+  // one that earns the tick.
+  const icon = $derived(notice?.kind === 'results_copied' ? 'check' : 'circle-alert');
 </script>
 
 <p class="notice" class:silent={message === null} role="status">
@@ -52,14 +59,10 @@
       is what makes the second one announce as well as the first.
     -->
     {#key sequence}
+      <Icon name={icon} size={16} />
       <span>{message}</span>
       {#if ondismiss !== undefined}
-        <button
-          type="button"
-          onclick={() => {
-            ondismiss();
-          }}>Dismiss</button
-        >
+        <Button variant="ghost" onclick={ondismiss}>Dismiss</Button>
       {/if}
     {/key}
   {/if}
@@ -68,14 +71,17 @@
 <style>
   .notice {
     display: flex;
-    gap: 0.75rem;
+    gap: var(--s-4);
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    margin-block: 1rem;
-    padding: 0.6rem 0.9rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 4px;
+    margin-block: var(--s-6);
+    padding: var(--s-2) var(--s-5);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
+    min-block-size: 40px;
+    font-size: var(--fs-small);
     text-align: center;
   }
 
@@ -84,15 +90,7 @@
     margin: 0;
     padding: 0;
     border: 0;
-  }
-
-  button {
-    padding: 0.25rem 0.6rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    cursor: pointer;
+    background: none;
+    min-block-size: 0;
   }
 </style>

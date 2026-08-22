@@ -71,7 +71,8 @@ disagree with the first.
   cannot drift apart on where the app goes.
 - Builds with `npm run build`, which is `just frontend-build`.
 - Stages with `npm run stage`, which is `just stage`: `site-root/` becomes the domain root,
-  `src/app.css` is copied beside the landing page, and `build/` is moved to `site/poodl/`.
+  `src/app.css` and the three font files it names are copied beside the landing page, and
+  `build/` is moved to `site/poodl/`.
 - Uploads `site/` — the whole domain — as a Pages artefact.
 - Deploys it in a second job that holds the `pages: write` and `id-token: write` scopes.
   Every other workflow in this repository is `contents: read` only.
@@ -92,9 +93,15 @@ moved to another. `just stage-preview` needs none: it serves `site/` whole, on p
 which is the deployment and not just the app. See
 [Configuration](../reference/configuration.md).
 
-`site/` should contain `index.html`, `app.css`, `.nojekyll` and a `poodl/` directory
-holding the build. The `.nojekyll` files come from `site-root/` and `static/` and stop Pages
-treating an underscore-prefixed directory as a Jekyll internal.
+`site/` should contain `index.html`, `app.css`, `.nojekyll`, a `lib/assets/fonts/` holding
+the three `.woff2` files, and a `poodl/` directory holding the build. The `.nojekyll` files
+come from `site-root/` and `static/` and stop Pages treating an underscore-prefixed
+directory as a Jekyll internal.
+
+The fonts sit at `lib/assets/fonts/` because that is the path `src/app.css` names, and the
+copy beside the landing page is raw rather than built. A landing page that renders in the
+system sans has that copy missing; nothing else about the page will look wrong, which is
+why it is worth checking for deliberately.
 
 `just preview` still works and still serves only `build/`. It is the right tool for a change
 to the game and the wrong one for a change to the domain.

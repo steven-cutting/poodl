@@ -10,6 +10,8 @@
    * `NothingAboutTheLinkIsKept`: this exists for as long as the notice does and
    * no longer. Nothing is written anywhere.
    */
+  import Button from '$lib/components/Button.svelte';
+
   let { url, oncopy }: { url: string; oncopy?: () => void } = $props();
 
   const fieldId = $props.id();
@@ -19,15 +21,15 @@
   <label for={fieldId}>Custom game link</label>
   <div class="row">
     <input id={fieldId} type="text" readonly value={url} />
-    <button type="button" onclick={() => oncopy?.()}>Copy link</button>
+    <Button onclick={() => oncopy?.()}>Copy link</Button>
   </div>
 </div>
 
 <style>
   .link {
     display: grid;
-    gap: 0.35rem;
-    margin-block: 1rem;
+    gap: var(--s-2);
+    margin-block: var(--s-6);
   }
 
   label {
@@ -36,28 +38,22 @@
 
   .row {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
   }
 
+  /*
+   * A text control's boundary answers the same floor a key's does, so the
+   * border is `--key-untried-rule` rather than a decorative rule. `font:
+   * inherit` keeps it at the 16px iOS will not zoom on.
+   */
   input {
     flex: 1 1 auto;
     min-inline-size: 0;
-    padding: 0.5rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 4px;
+    padding: 0 var(--s-4);
+    border: var(--rule-w) solid var(--key-untried-rule);
+    border-radius: var(--radius-card);
     background: var(--background);
     color: var(--text);
     font: inherit;
-  }
-
-  button {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
   }
 </style>

@@ -162,6 +162,11 @@
 
     await expect(canvas.getByRole('dialog', { name: /you won/i })).toHaveFocus();
 
+    // Close sits in the dialog's header row, so it is the first stop; the
+    // actions ride in the footer after the outcome.
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
+
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: 'New game' })).toHaveFocus();
     await userEvent.keyboard('{Enter}');

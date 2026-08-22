@@ -9,6 +9,23 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The Biscuit Games design system, ported from its Claude Design project per
+  [decision 0010](docs/decisions/0010-biscuit-games-design-system.md). `src/app.css`
+  carries the full token vocabulary — pure neutrals and the biscuit ramp, result hues
+  chosen dark-first, type, space, form and motion scales — with Bricolage Grotesque and
+  Instrument Sans committed as latin-subset variable woff2 files and 22 restroked Lucide
+  icons under `src/lib/assets/`. New primitives (`Icon`, `IconButton`, `Button`,
+  `Wordmark`, `HeaderBar`, `HowToPlay`) land with their tests and stories; `Modal` takes
+  the dialog shape with Close first and a rule-separated footer, `Notice` the toast shape,
+  and every component draws from tokens rather than its own border-and-fill CSS. The page
+  gains the platform header — brand lockup, mode chip, and the four actions — and
+  `GameNavigation` becomes the dialog the chip opens, keeping its surface and its
+  guarantees. A `Foundations` story documents the tokens, and
+  [Port a design system component](docs/how-to/port-a-design-system-component.md) records
+  the procedure and the ledger of what remains. The landing page at the domain root moves
+  with it: it already wore `src/app.css`, so it takes the new tokens and the display face,
+  and `scripts/stage_site.sh` copies the three font files beside the stylesheet it copies.
+
 - `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
   its control's action and nothing besides; pinch-zoom is untouched and the viewport stays
   scalable; every control meets `config.minimum_touch_target` in both directions down to
@@ -112,6 +129,42 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The non-colour indication on results is a marker bar rather than a corner glyph:
+  correct fills most of a tile or key's bottom edge, present shows a short centred
+  fraction, absent carries no bar beside a dimmed letter. `game.allium`'s
+  `ResultsAreNeverConveyedByColourAlone` and `AnUntriedKeyIsDistinguishableFromAScoredOne`
+  were amended first, and the palette's separation carriers moved with them: the untried
+  key hugs the page, hue results answer with their ink off that shared ground, absent
+  answers letter to letter, and the mark separation rides the drawn borders as a distance
+  with no direction. `tests/contrast.test.ts` was reworked to the new pairs — proven
+  against the old palette first, where it fails — and every floor holds in all four
+  combinations of theme and high contrast, with the tight pairs named in the `app.css`
+  header. Enter and Delete show icons rather than text glyphs, wider than a letter key and
+  never narrower, under the equal-division wording the spec now scopes to letter keys.
+- `settings.allium`'s `Appearance` gained `AnUnavailableControlIsExempt`: a control the
+  player cannot operate is held to none of the contrast figures
+  `EveryCombinationMeetsTheLegibilityFloor` states, adopting the carve-out WCAG 2.2 already
+  makes at 1.4.3 and 1.4.11 for an inactive component. Dimming is *how* unavailability
+  reads, and a dim held to a live control's bar would not read as one — the keyboard a
+  finished game leaves behind is the case it is written for. The exemption is only from the
+  figures: a dimmed control still reports its state to the accessibility tree and still
+  keeps every non-colour indication its live form carried, so a switched-off scored key
+  keeps its marker bar and its description. `tests/components.test.ts` holds that half,
+  which is not a ratio and so has no place in `tests/contrast.test.ts`.
+
+- The disabled ink goes back to the value the design system states. `--text-disabled` had
+  been ported lighter than its source on three of the four palettes — neutral-9 for
+  neutral-8 in light, neutral-9 for neutral-7 in light high contrast, neutral-6 for
+  neutral-7 in dark high contrast — which no decision recorded, so it was drift. The
+  disabled ink now measures 2.31–4.62 against the page and the raised surface where it
+  measured 1.36–2.48. Visible on every disabled control: the two settings rows that switch
+  themselves off, and the `Button` and `IconButton` disabled states the workshop shows.
+
+- `EveryCombinationMeetsTheLegibilityFloor` says what it always meant about a control that
+  draws no boundary. A control is identifiable by the boundary it draws or, where it draws
+  none, by its own words — so the `ghost` button, which is transparent on transparent in
+  the design system too, answers with the `--text-2` its words are painted in rather than
+  with an edge that does not exist. No pixel moved.
 - `DecodeRejectsWhatItDidNotProduce` promised more than a fixed-length token can deliver:
   refusing *every* altered token is not achievable when the tokens that decode are a fixed
   fraction of the strings the alphabet can spell. It now states the three properties that

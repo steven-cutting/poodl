@@ -69,8 +69,9 @@
 </Story>
 
 <!--
-  Tab cycles inside. Two stops here — the control and Close — so a third Tab has
-  to land back on the first rather than on the board behind the dialog.
+  Tab cycles inside. Two stops here — Close in the header row first, then the
+  control — so a third Tab has to land back on Close rather than on the board
+  behind the dialog.
 -->
 <Story
   name="Keeps the keyboard inside"
@@ -80,13 +81,13 @@
     const close = canvas.getByRole('button', { name: 'Close' });
 
     await userEvent.tab();
-    await expect(control).toHaveFocus();
-
-    await userEvent.tab();
     await expect(close).toHaveFocus();
 
     await userEvent.tab();
     await expect(control).toHaveFocus();
+
+    await userEvent.tab();
+    await expect(close).toHaveFocus();
   }}
 >
   {#snippet template(args)}

@@ -42,11 +42,16 @@
     align-items: center;
   }
 
+  /*
+   * Rule-drawn, like every other decoration in this design: the count is in
+   * the sentence, so the bar owes no hue and carries no meaning of its own.
+   */
   .bar {
     display: block;
     block-size: 0.75rem;
     min-inline-size: 2px;
-    border-radius: 2px;
-    background: var(--mark-correct);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: 1px;
+    background: transparent;
   }
 </style>

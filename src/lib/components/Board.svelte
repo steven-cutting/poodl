@@ -78,7 +78,7 @@
 <style>
   ol {
     display: grid;
-    gap: 0.35rem;
+    gap: var(--gap-row);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -87,12 +87,16 @@
 
   li {
     display: flex;
-    gap: 0.35rem;
+    gap: var(--gap-tile);
   }
 
   .attempts {
     margin-block: 1rem 0;
+    color: var(--text-2);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
     text-align: center;
-    color: var(--muted);
+    text-transform: uppercase;
   }
 </style>

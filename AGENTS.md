@@ -65,7 +65,9 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
   `*.spec.ts` reserved for Playwright. Component tests query by accessible role
   and name — never by class or test id.
 - Stories live in `stories/` at the repository root, as `*.stories.svelte` in
-  Svelte CSF, one file per component, covering the states its surface names.
+  Svelte CSF, one file per component — `Foundations.stories.svelte`, the token
+  specimens, is the one recorded exception — covering the states its surface
+  names.
   They are the workshop, not the evidence: `tests/` still carries the assertions
   and the coverage floor, and a story injects port fakes exactly as a test does.
   A new component lands with its test and its story in the same change.
