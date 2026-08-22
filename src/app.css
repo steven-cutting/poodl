@@ -2,11 +2,11 @@
  * Design tokens, from the Biscuit Games design system (decision 0010).
  *
  * `settings.allium`'s Appearance surface decides which of these apply: theme
- * follows the device until the player chooses, and high contrast — the setting
- * or the device, whichever asked — answers with a stronger palette in the same
- * hue families. Colour never carries meaning on its own: correct and present
- * carry marker bars, absent carries the absence of one, and every mark has an
- * accessible description.
+ * starts dark and follows the device only while the player has chosen system,
+ * and high contrast — the setting or the device, whichever asked — answers
+ * with a stronger palette in the same hue families. Colour never carries
+ * meaning on its own: correct and present carry marker bars, absent carries
+ * the absence of one, and every mark has an accessible description.
  *
  * Dark is designed first. The file is structured light-first because bare
  * `:root` has to hold some palette and the light one is the fallback, but
@@ -302,8 +302,9 @@
 }
 
 /*
- * The dark theme is reached two ways — by the device while no choice is
- * recorded, and by an explicit choice — and both must carry the same values.
+ * The dark theme is reached two ways — by the device while the player has
+ * chosen system, and by the dark choice itself, which is the default and the
+ * one the markup ships — and both must carry the same values.
  * `tests/contrast.test.ts` can only drive the attribute; jsdom answers no
  * media query, so the block below is the one the gate never sees. Keep them
  * in step by hand, and change neither alone: the drift check compares the

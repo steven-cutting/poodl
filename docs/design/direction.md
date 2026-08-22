@@ -111,6 +111,11 @@ The ground is not where the brand lives. The type and the mark are.
 Near-black is the identity — the hero image, the screenshot, the thing to picture when
 picturing the product. Light is the courtesy option, and a first-class one.
 
+It is also the default. `settings.allium` starts the theme dark rather than following the
+device, so a first visit lands on near-black whatever the device prefers, with light and
+system one choice away in Settings; the markup ships the same answer so the first paint
+agrees, and the landing page at the domain root is pinned to it the same way.
+
 This inverts how `src/app.css` currently reads, where the light theme is stated first and
 the dark theme follows it. Colour decisions are now made for dark and then answered for
 light, not the reverse. Nothing about the four-way theme × high-contrast structure changes;

@@ -37,24 +37,31 @@ describe('SettingsPanel', () => {
     const props = settingsProps();
     render(SettingsPanel, props);
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
     await userEvent.click(screen.getByRole('checkbox', { name: /high contrast/i }));
     await userEvent.click(screen.getByRole('checkbox', { name: /animations/i }));
     await userEvent.click(screen.getByRole('checkbox', { name: /physical keyboard/i }));
     await userEvent.click(screen.getByRole('checkbox', { name: /welcome screen/i }));
 
-    expect(props.onchoosetheme).toHaveBeenCalledWith('dark');
+    expect(props.onchoosetheme).toHaveBeenCalledWith('light');
     expect(props.onhighcontrast).toHaveBeenCalledWith(true);
     expect(props.onanimations).toHaveBeenCalledWith(false);
     expect(props.onphysicalkeyboard).toHaveBeenCalledWith(false);
     expect(props.onshowwelcome).toHaveBeenCalledWith(false);
   });
 
+  it('shows dark chosen until the player says otherwise', () => {
+    render(SettingsPanel, settingsProps());
+
+    expect(screen.getByRole('radio', { name: 'Dark' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked();
+  });
+
   it('shows the theme the player has chosen', () => {
     render(SettingsPanel, settingsProps({ settings: { ...DEFAULT_SETTINGS, theme: 'light' } }));
 
     expect(screen.getByRole('radio', { name: 'Light' })).toBeChecked();
-    expect(screen.getByRole('radio', { name: 'System' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Dark' })).not.toBeChecked();
   });
 
   /*
