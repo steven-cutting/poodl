@@ -14,7 +14,7 @@
     'Guarantees this component carries today:',
     '',
     '- `@guarantee ResultsAreNeverConveyedByColourAlone`. A tile says the same thing three ways:',
-    '  a colour, a marker bar — full-width for correct, a short centred one for present, and for',
+    '  a colour, a marker bar — most of the bottom edge for correct, a short centred one for present, and for',
     '  absent the absence of one beside a dimmed letter — and an accessible name ending in',
     '  *correct*, *in the word, wrong place* or *not in the word*. The **Every mark side by',
     '  side** story is the only place all three sit together, which is the only way to see that',
@@ -61,7 +61,7 @@
 <!-- A position nobody has typed into. Its accessible name is "Position 3, empty". -->
 <Story name="Empty" args={{ position: 3 }} />
 
-<!-- Typed but not submitted: a letter, no mark, no glyph, no colour. -->
+<!-- Typed but not submitted: a letter, no mark, no bar, no colour. -->
 <Story name="Typed, not yet scored" args={{ position: 1, letter: 'a' }} />
 
 <!-- The letter is in the answer at this position. -->
@@ -154,8 +154,9 @@
 <!--
   `GameBoard.@guarantee MotionRespectsTheReducedMotionPreference`, both ways.
 
-  A scored tile reveals itself with a rotation, and the reveal is gated on the
-  attribute the route derives rather than on a media query of its own. These two
+  A scored tile reveals itself with a fade and a 4px lift, and the reveal is
+  gated on the attribute the route derives rather than on a media query of its
+  own. These two
   stories pin the attribute either way, so the workshop renders both paths — and
   without the pin every story would silently take whichever one the toolbar was
   left on. What the play function can check is the gate; whether the frames are

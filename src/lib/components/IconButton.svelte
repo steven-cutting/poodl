@@ -17,11 +17,25 @@
     label,
     icon,
     onclick,
-    disabled = false
-  }: { label: string; icon: IconName; onclick?: () => void; disabled?: boolean } = $props();
+    disabled = false,
+    popup
+  }: {
+    label: string;
+    icon: IconName;
+    onclick?: () => void;
+    disabled?: boolean;
+    /** What pressing this opens, when it opens something — rendered as `aria-haspopup`. */
+    popup?: 'dialog';
+  } = $props();
 </script>
 
-<button type="button" aria-label={label} {disabled} onclick={() => onclick?.()}>
+<button
+  type="button"
+  aria-label={label}
+  aria-haspopup={popup}
+  {disabled}
+  onclick={() => onclick?.()}
+>
   <Icon name={icon} />
 </button>
 

@@ -67,7 +67,7 @@
     background: transparent;
     color: var(--text);
     font-family: var(--font-board);
-    font-size: 1.5rem;
+    font-size: var(--fs-board);
     font-weight: 600;
     letter-spacing: var(--track-board);
     line-height: 1;

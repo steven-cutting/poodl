@@ -125,7 +125,31 @@
   D O T R M are not. The status is in each key's accessible name — "P, in the
   word, wrong place" — as well as in its colour.
 -->
-<Story name="With knowledge from two guesses" args={{ knowledge: KNOWLEDGE }} />
+<Story
+  name="With knowledge from two guesses"
+  args={{ knowledge: KNOWLEDGE }}
+  play={async ({ canvasElement }) => {
+    // GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone — the geometry
+    // half for keys, as the Tile stories hold it for tiles: the two bars must
+    // differ in length by enough to tell apart at a glance, and only a layout
+    // engine can measure a width. jsdom holds their presence in
+    // tests/components.test.ts.
+    const canvas = within(canvasElement);
+    const bar = (name: string) =>
+      canvas.getByRole('button', { name }).querySelector('[data-marker]');
+
+    const correct = bar('A, correct');
+    const present = bar('P, in the word, wrong place');
+
+    await expect(correct).not.toBeNull();
+    await expect(present).not.toBeNull();
+
+    const wide = (correct as Element).getBoundingClientRect().width;
+    const short = (present as Element).getBoundingClientRect().width;
+
+    await expect(wide).toBeGreaterThan(short * 2);
+  }}
+/>
 
 <!-- Once the game is over every key is off, and a disabled key takes no focus. -->
 <Story name="Disabled" args={{ disabled: true }} />

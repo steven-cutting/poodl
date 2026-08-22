@@ -76,10 +76,10 @@
       <Icon name="chevron-down" size={16} />
     </button>
     <span class="divider" aria-hidden="true"></span>
-    <IconButton icon="share" label="Set a word" onclick={onopenshare} />
-    <IconButton icon="chart-column" label="Statistics" onclick={onopenstatistics} />
-    <IconButton icon="settings" label="Settings" onclick={onopensettings} />
-    <IconButton icon="info" label="How to play" onclick={onopenhelp} />
+    <IconButton icon="share" label="Set a word" popup="dialog" onclick={onopenshare} />
+    <IconButton icon="chart-column" label="Statistics" popup="dialog" onclick={onopenstatistics} />
+    <IconButton icon="settings" label="Settings" popup="dialog" onclick={onopensettings} />
+    <IconButton icon="info" label="How to play" popup="dialog" onclick={onopenhelp} />
   </div>
 </header>
 
@@ -141,8 +141,21 @@
       gap: var(--s-3);
     }
 
+    /*
+     * Out of the layout, not out of the accessibility tree: the mark beside
+     * these words is aria-hidden, so `display: none` here would leave the
+     * page's only h1 with an empty accessible name. The declarations are
+     * `app.css`'s `.visually-hidden`.
+     */
     .brand :global(.words) {
-      display: none;
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
     }
 
     .divider {

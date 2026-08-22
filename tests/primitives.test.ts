@@ -68,6 +68,25 @@ describe('IconButton', () => {
       userEvent.click(screen.getByRole('button', { name: 'Close' }))
     ).resolves.toBeUndefined();
   });
+
+  // The header's actions open dialogs and say so; Modal's Close opens nothing.
+  it('announces a popup only when told it opens one', () => {
+    const { unmount } = render(IconButton, {
+      label: 'Settings',
+      icon: 'settings',
+      popup: 'dialog'
+    });
+
+    expect(screen.getByRole('button', { name: 'Settings' })).toHaveAttribute(
+      'aria-haspopup',
+      'dialog'
+    );
+    unmount();
+
+    render(IconButton, { label: 'Close', icon: 'x' });
+
+    expect(screen.getByRole('button', { name: 'Close' })).not.toHaveAttribute('aria-haspopup');
+  });
 });
 
 describe('Button', () => {
@@ -176,6 +195,11 @@ describe('HeaderBar', () => {
     expect(props.onopenstatistics).toHaveBeenCalledTimes(1);
     expect(props.onopensettings).toHaveBeenCalledTimes(1);
     expect(props.onopenhelp).toHaveBeenCalledTimes(1);
+
+    // Each action opens a dialog and announces it, exactly as the chip does.
+    for (const name of ['Set a word', 'Statistics', 'Settings', 'How to play']) {
+      expect(screen.getByRole('button', { name })).toHaveAttribute('aria-haspopup', 'dialog');
+    }
   });
 
   it('carries the brand as the page heading', () => {

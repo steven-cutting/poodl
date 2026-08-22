@@ -94,7 +94,24 @@
 <Story
   name="At the narrowest supported width"
   args={{ mode: 'random', status: 'in_progress' }}
-  parameters={{ docs: { story: { inline: false } } }}
+  parameters={{
+    docs: { story: { inline: false } },
+    /*
+     * The collapse keys on the viewport (`max-width: 26rem`), and the story
+     * run's default viewport is 1200px wide. Without this pin the play would
+     * measure the uncollapsed header inside a narrow frame, and the state a
+     * phone actually renders would be evidence nowhere.
+     */
+    viewport: {
+      viewports: {
+        narrowest: {
+          name: 'Narrowest supported',
+          styles: { width: `${NARROWEST_SUPPORTED_WIDTH}px`, height: '568px' }
+        }
+      },
+      defaultViewport: 'narrowest'
+    }
+  }}
   play={async ({ canvasElement }) => {
     // DirectManipulation.@invariant EveryControlIsAComfortableTarget
     const frame = canvasElement.querySelector<HTMLElement>('[data-frame]');
@@ -111,6 +128,12 @@
       await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
       await expect(box.height).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
     }
+
+    // The wordmark's words leave the layout here, not the accessibility tree:
+    // the page's only h1 keeps its name when the lockup collapses to the mark.
+    await expect(
+      within(canvasElement).getByRole('heading', { level: 1, name: 'biscuit games / poodl' })
+    ).toBeInTheDocument();
   }}
 >
   {#snippet template(args)}

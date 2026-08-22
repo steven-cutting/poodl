@@ -206,7 +206,9 @@
    * Type. Bricolage Grotesque for display and the board, Instrument Sans for
    * the interface. --fs-body is copy only: a text control below 16px invites
    * iOS to zoom on focus, which DeliberateZoomIsNeverTakenAway forbids, so
-   * inputs and textareas keep `font: inherit` off the 16px body.
+   * inputs and textareas keep `font: inherit` off the 16px body. --fs-board
+   * is the tile letter, sized to the 48px cell decision 0009 records rather
+   * than the reference's 56px — the letter scales with the cell.
    */
   --font-ui: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Bricolage Grotesque', var(--font-ui);
@@ -220,7 +222,7 @@
   --fs-display-3: 1.625rem;
   --fs-display-2: 2.125rem;
   --fs-display-1: 2.875rem;
-  --fs-board: 1.875rem;
+  --fs-board: 1.5rem;
   --fs-stat: 1.75rem;
   --track-display: -0.02em;
   --track-title: -0.01em;
@@ -245,7 +247,6 @@
   --gap-tile: 5px;
   --gap-key: 5px;
   --gap-row: 6px;
-  --board-max: 340px;
   --shell-pad: 16px;
   /*
    * 34rem rather than the design system's 480px. The bottom keyboard row is

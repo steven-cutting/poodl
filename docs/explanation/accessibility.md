@@ -41,7 +41,8 @@ the way its state affords — correct and present paint their result ink through
 the border and the bar together, standing off the ground the untried key hugs; absent,
 with no hue and no bar, holds its dimmed letter apart from the untried letter; and absent
 stands off correct by the border each of the two draws, a distance with no direction —
-absent's border is the lighter of the pair in dark and the darker in light. What
+which of the pair is the lighter is the palette's own business, and today correct's hue
+is the lighter in all four. What
 `sharing.allium` ties to high contrast is which palette is in use, and the emoji "are
 whatever the reader's platform draws, and never were the board's own colours".
 
