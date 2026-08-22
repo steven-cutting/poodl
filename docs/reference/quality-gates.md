@@ -24,11 +24,14 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 9 | `check-agents` | The agent contract holds. |
 | 10 | `check-clean` | The run changed nothing. |
 
-One check is deliberately missing from that table. `just check-specs` runs `allium` over
-the specifications, and it reports rather than gates: `allium check` exits non-zero on
-warnings as well as errors, it offers no way to waive one, and the modules carry a known
-baseline. `check-links-online` sits outside the aggregate for the same class of reason.
-Both are listed in [Commands](commands.md), and the baseline is in
+Three checks are deliberately missing from that table. `just check-specs` runs
+`allium check` over the specifications and `just analyse-specs` runs `allium analyse` over
+them; both report rather than gate, because `allium check` exits non-zero on warnings as
+well as errors, `allium analyse` exits non-zero while any finding remains, neither offers a
+way to waive one, and the modules carry a known baseline of both. `check-links-online` sits
+outside the aggregate for a reason of the same class: it needs the network, and a check
+that can fail because a third party is down is not a gate. All three are listed in
+[Commands](commands.md), and the baseline is in
 [Work with the specifications](../how-to/work-with-the-specs.md).
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure
@@ -43,7 +46,7 @@ configuration, and it is the one installed as the pre-commit hook.
 
 | Hook | Checks |
 | --- | --- |
-| `ruff-check`, `ruff-format-check` | The four Python scripts under `scripts/`. |
+| `ruff-check`, `ruff-format-check` | Every Python script under `scripts/`. |
 | `editorconfig-checker` | Whitespace, line endings, final newlines. |
 | `eslint` | ESLint and `prettier --check` across the application, the stories, and the workshop configuration. |
 | `validate-docs`, `validate-agents` | The two contracts, so a hook catches them before the aggregate does. |
