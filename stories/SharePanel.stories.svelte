@@ -32,8 +32,9 @@
     '  way of **LinkReady**: the link carries everything the recipient needs and says nothing',
     '  about the word.',
     '- `@guarantee NothingAboutTheLinkIsKept`. The link is state Poodl holds for as long as it is',
-    '  showing it, and none of that is persisted — closing this loses it, which is the point. A',
-    '  link that is lost is gone.',
+    '  showing it, and none of that is persisted — closing this loses it, which is the point. It',
+    '  is the link that is not kept, and only that: the game on the board is persisted with its',
+    '  answer, so a link made from **This game** can be made again.',
     '- `@guarantee FullyKeyboardOperable`, on both surfaces. Asking for a link, entering a word,',
     '  submitting it and copying the resulting link, from the keyboard alone.'
   ].join('\n');

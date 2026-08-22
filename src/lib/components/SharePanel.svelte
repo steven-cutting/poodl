@@ -8,8 +8,8 @@
 
   /**
    * `sharing.allium` — the `CustomGameCreation` surface, and the way in to
-   * `ShareCurrentAnswer` while a game is being played. One dialog, because
-   * both end in the same thing: a link to a game whose word stays hidden.
+   * `ShareCurrentAnswer` while a game is on the board. One dialog, because
+   * both end in the same thing: a link that hides the word it carries.
    *
    * `ShareCurrentAnswer.AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard`:
    * "This game" is offered whenever there is a game on the board, in every
@@ -19,6 +19,14 @@
    * in `GameScreen`. `SharingCostsTheGameNothing` and
    * `TheAnswerIsNeverShownInOrderToShareIt` are the engine's to keep: nothing
    * here is handed the game, let alone its answer.
+   *
+   * That section's sentence has to stay true across all of that span, so it
+   * describes the making of the link and not the state of the word: making one
+   * gives nothing away, which is what `TheAnswerIsNeverShownInOrderToShareIt`
+   * promises, whereas "the word stays hidden" would be false once the
+   * conclusion has shown it. It says a new game rather than this one for the
+   * same reason `OpenCustomGameLink` does — the link hands over the answer, not
+   * the board, so the recipient starts custom and empty.
    *
    * `OnlyAcceptedWordsBecomeCustomGames`: a word Poodl does not accept produces
    * no link, the refusal is perceivable both ways, and the entry stays put for
@@ -37,12 +45,17 @@
    *
    * One slot for what was made, below both sections: a link carries no record
    * of which section asked for it, `Shareable` has no origin and needs none,
-   * and a refusal then lands right under the field that earned it.
+   * and a refusal then lands right under the field that earned it. The note
+   * under it therefore states only what both surfaces guarantee — that the link
+   * is not kept. It cannot go on to say the word is unrecoverable: the game on
+   * the board is persisted with its answer and `encode` is deterministic, so a
+   * link made from "This game" can simply be made again.
    *
    * The field has a placeholder and no visible label, as the design shows it.
    * The label is still here, visually hidden, so the field keeps its name; the
    * section's sentence describes it, and the placeholder is only the shape of
-   * what goes in.
+   * what goes in — bound to `WORD_LENGTH` like the `maxlength` beside it, so
+   * the two cannot come to disagree.
    */
   let {
     notice = null,
@@ -92,8 +105,8 @@
     <section>
       <h3>This game</h3>
       <p>
-        Copy a link that starts this exact game for whoever opens it. The word stays hidden — for
-        you and for them — and your game carries on untouched.
+        Make a link that sets this game's word for whoever opens it, as a new game of their own.
+        Making it gives nothing away — not to you, not to them — and your game carries on untouched.
       </p>
       <Button
         variant="primary"
@@ -116,7 +129,7 @@
         <input
           id={fieldId}
           type="text"
-          placeholder="Five-letter word"
+          placeholder={`${WORD_LENGTH}-letter word`}
           bind:value={entry}
           aria-describedby={hintId}
           autocomplete="off"
@@ -134,8 +147,8 @@
   {#if shareable?.kind === 'custom_link'}
     <LinkReady url={shareable.text} {oncopy} />
     <p class="note">
-      The word is not in the link in any readable form, and Poodl keeps no record of it. Lose the
-      link and it is gone.
+      The word is not in the link in any readable form, and Poodl keeps no record of the link
+      itself. Close this and it is gone.
     </p>
   {/if}
 </Modal>
