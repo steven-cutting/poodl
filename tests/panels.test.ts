@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/svelte';
+import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import CustomGameForm from '../src/lib/components/CustomGameForm.svelte';
+import HowToPlayPanel from '../src/lib/components/HowToPlayPanel.svelte';
 import InvalidLinkNotice from '../src/lib/components/InvalidLinkNotice.svelte';
 import SettingsPanel from '../src/lib/components/SettingsPanel.svelte';
 import StatisticsPanel from '../src/lib/components/StatisticsPanel.svelte';
@@ -400,5 +401,40 @@ describe('InvalidLinkNotice', () => {
     await userEvent.click(screen.getByRole('button', { name: /dismiss/i }));
 
     expect(ondismiss).toHaveBeenCalledTimes(1);
+  });
+});
+
+/*
+ * game.allium — the `Welcome` surface's explanation, as the dialog the
+ * header's info button opens. AFirstVisitIsExplained: "reachable again
+ * afterwards rather than being shown once and lost".
+ */
+describe('HowToPlayPanel', () => {
+  it('is the explanation inside a dialog named for it', () => {
+    render(HowToPlayPanel, { onclose: vi.fn() });
+    const dialog = screen.getByRole('dialog', { name: 'How to play' });
+
+    expect(dialog).toHaveFocus();
+    expect(dialog).toHaveTextContent(/6 attempts/);
+    expect(within(dialog).getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  it('closes from its own control', async () => {
+    const onclose = vi.fn();
+    render(HowToPlayPanel, { onclose });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(onclose).toHaveBeenCalledTimes(1);
+  });
+
+  // FullyKeyboardOperable, by way of Modal.
+  it('closes on Escape', async () => {
+    const onclose = vi.fn();
+    render(HowToPlayPanel, { onclose });
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(onclose).toHaveBeenCalledTimes(1);
   });
 });

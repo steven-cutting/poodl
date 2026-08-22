@@ -61,7 +61,7 @@ describe('WelcomeScreen', () => {
 
     const explanation = screen.getByRole('group', { name: /how to play/i });
 
-    expect(explanation).toHaveTextContent(/5 letters/);
+    expect(explanation).toHaveTextContent(/5-letter/);
     expect(explanation).toHaveTextContent(/6 attempts/);
   });
 

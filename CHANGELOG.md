@@ -129,6 +129,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The How to play explanation takes the design system's dialog shape and says less, more
+  plainly. `HowToPlay` is now the body alone — one sentence for the attempts and the word
+  length, the board's own `Tile` beside each of the three marks with its marker bar, and a
+  muted closing line — shared by the welcome screen, which frames it as the group it always
+  was, and by the new `HowToPlayPanel`, the dialog the header's info button opens, in the
+  same shell as every other panel. The example tiles are hidden from assistive technology
+  because the sentence beside each is the content, and `tests/contrast.test.ts` measures
+  the tile inks on the dialog surface, the one ground they had not been drawn on.
 - The non-colour indication on results is a marker bar rather than a corner glyph:
   correct fills most of a tile or key's bottom edge, present shows a short centred
   fraction, absent carries no bar beside a dimmed letter. `game.allium`'s

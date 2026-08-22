@@ -240,6 +240,27 @@ describe('EveryCombinationMeetsTheLegibilityFloor', () => {
         }
       });
 
+      /*
+       * `HowToPlay` draws one example tile per mark on a dialog's `--surface`,
+       * the one ground no tile had sat on: the board is on the page, a scored
+       * key on its raised ground. The dark themes have no fills, so there the
+       * letter sits straight on the surface and answers to the text bar; and
+       * the border, which with the bar is the shape that carries the result,
+       * answers to the non-text bar on every theme.
+       */
+      it('paints the example tiles legibly on a dialog', () => {
+        for (const ink of [...HUE_RESULTS, '--result-absent-text'] as const) {
+          expect(ratio(token(ink), token('--surface'))).toBeGreaterThanOrEqual(
+            MINIMUM_TEXT_CONTRAST
+          );
+        }
+        for (const boundary of [...HUE_RESULTS, '--result-absent'] as const) {
+          expect(ratio(token(boundary), token('--surface'))).toBeGreaterThanOrEqual(
+            MINIMUM_BOUNDARY_CONTRAST
+          );
+        }
+      });
+
       it('keeps the focus ring visible against the page', () => {
         expect(ratio(token('--focus'), token('--background'))).toBeGreaterThanOrEqual(
           MINIMUM_BOUNDARY_CONTRAST

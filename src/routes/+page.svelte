@@ -6,9 +6,8 @@
   import GameNavigation from '$lib/components/GameNavigation.svelte';
   import GameScreen from '$lib/components/GameScreen.svelte';
   import HeaderBar from '$lib/components/HeaderBar.svelte';
-  import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import HowToPlayPanel from '$lib/components/HowToPlayPanel.svelte';
   import InvalidLinkNotice from '$lib/components/InvalidLinkNotice.svelte';
-  import Modal from '$lib/components/Modal.svelte';
   import SettingsPanel from '$lib/components/SettingsPanel.svelte';
   import StatisticsPanel from '$lib/components/StatisticsPanel.svelte';
   import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
@@ -418,9 +417,7 @@
           onclose={() => (panel = null)}
         />
       {:else if panel === 'help'}
-        <Modal title="How to play" onclose={() => (panel = null)}>
-          <HowToPlay />
-        </Modal>
+        <HowToPlayPanel onclose={() => (panel = null)} />
       {/if}
     {/if}
   </main>

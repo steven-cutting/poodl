@@ -156,15 +156,43 @@ describe('Wordmark', () => {
   });
 });
 
+/*
+ * The body of the explanation, without a frame: `WelcomeScreen` names it as a
+ * group and `HowToPlayPanel` as a dialog, so the component itself carries the
+ * words and nothing else.
+ */
 describe('HowToPlay', () => {
-  // Welcome.@guarantee AFirstVisitIsExplained: the sentences the group holds.
-  it('explains the game inside a named group', () => {
+  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, and
+  // as many games as they like.
+  it('says how many attempts, how long a word is, and that there is no limit', () => {
     render(HowToPlay, {});
-    const explanation = screen.getByRole('group', { name: /how to play/i });
 
-    expect(explanation).toHaveTextContent(/5 letters/);
-    expect(explanation).toHaveTextContent(/6 attempts/);
-    expect(explanation).toHaveTextContent(/no daily word/i);
+    expect(screen.getByText(/6 attempts/)).toHaveTextContent(/5-letter word/);
+    expect(screen.getByText(/as many as you like/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  /*
+   * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone, as an
+   * illustration: the example beside each mark is the board's own tile, so it
+   * carries the bar the board draws — one for correct, a shorter one for
+   * present, none for absent. The tiles are hidden from assistive technology,
+   * because the sentence beside each is the content; so the visible half is
+   * held here through `[data-marker]`, the structural hook
+   * `tests/components.test.ts` uses for the same bar, and the names are asked
+   * for with `hidden` only to find each tile by the mark it shows.
+   */
+  it('shows each mark on a real tile that assistive technology does not read', () => {
+    render(HowToPlay, {});
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+
+    const marker = (name: string) =>
+      screen.getByRole('img', { name, hidden: true }).querySelector('[data-marker]');
+
+    expect(marker('Position 1, C, correct')).not.toBeNull();
+    expect(marker('Position 2, R, in the word, wrong place')).not.toBeNull();
+    expect(marker('Position 3, N, not in the word')).toBeNull();
   });
 });
 
