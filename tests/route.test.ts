@@ -337,10 +337,14 @@ describe('the page', () => {
   it('writes the appearance onto the document', async () => {
     render(Page);
     await userEvent.click(await screen.findByRole('button', { name: 'Settings' }));
-    await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
+
+    // The default, written before the player has touched anything.
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
     await userEvent.click(screen.getByRole('checkbox', { name: /high contrast/i }));
 
-    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
     expect(document.documentElement).toHaveAttribute('data-high-contrast', 'true');
     // Animations default to on, and jsdom's device asks for nothing.
     expect(document.documentElement).toHaveAttribute('data-animations', 'on');
@@ -348,6 +352,11 @@ describe('the page', () => {
     await userEvent.click(screen.getByRole('checkbox', { name: /animations/i }));
 
     expect(document.documentElement).not.toHaveAttribute('data-animations');
+
+    // `system` writes nothing, so `app.css` can reach the device preference.
+    await userEvent.click(screen.getByRole('radio', { name: 'System' }));
+
+    expect(document.documentElement).not.toHaveAttribute('data-theme');
   });
 
   /*

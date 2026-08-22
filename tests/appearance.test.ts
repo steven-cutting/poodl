@@ -8,7 +8,7 @@ import { animationsActive, darkActive, highContrastActive } from '../src/lib/dom
  * device's preferences negotiate.
  */
 describe('darkActive', () => {
-  // ThemeFollowsTheDeviceUntilThePlayerChooses.
+  // SystemFollowsTheDeviceAsItChanges.
   it('follows the device while the theme is system', () => {
     expect(darkActive('system', true)).toBe(true);
     expect(darkActive('system', false)).toBe(false);

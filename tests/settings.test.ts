@@ -20,9 +20,9 @@ function started(): AppState {
  * what it already is, which the engine treats as nothing to do.
  */
 describe('the preferences', () => {
-  it('starts at the defaults, with the theme following the device', () => {
+  it('starts at the defaults, with the theme dark', () => {
     expect(fresh().settings).toEqual({
-      theme: 'system',
+      theme: 'dark',
       highContrast: false,
       hardMode: false,
       animations: true,
@@ -35,7 +35,7 @@ describe('the preferences', () => {
     const state = run(
       env,
       fresh(),
-      { kind: 'choose_theme', choice: 'dark' },
+      { kind: 'choose_theme', choice: 'light' },
       { kind: 'set_high_contrast', enabled: true },
       { kind: 'set_animations', enabled: false },
       { kind: 'set_physical_keyboard', enabled: false },
@@ -43,7 +43,7 @@ describe('the preferences', () => {
     );
 
     expect(state.settings).toEqual({
-      theme: 'dark',
+      theme: 'light',
       highContrast: true,
       hardMode: false,
       animations: false,
@@ -55,7 +55,7 @@ describe('the preferences', () => {
   it('does nothing when told what it already is', () => {
     const state = fresh();
 
-    expect(run(env, state, { kind: 'choose_theme', choice: 'system' })).toBe(state);
+    expect(run(env, state, { kind: 'choose_theme', choice: 'dark' })).toBe(state);
     expect(run(env, state, { kind: 'set_high_contrast', enabled: false })).toBe(state);
   });
 });

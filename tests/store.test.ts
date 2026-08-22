@@ -294,8 +294,23 @@ describe('the endless countdown', () => {
  * preferences and the player's settings meet.
  */
 describe('appearance', () => {
+  // The default is dark, not system: a device asking for light does not get it
+  // until the player chooses system or light.
+  it('starts dark, whatever the device asks for', () => {
+    const { store, preferences } = harness();
+
+    expect(store.darkActive).toBe(true);
+
+    preferences.set({ prefersDark: false });
+
+    expect(store.darkActive).toBe(true);
+  });
+
+  // SystemFollowsTheDeviceAsItChanges.
   it('follows the device while the theme is system, and keeps following it', () => {
     const { store, preferences } = harness();
+
+    store.dispatch({ kind: 'choose_theme', choice: 'system' });
 
     expect(store.darkActive).toBe(false);
 
@@ -346,6 +361,7 @@ describe('appearance', () => {
 
   it('stops listening to the device once it is thrown away', () => {
     const live_ = harness();
+    live_.store.dispatch({ kind: 'choose_theme', choice: 'system' });
     live_.store.destroy();
 
     live_.preferences.set({ prefersDark: true });

@@ -4,7 +4,7 @@
  * `settings.allium` declares a `DevicePreferences` entity with a colour scheme,
  * a reduced-motion preference and a more-contrast preference on it, and says
  * Poodl reads them and never writes them.
- * `ThemeFollowsTheDeviceUntilThePlayerChooses` adds that Poodl "keeps matching
+ * `SystemFollowsTheDeviceAsItChanges` adds that Poodl "keeps matching
  * it as it changes", so this port watches as well as reads.
  */
 export interface PreferencesPort {

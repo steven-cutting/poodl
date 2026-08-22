@@ -17,7 +17,7 @@ function lived(): AppState {
   return run(
     env,
     playGuess(env, second, 'crumb'),
-    { kind: 'choose_theme', choice: 'dark' },
+    { kind: 'choose_theme', choice: 'light' },
     { kind: 'set_high_contrast', enabled: true }
   );
 }

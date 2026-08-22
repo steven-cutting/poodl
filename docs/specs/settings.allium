@@ -12,9 +12,9 @@
 --   - The guard on turning hard mode on part way through a game. Turning it
 --     off is never guarded, but during a game that has guesses in it, doing
 --     so is a one-way door: it cannot be turned back on until the next game.
---   - Theme following the system until the player chooses otherwise,
---     animations deferring to a reduced-motion preference, and high contrast
---     turning on for a device that asks for more of it.
+--   - Theme starting dark, with system as the choice that follows the device
+--     as it changes; animations deferring to a reduced-motion preference; and
+--     high contrast turning on for a device that asks for more of it.
 --   - The legibility every combination of theme and high contrast has to
 --     reach, stated as ratios rather than as colours.
 --
@@ -67,7 +67,7 @@ external entity DevicePreferences {
 ------------------------------------------------------------
 
 -- system means "whatever the device asks for, as it changes". light and dark
--- are the player overriding that.
+-- each hold, whatever the device asks for; dark is where Poodl starts.
 enum ThemeChoice { system | light | dark }
 
 ------------------------------------------------------------
@@ -100,10 +100,12 @@ entity Settings {
 -- Defaults
 ------------------------------------------------------------
 
--- One settings record, existing from the first visit. Theme starts at system,
--- so Poodl matches the device until the player says otherwise.
+-- One settings record, existing from the first visit. Theme starts dark, not
+-- at system: near-black is the product's identity (docs/design/direction.md,
+-- "Dark is home"), so a first visit lands on it whatever the device prefers.
+-- Light, and system's following of the device, stay one choice away.
 default Settings player_settings = {
-    theme: system,
+    theme: dark,
     high_contrast: false,
     hard_mode: false,
     animations: true,
@@ -311,10 +313,10 @@ surface Appearance {
         animations_active
         settings.high_contrast_active
 
-    @guarantee ThemeFollowsTheDeviceUntilThePlayerChooses
+    @guarantee SystemFollowsTheDeviceAsItChanges
         -- While theme is system, Poodl matches the device's colour scheme and
-        -- keeps matching it as it changes. Once the player picks light or
-        -- dark, that choice holds and the device is no longer consulted.
+        -- keeps matching it as it changes. Light and dark — the default
+        -- included — hold on their own, and the device is not consulted.
 
     @guarantee ReducedMotionOverridesTheAnimationSetting
         -- Animations run only when the animations setting is on and the

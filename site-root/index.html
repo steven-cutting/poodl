@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,7 +13,9 @@
       The application's own tokens, copied here by scripts/stage_site.sh rather
       than restated. A second palette would sit outside the contrast gate that
       tests/contrast.test.ts holds over the first one. It carries the theme too:
-      the light and dark blocks answer the device with no script to run.
+      data-theme="dark" on the root pins the page to the dark palette — the
+      default the app ships in its own markup — with no script to run, and no
+      settings panel here to choose otherwise.
 
       Since decision 0010 it carries the two faces as well, and the staging
       copies them to the path the stylesheet names. If the page renders in the

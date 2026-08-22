@@ -331,7 +331,7 @@ describe('the preferences port', () => {
     expect(changes).toBe(1);
   });
 
-  // ThemeFollowsTheDeviceUntilThePlayerChooses: it keeps matching as it changes.
+  // SystemFollowsTheDeviceAsItChanges: it keeps matching as it changes.
   it('reports a change, and stops once nobody is listening', () => {
     const media = fakeMatchMedia({ '(prefers-color-scheme: dark)': false });
     const preferences = createMediaPreferences(media.matchMedia);

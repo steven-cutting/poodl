@@ -73,7 +73,7 @@
   });
 </script>
 
-<!-- The defaults: theme following the device, hard mode off and available. -->
+<!-- The defaults: theme dark, hard mode off and available. -->
 <Story name="Defaults" />
 
 <!-- Hard mode on, before a guess. Turning it off costs nothing yet. -->
@@ -134,10 +134,11 @@
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
 
+    // A radio group's one tab stop is its checked radio: the default, dark.
     await userEvent.tab();
-    await expect(canvas.getByRole('radio', { name: 'System' })).toHaveFocus();
+    await expect(canvas.getByRole('radio', { name: 'Dark' })).toHaveFocus();
 
-    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.keyboard('{ArrowLeft}');
     await expect(handlers.onchoosetheme).toHaveBeenCalledWith('light');
 
     await userEvent.tab();

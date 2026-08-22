@@ -173,7 +173,9 @@
     }
 
     // `system` writes nothing, because app.css reaches the device preference
-    // only while the attribute is absent.
+    // only while the attribute is absent. `app.html` ships the attribute as
+    // `dark` — the default — so the prerendered page paints it before this
+    // runs; every other choice is written over it here.
     if (current.state.settings.theme === 'system') {
       root.removeAttribute('data-theme');
     } else {
@@ -186,14 +188,16 @@
      * where that negotiation is settled.
      *
      * Unlike the theme this is not also written as a media query in `app.css`,
-     * and the difference is deliberate. Theme has to carry `color-scheme` to
-     * the platform before hydration, so the query is load-bearing there and the
-     * attribute exists to override it. High contrast overrides nothing — the
-     * device wins outright, which is exactly why a query would be a second
-     * answer to a question the store has already answered, agreeing only for as
-     * long as the cascade order says so. The cost is that a device asking for
-     * more contrast sees the standard palette until the first paint, which is
-     * the same wait a stored setting already has.
+     * and the difference is deliberate. Theme has three answers and one of
+     * them, `system`, is the device's to give as it changes: the query is what
+     * carries that answer, `color-scheme` included, once the attribute is
+     * removed, and the attribute exists to override it. High contrast
+     * overrides nothing — the device wins outright, which is exactly why a
+     * query would be a second answer to a question the store has already
+     * answered, agreeing only for as long as the cascade order says so. The
+     * cost is that a device asking for more contrast sees the standard palette
+     * until the first paint, which is the same wait a stored setting already
+     * has.
      */
     if (current.highContrastActive) {
       root.setAttribute('data-high-contrast', 'true');
