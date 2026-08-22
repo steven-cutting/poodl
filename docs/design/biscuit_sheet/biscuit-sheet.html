@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Biscuit — character reference sheet (generated draft, 2026-08-22)</title>
+    <style>
+      @font-face {
+        font-family: 'Bricolage Grotesque';
+        src: url('../../../src/lib/assets/fonts/bricolage-grotesque-latin-variable.woff2')
+          format('woff2');
+        font-weight: 200 800;
+      }
+      @font-face {
+        font-family: 'Instrument Sans';
+        src: url('../../../src/lib/assets/fonts/instrument-sans-latin-variable.woff2')
+          format('woff2');
+        font-weight: 400 700;
+      }
+      :root {
+        --n-1: #0b0b0b;
+        --n-4: #262626;
+        --n-6: #4d4d4d;
+        --n-8: #a3a3a3;
+        --n-11: #ffffff;
+        --biscuit-1: #3d2313;
+        --biscuit-2: #6b3f22;
+        --biscuit-3: #8a5230;
+        --biscuit-4: #a9663b;
+        --biscuit-5: #c4834e;
+        --biscuit-6: #dda97b;
+        --biscuit-7: #efd3b4;
+        --bg: var(--n-1);
+        --text: var(--n-11);
+        --text-2: var(--n-8);
+        --rule: var(--n-4);
+        --rule-strong: var(--n-6);
+        --rule-w-strong: 1.5px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      body {
+        width: 1600px;
+        padding: 56px 64px 72px;
+        font-family: 'Instrument Sans', system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.45;
+        font-variant-numeric: tabular-nums;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: 'Bricolage Grotesque', 'Instrument Sans', sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0;
+      }
+      h1 {
+        font-size: 40px;
+        line-height: 1.1;
+      }
+      h2 {
+        font-size: 22px;
+        padding-top: 14px;
+        border-top: var(--rule-w-strong) solid var(--rule-strong);
+        margin-top: 48px;
+      }
+      h3 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      p {
+        margin: 6px 0 0;
+        max-width: 78ch;
+        color: var(--text-2);
+      }
+      p strong,
+      li strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      header {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 24px;
+        align-items: end;
+        padding-bottom: 16px;
+        border-bottom: var(--rule-w-strong) solid var(--rule-strong);
+      }
+      header .meta {
+        text-align: right;
+        color: var(--text-2);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .row {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+      figure {
+        margin: 0;
+      }
+      figure img {
+        display: block;
+        border: 1px solid var(--rule);
+        background: var(--bg);
+      }
+      figcaption {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--text-2);
+        max-width: 60ch;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        padding: 2px 6px 1px;
+        border: 1px solid var(--biscuit-6);
+        color: var(--biscuit-6);
+        border-radius: 2px;
+        vertical-align: middle;
+        margin-left: 8px;
+      }
+      .tag.fixed {
+        border-color: var(--text-2);
+        color: var(--text-2);
+      }
+      table {
+        border-collapse: collapse;
+        margin-top: 16px;
+        font-size: 14px;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 18px 8px 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: middle;
+        color: var(--text-2);
+      }
+      th {
+        color: var(--text);
+        font-weight: 600;
+        border-bottom: var(--rule-w-strong) solid var(--rule-strong);
+      }
+      td:first-child {
+        color: var(--text);
+      }
+      .swatch {
+        display: inline-block;
+        width: 64px;
+        height: 36px;
+        border: 1px solid var(--rule-strong);
+        vertical-align: middle;
+      }
+      code {
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: 13px;
+        color: var(--text);
+      }
+      .spec {
+        display: flex;
+        gap: 32px;
+        align-items: flex-end;
+        margin-top: 16px;
+      }
+      .spec figure {
+        text-align: left;
+      }
+      .rule-spec {
+        width: 180px;
+        border-top: var(--rule-w-strong) solid var(--text);
+        margin-bottom: 6px;
+      }
+      .postures {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px 24px;
+        margin-top: 16px;
+      }
+      .postures img {
+        width: 100%;
+        height: auto;
+      }
+      .postures .blocked {
+        aspect-ratio: 4 / 3;
+        border: 1px dashed var(--rule-strong);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 16px;
+        color: var(--text-2);
+        font-size: 13px;
+      }
+      ol,
+      ul {
+        margin: 8px 0 0;
+        padding-left: 20px;
+        color: var(--text-2);
+        max-width: 90ch;
+      }
+      li {
+        margin: 3px 0;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: start;
+      }
+      .legend {
+        margin-top: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Biscuit — character reference sheet</h1>
+        <p>
+          Backlog item 0.2, drawn to the character bible's model-sheet section. Adolescent
+          proportions, medium coat, single-weight white line, flat fills from the biscuit ramp.
+          Every panel is a generated draft (Nano Banana via <code>agy</code>) and is held
+          provisional until the owner accepts it against the bible; the
+          <span class="tag">provisional</span> tag marks what the closing shoot (item 0.1) still has
+          to close.
+        </p>
+      </div>
+      <div class="meta">
+        Drawn 2026-08-22 · generated draft, not yet accepted<br />
+        Stage for every pose: <code>viewBox 0 0 240 180</code>, floor <code>y=160</code><br />
+        Minimum render 180 × 135 CSS px · line 2 units = 1.5 px at minimum
+      </div>
+    </header>
+
+    <h2>
+      1 · Turnaround <span class="tag">provisional — proportions</span
+      ><span class="tag">provisional — tail carriage</span
+      ><span class="tag">provisional — hindquarters</span
+      ><span class="tag">provisional — head profile</span>
+    </h2>
+    <p>
+      Front, three-quarter, profile, rear, at one scale. A square compact dog, head carried close,
+      ears to the jaw. Nothing in the corpus measures her, so the ratios here are the bible's
+      bounds, not measurements; the rear view's rump and back are body colour because the
+      hindquarter markings are unverified; the tail is carried up and loosely curved by provision.
+    </p>
+    <div class="row">
+      <figure>
+        <img src="panels/turnaround.jpg" width="1376" height="768" alt="" />
+        <figcaption>
+          Standing turnaround, left to right: front, three-quarter, profile, rear.
+        </figcaption>
+      </figure>
+    </div>
+    <div class="row">
+      <figure>
+        <img src="panels/front.jpg" width="448" height="600" alt="" />
+        <figcaption>
+          The canonical front view. Every other panel on this sheet was drawn from it, so it is the
+          drawing that the turnaround, the heads and the postures are held consistent with.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2>2 · Head studies <span class="tag">provisional — head profile</span></h2>
+    <p>
+      A circle with a stub: domed skull, short blunt muzzle, soft stop. Ears set low at eye level,
+      two lobes to the jawline, the darkest value on her. Topknot held clear of the eyes. The
+      profile rests on a single filtered frame in the corpus and is flagged until the shoot confirms
+      it.
+    </p>
+    <div class="row">
+      <figure>
+        <img src="panels/head-studies.jpg" width="1100" height="614" alt="" />
+        <figcaption>Head front and head profile at one scale.</figcaption>
+      </figure>
+    </div>
+
+    <h2>3 · The fixed face <span class="tag fixed">fixed</span></h2>
+    <p>
+      <strong>The eyes are the face.</strong> Round, wide-set, open, level, on the viewer; amber
+      iris, separate dark pupil, liver rim; the two brow pips level above them. Everything else is
+      posture. Shown at hero size and at the minimum the bible permits, 180 × 135 — below that, only
+      the mark appears.
+    </p>
+    <div class="row">
+      <figure>
+        <img src="panels/fixed-face.jpg" width="720" height="540" alt="" />
+        <figcaption>Hero size.</figcaption>
+      </figure>
+      <figure>
+        <img src="panels/fixed-face.jpg" width="180" height="135" alt="" />
+        <figcaption>
+          180 × 135, the minimum. The face has to read here; if it does not, the drawing fails item
+          15 of the review list.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2>
+      4 · Marking map <span class="tag">provisional — hindquarters</span
+      ><span class="tag">provisional — adolescent foot</span>
+    </h2>
+    <div class="two-col">
+      <div>
+        <figure>
+          <img src="panels/marking-map.jpg" width="736" height="411" alt="" />
+          <figcaption>Flat map of where each fill sits, front and profile.</figcaption>
+        </figure>
+      </div>
+      <div class="legend">
+        <h3>Cream sits in five places and nowhere else</h3>
+        <ol>
+          <li>
+            <strong>Muzzle band</strong> — wrapping the muzzle from behind the nose back under the
+            eyes.
+          </li>
+          <li><strong>Brow pips</strong> — two, directly above the eyes; always drawn.</li>
+          <li><strong>Bib</strong> — chest and throat.</li>
+          <li><strong>Stockings</strong> — from about the elbow and the hock down.</li>
+          <li><strong>Feet</strong> — cream mops; pads dark, shown only when the sole turns.</li>
+        </ol>
+        <p>
+          Skull, ear leathers, back, flanks and rump are body colour. Until the shoot, nothing above
+          the hock is cream. The adolescent foot is drawn from puppy frames and flagged.
+        </p>
+      </div>
+    </div>
+
+    <h2>5 · Swatches</h2>
+    <p>
+      Every fill is one flat token from the biscuit ramp in <code>src/app.css</code>; the line is
+      <code>currentColor</code>. No value is mixed, lightened or shaded.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th>Part</th>
+          <th>Token</th>
+          <th>Value</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Body: skull, back, flanks, rump, legs above the stocking</td>
+          <td><code>--biscuit-3</code></td>
+          <td><code>#8a5230</code></td>
+          <td><span class="swatch" style="background: #8a5230"></span></td>
+        </tr>
+        <tr>
+          <td>Ear leathers</td>
+          <td><code>--biscuit-2</code></td>
+          <td><code>#6b3f22</code></td>
+          <td><span class="swatch" style="background: #6b3f22"></span></td>
+        </tr>
+        <tr>
+          <td>Markings: muzzle band, brow pips, bib, stockings, feet</td>
+          <td><code>--biscuit-7</code></td>
+          <td><code>#efd3b4</code></td>
+          <td><span class="swatch" style="background: #efd3b4"></span></td>
+        </tr>
+        <tr>
+          <td>Tail plume</td>
+          <td><code>--biscuit-6</code></td>
+          <td><code>#dda97b</code></td>
+          <td><span class="swatch" style="background: #dda97b"></span></td>
+        </tr>
+        <tr>
+          <td>Nose leather</td>
+          <td><code>--biscuit-4</code></td>
+          <td><code>#a9663b</code></td>
+          <td><span class="swatch" style="background: #a9663b"></span></td>
+        </tr>
+        <tr>
+          <td>Iris <span class="tag">provisional — amber value</span></td>
+          <td><code>--biscuit-5</code></td>
+          <td><code>#c4834e</code></td>
+          <td><span class="swatch" style="background: #c4834e"></span></td>
+        </tr>
+        <tr>
+          <td>Pupil and paw pads</td>
+          <td><code>--biscuit-1</code></td>
+          <td><code>#3d2313</code></td>
+          <td><span class="swatch" style="background: #3d2313"></span></td>
+        </tr>
+        <tr>
+          <td>The line: contour, curl loops, nostrils, mouth, toes</td>
+          <td><code>currentColor</code></td>
+          <td><code>--text</code> (white on dark, near-black on light)</td>
+          <td><span class="swatch" style="background: #ffffff"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>6 · Line weight at three sizes</h2>
+    <p>
+      One weight per asset and the same weight on every asset: 2 user units on the 240 × 180 stage,
+      which is 1.5 px — the interface's <code>--rule-w-strong</code>, drawn above each specimen — at
+      the minimum size and scales with the drawing. She is a print, not a UI rule: at hero size the
+      line is proportionally the same, not thinner.
+    </p>
+    <div class="spec">
+      <figure>
+        <div class="rule-spec"></div>
+        <img src="panels/fixed-face.jpg" width="180" height="135" alt="" />
+        <figcaption>180 × 135 (1×, the minimum)</figcaption>
+      </figure>
+      <figure>
+        <div class="rule-spec"></div>
+        <img src="panels/fixed-face.jpg" width="360" height="270" alt="" />
+        <figcaption>360 × 270 (2×)</figcaption>
+      </figure>
+      <figure>
+        <div class="rule-spec"></div>
+        <img src="panels/fixed-face.jpg" width="720" height="540" alt="" />
+        <figcaption>720 × 540 (4×, hero)</figcaption>
+      </figure>
+    </div>
+
+    <h2>7 · Posture vocabulary</h2>
+    <p>
+      The seven postures the backlog's first pose set draws from, each on the shared 4:3 stage. The
+      face is the same in every one that shows it; only posture changes. The mouth opens at a run
+      and a roll because a running or rolling dog's does, and that is posture, not expression.
+      <strong>None of the seven exists yet:</strong> the image model's quota ran out after the
+      panels above were drawn, so these slots are briefs, not drawings, until it resets.
+    </p>
+    <div class="postures">
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Loaf</strong> — legs tucked, head up, flat stare from slightly below. Idle after a
+          long pause (2.5).
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Sphinx</strong> — forelegs forward, head up. Forelegs for the idle.
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption><strong>Sit looking up</strong> — square sit, head tilted up.</figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Reared bipedal</strong> — up on the hind legs, looking up. Arrival or long absence
+          (2.3, 2.7).
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Run</strong> — straight at the viewer, ears airborne, mouth open as posture.
+          Arrival (2.3).
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Back roll</strong> — flung onto her back, limbs up, held. Win (2.1).
+        </figcaption>
+      </figure>
+      <figure>
+        <div class="blocked">
+          Not yet drawn — the image model's weekly quota was exhausted on 2026-08-22 and resets
+          2026-08-29. Prompt and references are in <code>prompts/panels.txt</code>.
+        </div>
+        <figcaption>
+          <strong>Chin down</strong> — ears back and slack, eyes level on the viewer. Loss (2.2);
+          deadpan, never sad.
+        </figcaption>
+      </figure>
+    </div>
+
+    <h2>8 · What is provisional on this sheet</h2>
+    <ul>
+      <li>
+        <strong>Proportions</strong> — the bible's bounds, not measurements; the shoot's level
+        full-body frames close them.
+      </li>
+      <li>
+        <strong>Tail length and carriage at rest</strong> — drawn up and loosely curved by
+        provision.
+      </li>
+      <li>
+        <strong>Hindquarter and back markings</strong> — nothing above the hock is cream until a
+        rear frame says otherwise.
+      </li>
+      <li><strong>The adolescent foot</strong> — every readable paw in the corpus is a puppy's.</li>
+      <li><strong>The head profile</strong> — rests on a single red-filtered frame.</li>
+      <li>
+        <strong>The iris value</strong> — <code>--biscuit-5</code> is the ramp's nearest step to
+        amber; if it reads orange here, one amber token is proposed.
+      </li>
+      <li>
+        <strong>Rendering</strong> — these panels are generated rasters. The fills approximate the
+        tokens and the line approximates one weight; the shipped assets are vector,
+        <code>currentColor</code> and token fills, and this sheet fixes what they draw, not how they
+        are built.
+      </li>
+    </ul>
+  </body>
+</html>
