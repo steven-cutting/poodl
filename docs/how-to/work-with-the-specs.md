@@ -57,32 +57,42 @@ rather than a package in either lockfile — see
 
 ```console
 just check-specs
+just analyse-specs
 ```
 
-That runs `allium check` over every module. The `spec-change` skill in `.agents/skills/`
-carries the procedure for agents.
+The first runs `allium check` over every module, which reports on structure: syntax,
+references, and names a module reaches for that no import defines. The second runs
+`allium analyse`, which repeats every one of those diagnostics and adds process-level
+findings on top — data flow, edge reachability, deadlocks, conflicts and invariants. The
+`spec-change` skill in `.agents/skills/` carries the procedure for agents.
 
 ### The current baseline
 
-`check-specs` is **not** part of `just check`. `allium check` exits non-zero on warnings as
-well as errors, and offers no configuration file, no severity threshold and no way to waive
-a diagnostic — so the recipe reports rather than gates until the count below reaches zero.
+Neither recipe is part of `just check`. `allium check` exits non-zero on warnings as well
+as errors, and offers no configuration file, no severity threshold and no way to waive a
+diagnostic; `allium analyse` exits non-zero while any finding remains. So both report
+rather than gate until the counts below reach zero.
 
-| Module | Diagnostics |
-| --- | --- |
-| `words.allium` | 0 |
-| `settings.allium` | 0 |
-| `statistics.allium` | 5 |
-| `sharing.allium` | 3 |
-| `game.allium` | 17 |
+| Module | Diagnostics | Findings |
+| --- | --- | --- |
+| `words.allium` | 0 | 0 |
+| `settings.allium` | 0 | 0 |
+| `statistics.allium` | 5 | 0 |
+| `sharing.allium` | 3 | 0 |
+| `game.allium` | 17 | 4 |
 
-Twenty-five in total: sixteen warnings and nine informational. Fourteen are
+Twenty-five diagnostics in total: sixteen warnings and nine informational. Fourteen are
 `allium.reference.unknownName` against `words/config`, where a module reaches for a name
 that `words.allium` does not define.
 
+Four findings, all of them in `game.allium`. Two are `missing_producer`: nothing
+establishes `Game.mode = endless`, which `ArmEndlessCountdown` and
+`EndlessCountdownElapses` both require. Two are `unreachable_trigger`: no surface provides
+`GameAbandoned` or `PlayerOpensPoodl`, though rules listen for both.
+
 **Read the count, not the exit code.** A change to a specification should add no new
-diagnostic. If a module's number goes up, the change caused it; if one goes down, say so,
-because that is progress worth recording here.
+diagnostic and no new finding. If a module's number goes up, the change caused it; if one
+goes down, say so, because that is progress worth recording here.
 
 ## Related pages
 

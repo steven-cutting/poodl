@@ -143,6 +143,14 @@ check-specs:
     uv run --frozen python scripts/install_allium.py --check
     .tools/bin/allium check docs/specs/
 
+# The same modules read for process completeness rather than structure: data
+# flow, reachability, deadlocks, conflicts and invariants. It repeats everything
+# `check-specs` reports and adds findings of its own, so it is outside
+# `just check` for the same reason and its baseline sits on the same page.
+analyse-specs:
+    uv run --frozen python scripts/install_allium.py --check
+    .tools/bin/allium analyse docs/specs/
+
 check-links-online:
     uv run --frozen prek run --all-files --hook-stage manual lychee-online
 
