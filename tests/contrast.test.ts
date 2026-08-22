@@ -25,6 +25,17 @@
  * are `aria-hidden` — and it has no notion at all of one key state standing
  * off another, which is the pair the whole palette is built around.
  *
+ * What is deliberately absent below is any disabled pair.
+ * `Appearance.@guarantee AnUnavailableControlIsExempt` holds a control the
+ * player cannot operate to none of these figures, exactly as WCAG 2.2 exempts
+ * an inactive component from 1.4.3 and 1.4.11 — so `--text-disabled`, the
+ * disabled button's `--rule` border and the keyboard a finished game dims are
+ * measured nowhere here, and adding them would assert a floor the
+ * specification does not state. The half of that guarantee which does bind is
+ * not a ratio at all, so it is held where the keys are rendered instead:
+ * `tests/components.test.ts` proves a switched-off key still reports as
+ * disabled and still carries the marker bar its live form carried.
+ *
  * All four combinations are covered; what is not is one of the two *routes* to
  * one of them. jsdom answers no media query, so the ratios below are all taken
  * with the dark theme reached by attribute, and `app.css` declares the same

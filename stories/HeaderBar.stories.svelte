@@ -131,9 +131,26 @@
 
     // The wordmark's words leave the layout here, not the accessibility tree:
     // the page's only h1 keeps its name when the lockup collapses to the mark.
+    const heading = within(canvasElement).getByRole('heading', {
+      level: 1,
+      name: 'biscuit games / poodl'
+    });
+
+    /*
+     * And they do leave it. Measured rather than read off a declaration,
+     * because the box is what the viewport pin above decides: at the story
+     * run's default 1200px the media query never matches, the words lay out at
+     * their natural width, and every other assertion in this play passes
+     * anyway — the frame does not overflow, the targets are whole, the heading
+     * has its name. Without this line a pin that silently stopped applying
+     * would leave the collapse evidence of nothing, and the shape it relies on
+     * is the deprecated one.
+     */
     await expect(
-      within(canvasElement).getByRole('heading', { level: 1, name: 'biscuit games / poodl' })
-    ).toBeInTheDocument();
+      within(heading)
+        .getByText(/^biscuit/)
+        .getBoundingClientRect().width
+    ).toBeLessThanOrEqual(1);
   }}
 >
   {#snippet template(args)}

@@ -141,6 +141,30 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   combinations of theme and high contrast, with the tight pairs named in the `app.css`
   header. Enter and Delete show icons rather than text glyphs, wider than a letter key and
   never narrower, under the equal-division wording the spec now scopes to letter keys.
+- `settings.allium`'s `Appearance` gained `AnUnavailableControlIsExempt`: a control the
+  player cannot operate is held to none of the contrast figures
+  `EveryCombinationMeetsTheLegibilityFloor` states, adopting the carve-out WCAG 2.2 already
+  makes at 1.4.3 and 1.4.11 for an inactive component. Dimming is *how* unavailability
+  reads, and a dim held to a live control's bar would not read as one — the keyboard a
+  finished game leaves behind is the case it is written for. The exemption is only from the
+  figures: a dimmed control still reports its state to the accessibility tree and still
+  keeps every non-colour indication its live form carried, so a switched-off scored key
+  keeps its marker bar and its description. `tests/components.test.ts` holds that half,
+  which is not a ratio and so has no place in `tests/contrast.test.ts`.
+
+- The disabled ink goes back to the value the design system states. `--text-disabled` had
+  been ported lighter than its source on three of the four palettes — neutral-9 for
+  neutral-8 in light, neutral-9 for neutral-7 in light high contrast, neutral-6 for
+  neutral-7 in dark high contrast — which no decision recorded, so it was drift. The
+  disabled ink now measures 2.31–4.62 against the page and the raised surface where it
+  measured 1.36–2.48. Visible on every disabled control: the two settings rows that switch
+  themselves off, and the `Button` and `IconButton` disabled states the workshop shows.
+
+- `EveryCombinationMeetsTheLegibilityFloor` says what it always meant about a control that
+  draws no boundary. A control is identifiable by the boundary it draws or, where it draws
+  none, by its own words — so the `ghost` button, which is transparent on transparent in
+  the design system too, answers with the `--text-2` its words are painted in rather than
+  with an edge that does not exist. No pixel moved.
 - `DecodeRejectsWhatItDidNotProduce` promised more than a fixed-length token can deliver:
   refusing *every* altered token is not achievable when the tokens that decode are a fixed
   fraction of the strings the alphabet can spell. It now states the three properties that

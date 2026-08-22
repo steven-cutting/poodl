@@ -336,14 +336,39 @@ surface Appearance {
     @guarantee EveryCombinationMeetsTheLegibilityFloor
         -- The floor holds in all four combinations of theme and high
         -- contrast, not only the one a change happened to be looked at in.
-        -- Text on any control reaches game/config.minimum_text_contrast
-        -- against what is behind it; every control's boundary reaches
-        -- game/config.minimum_boundary_contrast against the page; and the key
-        -- states stay apart by the two figures
+        -- Text on any control the player can operate reaches
+        -- game/config.minimum_text_contrast against what is behind it; every
+        -- such control is identifiable as one — by a boundary reaching
+        -- game/config.minimum_boundary_contrast against the page where it
+        -- draws a boundary, and by its own words where it draws none, since a
+        -- control with no drawn edge is found by reading it and an edge that
+        -- is not there cannot be measured; and the key states stay apart by
+        -- the two figures
         -- game/GameBoard.AnUntriedKeyIsDistinguishableFromAScoredOne names.
         -- High contrast raises the floor nowhere: it is a second palette that
         -- has to clear the same bar, not the version where legibility is
         -- finally attended to.
+
+    @guarantee AnUnavailableControlIsExempt
+        -- A control the player cannot operate is held to none of those
+        -- figures, exactly as WCAG 2.2 exempts an inactive component from
+        -- 1.4.3 and 1.4.11 — and so is the text that names it, because a
+        -- label that stayed bright beside a control that had gone quiet would
+        -- disagree with it about whether the thing can be used. Dimming is
+        -- how unavailability reads, and a dim that had to clear the bar a
+        -- live control clears would not read as one. The keyboard a finished
+        -- game leaves behind is the case this is written for: every key goes
+        -- quiet at once, and the quiet is the point.
+        -- What the exemption does not buy is anything about how that state is
+        -- known. It is spent only while the control genuinely cannot be
+        -- operated, never on one that is merely quiet or incidental; the
+        -- unavailability is carried in the accessibility tree, so a screen
+        -- reader is told in words what the eye reads as dim; and a dimmed
+        -- control keeps every non-colour indication its live form carried,
+        -- because AppearanceNeverCarriesMeaningAlone admits no exemption at
+        -- all. A scored key keeps its marker bar and its description once the
+        -- game that scored it is over, and the board beside it keeps that
+        -- game's record at full strength.
 }
 
 ------------------------------------------------------------

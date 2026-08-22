@@ -212,6 +212,27 @@ border against correct's. No figure quoted in a comment or on this page is load-
 each is derived from the colours that actually resolve. It was verified the way the rest
 of this is: by running the reworked test against the old palette and watching it fail.
 
+**One state is exempt, and the exemption is narrow.** A control the player cannot operate
+is held to none of those figures — `Appearance.@guarantee AnUnavailableControlIsExempt`,
+which adopts the carve-out WCAG 2.2 already makes at 1.4.3 and 1.4.11 for an inactive
+component. The reason is that dimming is *how* unavailability reads: a dim that had to
+clear the bar a live control clears would not read as one. The keyboard a finished game
+leaves behind is the case it is written for — every key goes quiet at once, and the quiet
+is the point. So `--text-disabled`, the disabled button's border and that dimmed keyboard
+appear in no measured pair, and this is the one place where axe's silence agrees with the
+specification rather than merely failing to reach it: axe declines to judge a disabled
+control (`is_disabled_default` in its contrast rule) and a label whose own control is
+disabled, which is exactly the shape of what is exempt.
+
+What the exemption does not buy is anything about how the state is *known*. The
+unavailability reaches the accessibility tree rather than resting on the dim, and a dimmed
+control keeps every non-colour indication its live form carried — a scored key keeps its
+marker bar and its description once the game that scored it is over, and the board beside
+it keeps that game's record at full strength. Neither of those is a ratio, so neither is in
+`contrast.test.ts`; both are held where the keys are rendered, in
+`tests/components.test.ts`, and both were checked by breaking them and watching the test
+fail.
+
 All four combinations are covered. What jsdom cannot drive is one of the two *routes* to
 one of them: it answers no media query, so every ratio is taken with the dark theme reached
 by attribute, while `app.css` declares the same palette a second time for the device's own

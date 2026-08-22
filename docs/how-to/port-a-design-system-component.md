@@ -28,12 +28,17 @@ the consumer and record the decision here instead.
    that is AGENTS.md invariant 1, and it is why the ported keyboard has no tinted key
    fills.
 2. **Map tokens, never hex.** Every colour in the port names a token from `src/app.css`.
-   Two rules with teeth: a control's border is `--key-untried-rule` (or a result token),
-   never `--rule` or `--rule-strong`, because a control's boundary owes
+   Two rules with teeth: a live control's border is `--key-untried-rule` (or a result
+   token), never `--rule` or `--rule-strong`, because a control's boundary owes
    `minimum_boundary_contrast` against the page and the decorative rules do not pay it in
    dark; and `--text-2`/`--text-3` are reading inks for the quiet grounds only. A new
    measured pair — any ink on any new ground — is added to `tests/contrast.test.ts`, which
-   recomputes rather than trusts.
+   recomputes rather than trusts. The one exception is the unavailable state:
+   `Appearance.@guarantee AnUnavailableControlIsExempt` holds a control the player cannot
+   operate to none of the figures, so `--text-disabled` and a disabled border are ported as
+   the design system draws them and are measured nowhere. What a ported disabled state does
+   owe is the other half of that guarantee — the unavailability in the accessibility tree,
+   and every non-colour indication the live form carried kept.
 3. **Write the props contract in TypeScript**: `$props` with an explicit type,
    callbacks-as-props, no event dispatcher, no `...rest` spreading. Port the variants the
    app consumes and list the rest under "Unported variants" below.

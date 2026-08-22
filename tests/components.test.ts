@@ -228,4 +228,37 @@ describe('Keyboard', () => {
       expect(button).toBeDisabled();
     }
   });
+
+  /*
+   * Appearance.@guarantee AnUnavailableControlIsExempt, which is the clause
+   * that lets a finished game's keyboard go quiet at all. The exemption is
+   * only from the contrast figures; it buys nothing about how the state is
+   * known, and it names two things a dimmed key still owes. Both are asserted
+   * here because the dimming is one `opacity` declaration away from taking
+   * them with it, and neither gate above would notice: `tests/contrast.test.ts`
+   * measures tokens rather than rendered keys, and axe declines to judge a
+   * disabled control at all.
+   *
+   * So: the unavailability reaches the accessibility tree rather than resting
+   * on the dim, and every non-colour indication the live keyboard carried —
+   * the marker bar and the description — survives being switched off.
+   */
+  it('keeps a scored key legible to a reader once the game switches it off', () => {
+    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])), disabled: true });
+
+    const keys = new Map(
+      screen.getAllByRole('button').map((key) => [key.getAttribute('data-mark'), key])
+    );
+
+    for (const mark of ['correct', 'present', 'absent', 'none'] as const) {
+      expect(keys.get(mark)).toBeDisabled();
+    }
+
+    expect(keys.get('correct')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('present')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('absent')?.querySelector('[data-marker]')).toBeNull();
+
+    expect(screen.getByRole('button', { name: 'A, correct' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'O, not in the word' })).toBeDisabled();
+  });
 });

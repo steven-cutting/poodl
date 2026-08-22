@@ -1046,8 +1046,9 @@ surface GameBoard {
         -- turn to know which letters are still open must survive a screen
         -- dimmed far enough to take the hues with it — and the figures
         -- differ because the range has to be spent rather than wished for.
-        -- Which combinations of appearance these survive is stated where
-        -- appearance is decided.
+        -- Which combinations of appearance these survive, and the one case
+        -- that is exempt from them — a keyboard the player can no longer
+        -- operate — is stated where appearance is decided.
 
     @guarantee EverySubmittedGuessIsAnnounced
         -- When a guess is accepted, its per-letter results are announced to

@@ -90,6 +90,35 @@ computed by `tests/contrast.test.ts` against the floors `game.allium` states.
   board is lighter than the system draws it, which is the point: the grid recedes and the
   letters carry it. No guarantee reads the step, because a typed tile carries its letter
   at 19.68 and an accessible name of its own.
+- **An unavailable control is exempt from the legibility floor, and the specification says
+  so.** The design system's `Button` paints a disabled control in `--text-disabled` on
+  nothing, bounded by `--rule`, and this port keeps that shape. What it had not kept was
+  the ink: `--text-disabled` had drifted lighter than the system on three of the four
+  palettes — neutral-9 where `tokens/theme-light.css` says neutral-8, neutral-9 again in
+  light high contrast where it says neutral-7, neutral-6 in dark high contrast where
+  `tokens/theme-dark.css` says neutral-7 — and no bullet here claimed it, so it was drift
+  rather than a decision. The system's own values are restored, which lifts the ink from
+  1.36–2.48 to 2.31–4.62 against the page and the raised surface.
+  That still does not clear 4.5 in either standard palette, the `--rule` boundary measures
+  1.19–4.62 against 3.0, and the on-screen keyboard dims itself at `opacity: 0.5` when a
+  game ends — Poodl's own doing, since the system's `Key` has no disabled state at all —
+  which halves every key's figures again. So the remaining choice was to repaint past what
+  the design asks for or to say what the design already meant, and `settings.allium` gained
+  `Appearance.@guarantee AnUnavailableControlIsExempt` beside
+  `EveryCombinationMeetsTheLegibilityFloor`: WCAG 2.2 exempts an inactive component from
+  1.4.3 and 1.4.11 for the reason that applies here too — dimming is *how* unavailability
+  reads, and a dim held to a live control's bar would not read as one. The exemption is
+  only from the figures. A dimmed control still reports its state to the accessibility tree
+  and still keeps every non-colour indication its live form carried, which is why a
+  switched-off scored key keeps its marker bar and its description. See
+  [Accessibility](../explanation/accessibility.md) for the model, and
+  `tests/components.test.ts` for the half of it that is not a ratio.
+- **A control with no drawn edge owes no edge contrast.** `ghost` is `transparent` on
+  transparent in the design system too, and the boundary clause used to read as though it
+  owed 3.0 anyway. `EveryCombinationMeetsTheLegibilityFloor` now says a control is
+  identifiable by the boundary it draws or, where it draws none, by its own words — which
+  `ghost` pays in `--text-2`, already measured on both grounds. No pixel moved; the clause
+  stopped being ambiguous about a variant the app ships in `Notice`.
 - **No destructive button variant.** "Clear everything" is a secondary button;
   `ResettingIsDeliberate` puts the weight on the two-step confirmation and the sentence
   naming what will go, not on a colour a colour-blind reader would miss.
@@ -98,9 +127,12 @@ computed by `tests/contrast.test.ts` against the floors `game.allium` states.
   `--brand-warm`/`--brand-warm-ink` are declared once on bare `:root` rather than answered
   per theme the way the design system answers them. Two of its four pairs measure under
   that floor — biscuit-2 on biscuit-6 at 4.25 in dark, biscuit-7 on biscuit-3 at 4.40 in
-  light — where the pinned pair measures 6.93 in every palette. The mark itself stays
-  neutral, as the design system's own `Mark` does at its default tone: the wordmark carries
-  the warmth, and the mark's one break is the fourth corner, not a colour.
+  light — where the pinned pair measures 6.93 in every palette. The lockup itself stays
+  neutral, as the design system's own `Mark` does at its default tone: `::selection` is the
+  one place the pair is spent, what makes the wordmark the wordmark is the name and the
+  face it is set in rather than a colour — see
+  [the design direction](../design/direction.md) — and the mark's one break is the fourth
+  corner.
 - **The shell is 34rem, not 480px.** The bottom keyboard row is ten flex shares and eight
   gaps plus the gutters; a 480px shell caps a letter key at about 40px on a screen with
   room for 44, and `EveryControlIsAComfortableTarget` lets only the screen take that away.

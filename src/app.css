@@ -169,7 +169,7 @@
   --text-2: var(--n-6);
   --text-3: var(--n-65);
   --text-inverse: var(--n-11);
-  --text-disabled: var(--n-9);
+  --text-disabled: var(--n-8);
   --focus: var(--n-1);
 
   /*
@@ -197,8 +197,20 @@
    * the one hairline that answers a control's boundary floor — n-7 is 4.33
    * off the dark page and 4.54 off the light one, where --rule and
    * --rule-strong (1.30 and 2.33 in dark) may bound a tile or separate rows
-   * but must never bound a control. Both grounds are derived once and follow
-   * the theme through the tokens they name.
+   * but must never bound a control the player can operate. One that they
+   * cannot is exempt from the floor entirely, by
+   * `Appearance.@guarantee AnUnavailableControlIsExempt`, which is why
+   * --text-disabled and the disabled button's --rule border are the two inks
+   * in this file that `tests/contrast.test.ts` deliberately does not measure.
+   * Being unmeasured is exactly why they are the values the design system
+   * states rather than values chosen here — n-8 light, n-7 in both
+   * high-contrast palettes, n-6 dark — and the four are copied from that
+   * project's `tokens/theme-light.css` and `tokens/theme-dark.css` rather
+   * than derived: nothing recomputes them, so drifting them costs nothing
+   * and is caught by nobody. Decision 0010 records the drift that already
+   * happened once.
+   * Both grounds are derived once and follow the theme through the tokens
+   * they name.
    */
   --key-untried-bg: var(--background);
   --key-untried-rule: var(--n-7);
@@ -347,7 +359,7 @@
     --text-2: var(--n-9);
     --text-3: var(--n-8);
     --text-inverse: var(--n-1);
-    --text-disabled: var(--n-6);
+    --text-disabled: var(--n-7);
     --focus: var(--n-11);
     --result-exact: var(--hue-exact-dark-hc);
     --result-exact-ink: var(--n-1);
@@ -422,7 +434,7 @@
   --text-2: var(--n-5);
   --text-3: var(--n-6);
   --text-inverse: var(--n-11);
-  --text-disabled: var(--n-9);
+  --text-disabled: var(--n-7);
   --focus: var(--n-0);
   --result-exact: var(--hue-exact-light-hc);
   --result-exact-ink: var(--n-11);
@@ -449,7 +461,7 @@
   --text-2: var(--n-9);
   --text-3: var(--n-8);
   --text-inverse: var(--n-1);
-  --text-disabled: var(--n-6);
+  --text-disabled: var(--n-7);
   --focus: var(--n-11);
   --result-exact: var(--hue-exact-dark-hc);
   --result-exact-ink: var(--n-1);
