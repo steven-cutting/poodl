@@ -122,9 +122,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A word Poodl refused left the link made from the previous word on screen beside the
   refusal, still copyable, which read as the link for the word just refused.
   `OnlyAcceptedWordsBecomeCustomGames` says a refused word produces no link.
-- The custom-game form was handed the notice and the link the board was showing, so both
-  turned up inside a form that made neither — and closing the form threw the board's link
-  away. It opens on a surface of its own.
+- The share dialog (then the custom-game form) was handed the notice and the link the board
+  was showing, so both turned up inside a dialog that made neither — and closing the dialog
+  threw the board's link away. It opens on a surface of its own.
 - A stored game was believed about its own marks, so a store that had been written to could
   restore a game that was never won, with a keyboard and a shared grid to match. Every
   stored guess is scored again on load. Stored input is checked for shape as well as length.
@@ -160,6 +160,29 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   which neither provided nor recorded their source; `static/word-lists-NOTICE.txt` and
   [Replace the word lists](docs/how-to/replace-the-word-lists.md) record that as a known
   gap rather than a resolved provenance.
+- The How to play explanation takes the design system's dialog shape and says less, more
+  plainly. `HowToPlay` is now the body alone — one sentence for the attempts and the word
+  length, the board's own `Tile` beside each of the three marks with its marker bar, and a
+  muted closing line — shared by the welcome screen, which frames it as the group it always
+  was, and by the new `HowToPlayPanel`, the dialog the header's info button opens, in the
+  same shell as every other panel. The example tiles are hidden from assistive technology
+  because the sentence beside each is the content, so each sentence is held by the row it
+  sits in, and the three describe their bars in the words the guarantee itself uses — bar,
+  shorter bar and no bar. `tests/contrast.test.ts` measures those tiles against the dialog
+  surface, the one ground they had not been drawn on: every border there, and every letter
+  the surface is in fact behind — which in the light themes is absent's alone, the two hue
+  letters sitting on their own fills and answering to those instead.
+- Passing on the word of the game being played moves from a button under the keyboard into
+  the dialog the header's share action opens, renamed "Share a game" from "Set a word". The
+  dialog now holds both ways of making a link — **This game**, offered for as long as a game
+  is on the board and saying which game it means, and **Your own word** — restyled to the
+  design system's eyebrows, copy and filled primary. A link a section makes is shown inside
+  the dialog and goes when it closes, and a link made in the end-of-game modal now goes the
+  same way when the modal is closed; the modal keeps its own "Share results" and "Share the
+  word", and the board no longer shows a custom-game link at all — only the shared grid, once
+  the conclusion is put away. `CustomGameForm` is `SharePanel`. `sharing.allium`'s rules and
+  guarantees are unchanged; the prose naming the way in moved with the control, and
+  `CustomGameCreation` now relates to `ShareCurrentAnswer`.
 - The non-colour indication on results is a marker bar rather than a corner glyph:
   correct fills most of a tile or key's bottom edge, present shows a short centred
   fraction, absent carries no bar beside a dimmed letter. `game.allium`'s

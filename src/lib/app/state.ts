@@ -98,7 +98,7 @@ export type Shareable = { kind: 'custom_link'; text: string } | { kind: 'results
 /**
  * A shareable as a surface receives it: something to show, and the text to show.
  *
- * `GameScreen`, `GameConclusion` and `CustomGameForm` are handed finished text
+ * `GameScreen`, `GameConclusion` and `SharePanel` are handed finished text
  * and never learn that one kind of it is rendered on the way past. The store
  * derives this; nothing writes it.
  */

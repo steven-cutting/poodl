@@ -33,7 +33,6 @@ function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
     onletter: vi.fn(),
     ondelete: vi.fn(),
     onsubmit: vi.fn(),
-    onshareanswer: vi.fn(),
     oncopy: vi.fn(),
     ondismissnotice: vi.fn(),
     ...overrides
@@ -61,7 +60,7 @@ describe('WelcomeScreen', () => {
 
     const explanation = screen.getByRole('group', { name: /how to play/i });
 
-    expect(explanation).toHaveTextContent(/5 letters/);
+    expect(explanation).toHaveTextContent(/5-letter/);
     expect(explanation).toHaveTextContent(/6 attempts/);
   });
 
@@ -610,19 +609,18 @@ describe('GameScreen', () => {
   });
 
   /*
-   * Whatever Poodl has made is shown where the player is looking, and the board
-   * is where they are looking once a dialog is closed: a grid shared from the
-   * conclusion is still theirs to copy after they put the conclusion away.
+   * The grid is shown where the player is looking, and the board is where they
+   * are looking once a dialog is closed: a grid shared from the conclusion is
+   * still theirs to copy after they put the conclusion away. A link is not —
+   * it lives inside the surface that made it, so a link handed here is nothing.
    */
-  it('shows the link or the grid it is holding', async () => {
+  it('shows the grid it is holding, and never a link', async () => {
     const props = screenProps(gameAfter(), {
       shareable: { kind: 'custom_link', text: 'https://poodl.test/?g=yrqt9rd9' }
     });
     const { unmount } = render(GameScreen, props);
 
-    expect(screen.getByRole('textbox', { name: /custom game link/i })).toHaveValue(
-      'https://poodl.test/?g=yrqt9rd9'
-    );
+    expect(screen.queryByRole('textbox', { name: /custom game link/i })).not.toBeInTheDocument();
     unmount();
 
     const shared = screenProps(gameAfter(), {
@@ -637,15 +635,5 @@ describe('GameScreen', () => {
     await userEvent.click(screen.getByRole('button', { name: /copy result/i }));
 
     expect(shared.oncopy).toHaveBeenCalledTimes(1);
-  });
-
-  // ShareCurrentAnswer.AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard.
-  it('offers to pass the word on, before a guess has been made', async () => {
-    const props = screenProps(gameAfter());
-    render(GameScreen, props);
-
-    await userEvent.click(screen.getByRole('button', { name: /share the word/i }));
-
-    expect(props.onshareanswer).toHaveBeenCalledTimes(1);
   });
 });

@@ -156,15 +156,63 @@ describe('Wordmark', () => {
   });
 });
 
+/*
+ * The body of the explanation, without a frame: `WelcomeScreen` names it as a
+ * group and `HowToPlayPanel` as a dialog, so the component itself carries the
+ * words and nothing else.
+ */
 describe('HowToPlay', () => {
-  // Welcome.@guarantee AFirstVisitIsExplained: the sentences the group holds.
-  it('explains the game inside a named group', () => {
+  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, and
+  // as many games as they like.
+  it('says how many attempts, how long a word is, and that there is no limit', () => {
     render(HowToPlay, {});
-    const explanation = screen.getByRole('group', { name: /how to play/i });
 
-    expect(explanation).toHaveTextContent(/5 letters/);
-    expect(explanation).toHaveTextContent(/6 attempts/);
-    expect(explanation).toHaveTextContent(/no daily word/i);
+    expect(screen.getByText(/6 attempts/)).toHaveTextContent(/5-letter word/);
+    expect(screen.getByText(/as many as you like/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  /*
+   * The half of the same guarantee that is read rather than seen. The tiles
+   * are `aria-hidden`, so the sentence in each row is the whole of what a
+   * screen reader is given for that mark — and nothing else here would notice
+   * it going: the count above and the bars below both pass just as well on
+   * three empty rows. So each row is held by its own words, in the order the
+   * marks are drawn in, and the words those rows use for the bars are the ones
+   * `GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone` uses itself:
+   * bar, shorter bar and no bar.
+   */
+  it('names every mark in the sentence beside its tile', () => {
+    render(HowToPlay, {});
+    const rows = screen.getAllByRole('listitem');
+
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Correct — right letter, right place. Marker bar.');
+    expect(rows[1]).toHaveTextContent('Present — right letter, wrong place. Shorter marker bar.');
+    expect(rows[2]).toHaveTextContent('Absent — not in the word. No marker bar.');
+  });
+
+  /*
+   * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone, as an
+   * illustration: the example beside each mark is the board's own tile, so it
+   * carries the bar the board draws — one for correct, a shorter one for
+   * present, none for absent. The tiles are hidden from assistive technology,
+   * because the sentence beside each is the content; so the visible half is
+   * held here through `[data-marker]`, the structural hook
+   * `tests/components.test.ts` uses for the same bar, and the names are asked
+   * for with `hidden` only to find each tile by the mark it shows.
+   */
+  it('shows each mark on a real tile that assistive technology does not read', () => {
+    render(HowToPlay, {});
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+
+    const marker = (name: string) =>
+      screen.getByRole('img', { name, hidden: true }).querySelector('[data-marker]');
+
+    expect(marker('Position 1, C, correct')).not.toBeNull();
+    expect(marker('Position 2, R, in the word, wrong place')).not.toBeNull();
+    expect(marker('Position 3, N, not in the word')).toBeNull();
   });
 });
 
@@ -182,11 +230,11 @@ describe('HeaderBar', () => {
     };
   }
 
-  it('offers the four actions under the names the page always used', async () => {
+  it('offers the four actions under the names the page uses', async () => {
     const props = headerProps();
     render(HeaderBar, props);
 
-    await userEvent.click(screen.getByRole('button', { name: 'Set a word' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Share a game' }));
     await userEvent.click(screen.getByRole('button', { name: 'Statistics' }));
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
     await userEvent.click(screen.getByRole('button', { name: 'How to play' }));
@@ -197,7 +245,7 @@ describe('HeaderBar', () => {
     expect(props.onopenhelp).toHaveBeenCalledTimes(1);
 
     // Each action opens a dialog and announces it, exactly as the chip does.
-    for (const name of ['Set a word', 'Statistics', 'Settings', 'How to play']) {
+    for (const name of ['Share a game', 'Statistics', 'Settings', 'How to play']) {
       expect(screen.getByRole('button', { name })).toHaveAttribute('aria-haspopup', 'dialog');
     }
   });

@@ -63,7 +63,7 @@ What the design project holds that this repository has not ported, and what bloc
 
 | Reference | What it is | Blocker or note |
 | --- | --- | --- |
-| `forms/Input`, `forms/Select` | Labelled field primitives | Fold `LinkReady`'s and `CustomGameForm`'s fields into `Input` when a third consumer appears. |
+| `forms/Input`, `forms/Select` | Labelled field primitives | Fold `LinkReady`'s and `SharePanel`'s fields into `Input` when a third consumer appears. |
 | `forms/SegmentedControl` | The theme picker's proper shape | Upgrade for `SettingsPanel`'s radios; keep the native inputs inside it. |
 | `forms/SettingsRow` | The rule-separated preference row | Extract from `SettingsPanel` when a second panel wants rows. |
 | `forms/Switch` | The 44×26 toggle | Ported as a restyle of the native checkbox inside `SettingsPanel`; extract on the same trigger as `SettingsRow`. |

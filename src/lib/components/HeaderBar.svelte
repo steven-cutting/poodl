@@ -16,9 +16,10 @@
    *
    * The info button is how `Welcome.@guarantee AFirstVisitIsExplained` keeps
    * the explanation "reachable again afterwards rather than being shown once
-   * and lost". The other three labels are the toolbar's old names, kept on
-   * purpose so nothing that asks for "Settings" by name has to learn a new
-   * one.
+   * and lost". Statistics and Settings keep the toolbar's old names, on
+   * purpose, so nothing that asks for "Settings" by name has to learn a new
+   * one; the share button is named for the dialog it opens, "Share a game",
+   * which holds both ways of passing a word on.
    *
    * Below ~26rem the wordmark gives up its words and the divider goes: four
    * 44px targets, the chip and the mark have to share 288px, and the collapse
@@ -76,7 +77,7 @@
       <Icon name="chevron-down" size={16} />
     </button>
     <span class="divider" aria-hidden="true"></span>
-    <IconButton icon="share" label="Set a word" popup="dialog" onclick={onopenshare} />
+    <IconButton icon="share" label="Share a game" popup="dialog" onclick={onopenshare} />
     <IconButton icon="chart-column" label="Statistics" popup="dialog" onclick={onopenstatistics} />
     <IconButton icon="settings" label="Settings" popup="dialog" onclick={onopensettings} />
     <IconButton icon="info" label="How to play" popup="dialog" onclick={onopenhelp} />

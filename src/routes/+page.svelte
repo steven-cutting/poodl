@@ -1,15 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import CustomGameForm from '$lib/components/CustomGameForm.svelte';
   import GameConclusion from '$lib/components/GameConclusion.svelte';
   import GameNavigation from '$lib/components/GameNavigation.svelte';
   import GameScreen from '$lib/components/GameScreen.svelte';
   import HeaderBar from '$lib/components/HeaderBar.svelte';
-  import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import HowToPlayPanel from '$lib/components/HowToPlayPanel.svelte';
   import InvalidLinkNotice from '$lib/components/InvalidLinkNotice.svelte';
-  import Modal from '$lib/components/Modal.svelte';
   import SettingsPanel from '$lib/components/SettingsPanel.svelte';
+  import SharePanel from '$lib/components/SharePanel.svelte';
   import StatisticsPanel from '$lib/components/StatisticsPanel.svelte';
   import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
   import { createStore } from '$lib/app/store.svelte';
@@ -50,7 +49,7 @@
    * inside `onMount`, which is a callback control-flow analysis does not follow.
    */
   let store = $state<Store | null>(null);
-  let panel = $state<'settings' | 'statistics' | 'custom' | 'modes' | 'help' | null>(null);
+  let panel = $state<'settings' | 'statistics' | 'share' | 'modes' | 'help' | null>(null);
 
   onMount(() => {
     const created = createStore(
@@ -140,24 +139,24 @@
   );
 
   /*
-   * The custom-game form is handed the notice and the shareable the engine
-   * holds, because both are what it makes. That means whatever the board was
-   * already saying — a guess rejection, a link made from the conclusion —
-   * would appear inside a form it has nothing to do with, and closing the form
-   * discards it. So the form opens on a clean surface.
+   * The share dialog is handed the notice and the shareable the engine holds,
+   * because both are what it makes. That means whatever the board was already
+   * saying — a guess rejection, the grid the conclusion made — would be
+   * inherited by a dialog that made neither and discarded when it closes. So
+   * the dialog opens on a clean surface.
    *
    * Only this panel: `SettingsPanel` and `StatisticsPanel` render neither, and
    * clearing on their behalf would throw away a link the player is still
    * looking at. An invalid-link notice is left alone too — `InvalidLinkNotice`
    * is its surface, it carries the way out of a dead end, and `boardNotice`
-   * has already excluded it from anything the form could inherit.
+   * has already excluded it from anything the dialog could inherit.
    */
-  function openCustomForm(): void {
+  function openSharePanel(): void {
     if (boardNotice !== null) {
       store?.dispatch({ kind: 'dismiss_notice' });
     }
     store?.dispatch({ kind: 'dismiss_shareable' });
-    panel = 'custom';
+    panel = 'share';
   }
 
   /*
@@ -227,7 +226,7 @@
     onopenmodes={() => (panel = 'modes')}
     onopensettings={() => (panel = 'settings')}
     onopenstatistics={() => (panel = 'statistics')}
-    onopenshare={openCustomForm}
+    onopenshare={openSharePanel}
     onopenhelp={() => (panel = 'help')}
   />
 
@@ -270,7 +269,7 @@
       {:else if game !== null}
         <!--
         One notice, one place. Whichever surface caused a notice shows it: the
-        custom game form and the end-of-game modal show the links they made, and
+        share dialog and the end-of-game modal show the links they made, and
         the board falls silent while either is open rather than saying the same
         thing twice. It matters most for the modal, which keeps the keyboard
         inside itself — a link behind it would be unreachable.
@@ -297,9 +296,6 @@
           }}
           onsubmit={() => {
             store?.dispatch({ kind: 'submit_guess' });
-          }}
-          onshareanswer={() => {
-            store?.dispatch({ kind: 'share_current_answer' });
           }}
           oncopy={() => {
             store?.dispatch({ kind: 'copy_shareable' });
@@ -336,6 +332,14 @@
             }}
             onclose={() => {
               closedConclusionFor = game.startedAt;
+              // A link made in here ends with it, as one made in the share
+              // dialog does: passing the word on belongs to the surfaces that
+              // offer it, and the board offers it no longer. The grid stays —
+              // `TheGridIsAvailableAsText` wants it where the player is looking.
+              if (shareable?.kind === 'custom_link') {
+                store?.dispatch({ kind: 'dismiss_notice' });
+                store?.dispatch({ kind: 'dismiss_shareable' });
+              }
             }}
             notice={panel === null ? boardNotice : null}
             noticeSequence={app.noticeSequence}
@@ -387,11 +391,18 @@
           }}
           onclose={() => (panel = null)}
         />
-      {:else if panel === 'custom'}
-        <CustomGameForm
+      {:else if panel === 'share'}
+        <SharePanel
           notice={boardNotice}
           noticeSequence={app.noticeSequence}
           {shareable}
+          mode={game?.mode ?? null}
+          status={game?.status ?? null}
+          onshareanswer={game !== null
+            ? () => {
+                store?.dispatch({ kind: 'share_current_answer' });
+              }
+            : undefined}
           oncreate={(entry: string) => {
             store?.dispatch({ kind: 'create_custom_game', entry });
           }}
@@ -418,9 +429,7 @@
           onclose={() => (panel = null)}
         />
       {:else if panel === 'help'}
-        <Modal title="How to play" onclose={() => (panel = null)}>
-          <HowToPlay />
-        </Modal>
+        <HowToPlayPanel onclose={() => (panel = null)} />
       {/if}
     {/if}
   </main>
