@@ -31,7 +31,7 @@
   });
 </script>
 
-<!-- The body at the width the dialog gives it: 28rem less the panel’s padding. -->
+<!-- The body at the width the dialog gives it: the 28rem panel less the body’s padding. -->
 <Story
   name="The explanation"
   asChild

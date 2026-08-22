@@ -77,3 +77,18 @@
     await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
   }}
 />
+
+<!--
+  The strongest palette on the darkest ground. The example tiles sit on the
+  dialog’s surface, the one ground the board never draws them on, and
+  `tests/contrast.test.ts` measures that pair; this is where the combination
+  renders and is looked at.
+-->
+<Story
+  name="Dark theme, high contrast"
+  globals={{ theme: 'dark', highContrast: 'on' }}
+  play={async () => {
+    await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    await expect(document.documentElement).toHaveAttribute('data-high-contrast', 'true');
+  }}
+/>

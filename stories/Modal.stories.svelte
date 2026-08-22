@@ -11,8 +11,9 @@
     '',
     'Governing surfaces: `SettingsPanel` in `docs/specs/settings.allium`, `StatisticsPanel` in',
     '`docs/specs/statistics.allium`, `CustomGameCreation` in `docs/specs/sharing.allium` and',
-    '`GameConclusion` in `docs/specs/game.allium`. All four carry',
-    '`@guarantee FullyKeyboardOperable`, so this is where it is made true once.',
+    '`GameNavigation` in `docs/specs/game.allium`, each carrying',
+    '`@guarantee FullyKeyboardOperable`, so this is where it is made true once. `GameConclusion`',
+    'and the How to play dialog, **HowToPlayPanel**, sit in the same shell — see their own pages.',
     '',
     'It takes focus when it opens, closes on Escape, and cycles Tab inside itself rather than',
     'letting the keyboard wander out to the board behind. The play functions below are the',
@@ -53,7 +54,7 @@
 <Story
   name="Closes on Escape"
   play={async ({ canvasElement }) => {
-    // FullyKeyboardOperable, on all four surfaces that use this shell.
+    // FullyKeyboardOperable, by way of this shell, for every panel that carries it.
     onclose.mockClear();
     await expect(within(canvasElement).getByRole('dialog')).toHaveFocus();
 
