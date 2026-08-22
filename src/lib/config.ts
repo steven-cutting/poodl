@@ -26,7 +26,7 @@ export const GAME_NAME = 'poodl';
  * fails outright instead of shipping as a vocabulary small enough to repeat
  * answers within a sitting.
  */
-export const MIN_ANSWER_WORDS = 2000;
+export const MIN_ANSWER_WORDS = 1000;
 export const MIN_GUESS_WORDS = 10000;
 
 /** `game.allium` — `config.max_attempts`. */

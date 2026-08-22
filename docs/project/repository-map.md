@@ -25,7 +25,7 @@ there is no backend to be a sibling of.
 │   │   ├── assets/      Committed fonts and icons, with their licence texts
 │   │   ├── components/  PascalCase Svelte components
 │   │   ├── config.ts    The values the specifications declare
-│   │   ├── data/        The two word lists, one word per line
+│   │   ├── data/        Word lists, one word per line; answers-scowl.txt is kept but not bundled
 │   │   ├── domain/      Pure behaviour: scoring, keyboard knowledge
 │   │   └── ports/       Every side effect, each with an in-memory fake
 │   └── routes/          SvelteKit routes, prerendered

@@ -39,7 +39,7 @@
 -- The lists are supplied to the product as data. Replacing the data replaces
 -- the playable vocabulary without any change to behaviour specified here.
 --
--- The intended sizes are roughly 2,300 answer words and roughly 13,000
+-- The intended sizes are roughly 1,100 answer words and roughly 15,000
 -- dictionary words. Those figures are design intent, but the floors beneath
 -- them are not: a truncated data file has to fail rather than ship as a
 -- playable but tiny vocabulary.
@@ -132,7 +132,7 @@ config {
     -- Floors, not targets. They exist so that a truncated or half-written
     -- data file fails outright instead of shipping as a vocabulary small
     -- enough to repeat answers within a sitting.
-    min_answer_words: Integer = 2000
+    min_answer_words: Integer = 1000
     min_guess_words: Integer = 10000
 }
 
