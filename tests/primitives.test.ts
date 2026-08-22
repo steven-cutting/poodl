@@ -173,6 +173,26 @@ describe('HowToPlay', () => {
   });
 
   /*
+   * The half of the same guarantee that is read rather than seen. The tiles
+   * are `aria-hidden`, so the sentence in each row is the whole of what a
+   * screen reader is given for that mark — and nothing else here would notice
+   * it going: the count above and the bars below both pass just as well on
+   * three empty rows. So each row is held by its own words, in the order the
+   * marks are drawn in, and the words those rows use for the bars are the ones
+   * `GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone` uses itself:
+   * bar, shorter bar and no bar.
+   */
+  it('names every mark in the sentence beside its tile', () => {
+    render(HowToPlay, {});
+    const rows = screen.getAllByRole('listitem');
+
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Correct — right letter, right place. Marker bar.');
+    expect(rows[1]).toHaveTextContent('Present — right letter, wrong place. Shorter marker bar.');
+    expect(rows[2]).toHaveTextContent('Absent — not in the word. No marker bar.');
+  });
+
+  /*
    * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone, as an
    * illustration: the example beside each mark is the board's own tile, so it
    * carries the bar the board draws — one for correct, a shorter one for

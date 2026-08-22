@@ -15,23 +15,30 @@
    *
    * The example beside each mark is the board's own `Tile`, so the bar a player
    * is told about is the bar the board draws, in every theme and both palettes
-   * (`GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone`). The tiles are
-   * hidden from assistive technology: the sentence beside each one is the
-   * content, and "Position 1, C, correct" read out before it would be noise.
-   * The bars they carry are held by `tests/primitives.test.ts` through
-   * `[data-marker]`, the structural hook `docs/reference/testing.md` records
-   * for exactly this kind of aria-hidden decoration.
+   * (`GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone`). The words
+   * for the three are that guarantee's own — bar, shorter bar and no bar —
+   * because the bar correct draws is most of a tile's bottom edge rather than
+   * all of it, and calling it full would set the sentence against the tile
+   * beside it.
+   *
+   * The tiles are hidden from assistive technology: the sentence beside each
+   * one is the content, and "Position 1, C, correct" read out before it would
+   * be noise. That leaves the sentences carrying the whole explanation on
+   * their own, so `tests/primitives.test.ts` holds each one by the row it sits
+   * in, and the bars beside them through `[data-marker]` — the structural hook
+   * `docs/reference/testing.md` records for exactly this kind of aria-hidden
+   * decoration.
    */
   const MARKS: readonly { mark: LetterMark; letter: string; sentence: string }[] = [
     {
       mark: 'correct',
       letter: 'c',
-      sentence: 'Correct — right letter, right place. Full marker bar.'
+      sentence: 'Correct — right letter, right place. Marker bar.'
     },
     {
       mark: 'present',
       letter: 'r',
-      sentence: 'Present — right letter, wrong place. Short marker bar.'
+      sentence: 'Present — right letter, wrong place. Shorter marker bar.'
     },
     { mark: 'absent', letter: 'n', sentence: 'Absent — not in the word. No marker bar.' }
   ];

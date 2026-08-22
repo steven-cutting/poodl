@@ -135,8 +135,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   muted closing line — shared by the welcome screen, which frames it as the group it always
   was, and by the new `HowToPlayPanel`, the dialog the header's info button opens, in the
   same shell as every other panel. The example tiles are hidden from assistive technology
-  because the sentence beside each is the content, and `tests/contrast.test.ts` measures
-  the tile inks on the dialog surface, the one ground they had not been drawn on.
+  because the sentence beside each is the content, so each sentence is held by the row it
+  sits in, and the three describe their bars in the words the guarantee itself uses — bar,
+  shorter bar and no bar. `tests/contrast.test.ts` measures those tiles against the dialog
+  surface, the one ground they had not been drawn on: every border there, and every letter
+  the surface is in fact behind — which in the light themes is absent's alone, the two hue
+  letters sitting on their own fills and answering to those instead.
 - The non-colour indication on results is a marker bar rather than a corner glyph:
   correct fills most of a tile or key's bottom edge, present shows a short centred
   fraction, absent carries no bar beside a dimmed letter. `game.allium`'s

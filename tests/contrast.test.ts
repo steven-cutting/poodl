@@ -243,17 +243,35 @@ describe('EveryCombinationMeetsTheLegibilityFloor', () => {
       /*
        * `HowToPlay` draws one example tile per mark on a dialog's `--surface`,
        * the one ground no tile had sat on: the board is on the page, a scored
-       * key on its raised ground. The dark themes have no fills, so there the
-       * letter sits straight on the surface and answers to the text bar; and
-       * the border, which with the bar is the shape that carries the result,
-       * answers to the non-text bar on every theme.
+       * key on its raised ground. Each pair below is one the eye actually
+       * meets, which is what decides who is measured against the surface and
+       * when.
+       *
+       * Absent has no fill in any theme, so its letter sits straight on the
+       * surface everywhere and answers to the text bar everywhere. A hue
+       * result's letter does the same only in the dark themes; the light ones
+       * fill its tile, so there the letter never touches the surface and the
+       * pair it does meet — its ink on its own fill — is the one measured
+       * above. Holding the light ink to the surface as well would pin a pair
+       * nothing paints, and could fail a palette that is in fact legible: the
+       * same over-reach the disabled carve-out above refuses, for the same
+       * reason. The border is on the surface in every theme, and with the bar
+       * it is the shape that carries the result, so it answers to the non-text
+       * bar throughout.
        */
       it('paints the example tiles legibly on a dialog', () => {
-        for (const ink of [...HUE_RESULTS, '--result-absent-text'] as const) {
-          expect(ratio(token(ink), token('--surface'))).toBeGreaterThanOrEqual(
-            MINIMUM_TEXT_CONTRAST
-          );
+        expect(ratio(token('--result-absent-text'), token('--surface'))).toBeGreaterThanOrEqual(
+          MINIMUM_TEXT_CONTRAST
+        );
+
+        if (combination.theme === 'dark') {
+          for (const ink of HUE_RESULTS) {
+            expect(ratio(token(ink), token('--surface'))).toBeGreaterThanOrEqual(
+              MINIMUM_TEXT_CONTRAST
+            );
+          }
         }
+
         for (const boundary of [...HUE_RESULTS, '--result-absent'] as const) {
           expect(ratio(token(boundary), token('--surface'))).toBeGreaterThanOrEqual(
             MINIMUM_BOUNDARY_CONTRAST
