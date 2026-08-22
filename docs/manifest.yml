@@ -46,6 +46,7 @@
     {"path": "decisions/0006-component-workshop.md", "title": "Decision 0006: A component workshop", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_component_workshop"], "requires": []},
     {"path": "decisions/0007-rules-as-a-reducer.md", "title": "Decision 0007: The rules are a reducer", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_rules_as_a_reducer"], "requires": []},
     {"path": "decisions/0008-visual-review-in-chromatic.md", "title": "Decision 0008: Visual review in Chromatic", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_visual_review"], "requires": []},
-    {"path": "decisions/0009-project-managed-allium-cli.md", "title": "Decision 0009: A project-managed Allium binary", "kind": "decision", "audience": ["maintainer", "agent"], "canonical_for": ["decision_allium_cli"], "requires": []}
+    {"path": "decisions/0009-poodl-lives-at-pnut-fans.md", "title": "Decision 0009: Poodl lives at pnut.fans", "kind": "decision", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["decision_own_domain"], "requires": []},
+    {"path": "decisions/0010-project-managed-allium-cli.md", "title": "Decision 0010: A project-managed Allium binary", "kind": "decision", "audience": ["maintainer", "agent"], "canonical_for": ["decision_allium_cli"], "requires": []}
   ]
 }

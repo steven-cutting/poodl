@@ -143,6 +143,10 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
 
 - `adapter-static` instead of `adapter-node`, and a GitHub Pages deploy
   workflow the template has no counterpart for.
+- The repository owns its own domain, so what the deploy uploads is a domain and
+  not an application: `site-root/` is the landing page at the root and the game
+  is staged beneath it at `/poodl/`. See
+  [decision 0009](docs/decisions/0009-poodl-lives-at-pnut-fans.md).
 - No backend, database, OpenAPI or Python application code; the app sits at the
   repository root rather than under `frontend/`.
 - Ports and fakes adapted from the template's HTTP `Api` boundary to this app's
@@ -161,7 +165,7 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
   gitignored `.tools/bin/` by `just install-allium`, and run by
   `just check-specs`. It reports rather than gates, and is deliberately not part
   of `just check`. See
-  [decision 0009](docs/decisions/0009-project-managed-allium-cli.md).
+  [decision 0010](docs/decisions/0010-project-managed-allium-cli.md).
 - Storybook as a component workshop: stories under `stories/`, each one rendered
   in Chromium with axe run over it, gated by `just check`. See
   [decision 0006](docs/decisions/0006-component-workshop.md).

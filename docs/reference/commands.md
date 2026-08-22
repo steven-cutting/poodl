@@ -37,6 +37,8 @@ rather than in a shell history.
 | --- | --- |
 | `just dev` | Vite development server with hot module replacement. |
 | `just preview` | Serve the built output in `build/`. Build first, and set the same `BASE_PATH` — see [Configuration](configuration.md). |
+| `just stage` | Assemble `site/`: the domain root from `site-root/`, with the build moved in beneath it at `BASE_PATH`. This is what Pages is given. |
+| `just stage-preview` | Serve the staged tree in `site/` on port 4174 — the whole domain, landing page included, which `just preview` cannot show. |
 | `just storybook` | The component workshop on port 6006, with hot module replacement. |
 
 ## Format and repair

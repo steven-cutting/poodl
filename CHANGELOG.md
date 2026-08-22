@@ -20,7 +20,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   errors, offers no way to waive one, and the modules carry a baseline of twenty-five
   diagnostics — recorded in `docs/how-to/work-with-the-specs.md` so a new finding can be
   told from an old one. See
-  [decision 0009](docs/decisions/0009-project-managed-allium-cli.md).
+  [decision 0010](docs/decisions/0010-project-managed-allium-cli.md).
 
 - `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
   its control's action and nothing besides; pinch-zoom is untouched and the viewport stays

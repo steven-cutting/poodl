@@ -21,6 +21,10 @@ node_modules/
 build/
 coverage/
 
+# What `just stage` assembles: the domain root with the build moved in beneath
+# it. Generated from site-root/ and build/, so it is output and never source.
+site/
+
 # The pinned allium binary, installed by `just install-allium`. Ignored because
 # `just check` snapshots the worktree between recipes, so a binary Git can see
 # would abort the run before any recipe's exit code is read.

@@ -1,12 +1,12 @@
 ---
-title: "Decision 0009: A project-managed Allium binary"
+title: "Decision 0010: A project-managed Allium binary"
 kind: "decision"
 audience: [maintainer, agent]
 canonical_for: [decision_allium_cli]
 requires: []
 ---
 
-# Decision 0009: A project-managed Allium binary
+# Decision 0010: A project-managed Allium binary
 
 ## Context
 

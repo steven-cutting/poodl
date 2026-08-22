@@ -11,5 +11,6 @@ exclude_path = [
   "build",
   "coverage",
   "node_modules",
+  "site",
   "storybook-static",
 ]

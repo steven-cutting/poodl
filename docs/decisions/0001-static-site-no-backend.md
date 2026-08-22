@@ -40,6 +40,11 @@ The base path becomes configuration. A project site is served from a subdirector
 `BASE_PATH` is read at build time into `paths.base`; a custom domain later means deleting
 one line from the workflow.
 
+**That last clause is superseded by
+[decision 0009](0009-poodl-lives-at-pnut-fans.md).** The custom domain arrived and the line
+was not deleted. `BASE_PATH` still names where Poodl sits, because the domain root became a
+landing page rather than the game — by choice now, where it had been a constraint.
+
 ## What would reopen this
 
 Anything requiring shared state between players: accounts, a synchronised daily word,

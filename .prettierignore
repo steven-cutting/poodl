@@ -3,6 +3,7 @@ build
 coverage
 node_modules
 package-lock.json
+site
 storybook-static
 
 # Markdown belongs to markdownlint-cli2. Two formatters over the same files
