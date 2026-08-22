@@ -64,7 +64,9 @@ drawn but not yet accepted stays unticked.
   [The fixed face](biscuit_pics/raw/README.md#the-fixed-face). **Deliverable:** the master
   vector and a PDF or PNG of the sheet, under the proposed `docs/design/biscuit_sheet/`.
   **Done when** the owner has approved it against the bible and every open question it
-  can close has been closed in the bible's decisions table.
+  can close has been closed in the bible's decisions table. _Drawn 2026-08-22 as a
+  generated draft, not yet accepted: see
+  [the character reference sheet](biscuit_sheet/README.md)._
 - [ ] **0.3 The mark candidates.** The illustrator's brief the direction reserves for the
   mark: at least three constructions, each abstract and geometric — one from a curl, one
   from an ear, one from a letterform — and each with its single wrong element named, per
@@ -149,8 +151,8 @@ under tier 3 only to say so.
   **Done when** the plume and the drop ears carry the identity with no face in frame.
 - [ ] **2.5 Idle after a long pause.** Ambient; the clock is read through the existing
   port. **She is** loafed — legs tucked, head up, looking flat at the viewer from slightly
-  below their eye line — the direction's own example of the register, *Biscuit has stopped
-  watching.* **Face:** fixed; this is the face at rest, and the pose that proves it.
+  below their eye line — the direction's own example of the register, _Biscuit has stopped
+  watching._ **Face:** fixed; this is the face at rest, and the pose that proves it.
   **Draw from**
   [Ambient: idle after a long pause](biscuit_pics/raw/README.md#ambient-idle-after-a-long-pause),
   the loaf first, the sphinx for the forelegs. **Mounts** at the page once the player has
@@ -207,5 +209,7 @@ is written down.
 - [Design direction](direction.md) — the pose set as a budget, and where she may be.
 - [Biscuit reference photography](biscuit_pics/raw/README.md) — the frames each item is
   drawn from.
+- [Biscuit character reference sheet](biscuit_sheet/README.md) — the generated draft of
+  item 0.2, and how it was made.
 - [Port a design system component](../how-to/port-a-design-system-component.md) — where
   each image mounts.
