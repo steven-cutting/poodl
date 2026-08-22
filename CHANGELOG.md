@@ -105,9 +105,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A word Poodl refused left the link made from the previous word on screen beside the
   refusal, still copyable, which read as the link for the word just refused.
   `OnlyAcceptedWordsBecomeCustomGames` says a refused word produces no link.
-- The custom-game form was handed the notice and the link the board was showing, so both
-  turned up inside a form that made neither — and closing the form threw the board's link
-  away. It opens on a surface of its own.
+- The share dialog (then the custom-game form) was handed the notice and the link the board
+  was showing, so both turned up inside a dialog that made neither — and closing the dialog
+  threw the board's link away. It opens on a surface of its own.
 - A stored game was believed about its own marks, so a store that had been written to could
   restore a game that was never won, with a keyboard and a shared grid to match. Every
   stored guess is scored again on load. Stored input is checked for shape as well as length.
@@ -129,6 +129,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Passing on the word of the game being played moves from a button under the keyboard into
+  the dialog the header's share action opens, renamed "Share a game" from "Set a word". The
+  dialog now holds both ways of making a link — **This game**, offered for as long as a game
+  is on the board and saying which game it means, and **Your own word** — restyled to the
+  design system's eyebrows, copy and filled primary. A link a section makes is shown inside
+  the dialog and goes when it closes; the end-of-game modal keeps its own "Share results" and
+  "Share the word", and the board shows only a link or a grid the conclusion made, once the
+  conclusion is put away. `CustomGameForm` is `SharePanel`. `sharing.allium`'s rules and
+  guarantees are unchanged; the prose naming the way in moved with the control, and
+  `CustomGameCreation` now relates to `ShareCurrentAnswer`.
 - The non-colour indication on results is a marker bar rather than a corner glyph:
   correct fills most of a tile or key's bottom edge, present shows a short centred
   fraction, absent carries no bar beside a dimmed letter. `game.allium`'s

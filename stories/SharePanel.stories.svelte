@@ -23,8 +23,13 @@
     '  **This game** is offered whenever the caller says there is a game — in every mode, from',
     '  before the first guess through to after the game is over — and withdrawn, section and',
     '  all, when there is none. The **No game to pass on** story is that state.',
+    '- `ShareCurrentAnswer` exposes `current_game.mode` and `current_game.status`, and the section',
+    '  says them — "Playing random." or "Practice game finished." — because the header chip that',
+    '  carries them is outside the dialog. The **This game, finished** story is the other',
+    '  phrasing.',
     '- `ShareCurrentAnswer.@guarantee TheAnswerIsNeverShownInOrderToShareIt`. Nothing here is',
-    '  handed the game, let alone its answer; asking for a link displays nothing about the word.',
+    '  handed the game — its mode and status only — let alone its answer; asking for a link',
+    '  displays nothing about the word.',
     '- `@guarantee OnlyAcceptedWordsBecomeCustomGames`. A word Poodl does not accept produces no',
     '  link, the refusal is perceivable both visually and to assistive technology, and the entry',
     '  stays put for the creator to correct rather than being cleared.',
@@ -43,10 +48,21 @@
     title: 'Sharing/SharePanel',
     component: SharePanel,
     tags: ['autodocs'],
-    args: { notice: null, shareable: null, onshareanswer, oncreate, oncopy, onclose },
+    args: {
+      notice: null,
+      shareable: null,
+      mode: 'random',
+      status: 'in_progress',
+      onshareanswer,
+      oncreate,
+      oncopy,
+      onclose
+    },
     argTypes: {
       notice: { control: false, description: 'The refusal, or nothing yet.' },
       shareable: { control: false, description: 'The link, once there is one.' },
+      mode: { control: false, description: 'The mode of the game on the board, if any.' },
+      status: { control: false, description: 'Whether that game is still being played.' },
       onshareanswer: { control: false, description: 'Offered only while a game is on the board.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
@@ -56,10 +72,22 @@
 <!-- Both sections, with nothing made yet: a game on the board, and an empty field. -->
 <Story name="Empty" />
 
+<!-- A finished game, its conclusion put away: the section says so, in the other phrasing. -->
+<Story
+  name="This game, finished"
+  args={{ mode: 'practice', status: 'won' }}
+  play={async ({ canvasElement }) => {
+    // ShareCurrentAnswer exposes current_game.mode and current_game.status.
+    await expect(within(canvasElement).getByRole('dialog')).toHaveTextContent(
+      'Practice game finished.'
+    );
+  }}
+/>
+
 <!-- No game on the board, so nothing to pass on: only a word of your own is offered. -->
 <Story name="No game to pass on">
   {#snippet template(args)}
-    <SharePanel {...args} onshareanswer={undefined} />
+    <SharePanel {...args} mode={null} status={null} onshareanswer={undefined} />
   {/snippet}
 </Story>
 
@@ -72,7 +100,11 @@
 <!-- The link, made. Nothing beside it says the word. -->
 <Story name="A link, made" args={{ shareable: LINK_MADE }} />
 
-<!-- Asking for a link to the game on the board. -->
+<!--
+  Asking for a link to the game on the board, from the keyboard alone. Close is
+  the dialog's first stop, and This game comes before the field, as the design
+  orders it.
+-->
 <Story
   name="Passing the word on"
   play={async ({ canvasElement }) => {
@@ -80,7 +112,14 @@
     onshareanswer.mockClear();
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole('button', { name: /make a link to this game/i }));
+    await expect(canvas.getByRole('dialog', { name: 'Share a game' })).toHaveFocus();
+
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: 'Make a link to this game' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
     await expect(onshareanswer).toHaveBeenCalledTimes(1);
   }}
 />

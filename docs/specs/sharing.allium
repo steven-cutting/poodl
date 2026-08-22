@@ -287,6 +287,12 @@ surface CustomGameCreation {
         fulfils AnswerObfuscation
         fulfils game/DirectManipulation
 
+    -- The other half of the dialog this is offered in: passing on the word of
+    -- the game on the board sits beside it, for as long as there is one.
+    related:
+        ShareCurrentAnswer(viewer.current_game)
+            when viewer.current_game != null
+
     @guarantee OnlyAcceptedWordsBecomeCustomGames
         -- A word that is not in the guess dictionary produces no link. The
         -- rejection says so in a way that is perceivable both visually and to

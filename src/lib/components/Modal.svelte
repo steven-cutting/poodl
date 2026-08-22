@@ -7,7 +7,8 @@
   /**
    * The shell every panel and the end-of-game modal sit in.
    *
-   * Four surfaces carry `FullyKeyboardOperable`, so this is where it is made
+   * The panel surfaces — settings, statistics, the mode dialog, and the share
+   * dialog's two — carry `FullyKeyboardOperable`, so this is where it is made
    * true once: the dialog takes focus when it opens, Escape closes it, and Tab
    * cycles inside rather than wandering out to the board behind.
    *

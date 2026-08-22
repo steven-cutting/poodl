@@ -271,6 +271,10 @@ describe('the page', () => {
 
     const dialog = screen.getByRole('dialog', { name: /share a game/i });
 
+    // ShareCurrentAnswer exposes the mode and the status: said in here, where
+    // the header chip is out of reach.
+    expect(dialog).toHaveTextContent('Playing practice.');
+
     await userEvent.click(
       within(dialog).getByRole('button', { name: /make a link to this game/i })
     );
@@ -279,6 +283,21 @@ describe('the page', () => {
 
     expect(links).toHaveLength(1);
     expect(dialog).toContainElement(links[0] as HTMLElement);
+  });
+
+  // The other half of AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard: no
+  // game, nothing to pass on, and the page is what says so.
+  it('offers nothing to pass on when no game is on the board', async () => {
+    render(Page);
+    await screen.findByRole('button', { name: 'Random' });
+    await userEvent.click(screen.getByRole('button', { name: 'Share a game' }));
+
+    const dialog = screen.getByRole('dialog', { name: /share a game/i });
+
+    expect(
+      within(dialog).queryByRole('button', { name: /make a link to this game/i })
+    ).not.toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: /word/i })).toBeInTheDocument();
   });
 
   /*

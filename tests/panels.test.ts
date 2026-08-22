@@ -391,6 +391,44 @@ describe('SharePanel', () => {
     expect(props.oncopy).not.toHaveBeenCalled();
   });
 
+  // ShareCurrentAnswer.FullyKeyboardOperable: asking for the link from the keyboard
+  // alone. Close is the dialog's first stop, and this game comes before the field.
+  it('asks for the link from the keyboard alone', async () => {
+    const props = panelProps();
+    render(SharePanel, props);
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Make a link to this game' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+
+    expect(props.onshareanswer).toHaveBeenCalledTimes(1);
+
+    await userEvent.tab();
+    expect(screen.getByRole('textbox', { name: /word/i })).toHaveFocus();
+  });
+
+  // ShareCurrentAnswer exposes current_game.mode and current_game.status, and a
+  // modal hides the header chip that says them — so the section says which game.
+  it('names the game it would pass on', () => {
+    const playing = render(SharePanel, panelProps({ mode: 'practice', status: 'in_progress' }));
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Playing practice.');
+    playing.unmount();
+
+    const finished = render(SharePanel, panelProps({ mode: 'practice', status: 'won' }));
+
+    expect(screen.getByRole('dialog')).toHaveTextContent('Practice game finished.');
+    finished.unmount();
+
+    // No game, no section — whatever the caller left in the props.
+    render(SharePanel, panelProps({ mode: 'random', status: 'won', onshareanswer: undefined }));
+
+    expect(screen.getByRole('dialog')).not.toHaveTextContent(/finished/i);
+  });
+
   it('offers nothing to pass on when there is no game', () => {
     render(SharePanel, panelProps({ onshareanswer: undefined }));
 

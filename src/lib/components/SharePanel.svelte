@@ -5,6 +5,7 @@
   import Notice from '$lib/components/Notice.svelte';
   import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
   import { WORD_LENGTH } from '$lib/config';
+  import type { GameMode, GameStatus } from '$lib/domain/types';
 
   /**
    * `sharing.allium` — the `CustomGameCreation` surface, and the way in to
@@ -27,6 +28,14 @@
    * conclusion has shown it. It says a new game rather than this one for the
    * same reason `OpenCustomGameLink` does — the link hands over the answer, not
    * the board, so the recipient starts custom and empty.
+   *
+   * `ShareCurrentAnswer` exposes the game's mode and status, and a modal dialog
+   * is where the header chip that says them stops being reachable: `aria-modal`
+   * hides the page behind from assistive technology, and the scrim dims it for
+   * everyone else. So the section says which game it would pass on, in the
+   * sentence `GameNavigation` uses for the same two facts — "Playing practice."
+   * or "Practice game finished." — and nothing more: `mode` and `status` are
+   * what the surface exposes, and the answer is still nowhere near this.
    *
    * `OnlyAcceptedWordsBecomeCustomGames`: a word Poodl does not accept produces
    * no link, the refusal is perceivable both ways, and the entry stays put for
@@ -55,12 +64,16 @@
    * The label is still here, visually hidden, so the field keeps its name; the
    * section's sentence describes it, and the placeholder is only the shape of
    * what goes in — bound to `WORD_LENGTH` like the `maxlength` beside it, so
-   * the two cannot come to disagree.
+   * the two cannot come to disagree. The sentence the field is described by
+   * states the length as well, because a description is read out where a
+   * placeholder may not be, and it is gone the moment typing starts.
    */
   let {
     notice = null,
     noticeSequence = 0,
     shareable = null,
+    mode = null,
+    status = null,
     onshareanswer,
     oncreate,
     oncopy,
@@ -70,6 +83,9 @@
     /** Advances so that an identical refusal is announced a second time. */
     noticeSequence?: number;
     shareable?: ShareableView | null;
+    /** Which game "This game" is: the two facts `ShareCurrentAnswer` exposes. */
+    mode?: GameMode | null;
+    status?: GameStatus | null;
     /** Offered only while a game is on the board: there is nothing to pass on otherwise. */
     onshareanswer?: () => void;
     oncreate: (entry: string) => void;
@@ -78,6 +94,16 @@
   } = $props();
 
   let entry = $state('');
+
+  /** The game named the way `GameNavigation` names it, or nothing when there is none. */
+  const which = $derived.by(() => {
+    if (mode === null) {
+      return null;
+    }
+    return status === 'in_progress'
+      ? `Playing ${mode}.`
+      : `${mode.charAt(0).toUpperCase()}${mode.slice(1)} game finished.`;
+  });
 
   /*
    * A rejection leaves the field alone — that is the other half of
@@ -104,6 +130,9 @@
   {#if onshareanswer !== undefined}
     <section>
       <h3>This game</h3>
+      {#if which !== null}
+        <p class="which">{which}</p>
+      {/if}
       <p>
         Make a link that sets this game's word for whoever opens it, as a new game of their own.
         Making it gives nothing away — not to you, not to them — and your game carries on untouched.
@@ -121,7 +150,8 @@
   <section>
     <h3>Your own word</h3>
     <p id={hintId}>
-      Make a game from a word you choose. It has to be a word Poodl would accept as a guess.
+      Make a game from a {WORD_LENGTH}-letter word you choose. It has to be one Poodl would accept
+      as a guess.
     </p>
     <form onsubmit={submit}>
       <div class="row">
@@ -173,6 +203,12 @@
     color: var(--text-2);
     font-size: var(--fs-body);
     line-height: 1.45;
+  }
+
+  /* Which game, in the reading ink, close under the eyebrow. */
+  .which {
+    margin-block-end: var(--s-2);
+    color: var(--text);
   }
 
   .note {

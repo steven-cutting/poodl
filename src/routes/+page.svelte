@@ -389,6 +389,8 @@
           notice={boardNotice}
           noticeSequence={app.noticeSequence}
           {shareable}
+          mode={game?.mode ?? null}
+          status={game?.status ?? null}
           onshareanswer={game !== null
             ? () => {
                 store?.dispatch({ kind: 'share_current_answer' });
