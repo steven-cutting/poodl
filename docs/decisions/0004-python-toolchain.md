@@ -21,9 +21,8 @@ Keep the Python toolchain. `pyproject.toml` declares a virtual project — `pack
 — whose only dependencies are `prek` and `ruff`, both pinned exactly and locked in
 `uv.lock`.
 
-Ruff is added on top of the template's gate list because the four scripts under
-`scripts/` are real Python that would otherwise go unlinted in a repository that gates
-everything else.
+Ruff is added on top of the template's gate list because the scripts under `scripts/` are
+real Python that would otherwise go unlinted in a repository that gates everything else.
 
 ## Consequences
 

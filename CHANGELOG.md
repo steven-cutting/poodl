@@ -26,6 +26,23 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with it: it already wore `src/app.css`, so it takes the new tokens and the display face,
   and `scripts/stage_site.sh` copies the three font files beside the stylesheet it copies.
 
+- The Allium checker is a project dependency rather than something a contributor is
+  assumed to have. `scripts/install_allium.py` pins version 3.5.3 by SHA-256 for each of
+  the four supported unix targets and installs the release binary into the gitignored
+  `.tools/bin/`, staging the download beside the installed copy and swapping it in only
+  once both its checksum and the version it reports agree with the pin, so a failed install
+  leaves a working one alone; `just install-allium` runs it, `just initialize` calls it,
+  `just check-specs` runs `allium check` over `docs/specs/`, and `just analyse-specs` runs
+  `allium analyse` over them for process completeness — data flow, reachability, deadlocks
+  and conflicts. The checksums are computed by hand because upstream publishes none for
+  these files, and the two the Homebrew formula does publish were cross-checked against
+  them. Both recipes report rather than gate and are deliberately absent from `just check`:
+  `allium check` fails on warnings as well as errors and `allium analyse` fails while any
+  finding remains, neither offers a way to waive one, and the modules carry a baseline of
+  twenty-five diagnostics and four findings — recorded in
+  `docs/how-to/work-with-the-specs.md` so a new one can be told from an old one. See
+  [decision 0011](docs/decisions/0011-project-managed-allium-cli.md).
+
 - `contract DirectManipulation` from `docs/specs/game.allium` is implemented. A tap performs
   its control's action and nothing besides; pinch-zoom is untouched and the viewport stays
   scalable; every control meets `config.minimum_touch_target` in both directions down to
