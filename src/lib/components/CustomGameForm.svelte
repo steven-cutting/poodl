@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import LinkReady from '$lib/components/LinkReady.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
@@ -81,7 +82,7 @@
         spellcheck="false"
         maxlength={WORD_LENGTH}
       />
-      <button type="submit">Make a link</button>
+      <Button type="submit">Make a link</Button>
     </div>
   </form>
 
@@ -104,36 +105,29 @@
 
   #hint,
   p {
-    margin-block: 0.25rem 0.5rem;
-    color: var(--muted);
-    font-size: 0.9rem;
+    margin-block: var(--s-1) var(--s-4);
+    color: var(--text-2);
+    font-size: var(--fs-small);
   }
 
   .row {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
   }
 
+  /*
+   * A control's boundary answers the same floor a key's does, and `font:
+   * inherit` keeps the field at the 16px iOS will not zoom on.
+   */
   input {
     flex: 1 1 auto;
     min-inline-size: 0;
-    padding: 0.5rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 4px;
+    padding: 0 var(--s-4);
+    border: var(--rule-w) solid var(--key-untried-rule);
+    border-radius: var(--radius-card);
     background: var(--background);
     color: var(--text);
     font: inherit;
     text-transform: uppercase;
-  }
-
-  button {
-    padding: 0.5rem 0.9rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
   }
 </style>

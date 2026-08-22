@@ -267,6 +267,10 @@ describe('StatisticsPanel', () => {
   it('takes the keyboard to the confirmation and back', async () => {
     render(StatisticsPanel, statisticsProps());
 
+    // Close sits in the dialog's header row, so it is the first stop.
+    await userEvent.tab();
+    expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
     await userEvent.tab();
     expect(screen.getByRole('button', { name: /reset/i })).toHaveFocus();
 

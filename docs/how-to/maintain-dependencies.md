@@ -55,7 +55,7 @@ relocking.
 `allium` is a checksummed binary, not a package, so no lockfile accounts for it and
 `just lock-check` cannot speak for it. `scripts/install_allium.py` holds the version and
 the SHA-256 of each supported artefact; see
-[decision 0010](../decisions/0010-project-managed-allium-cli.md).
+[decision 0011](../decisions/0011-project-managed-allium-cli.md).
 
 Upstream publishes no checksums for these files — its `SHA256SUMS.txt` covers only the
 editor extension and the language server — so all four have to be recomputed by hand:

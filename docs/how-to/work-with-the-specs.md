@@ -53,7 +53,7 @@ The `allium` command-line tool validates and analyses these files, and this proj
 pinned copy of it. `just initialize` installs it; afterwards, or after a version change,
 `just install-allium` puts it in the gitignored `.tools/bin/`. It is a checksummed binary
 rather than a package in either lockfile — see
-[decision 0010](../decisions/0010-project-managed-allium-cli.md).
+[decision 0011](../decisions/0011-project-managed-allium-cli.md).
 
 ```console
 just check-specs

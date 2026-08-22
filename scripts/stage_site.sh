@@ -40,4 +40,13 @@ cp -R site-root/. site/
 # beside the page is what puts the page inside that gate.
 cp src/app.css site/app.css
 
+# The faces the same stylesheet names, at the path it names them by. Inside the
+# app those three url()s go through Vite, which hashes the files and rewrites
+# them; this copy is raw, so the relative paths are resolved by the browser
+# against site/app.css and have to find something there. Mirroring src/ is what
+# lets the stylesheet be copied rather than rewritten, and a rewrite is the one
+# thing that would put a second, drifting copy of decision 0010 in this script.
+mkdir -p site/lib/assets/fonts
+cp src/lib/assets/fonts/*.woff2 site/lib/assets/fonts/
+
 mv build "site${BASE_PATH}"

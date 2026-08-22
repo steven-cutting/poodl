@@ -14,32 +14,57 @@
       than restated. A second palette would sit outside the contrast gate that
       tests/contrast.test.ts holds over the first one. It carries the theme too:
       the light and dark blocks answer the device with no script to run.
+
+      Since decision 0010 it carries the two faces as well, and the staging
+      copies them to the path the stylesheet names. If the page renders in the
+      system sans, that copy is what is missing.
     -->
     <link rel="stylesheet" href="./app.css" />
     <style>
-      /* Layout only. Every colour below is a token app.css already decided. */
+      /*
+       * Layout only. Every colour, face, size and step below is a token
+       * app.css already decided, which is what keeps this page inside the one
+       * system rather than beside it: the figures it used to state itself —
+       * 34rem, 1px, 1.5rem — are the tokens the app measures the same things
+       * with, so the page moves when the system does.
+       */
       .shell {
-        max-inline-size: 34rem;
+        max-inline-size: var(--shell-max);
         margin-inline: auto;
-        padding: 1.5rem 1rem 3rem;
+        padding: var(--s-8) var(--shell-pad) var(--s-11);
       }
 
       header {
-        border-block-end: 1px solid var(--tile-border);
-        padding-block-end: 0.75rem;
-        margin-block-end: 1.5rem;
+        border-block-end: var(--rule-w) solid var(--rule);
+        padding-block-end: var(--s-5);
+        margin-block-end: var(--s-8);
       }
 
+      /*
+       * The brand's own setting, as `Wordmark` sets it in the app: the display
+       * face, lowercase, tight. The name stays capitalised in the markup, so
+       * the title, the accessible name and the search snippet read as a name
+       * while the page shows the wordmark's case.
+       *
+       * The mark itself is deliberately not drawn here. Decision 0009 keeps
+       * this page to a name, a sentence and a link, and a second rendering of
+       * a placeholder lockup is exactly the growth that would reopen it.
+       */
       h1 {
         margin: 0;
-        font-size: 1.75rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        color: var(--text);
+        font-family: var(--font-display);
+        font-size: var(--fs-display-3);
+        font-weight: 600;
+        line-height: 1.1;
+        letter-spacing: var(--track-display);
+        text-transform: lowercase;
       }
 
       .tagline {
-        margin: 0.5rem 0 0;
-        color: var(--muted);
+        margin: var(--s-4) 0 0;
+        color: var(--text-2);
+        font-size: var(--fs-body);
       }
 
       .games {
@@ -49,13 +74,17 @@
       }
 
       .games a {
-        font-size: 1.25rem;
         color: var(--text);
+        font-family: var(--font-display);
+        font-size: var(--fs-title);
+        font-weight: 600;
+        letter-spacing: var(--track-title);
       }
 
       .games p {
-        margin: 0.25rem 0 0;
-        color: var(--muted);
+        margin: var(--s-2) 0 0;
+        color: var(--text-2);
+        font-size: var(--fs-body);
       }
     </style>
   </head>

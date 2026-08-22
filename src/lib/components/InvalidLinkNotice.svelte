@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
+
   /**
    * `sharing.allium` — the refusal half of the `CustomLinkEntry` surface.
    *
@@ -16,18 +18,16 @@
     that no longer exists.
   </p>
   <div class="actions">
-    <button
-      type="button"
-      class="primary"
+    <Button
+      variant="primary"
       onclick={() => {
         onaccept();
-      }}>Play a random game</button
+      }}>Play a random game</Button
     >
-    <button
-      type="button"
+    <Button
       onclick={() => {
         ondismiss();
-      }}>Dismiss</button
+      }}>Dismiss</Button
     >
   </div>
 </div>
@@ -35,11 +35,12 @@
 <style>
   .invalid {
     display: grid;
-    gap: 0.75rem;
-    margin-block: 1rem;
-    padding: 0.9rem 1rem;
-    border: 1px solid var(--mark-absent);
-    border-radius: 6px;
+    gap: var(--s-5);
+    margin-block: var(--s-6);
+    padding: var(--s-5) var(--s-6);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
   }
 
   p {
@@ -48,24 +49,7 @@
 
   .actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
     flex-wrap: wrap;
-  }
-
-  button {
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .primary {
-    border-color: var(--mark-correct);
-    background: var(--mark-correct);
-    color: var(--mark-text);
   }
 </style>

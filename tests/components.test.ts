@@ -41,6 +41,29 @@ describe('Tile', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Position 3, C, not in the word' })).toBeInTheDocument();
   });
+
+  /*
+   * The same guarantee's visible half: correct and present carry a marker bar
+   * and absent carries the absence of one. The bar is aria-hidden decoration
+   * with no role or name to query by, so `[data-marker]` is the structural
+   * hook — the same class of hook as the grandfathered `data-mark`, and
+   * `docs/reference/testing.md` records the trade. Its relative widths are
+   * geometry, held by the Tile stories where a layout engine exists.
+   */
+  it('draws a marker bar for the two marks that have one, and none for absent', () => {
+    render(Tile, { position: 1, letter: 'a', mark: 'correct' });
+    render(Tile, { position: 2, letter: 'b', mark: 'present' });
+    render(Tile, { position: 3, letter: 'c', mark: 'absent' });
+    render(Tile, { position: 4, letter: 'd' });
+
+    const marker = (name: string) =>
+      screen.getByRole('img', { name }).querySelector('[data-marker]');
+
+    expect(marker('Position 1, A, correct')).not.toBeNull();
+    expect(marker('Position 2, B, in the word, wrong place')).not.toBeNull();
+    expect(marker('Position 3, C, not in the word')).toBeNull();
+    expect(marker('Position 4, D')).toBeNull();
+  });
 });
 
 describe('Board', () => {
@@ -117,25 +140,23 @@ describe('Keyboard', () => {
 
   /*
    * DirectManipulation.EveryControlIsAComfortableTarget. A row divided equally
-   * across `narrowest_supported_width` leaves about 27px per control, which the
-   * words "Enter" and "Delete" do not fit at any legible size, so the two
-   * action keys carry the glyph every on-screen keyboard uses. The name is what
-   * the surface promised and it does not change: the glyph is hidden from
-   * assistive technology and the label says the word, so GameBoard.@guarantee
-   * FullyKeyboardOperable reads exactly as it did.
+   * among its letter keys leaves about 27px per control at
+   * `narrowest_supported_width`, which the words "Enter" and "Delete" do not
+   * fit at any legible size, so the two action keys show the icon every
+   * on-screen keyboard shows. The name is what the surface promised and it
+   * does not change: the icon is hidden from assistive technology and the
+   * label says the word, so GameBoard.@guarantee FullyKeyboardOperable reads
+   * exactly as it did.
    */
-  it('names the action keys in words while showing the glyph a finger expects', () => {
+  it('names the action keys in words while showing the icon a finger expects', () => {
     render(Keyboard);
 
-    for (const [name, glyph] of [
-      ['Enter', '⏎'],
-      ['Delete', '⌫']
-    ] as const) {
+    for (const name of ['Enter', 'Delete']) {
       const key = screen.getByRole('button', { name });
-      const mark = key.querySelector('[aria-hidden="true"]');
 
-      expect(mark?.textContent).toBe(glyph);
-      expect(key.textContent.trim()).toBe(glyph);
+      expect(key.querySelector('svg')).not.toBeNull();
+      // The icon is the whole face: no visible text competes with the label.
+      expect(key.textContent.trim()).toBe('');
     }
   });
 
@@ -151,24 +172,24 @@ describe('Keyboard', () => {
   /*
    * AGENTS.md invariant 6 and GameBoard.@guarantee
    * ResultsAreNeverConveyedByColourAlone. The accessible name carries the
-   * status for anyone reading by ear; the glyph carries it for a sighted
-   * colour-blind reader with no assistive technology, who has only the colour
-   * otherwise. A tile has carried one from the start; a key had not.
+   * status for anyone reading by ear; the marker bar carries it for a sighted
+   * colour-blind reader with no assistive technology — bar for correct,
+   * shorter bar for present, and for absent the absence of one beside a
+   * dimmed letter. A tile has carried a shape from the start; a key had not.
    */
   it('marks a known key with a shape as well as a colour', () => {
     render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])) });
 
-    const glyphs = new Map(
-      screen
-        .getAllByRole('button')
-        .map((key) => [key.getAttribute('data-mark'), key.textContent.trim()])
+    const keys = new Map(
+      screen.getAllByRole('button').map((key) => [key.getAttribute('data-mark'), key])
     );
 
-    expect(glyphs.get('correct')).toContain('■');
-    expect(glyphs.get('present')).toContain('▲');
-    expect(glyphs.get('absent')).toContain('×');
+    expect(keys.get('correct')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('present')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('absent')?.querySelector('[data-marker]')).toBeNull();
     // A key nothing is known about carries its letter and nothing else.
-    expect(glyphs.get('none')).toMatch(/^[A-Z]$/);
+    expect(keys.get('none')?.querySelector('[data-marker]')).toBeNull();
+    expect(keys.get('none')?.textContent.trim()).toMatch(/^[A-Z]$/);
   });
 
   it('reports the letter that was pressed', async () => {
@@ -206,5 +227,38 @@ describe('Keyboard', () => {
     for (const button of screen.getAllByRole('button')) {
       expect(button).toBeDisabled();
     }
+  });
+
+  /*
+   * Appearance.@guarantee AnUnavailableControlIsExempt, which is the clause
+   * that lets a finished game's keyboard go quiet at all. The exemption is
+   * only from the contrast figures; it buys nothing about how the state is
+   * known, and it names two things a dimmed key still owes. Both are asserted
+   * here because the dimming is one `opacity` declaration away from taking
+   * them with it, and neither gate above would notice: `tests/contrast.test.ts`
+   * measures tokens rather than rendered keys, and axe declines to judge a
+   * disabled control at all.
+   *
+   * So: the unavailability reaches the accessibility tree rather than resting
+   * on the dim, and every non-colour indication the live keyboard carried —
+   * the marker bar and the description — survives being switched off.
+   */
+  it('keeps a scored key legible to a reader once the game switches it off', () => {
+    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])), disabled: true });
+
+    const keys = new Map(
+      screen.getAllByRole('button').map((key) => [key.getAttribute('data-mark'), key])
+    );
+
+    for (const mark of ['correct', 'present', 'absent', 'none'] as const) {
+      expect(keys.get(mark)).toBeDisabled();
+    }
+
+    expect(keys.get('correct')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('present')?.querySelector('[data-marker]')).not.toBeNull();
+    expect(keys.get('absent')?.querySelector('[data-marker]')).toBeNull();
+
+    expect(screen.getByRole('button', { name: 'A, correct' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'O, not in the word' })).toBeDisabled();
   });
 });

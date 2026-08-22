@@ -96,6 +96,14 @@ obvious repair, and it was left undone rather than done badly.
 It is a few kilobytes and it buys a single palette; a second palette in a `style` block
 would have cost nothing to serve and everything to keep true.
 
+Since [decision 0010](0010-biscuit-games-design-system.md) the three font files ship twice
+as well, and they are not a few kilobytes. The copy at the root is unhashed and uncached
+across the two addresses, so a visitor who lands on the front door and then opens the game
+fetches both faces again. That is the price of the same trade one level up — the landing
+page is set in the product's type rather than in a stack of system fallbacks — and it is
+paid by one page that most visitors see once. It stops being a fair price if the root grows
+a second page, which is already the thing that reopens this decision.
+
 **The repository now owns an address larger than itself.** Poodl is one game and
 `pnut.fans` is a platform's front door, so a change to the front door is a change to the
 game's repository, its gate and its review. That is the wrong shape the moment there is
@@ -117,3 +125,4 @@ leaving a page outside the gates rests entirely on there being almost nothing to
 - [Configuration](../reference/configuration.md)
 - [Design direction](../design/direction.md)
 - [Decision 0001: A static site with no backend](0001-static-site-no-backend.md)
+- [Decision 0010: The Biscuit Games design system](0010-biscuit-games-design-system.md)

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '$lib/components/Button.svelte';
   import { describeCountdown } from '$lib/domain/announcements';
 
   /**
@@ -14,35 +15,23 @@
 
 <div class="countdown">
   <p>{describeCountdown(seconds)}</p>
-  <button
-    type="button"
+  <Button
     onclick={() => {
       onstop();
-    }}>Stop the countdown</button
+    }}>Stop the countdown</Button
   >
 </div>
 
 <style>
   .countdown {
     display: grid;
-    gap: 0.5rem;
+    gap: var(--s-4);
     justify-items: center;
-    margin-block: 1rem;
+    margin-block: var(--s-6);
   }
 
   p {
     margin: 0;
-    color: var(--muted);
-  }
-
-  button {
-    padding: 0.5rem 0.9rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
+    color: var(--text-2);
   }
 </style>

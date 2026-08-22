@@ -55,6 +55,11 @@ installs the system libraries Chromium links against.
 Stories live in `stories/` at the repository root, one file per component. The layout rule
 and what the story run proves are in [Testing](../reference/testing.md).
 
+One file deviates from one-per-component on purpose: `stories/Foundations.stories.svelte`
+documents the design tokens — palette, type ramp, spacing, radii — rather than a
+component, because the tokens are consumed by every component and owned by none. Its
+specimens are for looking; the measured pairs stay in `tests/contrast.test.ts`.
+
 ## Write a story
 
 Svelte CSF means the story file is itself a Svelte component. Call `defineMeta` in a module
@@ -123,7 +128,7 @@ to error; its own default only reports.
 3. **A contrast failure is usually a token, not a component.** Check the light palette, the
    dark palette and high contrast in `src/app.css` before changing any markup.
 4. **Silence is not always a pass.** Axe skips what it cannot attribute, including anything
-   behind `aria-hidden` — the tile's mark glyph is not checked by the contrast rule at all.
+   behind `aria-hidden` — a tile's marker bar is not checked by the contrast rule at all.
    Measure by hand when a guarantee rests on something the tool does not report.
 5. **If a rule is genuinely wrong for this project**, configure it once, where the
    configuration lives, with a stated reason. The rule about suppressions does not bend for

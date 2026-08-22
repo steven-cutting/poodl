@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
 
+  import Button from '$lib/components/Button.svelte';
   import DistributionChart from '$lib/components/DistributionChart.svelte';
   import Modal from '$lib/components/Modal.svelte';
   import { losses, winPercentage } from '$lib/domain/statistics';
@@ -40,7 +41,7 @@
 
   let confirming = $state(false);
   let confirmation: HTMLElement | undefined = $state();
-  let resetButton: HTMLElement | undefined = $state();
+  let resetButton: HTMLButtonElement | undefined = $state();
 
   /** Arm or disarm the two-step, and take focus to whichever step replaced it. */
   async function setConfirming(next: boolean): Promise<void> {
@@ -91,30 +92,31 @@
         answers you have seen. None of it can be recovered.
       </p>
       <div class="actions">
-        <button
-          type="button"
-          class="danger"
+        <!--
+          Deliberately not a special destructive look: ResettingIsDeliberate
+          puts the weight on this two-step and on the sentence above naming
+          what will go, not on a colour a colour-blind reader would miss.
+        -->
+        <Button
           onclick={() => {
             void setConfirming(false);
             onreset();
-          }}>Clear everything</button
+          }}>Clear everything</Button
         >
-        <button
-          type="button"
+        <Button
           onclick={() => {
             void setConfirming(false);
-          }}>Keep my statistics</button
+          }}>Keep my statistics</Button
         >
       </div>
     </fieldset>
   {:else}
     <p class="actions">
-      <button
-        type="button"
-        bind:this={resetButton}
+      <Button
+        bind:element={resetButton}
         onclick={() => {
           void setConfirming(true);
-        }}>Reset statistics</button
+        }}>Reset statistics</Button
       >
     </p>
   {/if}
@@ -124,73 +126,62 @@
   dl {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-    margin: 0 0 1.25rem;
+    gap: var(--s-5);
+    margin: 0 0 var(--s-7);
   }
 
   dl div {
     text-align: center;
   }
 
+  /* The design system's stat figure: a big tabular number over a micro label. */
   dt {
-    color: var(--muted);
-    font-size: 0.85rem;
+    color: var(--text-2);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    letter-spacing: var(--track-label);
+    text-transform: uppercase;
   }
 
   dd {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-size: var(--fs-stat);
+    font-weight: 600;
+    font-variant-numeric: var(--figures-tabular);
   }
 
   h3 {
-    margin-block: 0 0.5rem;
+    margin-block: 0 var(--s-4);
     font-size: 1rem;
   }
 
   .pool {
-    margin-block: 1rem;
-    color: var(--muted);
-    font-size: 0.9rem;
+    margin-block: var(--s-6);
+    color: var(--text-2);
+    font-size: var(--fs-small);
   }
 
   .confirm {
     margin: 0;
-    padding: 0.75rem 1rem;
-    border: 1px solid var(--tile-border);
-    border-radius: 6px;
+    padding: var(--s-5) var(--s-6);
+    border: var(--rule-w) solid var(--rule-strong);
+    border-radius: var(--radius-card);
   }
 
   legend {
-    padding-inline: 0.35rem;
+    padding-inline: var(--s-2);
     font-weight: 600;
   }
 
   .confirm p {
-    margin-block: 0 0.75rem;
+    margin-block: 0 var(--s-5);
   }
 
   .actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--s-4);
     flex-wrap: wrap;
     margin: 0;
-  }
-
-  button {
-    padding: 0.45rem 0.8rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .danger {
-    border-color: var(--mark-absent);
-    background: var(--mark-absent);
-    color: var(--mark-text);
   }
 </style>

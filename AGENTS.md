@@ -65,7 +65,9 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
   `*.spec.ts` reserved for Playwright. Component tests query by accessible role
   and name — never by class or test id.
 - Stories live in `stories/` at the repository root, as `*.stories.svelte` in
-  Svelte CSF, one file per component, covering the states its surface names.
+  Svelte CSF, one file per component — `Foundations.stories.svelte`, the token
+  specimens, is the one recorded exception — covering the states its surface
+  names.
   They are the workshop, not the evidence: `tests/` still carries the assertions
   and the coverage floor, and a story injects port fakes exactly as a test does.
   A new component lands with its test and its story in the same change.
@@ -165,7 +167,7 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
   gitignored `.tools/bin/` by `just install-allium`, and run by
   `just check-specs`. It reports rather than gates, and is deliberately not part
   of `just check`. See
-  [decision 0010](docs/decisions/0010-project-managed-allium-cli.md).
+  [decision 0011](docs/decisions/0011-project-managed-allium-cli.md).
 - Storybook as a component workshop: stories under `stories/`, each one rendered
   in Chromium with axe run over it, gated by `just check`. See
   [decision 0006](docs/decisions/0006-component-workshop.md).

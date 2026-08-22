@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '$lib/components/Icon.svelte';
   import type { KeyKnowledge, LetterMark } from '$lib/domain/types';
 
   let {
@@ -23,27 +24,6 @@
     absent: 'not in the word'
   };
 
-  // The same three shapes a tile carries. AGENTS.md invariant 6 asks for a
-  // non-colour indication on every key state as well as every letter result,
-  // and the accessible name alone leaves a sighted colour-blind reader with no
-  // assistive technology holding only the colour.
-  const GLYPH: Record<LetterMark, string> = {
-    correct: '\u25a0',
-    present: '\u25b2',
-    absent: '\u00d7'
-  };
-
-  /*
-   * DirectManipulation.EveryControlIsAComfortableTarget. A row divided equally
-   * across `config.narrowest_supported_width` leaves about 27px per control,
-   * and the words "Enter" and "Delete" do not fit that at any legible size. So
-   * the two action keys show what every on-screen keyboard shows and say the
-   * word in `aria-label` \u2014 the accessible name GameBoard promised is unchanged,
-   * and with no visible text there is no name to match it against.
-   */
-  const SUBMIT_GLYPH = '\u23ce';
-  const DELETE_GLYPH = '\u232b';
-
   const status = $derived(new Map(knowledge.map((entry) => [entry.letter, entry.status])));
 
   function labelFor(letter: string): string {
@@ -52,12 +32,32 @@
   }
 </script>
 
+<!--
+  The same indication scheme as the tiles, on the surface the player reads
+  every turn. An untried key hugs the page: the page's own ground, a drawn
+  border, the page's ink. A scored key steps onto the raised ground; correct
+  and present answer in their result's ink — letter, border and marker bar
+  together — and absent, with no hue and no bar, answers with its dimmed
+  letter. `AnUntriedKeyIsDistinguishableFromAScoredOne` states the figures and
+  `tests/contrast.test.ts` computes them.
+
+  The two action keys show icons and say the word in `aria-label` — the
+  accessible names GameBoard promised are unchanged, and with no visible text
+  there is no name to match against. They may be wider than a letter key and
+  never narrower, exactly as `EveryControlIsAComfortableTarget` now words it.
+-->
 <div class="keyboard" role="group" aria-label="Keyboard">
   {#each ROWS as row, index (index)}
     <div class="row">
       {#if index === ROWS.length - 1}
-        <button type="button" aria-label="Enter" {disabled} onclick={() => onsubmit?.()}>
-          <span aria-hidden="true">{SUBMIT_GLYPH}</span>
+        <button
+          type="button"
+          class="action"
+          aria-label="Enter"
+          {disabled}
+          onclick={() => onsubmit?.()}
+        >
+          <Icon name="corner-down-left" size={18} />
         </button>
       {/if}
       {#each [...row] as letter (letter)}
@@ -69,14 +69,20 @@
           onclick={() => onletter?.(letter)}
         >
           {letter.toUpperCase()}
-          {#if status.get(letter) != null}
-            <span class="glyph" aria-hidden="true">{GLYPH[status.get(letter) as LetterMark]}</span>
+          {#if status.get(letter) === 'correct' || status.get(letter) === 'present'}
+            <span class="marker" data-marker aria-hidden="true"></span>
           {/if}
         </button>
       {/each}
       {#if index === ROWS.length - 1}
-        <button type="button" aria-label="Delete" {disabled} onclick={() => ondelete?.()}>
-          <span aria-hidden="true">{DELETE_GLYPH}</span>
+        <button
+          type="button"
+          class="action"
+          aria-label="Delete"
+          {disabled}
+          onclick={() => ondelete?.()}
+        >
+          <Icon name="delete" size={18} />
         </button>
       {/if}
     </div>
@@ -86,7 +92,7 @@
 <style>
   .keyboard {
     display: grid;
-    gap: 0.35rem;
+    gap: var(--gap-row);
     margin-block-start: 1.5rem;
 
     /*
@@ -100,36 +106,49 @@
 
   .row {
     display: flex;
-    gap: 0.35rem;
+    gap: var(--gap-key);
   }
 
   /*
    * DirectManipulation.EveryControlIsAComfortableTarget. The invariant grants
    * the keyboard the one exemption in the contract, because ten keys and nine
    * gaps cannot each be 44px across 320px, and says what happens instead: the
-   * row is divided equally and a gap is kept between keys.
+   * row is divided equally among its letter keys and a gap is kept between
+   * keys.
    *
    * `flex: 1 1 0` is that division, and `min-inline-size: 0` is what lets it
-   * happen — the floors that used to sit here, 2rem on a letter and 4rem on
-   * Enter and Delete, defeat flex-shrink and made the bottom row 416px wide on
-   * a 320px screen. What a key gives up is now bounded by the width of the
-   * screen and by nothing else, so where there is room it takes the full 44px.
-   * `min-block-size` comes from the base rule in `app.css` and is met at every
-   * width. Measured in `stories/Keyboard.stories.svelte`; jsdom has no layout
-   * engine and can see none of it.
+   * happen — the floors that used to sit here defeat flex-shrink and made the
+   * bottom row 416px wide on a 320px screen. What a letter key gives up is
+   * bounded by the width of the screen and by nothing else, so where there is
+   * room it takes the full 44px. `min-block-size` comes from the base rule in
+   * `app.css` and is met at every width. Measured in
+   * `stories/Keyboard.stories.svelte`; jsdom has no layout engine and can see
+   * none of it.
    */
   button {
     position: relative;
     flex: 1 1 0;
     min-inline-size: 0;
     padding: 0.75rem 0.125rem;
-    border: 1px solid var(--key-border);
-    border-radius: 4px;
-    background: var(--key-background);
-    color: var(--key-text);
+    border: var(--rule-w) solid var(--key-untried-rule);
+    border-radius: var(--radius-key);
+    background: var(--key-untried-bg);
+    color: var(--text);
     font: inherit;
     font-weight: 600;
     cursor: pointer;
+  }
+
+  /*
+   * Wider, never narrower: the action keys end a turn rather than build one,
+   * and the icon earns comfortable room. 1.5 shares of the same division, so
+   * they still shrink with the screen instead of forcing a sideways scroll.
+   */
+  .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1.5 1 0;
   }
 
   button:disabled {
@@ -137,45 +156,47 @@
     opacity: 0.5;
   }
 
-  button:focus-visible {
-    outline: 3px solid var(--focus);
-    outline-offset: 2px;
+  /* Keys the guesses have scored step off the page onto the raised ground. */
+  button[data-mark='correct'],
+  button[data-mark='present'],
+  button[data-mark='absent'] {
+    background: var(--key-scored-bg);
   }
 
-  /*
-   * Fully opaque, for the reason the tile's glyph is: this is what discharges
-   * "colour never carries meaning alone", so it has to be legible to the
-   * readers it exists for. Axe cannot see it — the span is aria-hidden, so the
-   * contrast rule never inspects it at any opacity — and black on each of the
-   * three mark colours is already measured at 5.29, 7.99 and 4.98 to one. See
-   * `docs/decisions/0006-component-workshop.md`.
-   */
-  .glyph {
-    position: absolute;
-    inset-block-start: 1px;
-    inset-inline-end: 2px;
-    font-size: 0.5rem;
-    line-height: 1;
-    opacity: 1;
-  }
-
-  /* Keys repeat the board's palette, and the mark is in the accessible name
-  as well as the colour. */
   button[data-mark='correct'] {
-    background: var(--mark-correct);
-    border-color: var(--mark-correct);
-    color: var(--mark-text);
+    border: var(--rule-w-strong) solid var(--result-exact);
+    color: var(--result-exact);
   }
 
   button[data-mark='present'] {
-    background: var(--mark-present);
-    border-color: var(--mark-present);
-    color: var(--mark-text);
+    border: var(--rule-w-strong) solid var(--result-present);
+    color: var(--result-present);
   }
 
   button[data-mark='absent'] {
-    background: var(--mark-absent);
-    border-color: var(--mark-absent);
-    color: var(--mark-text);
+    border-color: var(--result-absent);
+    color: var(--result-absent-text);
+  }
+
+  /*
+   * The non-colour indication, as on a tile: exact fills most of the bottom
+   * edge, present a centred fraction, absent none. Drawn in `currentColor`, so
+   * it is always the same ink as the letter and the border.
+   */
+  .marker {
+    position: absolute;
+    inset-block-end: 3px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    block-size: 2px;
+    background: currentColor;
+  }
+
+  button[data-mark='correct'] .marker {
+    inline-size: 56%;
+  }
+
+  button[data-mark='present'] .marker {
+    inline-size: 20%;
   }
 </style>

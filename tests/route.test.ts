@@ -64,7 +64,9 @@ describe('the page', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
 
     expect(screen.getByRole('list', { name: 'Board' })).toBeInTheDocument();
-    expect(screen.getByText('Playing practice.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Playing practice — change game' })
+    ).toBeInTheDocument();
   });
 
   it('plays a guess from the on-screen keyboard', async () => {
@@ -90,7 +92,9 @@ describe('the page', () => {
     render(Page);
 
     expect(await screen.findByRole('list', { name: 'Board' })).toBeInTheDocument();
-    expect(screen.getByText('Playing custom.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Playing custom — change game' })
+    ).toBeInTheDocument();
   });
 
   /*
@@ -118,7 +122,9 @@ describe('the page', () => {
     await userEvent.click(screen.getByRole('button', { name: /random game/i }));
 
     expect(screen.getByRole('list', { name: 'Board' })).toBeInTheDocument();
-    expect(screen.getByText('Playing random.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Playing random — change game' })
+    ).toBeInTheDocument();
   });
 
   /*
@@ -151,7 +157,9 @@ describe('the page', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /random game/i }));
 
-    expect(screen.getByText('Playing random.')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Playing random — change game' })
+    ).toBeInTheDocument();
   });
 
   it('opens the settings, the statistics and the custom game form', async () => {
@@ -276,9 +284,10 @@ describe('the page', () => {
   });
 
   /*
-   * The conclusion covers GameNavigation, which carries
-   * ThreeModesCanBeStartedFromHere. Closing it reaches those controls again,
-   * and the board offers the conclusion back so nothing is lost.
+   * The conclusion covers the board, and GameNavigation — which carries
+   * ThreeModesCanBeStartedFromHere — sits behind the header's chip. Closing
+   * the conclusion reaches the chip again, the dialog it opens can start
+   * another game, and the board offers the conclusion back so nothing is lost.
    */
   it('closes the conclusion and offers it again', async () => {
     render(Page);
@@ -290,11 +299,59 @@ describe('the page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Endless' })).toBeInTheDocument();
 
+    await userEvent.click(screen.getByRole('button', { name: /change game/i }));
+    const games = screen.getByRole('dialog', { name: 'Games' });
+
+    expect(within(games).getByRole('button', { name: 'Endless' })).toBeInTheDocument();
+
+    await userEvent.click(within(games).getByRole('button', { name: 'Close' }));
     await userEvent.click(screen.getByRole('button', { name: /show the result again/i }));
 
     expect(screen.getByRole('dialog', { name: /you won|you lost/i })).toBeInTheDocument();
+  });
+
+  /*
+   * GameNavigation, reached the way a player reaches it now: the chip in the
+   * header opens the Games dialog, the sentence inside states the mode, and
+   * choosing one starts the game and puts the dialog away rather than leaving
+   * it over the fresh board.
+   */
+  it('opens the mode dialog from the chip, and a chosen mode closes it', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Playing practice — change game' }));
+
+    const games = screen.getByRole('dialog', { name: 'Games' });
+
+    expect(within(games).getByText('Playing practice.')).toBeInTheDocument();
+    expect(within(games).getByText(/counts as a loss/i)).toBeInTheDocument();
+
+    await userEvent.click(within(games).getByRole('button', { name: 'Endless' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Playing endless — change game' })
+    ).toBeInTheDocument();
+  });
+
+  /*
+   * Welcome.@guarantee AFirstVisitIsExplained: "the explanation is reachable
+   * again afterwards rather than being shown once and lost". The header's
+   * info button is the mechanism, and it works mid-game.
+   */
+  it('keeps the explanation reachable from the header', async () => {
+    render(Page);
+    await userEvent.click(await screen.findByRole('button', { name: 'Practice' }));
+    await userEvent.click(screen.getByRole('button', { name: 'How to play' }));
+
+    const help = screen.getByRole('dialog', { name: 'How to play' });
+
+    expect(within(help).getByRole('group', { name: /how to play/i })).toBeInTheDocument();
+
+    await userEvent.click(within(help).getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   /*
