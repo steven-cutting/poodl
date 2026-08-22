@@ -82,8 +82,9 @@ rather than gate until the counts below reach zero.
 | `game.allium` | 17 | 4 |
 
 Twenty-five diagnostics in total: sixteen warnings and nine informational. Fourteen are
-`allium.reference.unknownName` against `words/config`, where a module reaches for a name
-that `words.allium` does not define.
+`allium.reference.unknownName`, where a module reaches for a name its import does not
+define — half of those against `words/config`, the rest against `words/Words`,
+`game/config`, `game/GameBoard` and `game/GameConclusion`.
 
 Four findings, all of them in `game.allium`. Two are `missing_producer`: nothing
 establishes `Game.mode = endless`, which `ArmEndlessCountdown` and

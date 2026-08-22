@@ -18,8 +18,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and conflicts. The checksums are computed by hand because upstream publishes none for
   these files, and the two the Homebrew formula does publish were cross-checked against
   them. Both recipes report rather than gate and are deliberately absent from `just check`:
-  they fail on warnings as well as errors, offer no way to waive one, and the modules carry
-  a baseline of twenty-five diagnostics and four findings — recorded in
+  `allium check` fails on warnings as well as errors and `allium analyse` fails while any
+  finding remains, neither offers a way to waive one, and the modules carry a baseline of
+  twenty-five diagnostics and four findings — recorded in
   `docs/how-to/work-with-the-specs.md` so a new one can be told from an old one. See
   [decision 0010](docs/decisions/0010-project-managed-allium-cli.md).
 
