@@ -146,6 +146,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The default answer list is an easier one: 1,122 words supplied by the maintainer, trimmed
+  by hand (duplicates, entries that were not five letters, one trademark, fifteen obscure
+  words and one ethnic slur, which stays in the append-only guess dictionary and is simply
+  never drawn) and carrying `poodl`. The 2,394-word SCOWL/12dicts curation stays in the
+  repository as `src/lib/data/answers-scowl.txt`, unimported and unbundled, so it can be
+  restored by swapping the file names. `words.allium` lowers `config.min_answer_words` from
+  2,000 to 1,000 and restates its design intent as roughly 1,100 answers and roughly 15,000
+  dictionary words; `src/lib/config.ts` and the configuration reference mirror it.
+- The guess dictionary grows from 11,441 to 15,029 words: everything it held, every new
+  answer, and a 14,855-word list of accepted guesses the maintainer supplied. Nothing was
+  withdrawn. Both supplied lists were copied from a version of the game built with Replit,
+  which neither provided nor recorded their source; `static/word-lists-NOTICE.txt` and
+  [Replace the word lists](docs/how-to/replace-the-word-lists.md) record that as a known
+  gap rather than a resolved provenance.
 - The How to play explanation takes the design system's dialog shape and says less, more
   plainly. `HowToPlay` is now the body alone — one sentence for the attempts and the word
   length, the board's own `Tile` beside each of the three marks with its marker bar, and a

@@ -106,7 +106,7 @@ describe('decoding a token this scheme did not produce', () => {
   /*
    * `DecodeRejectsWhatItDidNotProduce` and `AlterationIsDetectedToABound`, over
    * every single-character alteration of every word in the list rather than a
-   * sample: 11,441 words, eight positions, thirty-one substitutions apiece.
+   * sample: 15,029 words, eight positions, thirty-one substitutions apiece.
    *
    * The two counts asserted are the two the specification states absolutely,
    * and neither is a matter of luck. An altered token cannot decode back to its
@@ -119,7 +119,7 @@ describe('decoding a token this scheme did not produce', () => {
    *
    * The survivors themselves are counted rather than forbidden, because
    * `AlterationIsDetectedToABound` promises a bound and not their absence. The
-   * bound asserted here is far looser than the fourteen this sweep actually
+   * bound asserted here is far looser than the sixteen this sweep actually
    * finds, so it reports a scheme that got worse without failing whenever the
    * check value happens to shift.
    */
@@ -161,7 +161,7 @@ describe('decoding a token this scheme did not produce', () => {
     expect(altered).toBe(dictionary.length * TOKEN_LENGTH * (TOKEN_ALPHABET.length - 1));
     expect(ownWord).toBe(0);
     expect(startsAGame).toBe(0);
-    // One in sixty-five thousand is the stated bound; this sweep finds fourteen.
+    // One in sixty-five thousand is the stated bound; this sweep finds sixteen.
     expect(survivors).toBeLessThan(altered / 65536);
   });
 

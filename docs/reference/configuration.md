@@ -103,7 +103,7 @@ name is drift in the other direction.
 | --- | --- | --- |
 | `WORD_LENGTH` | 5 | `words.allium`, `config.word_length` |
 | `GAME_NAME` | `poodl` | `words.allium`, `config.game_name`. The one word a specification names, and an ordinary answer word. Not the same entry as `SHARE_HEADING`. |
-| `MIN_ANSWER_WORDS` | 2000 | `words.allium`, `config.min_answer_words` |
+| `MIN_ANSWER_WORDS` | 1000 | `words.allium`, `config.min_answer_words` |
 | `MIN_GUESS_WORDS` | 10000 | `words.allium`, `config.min_guess_words` |
 | `MAX_ATTEMPTS` | 6 | `game.allium`, `config.max_attempts` |
 | `ENDLESS_COUNTDOWN_MS` | 10000 | `game.allium`, `config.endless_countdown`, stated there as `10.seconds` |

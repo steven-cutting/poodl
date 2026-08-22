@@ -1,8 +1,13 @@
-Poodl's word lists are derived from two collections: SCOWL, by Kevin
-Atkinson, and 12dicts, by Alan Beale. One entry comes from neither -- the
-game's own name, "poodl", which the specification requires both lists to
-carry. See docs/how-to/replace-the-word-lists.md for their provenance and
-for the obligations any replacement has to satisfy.
+Poodl's word lists come from three places. The guess dictionary merges
+words derived from two collections -- SCOWL, by Kevin Atkinson, and
+12dicts, by Alan Beale -- with a list of five-letter words the maintainer
+supplied from a version of the game built with Replit, which neither
+provided nor recorded where those words came from. The answer list was
+supplied the same way and trimmed by hand. One entry comes from none of
+these -- the game's own name, "poodl", which the specification requires
+both lists to carry. See docs/how-to/replace-the-word-lists.md for the
+provenance, for what is not known about it, and for the obligations any
+replacement has to satisfy.
 
 
 SCOWL (Spell Checker Oriented Word Lists) 2020.12.07
