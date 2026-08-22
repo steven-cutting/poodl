@@ -195,9 +195,10 @@ rule RejectCustomAnswer {
 -- Passing on the answer in play ------------------------------------------
 
 -- The other way a custom link comes about: not a word the player chose, but
--- the one their own game is built on. It works the same from the board and
--- from the end-of-game modal, and in every mode — including a custom game,
--- so a word that was sent to somebody can be sent on by them.
+-- the one their own game is built on. It works the same from the share dialog
+-- the header opens, where it sits beside CreateCustomGameLink, and from the
+-- end-of-game modal, and in every mode — including a custom game, so a word
+-- that was sent to somebody can be sent on by them.
 --
 -- Nothing is recorded here either. As with CreateCustomGameLink, the link is
 -- handed over and that is the end of it.
@@ -286,6 +287,12 @@ surface CustomGameCreation {
         fulfils AnswerObfuscation
         fulfils game/DirectManipulation
 
+    -- The other half of the dialog this is offered in: passing on the word of
+    -- the game on the board sits beside it, for as long as there is one.
+    related:
+        ShareCurrentAnswer(viewer.current_game)
+            when viewer.current_game != null
+
     @guarantee OnlyAcceptedWordsBecomeCustomGames
         -- A word that is not in the guess dictionary produces no link. The
         -- rejection says so in a way that is perceivable both visually and to
@@ -314,9 +321,11 @@ surface CustomGameCreation {
         -- all be done from the keyboard alone.
 }
 
--- Handing on the word the player is playing. One surface covers the board and
--- the end-of-game modal both, because is_current spans a game in progress and
--- one just finished, and an abandoned game is never on the board to share.
+-- Handing on the word the player is playing. One surface covers the share
+-- dialog and the end-of-game modal both, because is_current spans a game in
+-- progress and one just finished, and an abandoned game is never on the board
+-- to share. During play the way in is the dialog the header opens, shared
+-- with CustomGameCreation; once the game is over the modal offers it too.
 surface ShareCurrentAnswer {
     facing viewer: game/Player
 

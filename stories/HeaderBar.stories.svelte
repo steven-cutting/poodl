@@ -24,8 +24,8 @@
     'info button. `AvailableWhetherOrNotAGameExists` holds because the header renders',
     'unconditionally, before hydration included.',
     '',
-    'The action labels are the old toolbar’s — Set a word, Statistics, Settings — kept so',
-    'every query that asks by name still finds them, plus the new How to play.',
+    'Statistics and Settings keep the old toolbar’s labels, so every query that asks by name',
+    'still finds them; Share a game is named for the dialog it opens, and How to play is new.',
     '',
     '`contract DirectManipulation` has no exemption here, so the narrow story is the',
     'executable evidence: at `config.narrowest_supported_width` nothing scrolls sideways and',
@@ -73,7 +73,7 @@
     await userEvent.tab();
     await expect(chip).toHaveFocus();
 
-    for (const name of ['Set a word', 'Statistics', 'Settings', 'How to play']) {
+    for (const name of ['Share a game', 'Statistics', 'Settings', 'How to play']) {
       await userEvent.tab();
       await expect(canvas.getByRole('button', { name })).toHaveFocus();
     }

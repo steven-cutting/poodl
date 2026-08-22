@@ -5,12 +5,11 @@
   import GameScreen from '../src/lib/components/GameScreen.svelte';
   import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
   import { keyboardKnowledge } from '../src/lib/domain/keyboard';
-  import { CUSTOM_GAME, LINK, LINK_MADE, LOST_GAME, PLAYING, WON_GAME } from './fixtures';
+  import { CUSTOM_GAME, GRID, GRID_MADE, LOST_GAME, PLAYING, WON_GAME } from './fixtures';
 
   const onletter = fn();
   const ondelete = fn();
   const onsubmit = fn();
-  const onshareanswer = fn();
   const oncopy = fn();
   const ondismissnotice = fn();
   const onshowresult = fn();
@@ -18,8 +17,11 @@
   const OVERVIEW = [
     'The board, the keyboard and everything Poodl says while a game is on.',
     '',
-    'Governing surfaces: `GameBoard` and `PhysicalKeyboardInput` in `docs/specs/game.allium`, and',
-    '`ShareCurrentAnswer` in `docs/specs/sharing.allium`.',
+    'Governing surfaces: `GameBoard` and `PhysicalKeyboardInput` in `docs/specs/game.allium`. The',
+    'board is `related:` to `ShareCurrentAnswer` in `docs/specs/sharing.allium` but provides',
+    'nothing of it: passing the word on, and the link that makes, belong to the share dialog and',
+    'the conclusion. What the board keeps once the conclusion is put away is the grid',
+    '`ShareResults` made.',
     '',
     'Guarantees this component carries:',
     '',
@@ -33,9 +35,11 @@
     '- `@guarantee EveryRejectionIsAnnounced`, by way of **Notice**, with the typed letters still',
     '  on the board to be corrected.',
     '- `@guarantee EverySubmittedGuessIsAnnounced`, by way of **Announcer**.',
-    '- `ShareCurrentAnswer.@guarantee AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard`, and',
-    '  `@guarantee TheAnswerIsNeverShownInOrderToShareIt`: making a link displays nothing about',
-    '  the word.',
+    '- `ShareCurrentAnswer.@guarantee NothingAboutTheLinkIsKept`, by holding no link at all: a',
+    '  link lives inside the surface that made it — the share dialog the header opens during',
+    '  play, or the conclusion — and goes when that closes. Nothing here renders one.',
+    '- `ShareResults.@guarantee TheGridIsAvailableAsText`: the grid shared from the conclusion',
+    '  stays on the board as text once the conclusion is put away, where the player is looking.',
     '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
     '  measures what the invariant closes on — that the whole screen is playable at',
     '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
@@ -62,7 +66,6 @@
       onletter,
       ondelete,
       onsubmit,
-      onshareanswer,
       oncopy,
       ondismissnotice
     },
@@ -71,7 +74,10 @@
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
       notice: { control: false, description: 'What Poodl is saying, if anything.' },
-      shareable: { control: false, description: 'The link or the grid this board just made.' },
+      shareable: {
+        control: false,
+        description: 'The grid the conclusion made, still here after it was put away. Never a link.'
+      },
       onshowresult: { control: false, description: 'Offered only once a conclusion is closed.' }
     },
     parameters: { docs: { description: { component: OVERVIEW } } }
@@ -141,16 +147,27 @@
   }}
 />
 
-<!-- The link this board just made, ready to hand on. -->
+<!--
+  The grid shared from the conclusion, still on the board after the conclusion
+  was put away. This is the only thing the board holds: a link made in the
+  conclusion, like one made in the share dialog, closes with the surface that
+  made it, so there is no story of the board holding one.
+-->
 <Story
-  name="Passing the word on"
-  args={{ shareable: LINK_MADE }}
+  name="Holding a grid to share"
+  args={{
+    game: WON_GAME,
+    keyboard: keyboardKnowledge(WON_GAME.guesses),
+    onshowresult,
+    shareable: GRID_MADE
+  }}
   play={async ({ canvasElement }) => {
-    // ShareCurrentAnswer.@guarantee TheAnswerIsNeverShownInOrderToShareIt
+    // ShareResults.@guarantee TheGridIsAvailableAsText
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByRole('textbox', { name: /link/i })).toHaveValue(LINK);
-    await expect(canvasElement.textContent).not.toContain(PLAYING.answer.toUpperCase());
+    await expect(canvas.getByRole('textbox', { name: /result/i })).toHaveValue(GRID);
+    await expect(canvas.getByRole('button', { name: 'Show the result again' })).toBeInTheDocument();
+    await expect(canvas.queryByRole('textbox', { name: /link/i })).not.toBeInTheDocument();
   }}
 />
 
@@ -170,12 +187,23 @@
 
   The keyboard stories measure the keys. This one measures the claim the
   invariant closes on — that at `config.narrowest_supported_width` the game is
-  playable without scrolling sideways — over everything the board puts on the
-  screen at once, which is where a five-tile row, a toolbar and a keyboard get
-  to disagree about the space they have.
+  playable without scrolling sideways — over everything the board can put on the
+  screen at once: the board with the most controls on it is a finished one whose
+  result was shared from the conclusion and then put away, holding the grid, the
+  notice its copy left, and the way back to the result. That is where a five-tile
+  row, a notice with its control, a grid with its copy button, a button and a
+  keyboard get to disagree about the space they have.
 -->
 <Story
   name="At the narrowest supported width"
+  args={{
+    game: WON_GAME,
+    keyboard: keyboardKnowledge(WON_GAME.guesses),
+    onshowresult,
+    shareable: GRID_MADE,
+    notice: { kind: 'results_copied' },
+    noticeSequence: 1
+  }}
   parameters={{ docs: { story: { inline: false } } }}
   play={async ({ canvasElement }) => {
     // game/DirectManipulation.@invariant EveryControlIsAComfortableTarget

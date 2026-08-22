@@ -16,7 +16,9 @@
     'The end-of-game modal. Random waits here indefinitely; endless counts down and moves on',
     'unless the player stops it.',
     '',
-    'Governing surface: `GameConclusion` in `docs/specs/game.allium`.',
+    'Governing surface: `GameConclusion` in `docs/specs/game.allium`. The footer’s two share',
+    'actions are `ShareCurrentAnswer`’s and `ShareResults`’ in `docs/specs/sharing.allium`: the',
+    'modal is one of the two ways in to the first, and the only way in to the second.',
     '',
     'Guarantees this component carries:',
     '',
@@ -28,6 +30,9 @@
     '  however many have been played.',
     '- `@guarantee ConclusionIsAnnounced` is **Announcer**’s, not this one’s: the modal shows the',
     '  conclusion and the live region says it.',
+    '- `ShareCurrentAnswer.@guarantee FullyKeyboardOperable` and',
+    '  `ShareResults.@guarantee TheGridIsAvailableAsText`, for what the footer makes: the link and',
+    '  the grid are shown in here, as text, and the keyboard reaches every action.',
     '',
     'It closes, and that is a decision worth stating. The specification gives the modal no',
     'dismissal, but a dialog that trapped the keyboard with no way out would take',
@@ -156,8 +161,10 @@
   play={async ({ canvasElement }) => {
     // GameConclusion.@guarantee FullyKeyboardOperable
     // GameConclusion.@guarantee NoDailyLimit
+    // ShareCurrentAnswer.@guarantee FullyKeyboardOperable
     onnewgame.mockClear();
     onshareresults.mockClear();
+    onshareanswer.mockClear();
     const canvas = within(canvasElement);
 
     await expect(canvas.getByRole('dialog', { name: /you won/i })).toHaveFocus();
@@ -176,5 +183,11 @@
     await expect(canvas.getByRole('button', { name: /share results/i })).toHaveFocus();
     await userEvent.keyboard('[Space]');
     await expect(onshareresults).toHaveBeenCalledTimes(1);
+
+    // The other way in to ShareCurrentAnswer, once the game is over.
+    await userEvent.tab();
+    await expect(canvas.getByRole('button', { name: /share the word/i })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(onshareanswer).toHaveBeenCalledTimes(1);
   }}
 />
