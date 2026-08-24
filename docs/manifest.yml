@@ -12,10 +12,8 @@
     {"path": "design/direction.md", "title": "Design direction", "kind": "explanation", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_direction"], "requires": []},
     {"path": "design/resource-index.md", "title": "Design resource index", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["design_resource_index"], "requires": []},
     {"path": "design/biscuit_pics/raw/README.md", "title": "Biscuit reference photography", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_reference_photography"], "requires": []},
-    {"path": "design/biscuit_sheet/README.md", "title": "Biscuit character reference sheet", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_reference_sheet"], "requires": []},
     {"path": "design/biscuit-character-bible.md", "title": "Biscuit character bible", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_character_bible"], "requires": []},
     {"path": "design/biscuit-image-backlog.md", "title": "Biscuit image backlog", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_image_backlog"], "requires": []},
-    {"path": "design/biscuit_sheet_alt/README.md", "title": "Biscuit character reference sheet, alternative draft", "kind": "reference", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["biscuit_reference_sheet_alt"], "requires": []},
 
     {"path": "how-to/develop-locally.md", "title": "Develop locally", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["local_development"], "requires": []},
     {"path": "how-to/test-and-debug.md", "title": "Test and debug", "kind": "how-to", "audience": ["contributor", "maintainer", "agent"], "canonical_for": ["test_workflow"], "requires": []},
