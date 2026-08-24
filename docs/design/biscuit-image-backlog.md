@@ -74,6 +74,9 @@ drawn but not yet accepted stays unticked.
   can close has been closed in the bible's decisions table. _Drawn 2026-08-22 as a
   generated draft, not yet accepted: see
   [the character reference sheet](biscuit_sheet/README.md)._
+  _A second generated draft, made separately on 2026-08-22 without reference to the
+  first, is under [the alternative reference sheet](biscuit_sheet_alt/README.md); neither
+  is accepted._
 - [ ] **0.3 The mark candidates.** The illustrator's brief the direction reserves for the
   mark: at least three constructions, each abstract and geometric — one from a curl, one
   from an ear, one from a letterform — and each with its single wrong element named, per
@@ -221,5 +224,7 @@ is written down.
   drawn from.
 - [Biscuit character reference sheet](biscuit_sheet/README.md) — the generated draft of
   item 0.2, and how it was made.
+- [Biscuit character reference sheet, alternative draft](biscuit_sheet_alt/README.md) — the
+  second generated draft of item 0.2, made separately for comparison.
 - [Port a design system component](../how-to/port-a-design-system-component.md) — where
   each image mounts.

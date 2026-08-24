@@ -1,0 +1,4 @@
+=== TASK ===
+Use the built-in image_gen tool to generate the image described under COMPOSITION, obeying the IDENTITY AND RENDERING BLOCK in every detail. Generate it once, then look at the result. Regenerate at most ONE more time, and only if the first result clearly breaks a hard rule: an all-over fur texture or visible shading/gradients instead of flat fills, a cream/beige/blond body instead of brown #8a5230, a black nose, dark button eyes with no amber iris, missing cream brow pips, a show trim, anything worn or held, lettering, a white halo/sticker outline, or a background that is not flat near-black. Keep the better of the two. Do not use the edit mode, do not crop, do not resize.
+
+Copy the chosen generated PNG into the current working directory as out.png (an exact copy, no resizing), and reply with only the absolute path of the copy.
