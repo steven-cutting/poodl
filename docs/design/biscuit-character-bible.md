@@ -15,7 +15,7 @@ the record of the decisions that keep one drawing of her consistent with the nex
 It owns how she looks and how she is rendered. It does not own why she exists, where she is
 allowed to be or how she sounds — [Design direction](direction.md#biscuit) does, and
 nothing here relaxes it — and it does not own the evidence:
-[Biscuit reference photography](biscuit_pics/raw/README.md) holds seventy-five frames of
+[Biscuit reference photography](biscuit_pics/raw/README.md) holds eighty-six frames of
 the real dog, each read and graded, and where this page states a rule the evidence for it
 is a link into that index rather than a restatement. The images this page governs are
 listed, each with its own brief, in [Biscuit image backlog](biscuit-image-backlog.md).
@@ -64,7 +64,7 @@ specified as [the first item of the backlog](biscuit-image-backlog.md#tier-0-bef
 
 ### Proportions
 
-Nothing in the corpus can measure them. The twenty full frames added whole uncut bodies, so
+Nothing in the corpus can measure them. The full frames added whole uncut bodies, so
 her outline is no longer in doubt, but every one is shot from a standing person's eye onto a
 small dog and none has an object of known size beside her, so leg length and body depth are
 still inferred —

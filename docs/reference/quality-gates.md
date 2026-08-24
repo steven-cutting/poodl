@@ -52,7 +52,7 @@ Third-party hooks are pinned to commit SHAs with a version comment beside each.
 
 The large-file check caps a file at 768 KB and has exactly one exclusion:
 `docs/design/biscuit_pics/raw/full/`, the Biscuit reference photographs. They are
-unaltered camera frames of 3 to 7 MB, kept at capture resolution because the character
+unaltered camera frames of up to 8 MB, kept at capture resolution because the character
 reference sheet is drawn from them and a reader has to be able to zoom to a pad or an iris
 to check a claim [the index](../design/biscuit_pics/raw/README.md) makes about it — a
 verification pass over that page found four of its own claims false that way. The cap still
