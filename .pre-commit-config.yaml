@@ -52,6 +52,11 @@ repos:
     hooks:
       - id: check-added-large-files
         args: [--maxkb=768]
+        # The Biscuit reference photographs are unaltered camera frames and are
+        # kept at capture resolution on purpose: the character reference sheet is
+        # drawn from them, and a reader has to be able to zoom to a pad or an iris
+        # to check a claim the index makes. See docs/design/biscuit_pics/raw/README.md.
+        exclude: ^docs/design/biscuit_pics/raw/full/
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-json

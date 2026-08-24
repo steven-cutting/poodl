@@ -8,12 +8,18 @@ requires: []
 
 # Biscuit reference photography
 
-This directory holds 55 reference images of Biscuit, the real miniature poodle the
+This directory holds 75 reference images of Biscuit, the real miniature poodle the
 platform's mascot is drawn from. They are all of the same dog, and they range from when she
-was a little puppy to an adolescent, gathered as reference material for
+was a little puppy to the grown animal she is now, gathered as reference material for
 [the first pose set](../../direction.md#the-first-pose-set): the character reference sheet
 that has to fix her proportions, colouring, face, ears, tail and paws before an illustrator
 draws a single pose from them.
+
+They sit in two folders, and the difference between them decides what each is worth.
+`cutouts/` holds 55 iOS sticker cutouts, the subject lifted out of a photograph with the
+background removed; `full/` holds 20 unaltered camera frames, background and all. The
+cutouts came first and carry most of the poses; the full frames came later and carry
+everything the cutouts destroyed.
 
 Nothing here is a finished asset. The images are source material only, kept beside the
 design direction they inform rather than beside the shipped icons and fonts under
@@ -25,26 +31,58 @@ unread folder is how a character drifts.
 
 ## What these files are
 
+Two sub-corpora with opposite failure modes. Read which folder a frame is in before taking
+anything from it.
+
+### The 55 cutouts
+
 They are not raw camera frames. All 55 are 480×480 iOS sticker cutouts: the subject lifted
 out of a photograph with the background removed, then exported. That has four consequences
 the reference sheet has to work around.
 
 - **The edge is the cutout's, not the animal's.** Where a leg, an ear or the tail ran past
-  the edge of the source photograph, the cutout slices it flat. Nothing in this corpus is a
-  reliable outline, and proportion cannot be measured from any of it.
+  the edge of the source photograph, the cutout slices it flat. No cutout is a reliable
+  outline, and proportion cannot be measured from any of them.
 - **Two formats, and the difference matters.** 35 files are PNG and keep a live alpha
   channel, so she floats on transparency. 20 are JPEG, the same cutouts flattened onto
   **black**, which costs the floor line and the rear outline outright and collapses a brown
   dog in dim light toward a silhouette.
 - **Some carry a baked-in white sticker outline** that adds several pixels to her real edge.
   Those must never be traced for the reduced icon-mark.
-- **Seven pairs are one instant exported twice**, usually a PNG and its JPEG twin. The
-  corpus therefore holds about 48 distinct moments, not 55, and treating both halves of a
-  pair as independent evidence quietly doubles the weight of seven of them.
+- **Seven pairs are one instant exported twice**, usually a PNG and its JPEG twin. Treating
+  both halves of a pair as independent evidence quietly doubles the weight of seven moments.
 
 Two of the 55 are not photographs at all, and one shows no dog. They are listed and marked
 rather than deleted, because a reader who finds them unlabelled will assume they are
 reference.
+
+### The 20 full frames
+
+These are the photographs themselves, and they come in three tiers that matter. Eleven are
+phone captures at 5712 × 4284 or 4032 × 3024. Seven came through a Photos export at 768 × 1024,
+one of them landscape — about a thirtieth of the pixels of the largest, so they are soft at any
+magnification. Two are screen captures, softer again. Nothing has been cut out of any of them,
+so they carry the four things no cutout can.
+
+- **A real outline.** The animal ends where she ends. Thirteen of them hold her whole body
+  with no limb, ear or tail touching a frame edge, which is why every claim about her
+  silhouette, her tail and her feet now rests here rather than on a cutout. Being inside the
+  frame is not the same as being visible: in several of them the camera's height, a table leg
+  or the wall of a dog bed hides as much as an edge would have cut.
+- **A floor and a background.** She stands on something, casts a shadow and sits in a room
+  or a landscape, so scale, stance and how she carries herself are readable for the first
+  time.
+- **No sticker border and no black flatten.** Two of the three hazards that dominate the
+  cutouts are simply absent.
+- **Orientation intact.** Nine are portrait captures stored as landscape pixels with the
+  rotation held in EXIF. Any viewer that honours EXIF shows them upright; a tool that
+  strips it — which is exactly what happened to the cutouts — shows them 90 degrees off.
+  Rotate before reading a pose if your tool shows one sideways.
+
+They are not free of trouble: two were shot through a glass door, two are screen captures
+rather than files, most have a harness or a collar on her, the camera is nearly always a
+standing person's eye, and nineteen of the twenty show a grown dog rather than the adolescent
+the sheet is anchored to.
 
 ## How to read the index
 
@@ -53,22 +91,31 @@ tag vocabulary is closed, so it can be searched.
 
 | Group | Values |
 | --- | --- |
-| Stage | `puppy`, `juvenile`, `adolescent` |
+| Stage | `puppy`, `juvenile`, `adolescent`, `adult` |
 | Pose | `sit`, `stand`, `bipedal`, `lying`, `curled`, `sprawled`, `belly-up`, `walking`, `running`, `rolling`, `head-only`, `close-up` |
 | Angle | `frontal`, `three-quarter`, `profile`, `rear-view`, `from-above` |
-| Coat value | `rich-chocolate`, `mid-brown`, `faded-cafe-au-lait`, `pale-cream-cast`, `indeterminate-coat` |
-| Feature legible | `liver-nose`, `amber-eyes`, `cream-markings`, `curl-texture`, `topline`, `tail-pom`, `paw-pads`, `whole-silhouette` |
-| Light | `daylight`, `indoor`, `low-light`, `backlit`, `low-sun`, `blown-out`, `red-cast` |
-| Hazard | `sticker-border`, `black-flatten`, `cropped-limb`, `matte-artefact`, `motion-blur`, `rotated-export`, `low-resolution`, `second-subject`, `not-a-photo` |
+| Coat value | `rich-chocolate`, `mid-brown`, `faded-cafe-au-lait`, `pale-cream-cast`, `silver-beige`, `indeterminate-coat` |
+| Feature legible | `liver-nose`, `amber-eyes`, `cream-markings`, `curl-texture`, `topline`, `tail-pom`, `tail-at-rest`, `head-profile`, `paw-pads`, `whole-silhouette` |
+| Light | `daylight`, `indoor`, `open-shade`, `low-light`, `backlit`, `low-sun`, `blown-out`, `red-cast` |
+| Hazard | `sticker-border`, `black-flatten`, `cropped-limb`, `matte-artefact`, `motion-blur`, `rotated-export`, `low-resolution`, `second-subject`, `through-glass`, `groomed-coat`, `screenshot-crop`, `camera-above`, `not-a-photo` |
 
 The grade is how much weight a frame carries, not how good a photograph it is.
 
 | Grade | Meaning | Count |
 | --- | --- | --- |
-| prime | Draw from it directly. | 22 |
-| usable | Good for one thing; read the caution before taking anything else. | 29 |
+| prime | Draw from it directly. | 31 |
+| usable | Good for one thing; read the caution before taking anything else. | 40 |
 | marginal | Almost nothing survives, but what does is not available elsewhere. | 1 |
 | unusable | Do not draw from it at all. | 3 |
+
+One value in the **Best for** column is not a moment: `colour-range` marks a frame that is
+evidence for [the range she has to stay inside](#the-range-she-has-to-stay-inside) and for
+nothing else — it shows an end of the range rather than a colour to draw.
+
+A full frame and a cutout are not graded on the same scale by accident: a cutout graded
+prime is prime for a face or a colour, and a full frame graded prime is usually prime for a
+body. Where the two disagree about an outline, the full frame wins, because the cutout does
+not have one.
 
 Every hazard tag is explained under [Read these with care](#read-these-with-care), and the
 things no frame answers are under
@@ -91,7 +138,12 @@ Seen in
 [biscuit-puppy-lying-sticker-outline-head-tilt](cutouts/biscuit-puppy-lying-sticker-outline-head-tilt.jpeg),
 [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png),
 [biscuit-adolescent-sphinx-paws-forward](cutouts/biscuit-adolescent-sphinx-paws-forward.png),
-[biscuit-puppy-lying-overhead-pale-floor](cutouts/biscuit-puppy-lying-overhead-pale-floor.png).
+[biscuit-puppy-lying-overhead-pale-floor](cutouts/biscuit-puppy-lying-overhead-pale-floor.png),
+[biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg),
+[biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg).
+
+It survives the groom, which is the strongest single argument that the two clipped frames are
+her: the coat there reads silver-beige and the face is shaved, and the nose is still liver.
 
 ### Amber eyes with brown rims
 
@@ -107,6 +159,15 @@ Seen in
 [biscuit-adolescent-loaf-flat-stare-2](cutouts/biscuit-adolescent-loaf-flat-stare-2.jpeg),
 [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png).
 
+This is the one fixed trait the full frames do not corroborate, and the reason is worth
+recording so nobody goes looking again. In every full frame the eye carries a large reflection —
+a window, a sky, a canopy — spread across the cornea, and under it the iris reads as a dark
+button rather than as a ring. Only
+[biscuit-adult-sit-overhead-tongue-out-chips](full/biscuit-adult-sit-overhead-tongue-out-chips.jpeg)
+shows the amber at all, in the far eye, while the near one reads blue-grey from the same sky.
+The amber therefore rests on the four cutouts above, and a frame that settles the iris and the
+liver rim under controlled light is still missing.
+
 ### The phantom marking map and where it sits
 
 Cream to tan sits in five fixed places and nowhere else: a band wrapping the whole muzzle from
@@ -120,7 +181,13 @@ Seen in
 [biscuit-puppy-lying-sticker-outline-head-tilt](cutouts/biscuit-puppy-lying-sticker-outline-head-tilt.jpeg),
 [biscuit-puppy-lying-overhead-pale-floor](cutouts/biscuit-puppy-lying-overhead-pale-floor.png),
 [biscuit-puppy-sprawl-overhead-forelegs-out](cutouts/biscuit-puppy-sprawl-overhead-forelegs-out.jpeg),
-[biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png).
+[biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png),
+[biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg),
+[biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg).
+
+The last two settle the part the cutouts could not: the back, the flanks and the rump carry no
+cream at all, the stockings begin at about the elbow and the hock, and the pale hair below them
+runs unbroken into the feet.
 
 ### The ear leathers are the darkest thing on her
 
@@ -133,7 +200,12 @@ body and lose the read entirely at icon size.
 Seen in [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongue-out.jpeg),
 [biscuit-adolescent-walk-ball-in-mouth](cutouts/biscuit-adolescent-walk-ball-in-mouth.png),
 [biscuit-adolescent-run-ears-airborne](cutouts/biscuit-adolescent-run-ears-airborne.png),
-[biscuit-adolescent-stand-fish-bandana](cutouts/biscuit-adolescent-stand-fish-bandana.png).
+[biscuit-adolescent-stand-fish-bandana](cutouts/biscuit-adolescent-stand-fish-bandana.png),
+[biscuit-adult-stand-frontal-indoor](full/biscuit-adult-stand-frontal-indoor.jpeg),
+[biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg).
+
+It holds all the way to the grown dog. The body has gone paler again with age and the ear
+leathers have not: they are still the one warm brown left on her.
 
 ### Low drop ears in longer, wavier hair
 
@@ -147,13 +219,15 @@ Seen in
 [biscuit-adolescent-sphinx-paws-forward](cutouts/biscuit-adolescent-sphinx-paws-forward.png),
 [biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg),
 [biscuit-adolescent-stand-overhead-rear-2](cutouts/biscuit-adolescent-stand-overhead-rear-2.jpeg),
-[biscuit-puppy-sit-head-turned](cutouts/biscuit-puppy-sit-head-turned.png).
+[biscuit-puppy-sit-head-turned](cutouts/biscuit-puppy-sit-head-turned.png),
+[biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg),
+[biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg).
 
 ### Short blunt muzzle on a domed skull
 
 The muzzle is short and blunt with a soft stop, and the skull above it is domed and round, so
 the whole head reads as a circle with a stub on the front rather than as a wedge. This holds
-from puppy through adolescent frames and in the one profile the corpus has. An illustrator
+from puppy through adolescent frames, and in both of the profiles the corpus has. An illustrator
 reaching for the long tapering show-poodle head will lengthen the muzzle and narrow the skull,
 which ages her and makes her elegant, and she is neither.
 
@@ -161,7 +235,12 @@ Seen in
 [biscuit-adolescent-sphinx-paws-forward](cutouts/biscuit-adolescent-sphinx-paws-forward.png),
 [biscuit-adolescent-loaf-flat-stare](cutouts/biscuit-adolescent-loaf-flat-stare.png),
 [biscuit-adolescent-profile-head-red-filter](cutouts/biscuit-adolescent-profile-head-red-filter.jpeg),
-[biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg).
+[biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg),
+[biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg).
+
+The ledge frame is the only side view of her head with its colour intact, and it agrees with
+the red one: a short stub on a circle, with the stop soft enough to be a curve rather than an
+angle.
 
 ### Unclipped coat, soft irregular waves
 
@@ -176,7 +255,15 @@ Seen in
 [biscuit-puppy-lying-sticker-outline-head-tilt](cutouts/biscuit-puppy-lying-sticker-outline-head-tilt.jpeg),
 [biscuit-adolescent-loaf-flat-stare](cutouts/biscuit-adolescent-loaf-flat-stare.png),
 [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongue-out.jpeg),
-[biscuit-adolescent-stand-overhead-topline](cutouts/biscuit-adolescent-stand-overhead-topline.png).
+[biscuit-adolescent-stand-overhead-topline](cutouts/biscuit-adolescent-stand-overhead-topline.png),
+[biscuit-adult-lying-redwood-duff-head-up](full/biscuit-adult-lying-redwood-duff-head-up.jpeg),
+[biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg).
+
+Two frames are the exception rather than a contradiction: in
+[biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg)
+and [biscuit-adult-head-close-groomed-park](full/biscuit-adult-head-close-groomed-park.jpeg)
+she has been clipped short with a rounded topknot and a tidied face. That is a groomer's
+decision on a particular week, not her coat, and nothing on the sheet should be drawn from it.
 
 ### Tail carries a paler plume
 
@@ -192,6 +279,27 @@ Seen in
 [biscuit-adolescent-run-grass-tail-streaming](cutouts/biscuit-adolescent-run-grass-tail-streaming.png),
 [biscuit-adolescent-loaf-flat-stare-2](cutouts/biscuit-adolescent-loaf-flat-stare-2.jpeg).
 
+### The tail is long, and its carriage follows the pose
+
+The full frames settle a thing the cutouts could not, because none of them held a whole tail.
+It is long and feathered along its whole length rather than only at the tip, and it is carried
+two ways, decided by what the rest of her is doing rather than by mood. Standing she carries it
+up and curved above the line of the back, the plume falling to one side. Sitting or lying she
+lays it out behind her along the ground, straight or in a shallow curve, and it goes slack. None
+of the full frames shows it tucked between her legs, so a cowed carriage is not attested
+anywhere in this folder. Every full frame of the carriage is a standing or a resting dog; what
+it does on the move is recorded only in the run cutouts, streaming out behind her.
+
+Seen at rest in
+[biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg)
+and
+[biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg);
+carried up in
+[biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg),
+[biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg)
+and
+[biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg).
+
 ### Dark pads under cream foot feathering
 
 The pads are dark slate to charcoal brown and the hair over and between the toes is cream, so
@@ -202,7 +310,13 @@ toes exposed, either of which contradicts the marking map and the unclipped coat
 Seen in [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png),
 [biscuit-puppy-lying-overhead-pale-floor](cutouts/biscuit-puppy-lying-overhead-pale-floor.png),
 [biscuit-puppy-sprawl-overhead-forelegs-out](cutouts/biscuit-puppy-sprawl-overhead-forelegs-out.jpeg),
-[biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png).
+[biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png),
+[biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg).
+
+The last of those is the first grown foot in the folder and the only frame that shows three at
+once: both forefeet and one hind foot, soles turned to the camera on a lit floor, dark against
+the cream feathering, with black nails coming through the hair. The far hind foot is underneath
+her. Everything the sheet says about her feet rested on puppy frames until it arrived.
 
 Two of these are worth stating twice, because they are the ones a generic poodle reference
 overrides: **the nose is liver brown, not black**, and **the eyes are amber, not dark**.
@@ -217,12 +331,16 @@ so each has to be decided once and then held.
 ### Body coat value
 
 Her body value travels the whole way from deep saturated chocolate as a puppy to a greyish
-café-au-lait as an adolescent, and several bright-daylight frames push past that to something
-that reads cream. This must be chosen, not averaged, and the direction settles which way:
-recognisably brown points at the dark end. Take the puppy chocolate as the reference value,
-treat the café-au-lait loaf as the absolute lightest she is ever permitted to be drawn, and
-treat every pale-cream-cast frame as an exposure artefact that carries no colour information at
-all.
+café-au-lait as an adolescent, and the grown frames sit at that same faded end rather than past
+it: a pale biscuit cream with the ears still brown. Several bright-daylight frames push further
+into something that reads white, and two clipped frames read silver-beige, and neither is her.
+This must be chosen, not averaged, and the direction settles which way: recognisably brown
+points at the dark end. Take the puppy chocolate as the reference value, treat the café-au-lait
+loaf as the absolute lightest she is ever permitted to be drawn, and treat every pale-cream-cast
+frame as an exposure artefact that carries no colour information at all.
+
+The grown frames looked at first as though they extended the range. Read by capture date they do
+not, and [the range she has to stay inside](#the-range-she-has-to-stay-inside) shows why.
 
 Ends:
 [biscuit-puppy-lying-sticker-outline-head-tilt](cutouts/biscuit-puppy-lying-sticker-outline-head-tilt.jpeg)
@@ -247,10 +365,16 @@ and the two produce visibly different animals, so one has to be named and held. 
 end is funnier and reads more clearly as unclipped; the shorter end gives the icon-mark a
 silhouette it can survive at small size.
 
+The two groomed frames are the far end of the short reading, and they show what it costs: a
+clipped face and a rounded topknot turn her into a poodle in general rather than into her, and
+the value goes with it. They are the argument for the shaggy end rather than against it.
+
 Ends:
 [biscuit-puppy-lying-sticker-outline-head-tilt](cutouts/biscuit-puppy-lying-sticker-outline-head-tilt.jpeg)
 against
-[biscuit-adolescent-run-ears-airborne](cutouts/biscuit-adolescent-run-ears-airborne.png).
+[biscuit-adolescent-run-ears-airborne](cutouts/biscuit-adolescent-run-ears-airborne.png),
+with the clipped extreme at
+[biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg).
 
 ### Ear hair length
 
@@ -266,13 +390,21 @@ against [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongu
 ### Head-to-body proportion by age
 
 The puppy frames give an oversized head on a short-legged body; the adolescent frames give
-adult proportions on a leggy frame with a longer muzzle. The corpus tempts a blend because the
-colour evidence is strongest in the puppy frames and the proportion evidence is strongest in
-the adolescent ones, and a blend produces a dog that exists in no photograph. Name one age,
-take proportion only from that age, and let the puppy frames inform colour alone.
+adult proportions on a leggy frame with a longer muzzle; the grown frames give a heavier,
+deeper, shorter-legged animal under a longer coat. The corpus tempts a blend because the colour
+evidence is strongest in the puppy frames and the readable whole bodies are all in the grown
+ones, and a blend produces a dog that exists in no photograph. Name one age, take proportion
+only from that age, and let the other ages inform colour and behaviour alone.
+
+This is the sharpest trap the full frames introduce. They are the only frames in the folder
+that hold a complete uncut animal, so they are the obvious place to measure from — and the
+sheet is anchored to the adolescent, which is not the age they show. Read stance, tail, feet
+and marking map from them; do not read leg length or body depth from them.
 
 Ends: [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png)
-against [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongue-out.jpeg).
+against [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongue-out.jpeg),
+with the grown build at
+[biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg).
 
 ### Whether the eyes clear the fringe
 
@@ -302,19 +434,37 @@ something that reads cream.
 Left is the reference value. Right is the lightest she may ever be drawn. Anything paler in
 this folder is the exposure, not the dog.
 
+The grown frames looked at first as though they moved that right-hand end, and they do not.
+Read by capture date rather than by eye, they say the opposite. The one silver-beige frame,
+[biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg),
+is the **oldest** adult photograph in the folder — December 2025, with the tree over the parapet
+still in autumn yellow — and it is a freshly clipped dog behind a glass door with a panel seam
+running down her body. The controlled comparison is
+[biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg):
+the same balcony, the same glass, seven months later, unclipped, and she reads cream-tan with
+clearly brown ears. The genuinely newest frames in the folder run to August 2026 and sit at the
+café-au-lait end, not past it.
+
+So there is no continuing fade to decide about. The pale readings in this folder are a groom, a
+pane of glass and hard sun, in that order, and the rule the direction states holds without
+amendment.
+
 ## The index
 
-Fifty-five files, grouped by age and then by grade. The second line of each description is
-the thing that frame must not be trusted for.
+Seventy-five files, grouped by age and then by grade. The second line of each description is
+the thing that frame must not be trusted for. Which folder a frame is in, and therefore which
+set of hazards applies, follows from its group: everything under Puppy, Juvenile and
+Adolescent is a cutout except the one red-cast frame marked as a full frame, and everything
+under Adult is a full frame.
 
-12 puppy, 13 juvenile, 30 adolescent. Her age in a frame is the owner's call, not a reading of
-the pixels, and where the two disagreed the owner won.
+12 puppy, 13 juvenile, 31 adolescent, 19 adult. Her age in a frame is the owner's call, not a
+reading of the pixels, and where the two disagreed the owner won.
 
 ### Puppy
 
 The colour evidence lives here. Every frame but the silhouette is rich chocolate at full
 marking contrast, all of it shot indoors or in low light, and the only closed eyes in the
-corpus are in this group.
+cutouts are in this group.
 
 | Photo | Grade | What it shows | Tags | Best for |
 | --- | --- | --- | --- | --- |
@@ -355,8 +505,8 @@ every frame is indoors, dim or under a red cast, and much of it has clothing in 
 ### Adolescent
 
 The pose evidence lives here — running, rearing, rolling and loafing — and so does the fade. It
-is also the only group shot in daylight, which is exactly why its coat values are the least
-trustworthy in the folder.
+is the only group of cutouts shot in daylight, which is exactly why its coat values are the
+least trustworthy of them.
 
 | Photo | Grade | What it shows | Tags | Best for |
 | --- | --- | --- | --- | --- |
@@ -390,11 +540,51 @@ trustworthy in the folder.
 | [biscuit-adolescent-stand-overhead-rear](cutouts/biscuit-adolescent-stand-overhead-rear.png) | usable | Seen from above and behind as she stands, crown, drop ears, spine and tail plume toward the lens.<br>_The face is absent and the feet are cut at the bottom edge._ | stand, rear-view, from-above, no-face, daylight, faded-cafe-au-lait, low-resolution, cropped-limb | sign-off, mark-silhouette |
 | [biscuit-adolescent-stand-overhead-rear-2](cutouts/biscuit-adolescent-stand-overhead-rear-2.jpeg) | usable | The same overhead stand on black: domed crown, both drop ears, the spine and a pale tail plume.<br>_The face is tucked underneath and absent, and the feet are cut at the bottom edge._ | stand, rear-view, from-above, no-face, black-flatten, faded-cafe-au-lait, cropped-limb, curl-texture | mark-silhouette, sign-off |
 | [biscuit-adolescent-stand-overhead-topline](cutouts/biscuit-adolescent-stand-overhead-topline.png) | usable | Seen from directly overhead as she stands, head turned low and right, coat washed pale by sun.<br>_Sun washes the coat pale, and the tail end is sliced flat by the frame._ | stand, from-above, topline, curl-texture, daylight, faded-cafe-au-lait, cropped-limb, clean-cutout | mark-silhouette |
+| [biscuit-adolescent-head-on-blanket-red-cast-frontal](full/biscuit-adolescent-head-on-blanket-red-cast-frontal.jpeg) | usable | A second red-cast frame from the same rest as the cutout of that name, and not its source: head down on a blanket beside a knitted cushion, near-frontal with both eyes open and one ear spread across the blanket.<br>_The red flood destroys colour outright; take structure from this frame, never value._ | lying, head-down, close-up, red-cast, indeterminate-coat, adolescent, indoor, camera-above | sleepy, idle |
 
-### The seven duplicate pairs
+### Adult
 
-Each of these is a single instant exported twice, matched by correlating the two subject
-silhouettes at every ninety degrees. Count one, not two.
+Nineteen of the twenty full frames, and the whole of the folder's evidence about her body. This
+is where the outline, the tail, the feet, the back and the hindquarters are settled, and it is
+the one group whose proportions the sheet must not use, because the sheet is anchored to the
+adolescent and these frames are not. It is also the group where the camera is nearly always a
+standing person's eye looking down at a small dog, so read stance from it and never leg length.
+
+The twentieth full frame is adolescent and sits in the group above.
+
+| Photo | Grade | What it shows | Tags | Best for |
+| --- | --- | --- | --- | --- |
+| [biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg) | prime | Lying on her side on a lit wood floor, the body in profile from head to hindquarters, with three of her four feet turned to the camera and the pads showing.<br>_A table leg crosses her croup and all but hides the tail, and the far hind leg is under her, so no outline can be traced from this frame._ | lying, profile, adult, faded-cafe-au-lait, paw-pads, harness, indoor, camera-above | colour-reference, idle |
+| [biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg) | prime | Lying sphinx-style side-on along a low concrete ledge in daylight, head in near-strict profile, the whole tail laid out behind her on the stone.<br>_A black harness strap and a rose leash cross the chest, and the near eye is a dark slit under the brow patch, so take the muzzle, the stop and the ear set from it and no eye._ | lying, profile, adult, head-profile, tail-at-rest, whole-silhouette, daylight, harness | mark-silhouette, face-reference, sign-off |
+| [biscuit-adult-stand-frontal-indoor](full/biscuit-adult-stand-frontal-indoor.jpeg) | prime | Standing square at the camera across a carpet in even indoor daylight, both forefeet planted, the face full to the lens and nothing cut by an edge.<br>_The camera is at standing height, so the body foreshortens and the hindquarters, the hind feet and the tail are hidden behind the chest._ | stand, frontal, adult, eye-contact, liver-nose, harness, indoor, camera-above | arrival, face-reference, colour-reference |
+| [biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg) | prime | Head and chest filling the frame indoors as she sits and looks up into the lens, the liver nose, the ear set and the cream muzzle band unambiguous.<br>_Warm indoor light golds the whole frame and both eyes read as dark buttons, so take structure from it and neither coat colour nor eye colour._ | sit, frontal, close-up, adult, liver-nose, cream-markings, indoor, camera-above | face-reference, arrival, idle |
+| [biscuit-adult-lying-redwood-duff-head-up](full/biscuit-adult-lying-redwood-duff-head-up.jpeg) | prime | Lying in redwood duff in open shade with her head up and turned to the lens and her mouth just open, the whole body and tail in frame.<br>_The duff is a warm red-brown ground that bounces up and warms the coat, and a canopy reflection fills both eyes._ | lying, three-quarter, adult, whole-silhouette, open-shade, harness, eye-contact, faded-cafe-au-lait | idle, face-reference, colour-reference |
+| [biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg) | prime | Standing three-quarter on a path in dappled shade, head brought round to the camera, all four feet down and the tail up over the back.<br>_Dappled light patches the coat and a bright canopy reflection fills both eyes, so neither a coat value nor an iris may be taken from it._ | stand, three-quarter, adult, whole-silhouette, tail-pom, open-shade, harness, camera-above | mark-silhouette, arrival, idle |
+| [biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg) | prime | Lying flat on a carpet with her chin on the floor and both ears back, eyes open and holding the lens, nothing worn at all.<br>_Shot from standing height, so the body foreshortens away behind the head._ | lying, frontal, head-down, adult, eye-contact, ears-back, indoor, camera-above | loss, sleepy, long-absence |
+| [biscuit-adult-asleep-dog-bed-head-over-edge](full/biscuit-adult-asleep-dog-bed-head-over-edge.jpeg) | prime | Asleep in her bed with the body inside it and the head poured out over the rim onto the rug, eyes shut, the topline unbroken from rump to neck.<br>_The wall of the bed hides her legs and her underline, and a glass table panel beside her head greys the outer half of her far ear._ | lying, eyes-closed, adult, dog-bed, topline, indoor, camera-above, faded-cafe-au-lait | sleepy, sign-off |
+| [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg) | prime | Seen from directly above and behind as she lies stretched out in hard low sun, the whole back, rump and tail toward the lens.<br>_Directly overhead and in hard sun: the lit side burns toward white, so the marking map reads here and the coat value does not._ | lying, from-above, rear-view, adult, topline, curl-texture, low-sun, harness | mark-silhouette, sign-off |
+| [biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg) | usable | Standing three-quarter to the camera on a picnic blanket with her jaws open over a metal bottle lying in front of her, whole body and tail clear of every edge.<br>_Her head sits against a stroller, a wheel and a bassinet, so only the body below the shoulders has a plain ground behind it._ | stand, three-quarter, adult, whole-silhouette, tail-pom, daylight, harness, camera-above | mark-silhouette, arrival, idle |
+| [biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg) | usable | Standing on a concrete balcony seen from the window above with a twig held in her mouth, whole body and tail in frame, face turned up to the camera.<br>_Shot through a glass door, which veils contrast and lays a reflection over her, and a harness strap and a hanging tag cross the chest._ | stand, from-above, adult, whole-silhouette, through-glass, camera-above, harness, collar | mark-silhouette, arrival |
+| [biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg) | usable | The same balcony after a groom, and the oldest adult frame in the folder: sitting square with a clipped face and a rounded topknot, the body short and silver-beige.<br>_A glass panel edge crosses her body and the coat is a fresh clip, so the pale value here is the groom and the glass and not her._ | sit, three-quarter, adult, silver-beige, groomed-coat, through-glass, whole-silhouette, camera-above | colour-range |
+| [biscuit-adult-head-close-groomed-park](full/biscuit-adult-head-close-groomed-park.jpeg) | usable | Filling the frame low and close on a park lawn, head and shoulders only, freshly groomed with a grey-beige crown and the ear leathers still brown.<br>_A hand holds her collar, a walker's string of other dogs crosses the middle distance, and the clipped face is the groomer's and not hers._ | close-up, frontal, adult, silver-beige, groomed-coat, second-subject, human-hand, daylight | face-reference, colour-range |
+| [biscuit-adult-sit-shrimp-bandana-head-cocked](full/biscuit-adult-sit-shrimp-bandana-head-cocked.jpeg) | usable | Sitting on a dark carpet in a shrimp-print bandana and a pink harness, head cocked and turned to her left, the face in clean three-quarter to the lens.<br>_The bandana covers the throat and bib and the harness the chest, so no front marking reads; the cutout this index calls the fish bandana wears this same shrimp print._ | sit, three-quarter, adult, bandana, harness, liver-nose, indoor, camera-above | idle, face-reference |
+| [biscuit-adult-belly-up-carpet-harness](full/biscuit-adult-belly-up-carpet-harness.jpeg) | usable | On her back under a chair with her head thrown back to the camera upside down, forelegs folded over, one forepaw's black nails showing.<br>_A hind leg and paw are sliced flat at the top edge, and the harness and collar wrap the chest, so neither the outline nor the markings read._ | belly-up, from-above, adult, harness, collar, indoor, camera-above, cropped-limb | win, idle |
+| [biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg) | usable | Lying on a blanket in a park with her back to the camera, hind legs and tail spread out behind her, a lawn and people beyond.<br>_The face is absent, a harness and collar cross the withers and throat with a leash trailing off, and hard sun washes the visible coat._ | lying, rear-view, adult, tail-at-rest, no-face, blown-out, harness, second-subject | sign-off, mark-silhouette |
+| [biscuit-adult-sit-overhead-tongue-out-chips](full/biscuit-adult-sit-overhead-tongue-out-chips.jpeg) | usable | Sitting on wood chips and looking straight up into the lens with her tongue out, harness and collar on.<br>_She sits in open shade with the sun on the ground beyond her, and a sky reflection fills both corneas: the near eye reads blue-grey and the far one amber._ | sit, from-above, adult, mouth-open, tongue-out, open-shade, harness, camera-above | win, arrival |
+| [biscuit-adult-walk-close-tongue-out-screenshot](full/biscuit-adult-walk-close-tongue-out-screenshot.png) | usable | A screen capture cropped tall: close and low as she walks at the camera over grass with her tongue out, under a blue sky.<br>_A screenshot rather than a file, so it is soft and re-compressed, and the sky blues the shaded side of her face._ | walking, frontal, close-up, adult, screenshot-crop, low-resolution, daylight, tongue-out | arrival, win, face-reference |
+| [biscuit-adult-sit-decking-mouth-open-screenshot](full/biscuit-adult-sit-decking-mouth-open-screenshot.png) | usable | A screen capture cropped tall: sitting square on grey decking with her mouth open, brown harness and patterned collar, shrubbery behind.<br>_A screenshot rather than a file, so it is soft; the harness covers the chest, and a pale animal sits at the right edge._ | sit, frontal, adult, mouth-open, screenshot-crop, low-resolution, harness, second-subject | win, arrival |
+
+### The duplicate pairs
+
+Seven relationships in the folder are one instant recorded twice, all of them cutout pairs,
+matched by correlating the two subject silhouettes at every ninety degrees. Count one, not two.
+Seventy-five files therefore hold about 68 distinct moments.
+
+No full frame is the source of any cutout. The nearest thing to one is the pair of red-cast
+frames, which share a rest, a blanket and a flood but are two separate exposures: the cutout is
+a three-quarter view from her left with one eye showing, and
+[the full frame](full/biscuit-adolescent-head-on-blanket-red-cast-frontal.jpeg) is near-frontal
+with both. A background removal cannot change how many eyes are in a picture.
 
 | The pair | What differs |
 | --- | --- |
@@ -417,115 +607,137 @@ the two registers the direction names at the end.
 [biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg),
 [biscuit-adolescent-lying-grass-teeth-showing-2](cutouts/biscuit-adolescent-lying-grass-teeth-showing-2.jpeg),
 [biscuit-adolescent-back-roll-open-mouth-2](cutouts/biscuit-adolescent-back-roll-open-mouth-2.jpeg),
-[biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png)
+[biscuit-adult-belly-up-carpet-harness](full/biscuit-adult-belly-up-carpet-harness.jpeg)
 
 Take the face from the first two, which are prime, frontal and hold the lens with the mouth
 open, and the body attitude from the last two, which are the disproportionate behaviour the
-register wants: she flings herself onto her back and stays there. The two roll frames are
-rotated exports with a blurred face and a sun-flared eye, so they are posture evidence only.
+register wants: she flings herself onto her back and stays there. The cutout roll is a rotated
+export with a blurred face, so it is posture evidence only; the grown roll replaces the
+sun-flared cutout that used to sit here because it is a whole photograph rather than a cutout
+and the forepaw with its black nails is readable, though a hind leg still runs off the top edge
+of it.
 
 ### Outcome: loss
 
+[biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg),
 [biscuit-adolescent-chin-down-party-hat](cutouts/biscuit-adolescent-chin-down-party-hat.jpeg),
-[biscuit-juvenile-curled-underexposed-head-low](cutouts/biscuit-juvenile-curled-underexposed-head-low.jpeg),
-[biscuit-adolescent-stand-fish-bandana](cutouts/biscuit-adolescent-stand-fish-bandana.png)
+[biscuit-juvenile-curled-underexposed-head-low](cutouts/biscuit-juvenile-curled-underexposed-head-low.jpeg)
 
-The corpus is thin here and these are the least bad. The party hat frame is the closest thing
-to the register — she lies chin down and looks up without moving — but the hat is a prop that
-has to be discarded and the black flatten eats her outline. The curled frame reads genuinely
-deflated once its tone is lifted, and the bandana stand gives a lowered head and half-shut eyes
-with the body blown out to white.
+This was the thinnest moment in the corpus and it is now the best-served of the two the
+direction says must be very good. The grown frame is the register itself and needs no
+allowance made for it: chin flat on the floor, both ears back, eyes open and holding the lens,
+nothing worn, even indoor light, whole body in frame. Draw the ear carriage and the eye shape
+from it. The party hat frame is the same posture with a prop that has to be discarded and a
+black flatten that eats her outline, and the curled frame reads genuinely deflated once its
+tone is lifted.
 
 ### Bookend: arrival
 
 [biscuit-adolescent-run-ears-airborne](cutouts/biscuit-adolescent-run-ears-airborne.png),
 [biscuit-adolescent-run-tongue-out](cutouts/biscuit-adolescent-run-tongue-out.jpeg),
-[biscuit-adolescent-bipedal-looking-up](cutouts/biscuit-adolescent-bipedal-looking-up.png),
-[biscuit-adolescent-walk-ball-in-mouth](cutouts/biscuit-adolescent-walk-ball-in-mouth.png)
+[biscuit-adult-stand-frontal-indoor](full/biscuit-adult-stand-frontal-indoor.jpeg),
+[biscuit-adolescent-bipedal-looking-up](cutouts/biscuit-adolescent-bipedal-looking-up.png)
 
 The best covered moment in the corpus. Two prime running frames come straight at the lens with
-the ears lifted clear of the skull, one prime frame has her reared on her hind legs looking up,
-and the walk with the ball gives the same approach slowed down with the whole front of the dog
-readable. All four crop the feet at the bottom edge, so take stride from them and never leg
-length.
+the ears lifted clear of the skull, and one prime frame has her reared on her hind legs looking
+up. The grown frame is the same approach halted, and the only one of the four with nothing cut
+by an edge: take the front assembly and the head carriage from it, take stride from the running
+pair, and take leg length and rear stance from none of them — the grown frame looks down on her
+steeply enough that the hindquarters disappear behind the chest.
 
 ### Bookend: sign-off
 
-[biscuit-juvenile-sit-rear-pink-collar](cutouts/biscuit-juvenile-sit-rear-pink-collar.png),
+[biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg),
+[biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg),
 [biscuit-adolescent-stand-overhead-rear-2](cutouts/biscuit-adolescent-stand-overhead-rear-2.jpeg),
-[biscuit-juvenile-head-down-dim-profile](cutouts/biscuit-juvenile-head-down-dim-profile.png)
+[biscuit-juvenile-sit-rear-pink-collar](cutouts/biscuit-juvenile-sit-rear-pink-collar.png)
 
-Only two frames in the whole corpus put her back to the camera, and both need work: the sit is
-180 degrees off in the export and the overhead stand is shot from above rather than from her
-own height, so neither gives the level walking-away view a sign-off wants. The dim profile with
-her head down and turned aside is the alternative reading of the same moment, and it is
-underexposed.
+Still the worst-served moment, but no longer for want of a rear view: four rather than two. Two
+grown frames now put her back to the camera with the whole rump, the hind legs and the tail in
+frame, and they settle what the marking map does behind the hip. What none of the four is, is a
+dog departing: she is lying down in both grown frames, and both cutouts are shot from above and
+behind. The level walking-away frame a sign-off wants is still the one photograph the folder
+does not contain.
 
 ### Ambient: idle after a long pause
 
 [biscuit-adolescent-loaf-flat-stare](cutouts/biscuit-adolescent-loaf-flat-stare.png),
 [biscuit-adolescent-sphinx-paws-forward](cutouts/biscuit-adolescent-sphinx-paws-forward.png),
-[biscuit-juvenile-belly-up-bare-belly](cutouts/biscuit-juvenile-belly-up-bare-belly.png)
+[biscuit-adult-lying-redwood-duff-head-up](full/biscuit-adult-lying-redwood-duff-head-up.jpeg)
 
 The loaf is the moment stated plainly — legs tucked, head up, looking flat into the lens from
 slightly above — and it is also the faded calibration anchor. The sphinx adds the same flat
-attention with both forelegs stretched forward and the paws readable. The bare-belly sprawl is
-the same idea escalated into having given up waiting.
+attention with both forelegs stretched forward and the paws readable. The duff frame is the
+grown version of the sphinx with the whole animal inside the frame, which is what makes it
+worth having beside two cutouts that say the same thing about the face.
 
 ### Ambient: sleepier late at night
 
+[biscuit-adult-asleep-dog-bed-head-over-edge](full/biscuit-adult-asleep-dog-bed-head-over-edge.jpeg),
 [biscuit-puppy-asleep-head-down](cutouts/biscuit-puppy-asleep-head-down.jpeg),
 [biscuit-adolescent-head-on-blanket-red-cast](cutouts/biscuit-adolescent-head-on-blanket-red-cast.png),
 [biscuit-puppy-curled-lamb-toy-bed](cutouts/biscuit-puppy-curled-lamb-toy-bed.jpeg)
 
-The first is the only frame in the corpus with her eyes actually shut, and it is a puppy head
-filling the frame, so eye closure has to come from a puppy and everything else from elsewhere.
-The blanket frame gives the half-awake version, one eye open with a windowpane catchlight, but
-its red flood carries structure only. The bed frame gives a curled body with the chin over a
-toy and a readable face.
+The grown frame is the one that changed this moment: eyes shut, the body folded into the bed
+and the head poured out over the rim onto the rug, so how she sleeps is now a posture rather
+than an inference from a puppy's head. The puppy frame keeps the closed eyes at close range,
+the blanket frame gives the half-awake version with one eye open and a windowpane catchlight
+but carries structure only under its red flood, and the bed frame gives a curled body with the
+chin over a toy and a readable face.
 
 ### Stateful: different after a long absence
 
 [biscuit-adolescent-bipedal-jaws-open](cutouts/biscuit-adolescent-bipedal-jaws-open.png),
 [biscuit-adolescent-bipedal-looking-up](cutouts/biscuit-adolescent-bipedal-looking-up.png),
-[biscuit-adolescent-chin-down-party-hat](cutouts/biscuit-adolescent-chin-down-party-hat.jpeg)
+[biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg)
 
 Nothing in the corpus distinguishes this from an ordinary arrival, so the difference has to be
 made by degree rather than found in a photograph. The two bipedal frames are the escalated
-greeting — up on her hind legs, head thrown back, jaws open — and the chin-down frame is the
-opposite reading, the reproach, if the pose is meant to withhold rather than escalate. Both
+greeting — up on her hind legs, head thrown back, jaws open — and the grown chin-down frame is
+the opposite reading, the reproach, if the pose is meant to withhold rather than escalate. Both
 bipedal frames slice a hind leg at the edge.
 
 ### The fixed face
 
 [biscuit-adolescent-sphinx-paws-forward](cutouts/biscuit-adolescent-sphinx-paws-forward.png),
-[biscuit-adolescent-loaf-flat-stare-2](cutouts/biscuit-adolescent-loaf-flat-stare-2.jpeg),
+[biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg),
 [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png),
 [biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg)
 
-These four fix the face at both ends of the fade. The sphinx and the loaf give the adolescent
-head frontal with the amber irises and the liver nose unambiguous; the puppy frame gives the
-same architecture at full marking contrast, with the brow pips and the pads visible; the open
-mouth is the only frontal view of teeth and tongue the pose set will need. The loaf is the same
-instant as the idle pick, deliberately, since one frame serves value and structure.
+These four fix the face across the whole fade. The sphinx gives the adolescent head frontal
+with the amber irises and the liver nose unambiguous; the grown face study gives the same
+architecture at capture resolution with both eyes lit, and is the frame to settle the iris and
+the eye rim from; the puppy frame gives it at full marking contrast with the brow pips and the
+pads visible; the open mouth is the only frontal view of teeth and tongue the pose set will
+need. Nothing in the grown frame's proportions belongs on the sheet — it is here for the eyes,
+the nose and the ear set, and for nothing below the throat.
 
 ### The reduced mark
 
+[biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg),
+[biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg),
 [biscuit-adolescent-profile-head-red-filter](cutouts/biscuit-adolescent-profile-head-red-filter.jpeg),
-[biscuit-adolescent-stand-overhead-rear-2](cutouts/biscuit-adolescent-stand-overhead-rear-2.jpeg),
-[biscuit-puppy-bipedal-silhouette](cutouts/biscuit-puppy-bipedal-silhouette.jpeg),
-[biscuit-adolescent-stand-overhead-topline](cutouts/biscuit-adolescent-stand-overhead-topline.png)
+[biscuit-adolescent-stand-overhead-rear-2](cutouts/biscuit-adolescent-stand-overhead-rear-2.jpeg)
 
 The mark is built from a curl, an ear or a letterform, so these are chosen for outline rather
-than colour. The red profile is the sharpest curl-and-muzzle edge in the corpus and its
-destroyed colour costs nothing here. The overhead rear gives the domed crown, both ear lobes
-and the tail plume as flat shapes. The bipedal near-silhouette is marginal and small but is the
-only true outline of the whole animal. None of these should be traced from a frame carrying a
-baked-in sticker border. That outline is a puppy's, so tracing it imports puppy proportions
-into a mark the rest of the sheet may be drawing at an older age.
+than colour. The two grown frames are what the register was missing: side views of the whole
+animal with no sticker border thickening the edge and no black flatten swallowing the rear, so
+an outline can be taken from a photograph rather than from a cutout for the first time. Both
+come with a qualification. Each is a 768 × 1024 Photos export, soft at magnification, so the
+overall outline is traceable but no fine curl edge is. In the ledge frame the ground behind her
+is plain stone and the outline is clean throughout; in the blanket frame only the body below the
+shoulders is against plain ground, while the head sits against a stroller, a wheel and a
+bassinet, and the jaw is open over a bottle. The red profile is still the sharpest
+curl-and-muzzle edge in the corpus and its destroyed colour costs nothing here, and the overhead
+rear gives the domed crown, both ear lobes and the tail plume as flat shapes. None of these
+should be traced from a frame carrying a baked-in sticker border, and if the mark is traced from
+a grown frame its proportions are a grown dog's — which the rest of the sheet may not be drawing.
 
-That profile is the only side view of her head in the folder, which is why it earns a place
-under the mark despite having no colour left in it at all.
+![Biscuit grown, lying side-on along a concrete ledge in daylight with the whole tail laid out behind her](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg)
+
+The red-filtered head profile keeps its place beside it, because the two agree about the muzzle
+line and the stop, and agreement across a destroyed frame and an intact one is worth more than
+either alone.
 
 ![Biscuit in profile, rendered in flat red on black, with the muzzle line, the stop and the drop ear intact](cutouts/biscuit-adolescent-profile-head-red-filter.jpeg)
 
@@ -588,7 +800,9 @@ can be checked against this list before anything is taken from it.
   [biscuit-adolescent-run-ears-airborne](cutouts/biscuit-adolescent-run-ears-airborne.png),
   [biscuit-adolescent-stand-low-sun-head-turned](cutouts/biscuit-adolescent-stand-low-sun-head-turned.png),
   [biscuit-adolescent-stand-low-sun-head-turned-2](cutouts/biscuit-adolescent-stand-low-sun-head-turned-2.png),
-  [biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png)
+  [biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png),
+  [biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg),
+  [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg)
 - **A heavy red cast or filter floods the frame. Coat colour and eye colour are unrecoverable;
   only the marking pattern and the curl structure separate. Take structure from these, never
   value.**
@@ -618,7 +832,29 @@ can be checked against this list before anything is taken from it.
   [biscuit-adolescent-lying-plush-toy](cutouts/biscuit-adolescent-lying-plush-toy.png),
   [biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png),
   [biscuit-adolescent-walk-ball-in-mouth](cutouts/biscuit-adolescent-walk-ball-in-mouth.png),
-  [biscuit-adolescent-trot-overhead-tongue-out](cutouts/biscuit-adolescent-trot-overhead-tongue-out.jpeg)
+  [biscuit-adolescent-trot-overhead-tongue-out](cutouts/biscuit-adolescent-trot-overhead-tongue-out.jpeg),
+  [biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg),
+  [biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg),
+  [biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg),
+  [biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg),
+  [biscuit-adult-lying-redwood-duff-head-up](full/biscuit-adult-lying-redwood-duff-head-up.jpeg),
+  [biscuit-adult-sit-shrimp-bandana-head-cocked](full/biscuit-adult-sit-shrimp-bandana-head-cocked.jpeg),
+  [biscuit-adult-belly-up-carpet-harness](full/biscuit-adult-belly-up-carpet-harness.jpeg),
+  [biscuit-adult-stand-frontal-indoor](full/biscuit-adult-stand-frontal-indoor.jpeg),
+  [biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg),
+  [biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg),
+  [biscuit-adult-sit-overhead-tongue-out-chips](full/biscuit-adult-sit-overhead-tongue-out-chips.jpeg),
+  [biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg),
+  [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg),
+  [biscuit-adult-walk-close-tongue-out-screenshot](full/biscuit-adult-walk-close-tongue-out-screenshot.png),
+  [biscuit-adult-sit-decking-mouth-open-screenshot](full/biscuit-adult-sit-decking-mouth-open-screenshot.png)
+
+  Only three of the twenty full frames have nothing on her at all:
+  [biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg),
+  [biscuit-adult-asleep-dog-bed-head-over-edge](full/biscuit-adult-asleep-dog-bed-head-over-edge.jpeg)
+  and
+  [biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg),
+  and the last of those is clipped instead.
 - **A limb, the tail or an ear is sliced flat at the edge of the source photograph. Proportion
   is not readable in any of these, and the flat cut must not be mistaken for the animal's real
   outline.**
@@ -637,7 +873,8 @@ can be checked against this list before anything is taken from it.
   [biscuit-adolescent-run-grass-tail-streaming](cutouts/biscuit-adolescent-run-grass-tail-streaming.png),
   [biscuit-adolescent-sit-pink-heart-collar-2](cutouts/biscuit-adolescent-sit-pink-heart-collar-2.png),
   [biscuit-puppy-lying-forepaws-pads](cutouts/biscuit-puppy-lying-forepaws-pads.png),
-  [biscuit-adolescent-walk-ball-in-mouth](cutouts/biscuit-adolescent-walk-ball-in-mouth.png)
+  [biscuit-adolescent-walk-ball-in-mouth](cutouts/biscuit-adolescent-walk-ball-in-mouth.png),
+  [biscuit-adult-belly-up-carpet-harness](full/biscuit-adult-belly-up-carpet-harness.jpeg)
 - **An unremoved second dark animal survives the cutout at the right edge and merges with her
   rear outline. Do not read her hindquarters or her back line from either frame.**
   [biscuit-adolescent-lying-grass-teeth-showing](cutouts/biscuit-adolescent-lying-grass-teeth-showing.png),
@@ -662,12 +899,16 @@ can be checked against this list before anything is taken from it.
   [biscuit-adolescent-stand-low-sun-head-turned-2](cutouts/biscuit-adolescent-stand-low-sun-head-turned-2.png)
 - **The eye colour in these frames is not hers. Sun flare turns the one visible eye pale
   blue-grey in the sunlit roll, underexposure loses the eyes entirely in the sweater sit and
-  the dim floor frame, and hair veils both eyes in the lowered head. Her eyes are amber and
-  must be taken from a frame where they are lit and open.**
+  the dim floor frame, hair veils both eyes in the lowered head, and in the wood-chip frame a
+  sky reflection sits across both corneas so the near eye reads blue-grey while the far one
+  keeps its amber. Her eyes are amber and must be taken from a frame where they are lit and
+  open — which, in this folder, means a cutout: every full frame carries a window, a sky or a
+  canopy spread across the eye.**
   [biscuit-adolescent-belly-up-sunlit-harness](cutouts/biscuit-adolescent-belly-up-sunlit-harness.png),
   [biscuit-adolescent-sit-pink-sweater-2](cutouts/biscuit-adolescent-sit-pink-sweater-2.jpeg),
   [biscuit-juvenile-belly-up-dim-floor](cutouts/biscuit-juvenile-belly-up-dim-floor.png),
-  [biscuit-juvenile-head-lowered-curls-over-eyes](cutouts/biscuit-juvenile-head-lowered-curls-over-eyes.jpeg)
+  [biscuit-juvenile-head-lowered-curls-over-eyes](cutouts/biscuit-juvenile-head-lowered-curls-over-eyes.jpeg),
+  [biscuit-adult-sit-overhead-tongue-out-chips](full/biscuit-adult-sit-overhead-tongue-out-chips.jpeg)
 - **Matte artefacts survive the background removal: an orange fringe along the edge, a flat
   white notch of unremoved background, a black halo, a dark surviving patch, and a green grass
   fringe on an ear. None of these are markings, hair or shadow, and copying them into the
@@ -679,113 +920,158 @@ can be checked against this list before anything is taken from it.
   [biscuit-adolescent-sit-mouth-wide-open](cutouts/biscuit-adolescent-sit-mouth-wide-open.jpeg),
   [biscuit-adolescent-chin-down-party-hat](cutouts/biscuit-adolescent-chin-down-party-hat.jpeg),
   [biscuit-juvenile-chin-on-paws-red-cast](cutouts/biscuit-juvenile-chin-on-paws-red-cast.png)
+- **Shot through a glass door. The glass veils contrast, lifts the blacks, lays a reflection of
+  the sky across her and cools the whole frame toward grey. Pose and outline survive; no coat
+  value may be sampled from either.**
+  [biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg),
+  [biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg)
+- **Freshly groomed. The face is clipped, the topknot rounded and the body taken short, which is
+  a decision made on one particular week and not her coat. These two are the reason the folder
+  contains a silver-beige dog at all, and neither coat length nor coat value may be taken from
+  them. Everything else about her survives the clip, which is what identifies them as her: the
+  liver nose and the brown ear leathers in both, the face markings in both, and the body
+  marking map in the balcony frame, which is the only one of the two that holds a body.**
+  [biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg),
+  [biscuit-adult-head-close-groomed-park](full/biscuit-adult-head-close-groomed-park.jpeg)
+- **Screen captures, not photographs. Both are a phone screen recorded and cropped tall, so they
+  are soft, re-compressed and smaller than they look. Read expression from them; read no edge,
+  no texture and no value.**
+  [biscuit-adult-walk-close-tongue-out-screenshot](full/biscuit-adult-walk-close-tongue-out-screenshot.png),
+  [biscuit-adult-sit-decking-mouth-open-screenshot](full/biscuit-adult-sit-decking-mouth-open-screenshot.png)
+- **Other people and other animals share the frame. A hand holds her collar, a boot and a knee
+  crowd the blanket, a walker's pack of dogs fills the background, and a park is behind her.
+  None of it is her, and the pack in particular is a walker's string of other dogs, a couple of
+  them pale curly types, that must not seed the drawing.**
+  [biscuit-adult-head-close-groomed-park](full/biscuit-adult-head-close-groomed-park.jpeg),
+  [biscuit-adult-lying-rear-view-park-blanket](full/biscuit-adult-lying-rear-view-park-blanket.jpeg),
+  [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg),
+  [biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg),
+  [biscuit-adult-sit-decking-mouth-open-screenshot](full/biscuit-adult-sit-decking-mouth-open-screenshot.png)
+- **Shot from standing height, looking down at a small dog. This is the single hazard the full
+  frames did not fix and it runs through nearly all of them: the camera is a person's eye and
+  she is a foot off the floor, so the head enlarges, the back shortens and the legs foreshorten.
+  Stance, marking map, tail and feet are safe to read; leg length and body depth are not, from
+  any of them.**
+  [biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg),
+  [biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg),
+  [biscuit-adult-stand-balcony-through-glass](full/biscuit-adult-stand-balcony-through-glass.jpeg),
+  [biscuit-adult-sit-groomed-balcony-through-glass](full/biscuit-adult-sit-groomed-balcony-through-glass.jpeg),
+  [biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg),
+  [biscuit-adult-asleep-dog-bed-head-over-edge](full/biscuit-adult-asleep-dog-bed-head-over-edge.jpeg),
+  [biscuit-adult-belly-up-carpet-harness](full/biscuit-adult-belly-up-carpet-harness.jpeg),
+  [biscuit-adult-sit-shrimp-bandana-head-cocked](full/biscuit-adult-sit-shrimp-bandana-head-cocked.jpeg),
+  [biscuit-adult-sit-overhead-tongue-out-chips](full/biscuit-adult-sit-overhead-tongue-out-chips.jpeg),
+  [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg),
+  [biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg),
+  [biscuit-adult-stand-frontal-indoor](full/biscuit-adult-stand-frontal-indoor.jpeg),
+  [biscuit-adult-sit-face-study-warm-light](full/biscuit-adult-sit-face-study-warm-light.jpeg),
+  [biscuit-adolescent-head-on-blanket-red-cast-frontal](full/biscuit-adolescent-head-on-blanket-red-cast-frontal.jpeg)
+
+## What the twenty full frames closed
+
+The gaps below were written when the folder held cutouts alone. Five of them are now answered
+and are recorded where they belong rather than left standing here as open questions.
+
+| Gap | Closed by | Where the answer lives now |
+| --- | --- | --- |
+| The tail's length and its carriage at rest | [biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg), [biscuit-adult-stand-three-quarter-path](full/biscuit-adult-stand-three-quarter-path.jpeg) | [The tail is long, and its carriage follows the pose](#the-tail-is-long-and-its-carriage-follows-the-pose) |
+| The marking pattern on her hindquarters and back | [biscuit-adult-lying-overhead-topline-sunlit](full/biscuit-adult-lying-overhead-topline-sunlit.jpeg), [biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg) | [The phantom marking map and where it sits](#the-phantom-marking-map-and-where-it-sits) |
+| A frame of low affect in readable light | [biscuit-adult-chin-down-ears-back](full/biscuit-adult-chin-down-ears-back.jpeg) | [Outcome: loss](#outcome-loss) |
+| Sleep beyond a puppy's head | [biscuit-adult-asleep-dog-bed-head-over-edge](full/biscuit-adult-asleep-dog-bed-head-over-edge.jpeg) | [Ambient: sleepier late at night](#ambient-sleepier-late-at-night) |
+| A traceable outline for the icon-mark — the overall silhouette, not a fine curl edge | [biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg), [biscuit-adult-stand-blanket-jaws-open](full/biscuit-adult-stand-blanket-jaws-open.jpeg) | [The reduced mark](#the-reduced-mark) |
+
+Every one of those answers is a grown dog's. Where the sheet is drawing an adolescent, they
+settle what the thing is — where the tail goes, where the cream stops, what a deflated ear
+looks like — and not how long it is.
 
 ## What this corpus cannot answer
 
 The reference sheet is required to fix her proportions, colouring, face, ears, tail and
-paws. The face is well covered at both ends of the fade and in both light and dark exposure.
-The rest is not, and no amount of re-reading these files will change that — each gap below
-needs a photograph that does not exist yet.
+paws. The face is well covered at every age and in both light and dark exposure, and the tail,
+the feet, the back and the rump are covered now that the full frames have arrived. What is left
+is measurement, and one photograph that has never been taken.
 
-### Her proportions cannot be measured anywhere in the corpus
+### Her proportions still cannot be measured
 
-Every full-body frame either slices a limb flat at the edge of the source photograph or is shot
-from directly overhead, which foreshortens the legs. Leg length relative to body depth, chest
-depth and the length of the back are therefore all inferred, and the reference sheet exists
+The full frames removed the reason the cutouts could not answer this and did not answer it
+themselves. Thirteen of them hold a whole uncut animal, so her outline is no longer in doubt —
+but every one is shot from a standing person's eye onto a dog a foot off the floor, so the head
+enlarges, the back shortens and the legs foreshorten, and none of them contains an object of
+known size beside her. Leg length relative to body depth, chest depth and the length of the
+back are therefore still inferred rather than measured, and the reference sheet exists
 specifically to fix them.
 
 **What would close it.** A level side-on photograph of her standing squarely, taken at her own
-height, with all four feet and the whole tail inside the frame and nothing touching an edge.
+height, with all four feet and the whole tail inside the frame, nothing touching an edge, and
+something of known size on the floor beside her.
 
-### The tail's length and its carriage at rest are unestablished
+### The age the sheet is anchored to has no whole-body frame
 
-The tail appears only as a plume seen from above, streaming behind her at a run, or lost
-entirely in a black flatten. Whether it is carried up, out or low when she is simply standing
-is not visible in any frame, and the reference sheet is required to fix the tail.
+This is the gap the full frames created. The sheet is anchored to the adolescent, and every
+adolescent frame in the folder is a cutout with a limb, an ear or the tail sliced flat at the
+edge. Every uncut body belongs to the grown dog, whose build is heavier and shorter-legged
+under a longer coat. So the one age whose proportions the sheet is committed to drawing is the
+one age with no complete photograph of it, and the temptation to measure the grown frames and
+call the result adolescent is the most likely single error this folder now invites.
 
-**What would close it.** A side-on standing photograph at her own height with the tail relaxed
-and completely in frame against a plain background.
+**What would close it.** Nothing can: she is no longer that age. The sheet either accepts that
+its proportions are an inference corrected by the grown frames, or the anchor moves to the age
+that is photographed.
 
 ### There is no clear view of an adolescent foot
 
-Every readable paw in the corpus belongs to the puppy. Adolescent feet are cropped at the
-bottom edge, smeared by motion, or covered by socks and booties, so the current foot shape and
-pad colour rest entirely on frames from an age whose proportions the sheet may not be using.
+The foot is documented at both ends of her life and not in the middle. The puppy frames give
+pads and cream feathering at close range, and
+[biscuit-adult-side-lying-full-body-pads](full/biscuit-adult-side-lying-full-body-pads.jpeg)
+gives three grown feet at once on a lit floor — both forefeet and one hind. Adolescent feet are still cropped at the
+bottom edge, smeared by motion, or covered by socks and booties. Since the two ends agree about
+pad colour and feathering, this matters less than it did — the shape of a grown foot under a
+longer coat is the part that does not transfer.
 
-**What would close it.** A lit close-up of one adolescent front foot and one hind foot, unshod,
-photographed from the side and again from underneath.
+**What would close it.** It is closed for practical purposes; what remains is confirmation that
+the adolescent foot sits between the two, which only an adolescent photograph could give.
 
 ### No two frames agree on her colour under comparable light
 
-Coat value is carried by frames that each distort it in a different direction: hard sun blowing
-the body toward white, a red flood, a black flatten, underexposure, and low sun gilding one
-side gold. The sheet has to name one body colour and the corpus offers no neutral measurement
-of it.
+Coat value is still carried by frames that each distort it in a different direction: hard sun
+blowing the body toward white, a red flood, a black flatten, underexposure, low sun gilding one
+side gold, glass cooling the whole frame toward grey. The full frames add several in even
+indoor daylight and open shade, which is a real improvement, but none of them contains a
+neutral reference, so the sheet still has to name one body colour by judgement. The problem has
+also grown: the newest frames are paler than the limit the direction sets, which is dealt with
+under [the range she has to stay inside](#the-range-she-has-to-stay-inside).
 
 **What would close it.** Three frames of her in the same even indoor daylight, front, profile
 and rear, shot within a minute of one another with a neutral grey card included in the first.
 
-### The head profile rests on a single filtered frame
+### The head profile has one square-on frame and its colour is destroyed
 
-Only one true side view of the head exists and it is rendered in flat saturated red on black.
-Muzzle length, the depth of the stop and the line of the skull — the three things that decide
-whether she reads as herself or as a generic poodle — are therefore established by one image
-whose colour is destroyed.
+Two profiles now exist rather than one, and neither is what the sheet wants. The red-filtered
+head is square on to the camera and has no colour left in it at all;
+[biscuit-adult-lying-profile-ledge-tail-out](full/biscuit-adult-lying-profile-ledge-tail-out.jpeg)
+has its colour intact but her head is turned a few degrees toward the lens and the ear falls
+across the cheek. They agree about the muzzle length, the depth of the stop and the line of the
+skull, which is what makes them worth more together than either alone, but a measured profile
+still rests on inference between them.
 
-**What would close it.** An evenly lit head profile taken at eye level with the ear held clear
-of the cheek so the jaw and muzzle line are unobstructed.
+**What would close it.** An evenly lit head profile taken at eye level, square on, with the ear
+held clear of the cheek so the jaw and muzzle line are unobstructed.
 
 ### Nothing shows her leaving at ground level
 
-Sign-off wants her moving away from the viewer, and both rear views in the corpus are shot from
-above and behind, one of them rotated 180 degrees in the export. An overhead rear reads as a
-dog being looked down on, not as a dog departing.
+Sign-off wants her moving away from the viewer. The folder now has three rear views rather than
+two, and all three are of a stationary dog: two grown frames of her lying down with her back to
+the camera, and the cutouts shot from above and behind, one of them rotated 180 degrees in the
+export. A lying rear view reads as a dog settled, and an overhead rear reads as a dog being
+looked down on. Neither reads as a dog departing.
 
 **What would close it.** A photograph taken at her own height as she walks directly away, with
 her whole body, her hind feet and her tail inside the frame.
 
-### There is no frame of low affect in readable light
-
-Loss is one of the two poses the direction says must be very good, and the three candidates are
-an underexposed curl, a head lowered under a wash that blows the body white, and a dog in a
-party hat. Ear carriage and eye shape in a deflated state are consequently unsupported.
-
-**What would close it.** An evenly lit frame taken at her own height of her lying with her chin
-on the floor and her ears back, with no clothing, prop or harness on her.
-
-### Sleep is documented only as a puppy head
-
-Exactly one frame has her eyes closed and it fills the frame with a puppy's head, so an
-adolescent sleeping posture — how she folds, where the head goes, what the ears do — has to be
-assembled from waking frames of a curl.
-
-**What would close it.** An adolescent asleep with her whole body in frame, evenly lit,
-photographed from her own height rather than from above.
-
-### The marking pattern on her hindquarters and back is unverified
-
-The marking map is confirmed on the face, chest and legs from many frames, but the only views
-of her rump and back are two overhead frames washed pale by sun and a black flatten that
-swallows the rear outline. Whether any cream reaches the hind legs above the hock is not
-readable.
-
-**What would close it.** A rear three-quarter photograph in even indoor light with the hind
-legs and rump fully lit and nothing worn over them.
-
-### The icon-mark register has no clean outline to work from
-
-The reduced mark needs an unambiguous silhouette, and the frames that offer one are
-compromised: the true silhouette is marginal, low resolution and small in frame, and many of
-the crisper cutouts carry a baked-in white sticker border that thickens her real edge by
-several pixels.
-
-**What would close it.** A full-body profile against a plain contrasting background, in flat
-even light, exported at full resolution without any sticker outline applied.
-
-Taken together these are a short shoot: a level, evenly lit set at her own height — front,
-profile, rear and walking away, all four feet and the whole tail inside the frame, nothing
-worn, and a grey card in the first exposure. That one session answers every gap above except
-sleep and low affect, which have to be caught rather than posed.
+Taken together these are a short shoot, and a shorter one than before: a level, evenly lit set
+at her own height — square side-on, head profile and walking away — with all four feet and the
+whole tail inside the frame, nothing worn, something of known size on the floor, and a grey
+card in the first exposure. That one session answers everything above that is still answerable.
 
 ## Related pages
 

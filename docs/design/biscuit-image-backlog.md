@@ -46,12 +46,18 @@ drawn but not yet accepted stays unticked.
 - [ ] **0.1 The closing shoot.** Not a drawing: the photographs the corpus lacks, which
   the photo index specifies under
   [What this corpus cannot answer](biscuit_pics/raw/README.md#what-this-corpus-cannot-answer)
-  — a level, evenly lit set at her own height, front, profile, rear and walking away, all
-  four feet and the whole tail in frame, nothing worn, a grey card in the first exposure,
-  plus sleep and low affect caught rather than posed. The sheet can start without it and
-  must be revised against it; the provisional items in the bible are the list of what it
-  closes. **Done when** the frames are added to the photography index with grades and tags
-  like the rest.
+  — a level, evenly lit set at her own height, square side-on, head profile and walking away,
+  all four feet and the whole tail in frame, nothing worn, something of known size on the
+  floor, and a grey card in the first exposure. The sheet can start without it and must be
+  revised against it; the provisional items in the bible are the list of what it closes.
+  **Done when** the frames are added to the photography index with grades and tags like the
+  rest. _Partly overtaken on 2026-08-22: twenty full camera frames were added to the index
+  and closed five of the gaps this item existed to close — tail carriage, the hindquarter
+  markings, low affect, sleep, and a clean outline for the mark. See
+  [what the twenty full frames closed](biscuit_pics/raw/README.md#what-the-twenty-full-frames-closed).
+  They are not the shoot: nothing in them is level, measured or unclothed, and they show a
+  grown dog rather than the adolescent the sheet is anchored to, so this item stays open and
+  is shorter than it was._
 - [ ] **0.2 The character reference sheet.** The first deliverable and the last word on her
   anatomy, drawn to [the model sheet section](biscuit-character-bible.md#model-sheet):
   a turnaround — front, three-quarter, profile, rear — at adolescent proportions and medium
@@ -59,8 +65,9 @@ drawn but not yet accepted stays unticked.
   minimum; the marking map as a flat diagram; swatches naming every token in the colour
   table; a line-weight specimen at three sizes; and the posture vocabulary as thumbnails —
   loaf, sphinx, sit looking up, reared bipedal, run, back roll, chin down. Every provisional
-  item (proportions, tail carriage, hindquarters, the adolescent foot, the head profile) is
-  marked provisional on the sheet itself. **Draw from** the fixed-trait sections and
+  item (proportions, the adolescent foot's shape, a measured head profile) is marked
+  provisional on the sheet itself; tail carriage and the hindquarter markings were on that
+  list until the twenty full frames settled them. **Draw from** the fixed-trait sections and
   [The fixed face](biscuit_pics/raw/README.md#the-fixed-face). **Deliverable:** the master
   vector and a PDF or PNG of the sheet, under the proposed `docs/design/biscuit_sheet/`.
   **Done when** the owner has approved it against the bible and every open question it
@@ -118,18 +125,18 @@ under tier 3 only to say so.
   a leap frame. **Face:** the eyes are level on the viewer as the fixed face requires; the
   mouth may be open because a rolling dog's is, and that is posture, not expression.
   **Draw from** [Outcome: win](biscuit_pics/raw/README.md#outcome-win): face from the two
-  prime frontal frames, body from the roll and the sunlit belly-up, which are posture
-  evidence only. **Mounts** at `GameConclusion`, the won outcome, inside the 4:3 stage at
+  prime frontal frames, body from the cutout roll and the grown back-roll on the carpet,
+  which are posture evidence only. **Mounts** at `GameConclusion`, the won outcome, inside the 4:3 stage at
   no less than the minimum; the mark when motion is off. **Deliverable:** SVG plus the two
   review PNG files. **Done when** the roll reads as a decision she made, and the face is the same
   face as the loss.
 - [ ] **2.2 Loss.** The second. **She is** lying chin down, forelegs forward, ears back and
   slack, looking up without moving — reproach by posture. **Face:** the eyes are open,
   level, on the viewer; nothing narrows. **Draw from**
-  [Outcome: loss](biscuit_pics/raw/README.md#outcome-loss), which is the thinnest moment in
-  the corpus — the party hat is discarded, the curl's tone is lifted before anything is
-  read, and the bandana stand's body is not hers to draw; item 0.1's low-affect frame
-  supersedes all three when it exists. **Mounts** at `GameConclusion`, the lost outcome.
+  [Outcome: loss](biscuit_pics/raw/README.md#outcome-loss), which the full frames turned from
+  the thinnest moment into one of the best served: the grown chin-down frame is the register
+  itself, with the ears back, the eyes level and nothing worn, and the ear carriage and eye
+  shape come from it. The party hat and the underexposed curl stay as second readings. **Mounts** at `GameConclusion`, the lost outcome.
   **Deliverable:** SVG plus review PNG files. **Done when** it is unmistakably the same animal
   as the win with the eyes unchanged, and the word for it is deadpan, never sad.
 - [ ] **2.3 Arrival.** The opening bookend. **She is** coming straight at the viewer — a
@@ -137,17 +144,19 @@ under tier 3 only to say so.
   stage, reared on her hind legs looking up; the sheet's thumbnails decide which. **Face:**
   fixed; the mouth may be open at a run. **Draw from**
   [Bookend: arrival](biscuit_pics/raw/README.md#bookend-arrival), the best covered moment in
-  the corpus; stride from those frames, never leg length, because all four crop the feet.
+  the corpus; stride from the two running frames, the front assembly and head carriage from
+  the grown frontal stand, and leg length from none of them.
   **Mounts** at the page's opening bookend, per the `MascotSlot` row. **Deliverable:** SVG
   plus review PNG files. **Done when** the whole front of the dog reads at the minimum size and
   the ears are unmistakably airborne.
 - [ ] **2.4 Sign-off.** The closing bookend. **She is** walking directly away from the
   viewer at her own height, whole body, hind feet and tail plume in frame. **Face:** not
   visible; the back view is the point. **Draw from**
-  [Bookend: sign-off](biscuit_pics/raw/README.md#bookend-sign-off), which the index calls
-  insufficient — both rear views are shot from above, one is rotated in the export — so this
-  pose is the one most dependent on item 0.1's walking-away frame and is drawn last in this
-  tier. **Mounts** at the page's closing bookend. **Deliverable:** SVG plus review PNG files.
+  [Bookend: sign-off](biscuit_pics/raw/README.md#bookend-sign-off), which the index still
+  calls insufficient — there are four rear views now and not one of them is a dog departing:
+  the two grown frames have her lying down and the two cutouts are shot from above and behind
+  — so this pose is the one most dependent on item 0.1's walking-away frame and is drawn last
+  in this tier. **Mounts** at the page's closing bookend. **Deliverable:** SVG plus review PNG files.
   **Done when** the plume and the drop ears carry the identity with no face in frame.
 - [ ] **2.5 Idle after a long pause.** Ambient; the clock is read through the existing
   port. **She is** loafed — legs tucked, head up, looking flat at the viewer from slightly
@@ -161,10 +170,11 @@ under tier 3 only to say so.
 - [ ] **2.6 Sleepier late at night.** Ambient, clock-read. **She is** the loaf tightened
   into a curl, chin on the paws, ears slack, tail over the nose if the sheet's carriage
   allows it. **Face:** the eyes stay open and level — sleepy is a posture, and the bible
-  says so; the photo index's closed-eye puppy frame is evidence for the curl and not for
-  the eyes. **Draw from**
+  says so; the photo index's closed-eye frames are evidence for the fold and not for the
+  eyes. **Draw from**
   [Ambient: sleepier late at night](biscuit_pics/raw/README.md#ambient-sleepier-late-at-night)
-  for the body, and from item 0.1's adolescent sleep frame when it exists. **Mounts** at the
+  for the body — the grown dog asleep in her bed now shows how she folds and where the head
+  goes, which the puppy head could not. **Mounts** at the
   page, as 2.5. **Deliverable:** SVG plus review PNG files. **Done when** it reads as later
   than 2.5 by posture alone.
 - [ ] **2.7 Different after a long absence.** Stateful, clock-read. **She is** either the

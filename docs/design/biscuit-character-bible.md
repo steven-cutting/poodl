@@ -15,7 +15,7 @@ the record of the decisions that keep one drawing of her consistent with the nex
 It owns how she looks and how she is rendered. It does not own why she exists, where she is
 allowed to be or how she sounds — [Design direction](direction.md#biscuit) does, and
 nothing here relaxes it — and it does not own the evidence:
-[Biscuit reference photography](biscuit_pics/raw/README.md) holds fifty-five frames of
+[Biscuit reference photography](biscuit_pics/raw/README.md) holds seventy-five frames of
 the real dog, each read and graded, and where this page states a rule the evidence for it
 is a link into that index rather than a restatement. The images this page governs are
 listed, each with its own brief, in [Biscuit image backlog](biscuit-image-backlog.md).
@@ -64,9 +64,14 @@ specified as [the first item of the backlog](biscuit-image-backlog.md#tier-0-bef
 
 ### Proportions
 
-Nothing in the corpus can measure them — every full-body frame slices a limb or looks down
-on her from above — and
-[the index says so](biscuit_pics/raw/README.md#her-proportions-cannot-be-measured-anywhere-in-the-corpus).
+Nothing in the corpus can measure them. The twenty full frames added whole uncut bodies, so
+her outline is no longer in doubt, but every one is shot from a standing person's eye onto a
+small dog and none has an object of known size beside her, so leg length and body depth are
+still inferred —
+[the index says so](biscuit_pics/raw/README.md#her-proportions-still-cannot-be-measured).
+Worse for this page, every uncut body is a grown dog's and the sheet is anchored to the
+adolescent, which
+[has no whole-body frame at all](biscuit_pics/raw/README.md#the-age-the-sheet-is-anchored-to-has-no-whole-body-frame).
 Until the closing shoot exists, the sheet works inside these bounds, which are inference
 from the breed's structure corrected by her frames, not measurements of her:
 
@@ -97,9 +102,9 @@ Each rule is one line; the evidence is the link.
 | Topknot | Shapeless, unclipped, held clear of the eyes. | [Whether the eyes clear the fringe](biscuit_pics/raw/README.md#whether-the-eyes-clear-the-fringe) |
 | Mouth | Closed at rest, a short flat stroke. Open is posture — a running or rolling dog's mouth — and never an expression. | [Outcome: win](biscuit_pics/raw/README.md#outcome-win) |
 
-The head profile rests on
-[a single filtered frame](biscuit_pics/raw/README.md#the-head-profile-rests-on-a-single-filtered-frame);
-the sheet's profile is drawn from it for structure and flagged until the shoot confirms it.
+The head profile rests on two frames that agree and neither of which is what the sheet wants:
+[one square on with its colour destroyed, one in colour with the head turned](biscuit_pics/raw/README.md#the-head-profile-has-one-square-on-frame-and-its-colour-is-destroyed).
+The sheet's profile is drawn from both for structure and flagged until the shoot confirms it.
 
 ### The fixed face
 
@@ -116,8 +121,9 @@ event. This is that face, stated so an illustrator can hold it across every pose
 - **Deadpan is the resting state.** At rest the mouth is closed and the ears hang. A loss
   is chin down and ears back with the eyes still level on the viewer — reproach by posture.
   Sleepy is a tighter curl with the chin on the paws and the ears slack, and the eyes are
-  still open. The photo index offers a closed-eye puppy frame for sleep; under this rule it
-  is posture evidence for the curl and not a licence to shut the eyes.
+  still open. The photo index offers closed-eye frames for sleep — a puppy's head, and the
+  grown dog folded into her bed; under this rule they are posture evidence for the fold and
+  not a licence to shut the eyes.
 - **The break is a change to the eyes** — shut, a wink, a side-eye, a widening, whichever
   the one break drawing chooses. At most one such image exists. Its form and its trigger are
   [open questions](#open-questions); until they are answered, no image breaks the face.
@@ -141,9 +147,11 @@ the elbow and hock down; and the feet. Skull, ear leathers, back, flanks and rum
 colour. Evidence:
 [The phantom marking map and where it sits](biscuit_pics/raw/README.md#the-phantom-marking-map-and-where-it-sits).
 
-The hindquarters are
-[unverified](biscuit_pics/raw/README.md#the-marking-pattern-on-her-hindquarters-and-back-is-unverified):
-until the shoot, nothing above the hock is cream, and the sheet says so.
+The hindquarters are no longer provisional. The full frames show the back, the flanks and the
+rump carrying no cream at all, the stockings starting at about the elbow and the hock, and the
+pale hair below them running unbroken into the feet —
+[the evidence is in the marking map](biscuit_pics/raw/README.md#the-phantom-marking-map-and-where-it-sits).
+Nothing above the hock is cream, and it is now a reading rather than a placeholder.
 
 ### Tail
 
@@ -151,19 +159,22 @@ A fuller, longer, paler plume of hair at the end of the tail — not a shaved po
 stalk, not a bare tapered whip. Evidence:
 [Tail carries a paler plume](biscuit_pics/raw/README.md#tail-carries-a-paler-plume).
 
-Its length and its carriage at rest are
-[unestablished](biscuit_pics/raw/README.md#the-tails-length-and-its-carriage-at-rest-are-unestablished).
-Provisionally the tail is carried up and loosely curved, plume readable from the side and
-from above, and every pose keeps that carriage until the shoot says otherwise.
+Its length and its carriage are established. The tail is long and feathered along its whole
+length, and the carriage follows the pose rather than the mood: **up and curved over the back
+when she is standing, laid out behind her along the ground when she is sitting or lying**, and
+never tucked. What it does at a walk is not photographed; only a run is. Evidence:
+[The tail is long, and its carriage follows the pose](biscuit_pics/raw/README.md#the-tail-is-long-and-its-carriage-follows-the-pose).
+Every pose draws one of those two carriages and no third.
 
 ### Feet
 
 Cream mops from above and from the side; the pads are dark and appear only when the sole
 turns to the viewer. Never pink pads, never a clipped foot with the toes exposed. Evidence:
 [Dark pads under cream foot feathering](biscuit_pics/raw/README.md#dark-pads-under-cream-foot-feathering).
-Every readable paw in the corpus is a puppy's, so the adolescent foot is
-[an open gap](biscuit_pics/raw/README.md#there-is-no-clear-view-of-an-adolescent-foot)
-drawn from those frames and flagged.
+The foot is documented as a puppy and as a grown dog, and the two agree about pad colour and
+feathering; only the adolescent middle is
+[still an open gap](biscuit_pics/raw/README.md#there-is-no-clear-view-of-an-adolescent-foot),
+so the shape stays flagged even though the colouring does not.
 
 ### Colour
 
@@ -305,7 +316,8 @@ Hold every delivery against this list before accepting it. Each line is a yes or
 5. Ears are set low, reach the jaw, hang clear of the cheek, and are the darkest value.
 6. The head is a circle with a stub, not a wedge.
 7. The coat is unclipped, medium, wavy; no pattern, no bracelet, no shaved face or foot.
-8. The tail ends in a paler plume, carried up and loosely curved.
+8. The tail ends in a paler plume, carried up and curved over the back when she stands and
+   laid out behind her when she sits or lies, never tucked.
 9. Feet are cream; pads are dark and shown only when the sole turns.
 10. The body is `--biscuit-3`; no part of her is lighter than its token, and no fill is
     outside the colour table.
@@ -336,10 +348,16 @@ decisions; the rest wait on photographs that do not exist yet.
   face.
 - **The iris value.** Whether `--biscuit-5` reads as amber on the sheet, or a token is
   added.
-- **Tail carriage at rest, the adolescent foot, the hindquarter markings, the head
-  profile.** Each is provisional above and each is closed by the shoot the photo index
-  describes under
+- **The adolescent foot's shape, and a measured head profile.** Each is provisional above and
+  each is closed by the shoot the photo index describes under
   [What this corpus cannot answer](biscuit_pics/raw/README.md#what-this-corpus-cannot-answer).
+  Tail carriage and the hindquarter markings were on this list and are not any more; the
+  twenty full frames settled both, and
+  [the index records which frames did it](biscuit_pics/raw/README.md#what-the-twenty-full-frames-closed).
+- **Whether the anchor age survives.** The sheet is anchored to the adolescent and no
+  adolescent frame shows a whole animal, while every whole animal in the folder is a grown
+  dog whose build is heavier and shorter-legged. Either the proportions stay an inference or
+  the anchor moves, and no page decides that on its own.
 - **The sources' home.** `docs/design/biscuit_sheet/` is proposed for the sheet and the
   masters and `src/lib/assets/biscuit/` for the shipped SVGs; both are named here so the
   first delivery lands somewhere deliberate, and either may move when it does.

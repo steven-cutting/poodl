@@ -50,6 +50,14 @@ configuration, and it is the one installed as the pre-commit hook.
 
 Third-party hooks are pinned to commit SHAs with a version comment beside each.
 
+The large-file check caps a file at 768 KB and has exactly one exclusion:
+`docs/design/biscuit_pics/raw/full/`, the Biscuit reference photographs. They are
+unaltered camera frames of 3 to 7 MB, kept at capture resolution because the character
+reference sheet is drawn from them and a reader has to be able to zoom to a pad or an iris
+to check a claim [the index](../design/biscuit_pics/raw/README.md) makes about it — a
+verification pass over that page found four of its own claims false that way. The cap still
+applies everywhere else, so a stray binary is still caught.
+
 One gap is worth knowing about rather than being surprised by. `actionlint` analyses a
 `run:` block by handing it to `shellcheck`, and it reports nothing at all when it cannot
 find `shellcheck` on its own `PATH`. Under `prek` each hook gets its own environment, so

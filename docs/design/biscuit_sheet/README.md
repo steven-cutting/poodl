@@ -33,8 +33,9 @@ the fixed face at hero size and at the 180 × 135 minimum; the marking map as a 
 diagram; swatches naming every token in the bible's colour table; a line-weight specimen at
 three sizes; and the posture vocabulary as thumbnails — loaf, sphinx, sit looking up,
 reared bipedal, run, back roll, chin down. Every provisional item in the bible —
-proportions, tail carriage, hindquarters, the adolescent foot, the head profile — is
-tagged provisional on the sheet.
+proportions, the adolescent foot's shape, a measured head profile — is tagged provisional on
+the sheet. Tail carriage and the hindquarter markings were provisional when this sheet was
+drawn and are not any more, so the sheet's flags on those two are stale.
 
 **The seven posture thumbnails are not drawn.** The image model's weekly quota ran out
 after the five panels above were made (reset 2026-08-29); their slots on the sheet carry
