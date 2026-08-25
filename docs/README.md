@@ -38,6 +38,10 @@ how the two relate.
 ## Design
 
 - [Design direction](design/direction.md) — how Biscuit Games looks and feels, and why.
+- [Biscuit character bible](design/biscuit-character-bible.md) — what any image of Biscuit
+  has to hold to, and how to review one.
+- [Biscuit image backlog](design/biscuit-image-backlog.md) — every image of her the game
+  needs, in the order it needs them, each with a brief.
 - [Biscuit reference photography](design/biscuit_pics/raw/README.md) — the graded frames of
   the real dog the drawings are made from.
 - [Design resource index](design/resource-index.md) — research, standards, tools and public

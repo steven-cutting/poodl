@@ -1437,5 +1437,9 @@ without touching one of these, because it was shot standing up and empty-handed.
 
 - [Design direction](../../direction.md) — what the mascot is for, and the pose set this
   material feeds.
+- [Biscuit character bible](../../biscuit-character-bible.md) — the rules a drawing made
+  from these frames has to hold to.
+- [Biscuit image backlog](../../biscuit-image-backlog.md) — the drawings, in order, and
+  which section here each is drawn from.
 - [Design resource index](../../resource-index.md) — the research behind the design
   vocabulary.
