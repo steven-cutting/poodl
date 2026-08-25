@@ -1,141 +1,345 @@
 <!doctype html>
-<meta charset="utf-8">
+<meta charset="utf-8" />
 <title>Biscuit character reference sheet</title>
 <style>
-  :root { --ink:#efd3b4; --ground:#0b0b0b; --rule:#3a2a1e; --dim:#b99a78; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--ground); color:var(--ink);
-    font:15px/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing:antialiased; width:2000px; padding:64px 72px 88px; }
-  h1 { font-size:40px; letter-spacing:-0.02em; margin:0 0 4px; font-weight:600; }
-  .sub { color:var(--dim); font-size:16px; margin:0 0 6px; max-width:96ch; }
-  .status { display:inline-block; border:1.5px solid var(--rule); padding:5px 12px;
-    font-size:12px; letter-spacing:0.12em; text-transform:uppercase; margin-top:14px; }
-  h2 { font-size:13px; letter-spacing:0.16em; text-transform:uppercase; font-weight:600;
-    margin:0 0 18px; padding-bottom:9px; border-bottom:1.5px solid var(--rule); }
-  section { margin-top:52px; }
-  .row { display:flex; gap:20px; align-items:flex-start; }
-  .panel { margin:0; flex:1; }
-  .plate { background:#0b0b0b; border:1px solid var(--rule); position:relative;
-    aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .plate.sq { aspect-ratio:1/1; }
-  .plate.floored::after { content:""; position:absolute; left:0; right:0; bottom:11.1%;
-    border-top:1px dashed #b99a7855; }
-  .plate img { width:100%; height:100%; object-fit:contain; display:block; }
-  figcaption { margin-top:9px; display:flex; flex-direction:column; gap:2px; }
-  .lab { font-size:13px; font-weight:600; letter-spacing:0.04em; }
-  .note { font-size:12px; color:var(--dim); }
+  :root {
+    --ink: #efd3b4;
+    --ground: #0b0b0b;
+    --rule: #3a2a1e;
+    --dim: #b99a78;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font:
+      15px/1.55 'Helvetica Neue',
+      Helvetica,
+      Arial,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    width: 2000px;
+    padding: 64px 72px 88px;
+  }
+  h1 {
+    font-size: 40px;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+  .sub {
+    color: var(--dim);
+    font-size: 16px;
+    margin: 0 0 6px;
+    max-width: 96ch;
+  }
+  .status {
+    display: inline-block;
+    border: 1.5px solid var(--rule);
+    padding: 5px 12px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-top: 14px;
+  }
+  h2 {
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0 0 18px;
+    padding-bottom: 9px;
+    border-bottom: 1.5px solid var(--rule);
+  }
+  section {
+    margin-top: 52px;
+  }
+  .row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .panel {
+    margin: 0;
+    flex: 1;
+  }
+  .plate {
+    background: #0b0b0b;
+    border: 1px solid var(--rule);
+    position: relative;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .plate.sq {
+    aspect-ratio: 1/1;
+  }
+  .plate.floored::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 11.1%;
+    border-top: 1px dashed #b99a7855;
+  }
+  .plate img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  figcaption {
+    margin-top: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .lab {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .note {
+    font-size: 12px;
+    color: var(--dim);
+  }
 
+  .split {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+  }
+  .map {
+    position: relative;
+    width: 820px;
+    flex: none;
+  }
+  .map .plate {
+    position: relative;
+  }
+  .pin {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    margin: -13px 0 0 -13px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--ground);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 3px #0b0b0b;
+  }
+  .key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+  }
+  .key li {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .key b {
+    display: inline-block;
+    width: 22px;
+  }
 
-  .split { display:flex; gap:36px; align-items:flex-start; }
-  .map { position:relative; width:820px; flex:none; }
-  .map .plate { position:relative; }
-  .pin { position:absolute; width:26px; height:26px; margin:-13px 0 0 -13px;
-    border-radius:50%; background:var(--ink); color:var(--ground); font-size:13px;
-    font-weight:700; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 0 0 3px #0b0b0b; }
-  .key { list-style:none; margin:0; padding:0; font-size:14px; }
-  .key li { padding:9px 0; border-bottom:1px solid var(--rule); }
-  .key b { display:inline-block; width:22px; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 9px 14px 9px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .sw {
+    width: 44px;
+  }
+  .sw span {
+    display: block;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--rule);
+  }
+  .tok,
+  .hex {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .why {
+    color: var(--dim);
+  }
 
-  table { border-collapse:collapse; width:100%; font-size:14px; }
-  th, td { text-align:left; padding:9px 14px 9px 0; border-bottom:1px solid var(--rule);
-    vertical-align:top; }
-  th { font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--dim); }
-  .sw { width:44px; }
-  .sw span { display:block; width:34px; height:34px; border:1px solid var(--rule); }
-  .tok, .hex { font-family:"SF Mono", Menlo, monospace; font-size:13px;
-    font-variant-numeric:tabular-nums; white-space:nowrap; }
-  .why { color:var(--dim); }
+  .specimen {
+    display: flex;
+    gap: 44px;
+    align-items: flex-end;
+  }
+  .spec {
+    text-align: center;
+  }
+  .spec .plate {
+    background: #0b0b0b;
+  }
+  .spec .cap {
+    font-size: 12px;
+    color: var(--dim);
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .rulebar {
+    margin: 10px auto 0;
+    background: var(--ink);
+  }
 
-  .specimen { display:flex; gap:44px; align-items:flex-end; }
-  .spec { text-align:center; }
-  .spec .plate { background:#0b0b0b; }
-  .spec .cap { font-size:12px; color:var(--dim); margin-top:8px;
-    font-variant-numeric:tabular-nums; }
-  .rulebar { margin:10px auto 0; background:var(--ink); }
+  .stage {
+    display: flex;
+    gap: 36px;
+    align-items: flex-start;
+  }
+  .stagebox {
+    width: 480px;
+    height: 360px;
+    border: 1px solid var(--rule);
+    position: relative;
+    flex: none;
+    background: #0b0b0b;
+  }
+  .stagebox .floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 88.9%;
+    border-top: 1.5px solid #b99a78;
+  }
+  .stagebox .safe {
+    position: absolute;
+    inset: 3.33%;
+    border: 1px dashed #b99a7866;
+  }
+  .stagebox .t {
+    position: absolute;
+    font-size: 11px;
+    color: var(--dim);
+    font-family: 'SF Mono', Menlo, monospace;
+  }
 
-  .stage { display:flex; gap:36px; align-items:flex-start; }
-  .stagebox { width:480px; height:360px; border:1px solid var(--rule); position:relative;
-    flex:none; background:#0b0b0b; }
-  .stagebox .floor { position:absolute; left:0; right:0; top:88.9%;
-    border-top:1.5px solid #b99a78; }
-  .stagebox .safe { position:absolute; inset:3.33%; border:1px dashed #b99a7866; }
-  .stagebox .t { position:absolute; font-size:11px; color:var(--dim);
-    font-family:"SF Mono", Menlo, monospace; }
-
-  .cols { column-count:2; column-gap:44px; }
-  .cols ul { margin:0; padding-left:18px; font-size:14px; }
-  .cols li { margin-bottom:12px; break-inside:avoid; }
-  .cols b { font-weight:600; }
-  .foot { margin-top:56px; padding-top:18px; border-top:1.5px solid var(--rule);
-    font-size:12.5px; color:var(--dim); max-width:120ch; }
+  .cols {
+    column-count: 2;
+    column-gap: 44px;
+  }
+  .cols ul {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 14px;
+  }
+  .cols li {
+    margin-bottom: 12px;
+    break-inside: avoid;
+  }
+  .cols b {
+    font-weight: 600;
+  }
+  .foot {
+    margin-top: 56px;
+    padding-top: 18px;
+    border-top: 1.5px solid var(--rule);
+    font-size: 12.5px;
+    color: var(--dim);
+    max-width: 120ch;
+  }
 </style>
 
 <header>
   <h1>Biscuit — character reference sheet</h1>
-  <p class="sub">Item 0.2 of the Biscuit image backlog, drawn to the model sheet section of
-  the character bible. Proportions are adolescent; the coat is medium; she wears nothing and
-  holds nothing; her fills are the biscuit ramp and nothing else.</p>
+  <p class="sub">
+    Item 0.2 of the Biscuit image backlog, drawn to the model sheet section of the character bible.
+    Proportions are adolescent; the coat is medium; she wears nothing and holds nothing; her fills
+    are the biscuit ramp and nothing else.
+  </p>
   <span class="status">Draft — not accepted · closes no open question · 2026-08-24</span>
 </header>
 
 <section>
   <h2>Turnaround — adolescent proportions, medium coat</h2>
   <div class="row">
-      <figure class="panel ">
-        <div class="plate floored"><img src="panels/stage/front.png" alt=""></div>
-        <figcaption><span class="lab">Front</span></figcaption>
-      </figure>
-      <figure class="panel ">
-        <div class="plate floored"><img src="panels/stage/turn-three-quarter.png" alt=""></div>
-        <figcaption><span class="lab">Three-quarter</span></figcaption>
-      </figure>
-      <figure class="panel ">
-        <div class="plate floored"><img src="panels/stage/turn-profile.png" alt=""></div>
-        <figcaption><span class="lab">Profile</span></figcaption>
-      </figure>
-      <figure class="panel ">
-        <div class="plate floored"><img src="panels/stage/turn-rear.png" alt=""></div>
-        <figcaption><span class="lab">Rear</span></figcaption>
-      </figure>
+    <figure class="panel">
+      <div class="plate floored"><img src="panels/stage/front.png" alt="" /></div>
+      <figcaption><span class="lab">Front</span></figcaption>
+    </figure>
+    <figure class="panel">
+      <div class="plate floored"><img src="panels/stage/turn-three-quarter.png" alt="" /></div>
+      <figcaption><span class="lab">Three-quarter</span></figcaption>
+    </figure>
+    <figure class="panel">
+      <div class="plate floored"><img src="panels/stage/turn-profile.png" alt="" /></div>
+      <figcaption><span class="lab">Profile</span></figcaption>
+    </figure>
+    <figure class="panel">
+      <div class="plate floored"><img src="panels/stage/turn-rear.png" alt="" /></div>
+      <figcaption><span class="lab">Rear</span></figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <h2>Head studies</h2>
-  <div class="row" style="max-width:1000px">
-      <figure class="panel ">
-        <div class="plate sq"><img src="panels/head-front.png" alt=""></div>
-        <figcaption><span class="lab">Head, front</span></figcaption>
-      </figure>
-      <figure class="panel ">
-        <div class="plate sq"><img src="panels/head-profile.png" alt=""></div>
-        <figcaption><span class="lab">Head, profile</span></figcaption>
-      </figure>
+  <div class="row" style="max-width: 1000px">
+    <figure class="panel">
+      <div class="plate sq"><img src="panels/head-front.png" alt="" /></div>
+      <figcaption><span class="lab">Head, front</span></figcaption>
+    </figure>
+    <figure class="panel">
+      <div class="plate sq"><img src="panels/head-profile.png" alt="" /></div>
+      <figcaption><span class="lab">Head, profile</span></figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <h2>The fixed face — the eyes are the face</h2>
   <div class="split">
-    <figure class="panel" style="width:560px;flex:none;margin:0">
-      <div class="plate sq"><img src="panels/fixed-face.png" alt=""></div>
+    <figure class="panel" style="width: 560px; flex: none; margin: 0">
+      <div class="plate sq"><img src="panels/fixed-face.png" alt="" /></div>
       <figcaption><span class="lab">Hero size</span></figcaption>
     </figure>
     <div>
-      <figure class="panel" style="margin:0 0 22px">
-        <div class="plate floored" style="width:180px;height:135px;aspect-ratio:auto">
-          <img src="panels/stage/front.png" alt=""></div>
-        <figcaption><span class="lab">180 × 135, placed 1:1</span>
-        <span class="note">the minimum the full register is ever rendered at</span></figcaption>
+      <figure class="panel" style="margin: 0 0 22px">
+        <div class="plate floored" style="width: 180px; height: 135px; aspect-ratio: auto">
+          <img src="panels/stage/front.png" alt="" />
+        </div>
+        <figcaption>
+          <span class="lab">180 × 135, placed 1:1</span>
+          <span class="note">the minimum the full register is ever rendered at</span>
+        </figcaption>
       </figure>
-      <p style="font-size:14px;max-width:56ch">When she faces the viewer both eyes are
-      visible, round, open, level — neither narrowed nor widened — and looking at the
-      viewer. The brow pips sit level above them. This does not change from one image to
-      the next. Everything else is posture: the mouth may open at a run or a roll, the ears
-      may lift or flatten, the head may tilt, and the body may do anything the moment calls
-      for. Deadpan is the resting state. No image on this sheet breaks the face.</p>
+      <p style="font-size: 14px; max-width: 56ch">
+        When she faces the viewer both eyes are visible, round, open, level — neither narrowed nor
+        widened — and looking at the viewer. The brow pips sit level above them. This does not
+        change from one image to the next. Everything else is posture: the mouth may open at a run
+        or a roll, the ears may lift or flatten, the head may tilt, and the body may do anything the
+        moment calls for. Deadpan is the resting state. No image on this sheet breaks the face.
+      </p>
     </div>
   </div>
 </section>
@@ -144,14 +348,27 @@
   <h2>The marking map — cream sits in five places and nowhere else</h2>
   <div class="split">
     <div class="map">
-      <div class="plate floored"><img src="panels/stage/front.png" alt=""><div class="pin" style="left:43.7%;top:30.0%">1</div><div class="pin" style="left:40.5%;top:17.2%">2</div><div class="pin" style="left:44.6%;top:37.7%">3</div><div class="pin" style="left:38.4%;top:73.5%">4</div><div class="pin" style="left:38.4%;top:84.6%">5</div></div>
+      <div class="plate floored">
+        <img src="panels/stage/front.png" alt="" />
+        <div class="pin" style="left: 43.7%; top: 30%">1</div>
+        <div class="pin" style="left: 40.5%; top: 17.2%">2</div>
+        <div class="pin" style="left: 44.6%; top: 37.7%">3</div>
+        <div class="pin" style="left: 38.4%; top: 73.5%">4</div>
+        <div class="pin" style="left: 38.4%; top: 84.6%">5</div>
+      </div>
     </div>
-    <div style="flex:1">
-      <ul class="key"><li><b>1</b> Muzzle band — behind the nose, back to under the eyes</li><li><b>2</b> Brow pips — one directly above each eye</li><li><b>3</b> Bib — throat and upper chest only</li><li><b>4</b> Stockings — from about the elbow and the hock down</li><li><b>5</b> Feet</li></ul>
-      <p style="font-size:14px;color:var(--dim);max-width:72ch;margin-top:20px">
-      Skull, ear leathers, back, flanks and rump are body colour. Nothing above the elbow
-      and the hock is cream. The pips are the marking most often dropped, and they carry
-      the expression.</p>
+    <div style="flex: 1">
+      <ul class="key">
+        <li><b>1</b> Muzzle band — behind the nose, back to under the eyes</li>
+        <li><b>2</b> Brow pips — one directly above each eye</li>
+        <li><b>3</b> Bib — throat and upper chest only</li>
+        <li><b>4</b> Stockings — from about the elbow and the hock down</li>
+        <li><b>5</b> Feet</li>
+      </ul>
+      <p style="font-size: 14px; color: var(--dim); max-width: 72ch; margin-top: 20px">
+        Skull, ear leathers, back, flanks and rump are body colour. Nothing above the elbow and the
+        hock is cream. The pips are the marking most often dropped, and they carry the expression.
+      </p>
     </div>
   </div>
 </section>
@@ -159,142 +376,236 @@
 <section>
   <h2>Colour — every fill is one flat token</h2>
   <table>
-    <tr><th></th><th>Token</th><th>Value</th><th>Part</th><th>Why this value</th></tr>
     <tr>
-          <td class="sw"><span style="background:#8a5230"></span></td>
-          <td class="tok">--biscuit-3</td><td class="hex">#8a5230</td>
-          <td class="part">Body</td><td class="why">skull, back, flanks, rump, legs above the stocking</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#6b3f22"></span></td>
-          <td class="tok">--biscuit-2</td><td class="hex">#6b3f22</td>
-          <td class="part">Ear leathers</td><td class="why">the darkest thing on her</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#efd3b4"></span></td>
-          <td class="tok">--biscuit-7</td><td class="hex">#efd3b4</td>
-          <td class="part">Markings</td><td class="why">muzzle band, brow pips, bib, stockings, feet</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#dda97b"></span></td>
-          <td class="tok">--biscuit-6</td><td class="hex">#dda97b</td>
-          <td class="part">Tail plume</td><td class="why">paler than the body, not as pale as a marking</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#a9663b"></span></td>
-          <td class="tok">--biscuit-4</td><td class="hex">#a9663b</td>
-          <td class="part">Nose leather</td><td class="why">a shade off the body, warm, on the cream band</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#c4834e"></span></td>
-          <td class="tok">--biscuit-5</td><td class="hex">#c4834e</td>
-          <td class="part">Iris</td><td class="why">provisional: the ramp's nearest step to amber</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#3d2313"></span></td>
-          <td class="tok">--biscuit-1</td><td class="hex">#3d2313</td>
-          <td class="part">Pupil, paw pads</td><td class="why">a fixed dark, never the line colour</td>
-        </tr><tr>
-          <td class="sw"><span style="background:#ffffff"></span></td>
-          <td class="tok">currentColor</td><td class="hex">#ffffff</td>
-          <td class="part">The line</td><td class="why">contour, curl loops, nostrils, mouth, toes</td>
-        </tr>
+      <th></th>
+      <th>Token</th>
+      <th>Value</th>
+      <th>Part</th>
+      <th>Why this value</th>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #8a5230"></span></td>
+      <td class="tok">--biscuit-3</td>
+      <td class="hex">#8a5230</td>
+      <td class="part">Body</td>
+      <td class="why">skull, back, flanks, rump, legs above the stocking</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #6b3f22"></span></td>
+      <td class="tok">--biscuit-2</td>
+      <td class="hex">#6b3f22</td>
+      <td class="part">Ear leathers</td>
+      <td class="why">the darkest thing on her</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #efd3b4"></span></td>
+      <td class="tok">--biscuit-7</td>
+      <td class="hex">#efd3b4</td>
+      <td class="part">Markings</td>
+      <td class="why">muzzle band, brow pips, bib, stockings, feet</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #dda97b"></span></td>
+      <td class="tok">--biscuit-6</td>
+      <td class="hex">#dda97b</td>
+      <td class="part">Tail plume</td>
+      <td class="why">paler than the body, not as pale as a marking</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #a9663b"></span></td>
+      <td class="tok">--biscuit-4</td>
+      <td class="hex">#a9663b</td>
+      <td class="part">Nose leather</td>
+      <td class="why">a shade off the body, warm, on the cream band</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #c4834e"></span></td>
+      <td class="tok">--biscuit-5</td>
+      <td class="hex">#c4834e</td>
+      <td class="part">Iris</td>
+      <td class="why">provisional: the ramp's nearest step to amber</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #3d2313"></span></td>
+      <td class="tok">--biscuit-1</td>
+      <td class="hex">#3d2313</td>
+      <td class="part">Pupil, paw pads</td>
+      <td class="why">a fixed dark, never the line colour</td>
+    </tr>
+    <tr>
+      <td class="sw"><span style="background: #ffffff"></span></td>
+      <td class="tok">currentColor</td>
+      <td class="hex">#ffffff</td>
+      <td class="part">The line</td>
+      <td class="why">contour, curl loops, nostrils, mouth, toes</td>
+    </tr>
   </table>
-  <p style="font-size:14px;color:var(--dim);max-width:96ch;margin-top:16px">
-  No value is mixed, lightened or shaded. She never takes a result hue or a neutral, and no
-  contrast floor applies to her: she is decorative and carries no state. On the light page
-  the cream markings at the silhouette's edge are held by the contour alone, which is one
-  reason the line is the register.</p>
+  <p style="font-size: 14px; color: var(--dim); max-width: 96ch; margin-top: 16px">
+    No value is mixed, lightened or shaded. She never takes a result hue or a neutral, and no
+    contrast floor applies to her: she is decorative and carries no state. On the light page the
+    cream markings at the silhouette's edge are held by the contour alone, which is one reason the
+    line is the register.
+  </p>
 </section>
 
 <section>
   <h2>The line — one weight per asset, the same weight on every asset</h2>
   <div class="specimen">
-    <div class="spec"><div class="plate floored" style="width:720px;height:540px;aspect-ratio:auto">
-      <img src="panels/stage/front.png" alt=""></div>
-      <div class="rulebar" style="width:720px;height:6px"></div>
-      <div class="cap">720 × 540 — 4×  ·  rule 6.0 px</div></div>
-    <div class="spec"><div class="plate floored" style="width:360px;height:270px;aspect-ratio:auto">
-      <img src="panels/stage/front.png" alt=""></div>
-      <div class="rulebar" style="width:360px;height:3px"></div>
-      <div class="cap">360 × 270 — 2×  ·  rule 3.0 px</div></div>
-    <div class="spec"><div class="plate floored" style="width:180px;height:135px;aspect-ratio:auto">
-      <img src="panels/stage/front.png" alt=""></div>
-      <div class="rulebar" style="width:180px;height:1.5px"></div>
-      <div class="cap">180 × 135 — 1×  ·  rule 1.5 px</div></div>
+    <div class="spec">
+      <div class="plate floored" style="width: 720px; height: 540px; aspect-ratio: auto">
+        <img src="panels/stage/front.png" alt="" />
+      </div>
+      <div class="rulebar" style="width: 720px; height: 6px"></div>
+      <div class="cap">720 × 540 — 4× · rule 6.0 px</div>
+    </div>
+    <div class="spec">
+      <div class="plate floored" style="width: 360px; height: 270px; aspect-ratio: auto">
+        <img src="panels/stage/front.png" alt="" />
+      </div>
+      <div class="rulebar" style="width: 360px; height: 3px"></div>
+      <div class="cap">360 × 270 — 2× · rule 3.0 px</div>
+    </div>
+    <div class="spec">
+      <div class="plate floored" style="width: 180px; height: 135px; aspect-ratio: auto">
+        <img src="panels/stage/front.png" alt="" />
+      </div>
+      <div class="rulebar" style="width: 180px; height: 1.5px"></div>
+      <div class="cap">180 × 135 — 1× · rule 1.5 px</div>
+    </div>
   </div>
-  <p style="font-size:14px;color:var(--dim);max-width:96ch;margin-top:18px">
-  The line is set at 2 user units on the stage, which renders as 1.5 px — the interface's
-  <span class="tok">--rule-w-strong</span> — at the minimum size, and scales with the drawing
-  above it. She is a print, not a UI rule. The bar under each plate is that size's implied
-  weight, drawn at 1:1.</p>
+  <p style="font-size: 14px; color: var(--dim); max-width: 96ch; margin-top: 18px">
+    The line is set at 2 user units on the stage, which renders as 1.5 px — the interface's
+    <span class="tok">--rule-w-strong</span> — at the minimum size, and scales with the drawing
+    above it. She is a print, not a UI rule. The bar under each plate is that size's implied weight,
+    drawn at 1:1.
+  </p>
 </section>
 
 <section>
   <h2>The stage — every full-register pose is drawn on it</h2>
   <div class="stage">
     <div class="stagebox">
-      <div class="safe"></div><div class="floor"></div>
-      <div class="t" style="left:8px;top:6px">0,0</div>
-      <div class="t" style="right:8px;top:6px">240,0</div>
-      <div class="t" style="left:8px;top:calc(88.9% + 6px)">floor y = 160</div>
-      <div class="t" style="right:8px;bottom:6px">240,180</div>
+      <div class="safe"></div>
+      <div class="floor"></div>
+      <div class="t" style="left: 8px; top: 6px">0,0</div>
+      <div class="t" style="right: 8px; top: 6px">240,0</div>
+      <div class="t" style="left: 8px; top: calc(88.9% + 6px)">floor y = 160</div>
+      <div class="t" style="right: 8px; bottom: 6px">240,180</div>
     </div>
-    <div style="flex:1;max-width:72ch;font-size:14px">
-      <p><b>viewBox 0 0 240 180</b>, a 4:3 field, never rendered below 180 × 135 CSS pixels.
-      Whatever part of her touches the ground touches <b>y = 160</b>; the bottom twenty units
-      are margin. Nothing touches an edge — at least eight units all round, shown dashed —
-      and she is drawn as large as the pose allows inside that.</p>
-      <p style="color:var(--dim)">She faces the viewer or moves toward or away from them. The
-      stage is not cropped, rotated or mirrored at mount: a mirrored pose is a pose decision
-      made on this sheet. The drawings above were generated and cannot be authored to a
-      viewBox, so the posture thumbnails are fitted into 4:3 frames with the floor line drawn
-      — the stage as a reading aid, not as geometry.</p>
+    <div style="flex: 1; max-width: 72ch; font-size: 14px">
+      <p>
+        <b>viewBox 0 0 240 180</b>, a 4:3 field, never rendered below 180 × 135 CSS pixels. Whatever
+        part of her touches the ground touches <b>y = 160</b>; the bottom twenty units are margin.
+        Nothing touches an edge — at least eight units all round, shown dashed — and she is drawn as
+        large as the pose allows inside that.
+      </p>
+      <p style="color: var(--dim)">
+        She faces the viewer or moves toward or away from them. The stage is not cropped, rotated or
+        mirrored at mount: a mirrored pose is a pose decision made on this sheet. The drawings above
+        were generated and cannot be authored to a viewBox, so the posture thumbnails are fitted
+        into 4:3 frames with the floor line drawn — the stage as a reading aid, not as geometry.
+      </p>
     </div>
   </div>
 </section>
 
 <section>
   <h2>Posture vocabulary</h2>
-  <div class="row" style="flex-wrap:wrap">
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-loaf.png" alt=""></div>
-        <figcaption><span class="lab">Loaf</span><span class="note">legs tucked, head up, tail slack</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-sphinx.png" alt=""></div>
-        <figcaption><span class="lab">Sphinx</span><span class="note">forelegs stretched forward</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-sit-up.png" alt=""></div>
-        <figcaption><span class="lab">Sit, looking up</span><span class="note">sitting square, head up, tail slack</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-bipedal.png" alt=""></div>
-        <figcaption><span class="lab">Reared bipedal</span><span class="note">both hind feet down and in frame</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-run.png" alt=""></div>
-        <figcaption><span class="lab">Run</span><span class="note">ears lifted clear; mouth open is posture</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-back-roll.png" alt=""></div>
-        <figcaption><span class="lab">Back roll</span><span class="note">flung there and held</span></figcaption>
-      </figure>
-      <figure class="panel thumb">
-        <div class="plate floored"><img src="panels/stage/pose-chin-down.png" alt=""></div>
-        <figcaption><span class="lab">Chin down</span><span class="note">ears back, eyes still level</span></figcaption>
-      </figure>
+  <div class="row" style="flex-wrap: wrap">
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-loaf.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Loaf</span><span class="note">legs tucked, head up, tail slack</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-sphinx.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Sphinx</span><span class="note">forelegs stretched forward</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-sit-up.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Sit, looking up</span
+        ><span class="note">sitting square, head up, tail slack</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-bipedal.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Reared bipedal</span
+        ><span class="note">both hind feet down and in frame</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-run.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Run</span
+        ><span class="note">ears lifted clear; mouth open is posture</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-back-roll.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Back roll</span><span class="note">flung there and held</span>
+      </figcaption>
+    </figure>
+    <figure class="panel thumb">
+      <div class="plate floored"><img src="panels/stage/pose-chin-down.png" alt="" /></div>
+      <figcaption>
+        <span class="lab">Chin down</span><span class="note">ears back, eyes still level</span>
+      </figcaption>
+    </figure>
   </div>
 </section>
 
 <section>
   <h2>What is provisional on this sheet</h2>
   <div class="cols">
-    <ul><li><b>Proportions.</b> No frame in the corpus can measure leg length or body depth, and the age the sheet is anchored to has no whole-body frame at all. Every ratio here is inference from the breed's structure corrected by her frames.</li><li><b>The adolescent foot's shape.</b> Documented as a puppy and as a grown dog, which agree about pad colour and feathering. The adolescent middle is not photographed.</li><li><b>The head profile.</b> Rests on two frames that agree and neither of which is what the sheet wants: one square on with its colour destroyed, one in colour with the head turned.</li><li><b>The iris value.</b> --biscuit-5 is the ramp's nearest step to amber. No full frame corroborates her iris; if this reads orange, one amber token is proposed.</li><li><b>The anchor age itself.</b> Every whole animal in the folder is a grown dog whose build is heavier and shorter-legged than the adolescent this sheet is drawn to.</li></ul>
+    <ul>
+      <li>
+        <b>Proportions.</b> No frame in the corpus can measure leg length or body depth, and the age
+        the sheet is anchored to has no whole-body frame at all. Every ratio here is inference from
+        the breed's structure corrected by her frames.
+      </li>
+      <li>
+        <b>The adolescent foot's shape.</b> Documented as a puppy and as a grown dog, which agree
+        about pad colour and feathering. The adolescent middle is not photographed.
+      </li>
+      <li>
+        <b>The head profile.</b> Rests on two frames that agree and neither of which is what the
+        sheet wants: one square on with its colour destroyed, one in colour with the head turned.
+      </li>
+      <li>
+        <b>The iris value.</b> --biscuit-5 is the ramp's nearest step to amber. No full frame
+        corroborates her iris; if this reads orange, one amber token is proposed.
+      </li>
+      <li>
+        <b>The anchor age itself.</b> Every whole animal in the folder is a grown dog whose build is
+        heavier and shorter-legged than the adolescent this sheet is drawn to.
+      </li>
+    </ul>
   </div>
-  <h2 style="margin-top:34px">What the twenty full frames closed, and is no longer provisional</h2>
-  <div class="cols"><ul><li><b>Tail carriage.</b> Up and curved over the back standing; slack and laid out behind her settled. Closed by the twenty full frames.</li><li><b>The hindquarter markings.</b> Back, flanks and rump carry no cream at all; the stockings begin at about the elbow and the hock. Closed by the two grown lying frames.</li></ul></div>
+  <h2 style="margin-top: 34px">What the twenty full frames closed, and is no longer provisional</h2>
+  <div class="cols">
+    <ul>
+      <li>
+        <b>Tail carriage.</b> Up and curved over the back standing; slack and laid out behind her
+        settled. Closed by the twenty full frames.
+      </li>
+      <li>
+        <b>The hindquarter markings.</b> Back, flanks and rump carry no cream at all; the stockings
+        begin at about the elbow and the hock. Closed by the two grown lying frames.
+      </li>
+    </ul>
+  </div>
 </section>
 
-<p class="foot">Every drawing above was generated with OpenAI's image model through the Codex
-CLI, from the character bible and the photo index, and then snapped to the exact colour table
-above. There is no master vector: a raster generator cannot produce one, and the backlog asks
-for one, so what this sheet settles is the reading of the brief and not the artwork. Nothing
-here closes an open question, ticks the backlog item or changes a decision in the bible.
+<p class="foot">
+  Every drawing above was generated with OpenAI's image model through the Codex CLI, from the
+  character bible and the photo index, and then snapped to the exact colour table above. There is no
+  master vector: a raster generator cannot produce one, and the backlog asks for one, so what this
+  sheet settles is the reading of the brief and not the artwork. Nothing here closes an open
+  question, ticks the backlog item or changes a decision in the bible.
 </p>
-</html>
