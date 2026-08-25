@@ -266,10 +266,7 @@ recognisably brown; drifting toward cream or white is a defect, not a variation.
 Reference photography of the real dog — puppy through grown, as sticker cutouts and as the
 original camera frames — lives in
 [Biscuit reference photography](biscuit_pics/raw/README.md), gathered for this reference
-sheet to draw from. What the sheet must fix, and every rule for drawing and
-using her, is the [Biscuit character bible](biscuit-character-bible.md); the images that
-follow from it, this pose set included, are briefed one by one in the
-[Biscuit image backlog](biscuit-image-backlog.md).
+sheet to draw from.
 
 ### Where she does not go
 
