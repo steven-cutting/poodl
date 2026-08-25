@@ -1,0 +1,146 @@
+=== WHO SHE IS (read this first; it decides everything else) ===
+
+"Biscuit" is a brown miniature poodle. She is the host of a spare, precise little
+word game for adults. She is exacting, proprietorial and entirely unbothered.
+
+She is NOT a cute cartoon mascot. Not kawaii, not chibi, not a plush toy, not a
+sticker, not a children's-book character, not a greetings-card puppy. If the drawing
+would look at home on a nursery wall it is WRONG. The single most common failure is
+making her adorable; do not.
+
+Concretely, that means:
+- Her EYES ARE SMALL relative to her skull — real dog eyes, each about one seventh of
+  the skull's width. NEVER big round anime or cartoon eyes. No eyelashes. No sparkle.
+- Her expression is DEADPAN. No smile. No happy curve to the mouth. No raised brows.
+- Her head is NOT oversized. She is an adolescent dog with near-adult proportions,
+  not a puppy with a big head and short legs.
+
+=== THE GENRE THIS DRAWING BELONGS TO ===
+
+Draw her as a MID-CENTURY MODERN SCREEN-PRINTED POSTER ANIMAL: the flat, geometric,
+reduced style of 1950s and 1960s silkscreen wildlife and zoo posters, where an animal is
+built from a few clean flat shapes and one ink line, printed in four or five spot colours
+with no shading of any kind. Calm, graphic, adult, slightly severe. The kind of print that
+hangs in a design studio, not a nursery.
+
+That genre decides the drawing more than any other instruction here:
+- REDUCE. Draw the fewest shapes that still read as this dog. Simplify the coat into clean
+  masses. Resist adding detail; detail is the enemy of this style.
+- NO STICKER LOOK. This is a printed poster, not a die-cut vinyl sticker. There is NO white
+  rim, halo, glow or outline running around the outside of the animal. The ink line is a
+  drawn line of even width, not a cut edge.
+- NO CUTENESS. Mid-century poster animals are observed, not anthropomorphised. She is
+  poised and self-possessed, never adorable, never appealing to a child.
+
+=== RENDERING LANGUAGE (a screen print, not a painting) ===
+
+Draw her as a FLAT VECTOR ILLUSTRATION: one ink keyline plus flat spot colours, like
+a two-plate screen print or a modern pictogram.
+
+LINE
+- ONE ink line, pure white (#ffffff), the SAME WIDTH EVERYWHERE — about 1/200 of the
+  image width. No tapering, no pressure, no thicker outer contour, no double line,
+  no sketchiness, no broken strokes, no halo, no glow, no drop shadow, no outer
+  white rim offset from the fill.
+- THE SILHOUETTE IS ONE SMOOTH CONTINUOUS CURVE with a slight, irregular, lazy waver
+  in it. It is NOT scalloped. It is NOT a row of bumps. It is NOT a chain of arcs or
+  semicircles. It is NOT a cloud outline. It is NOT drawn as individual curls. Think
+  of the edge of a soft cushion drawn in a single confident stroke, not of a sheep.
+- Coat texture inside the silhouette is a HANDFUL of separate open loops of the white
+  line — about six to twelve in a whole-body drawing, and none at all over large areas
+  of flank. Never a scribble, never a fur pattern, never hatching, never fur strands.
+
+FILLS
+- Flat fills ONLY. Every colour area is one completely even colour. NO shading, NO
+  gradient, NO highlight, NO catchlight, NO cast shadow, NO ambient occlusion, NO
+  texture, NO grain, NO noise, NO airbrush. Light does not fall on her.
+- Exactly this palette and nothing else; no mixing, no tints, no darker or lighter
+  versions of any of them:
+    body (skull, back, flanks, rump, upper legs, tail shaft) : #8a5230
+    ear hair (the darkest thing on her)                      : #6b3f22
+    cream markings                                           : #efd3b4
+    tail plume                                               : #dda97b
+    nose leather                                             : #a9663b
+    iris                                                     : #c4834e
+    pupil, and paw pads                                      : #3d2313
+    the ink line                                             : #ffffff
+    the background                                           : #0b0b0b
+- She is recognisably BROWN. The body is NEVER cream, beige, tan, blond, grey or
+  café-au-lait. The photographs are faded, sunlit or filtered: take ANATOMY from them,
+  NEVER colour.
+
+BACKGROUND
+- One flat #0b0b0b covering the whole image, edge to edge, fully opaque. No
+  transparency. No floor, no ground line, no horizon, no shadow under her, no scene,
+  no props, no vignette, no border, no frame, no sticker outline.
+
+=== ANATOMY (each line names the mistake it prevents) ===
+
+- SQUARE AND COMPACT. Height at the withers is about equal to the length from the
+  point of the chest to the back of the rump. Not long-bodied. Not leggy. Not a
+  sausage.
+- THE HEAD IS A CIRCLE WITH A STUB. The skull is a round dome. The muzzle is a SHORT
+  BLUNT stub on the front of it, no longer than one third of the skull's diameter,
+  with a soft rounded stop rather than an angle. NEVER a long tapering show-poodle
+  wedge, NEVER a snout, NEVER a greyhound head. This is the second most common
+  failure after cuteness, and it is most often made in the profile view.
+- THE NECK DISAPPEARS INTO COAT, so the head sits close to the shoulders. No long
+  elegant neck.
+- EARS SET LOW, at eye level, hanging as TWO DISTINCT LOBES that reach about the
+  jawline and hang clear of the cheek. Their hair is in longer, looser waves than the
+  body, and they are the DARKEST value on her (#6b3f22 against a #8a5230 body). Never
+  set high, never short, never the same colour as the body.
+- TOPKNOT shapeless and unclipped, held CLEAR OF THE EYES. The eyes are never veiled.
+- COAT medium length and UNCLIPPED EVERYWHERE: no shaved face, no shaved feet, no
+  pompoms, no bracelets, no rosettes, no clipped edges, no continental or show trim of
+  any kind. She is a pet, never a show dog.
+- TAIL long and feathered along its whole length. Standing, it is carried UP and
+  CURVED OVER THE LINE OF THE BACK. Lying or sitting, it is slack and laid out behind
+  her along the ground. Never tucked. The plume is the longer, looser, paler hair of
+  the last third (#dda97b), rather than a separate object: it is NOT a fan, NOT a
+  feather duster, NOT a squirrel tail, NOT a shaved pom on a stalk, and never wider
+  than her own head.
+- FEET are cream mops of hair that close over the toes. Pads are dark (#3d2313) and
+  appear ONLY when a sole is turned toward the viewer. Never pink pads, never clipped
+  feet with bare toes.
+
+=== THE MARKING MAP — cream (#efd3b4) sits in exactly FIVE places and NOWHERE else ===
+
+1. A BAND AROUND THE MUZZLE. It starts just behind the nose and runs back to a line
+    under the eyes, and it wraps the whole muzzle including under the jaw. It is a
+    BAND, not a mask: it does NOT reach the eyes, it does NOT climb the forehead, it is
+    NOT a blaze, and it is NOT a big cream patch covering the front of the face.
+2. TWO SMALL CREAM PIPS directly above the eyes, one over each eye, each about the
+    size of the eye. ALWAYS drawn — they carry her expression and they are the mark
+    most often forgotten.
+3. A BIB on the throat and the upper chest only — about the size of a bow tie. NOT a
+    shirt front, NOT a belly panel, NOT a stripe running down to the groin.
+4. STOCKINGS from about the elbow and the hock down.
+5. THE FEET.
+
+The skull, the ear leathers, the back, the flanks, the rump and the legs above the
+elbow and hock are BODY COLOUR. There is no cream there at all.
+
+=== THE FIXED FACE (whenever the face is toward the viewer) ===
+
+- Both eyes ROUND, WIDE-SET, OPEN and LEVEL — neither narrowed nor widened — looking
+  straight at the viewer. Flat amber iris #c4834e with a distinct flat dark pupil
+  #3d2313 inside it. NO white anywhere in the eye: no catchlight, no glint, no
+  reflection, no sclera.
+- The rim around each eye is a THIN LIVER-BROWN line, never black, never heavier than
+  the other interior lines.
+- The NOSE is LARGE for the short muzzle, one flat LIVER BROWN #a9663b, NEVER BLACK
+  and never with a lighter sheen band across it. Nostrils and the philtrum groove are
+  drawn in the white line only. Two dark nostril apertures are allowed; a dark nose
+  around them is not.
+- Mouth CLOSED at rest: one short flat white stroke, straight, no curve up or down.
+  It opens only when the pose explicitly says so, and an open mouth is what a running
+  or rolling dog does, never an expression.
+
+=== EXCLUSIONS ===
+
+- She wears NOTHING: no collar, no harness, no tag, no clothes, no hat, no bandana,
+  no bow, no booties. She holds nothing. No ball, no toy, no bone.
+- Nobody is with her: no second animal, no hand, no person.
+- NO LETTERING ANYWHERE: no caption, no label, no title, no annotation, no arrow, no
+  measurement, no speech bubble, no watermark, no signature, no logo.

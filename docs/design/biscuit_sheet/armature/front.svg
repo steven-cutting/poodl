@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#0b0b0b"/>
+  <g stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- hind feet, behind and just outboard of the forefeet -->
+    <g fill="#efd3b4">
+      <path d="M372 884 c -12 26 -12 50 -2 62 c 9 11 26 16 46 16 c 20 0 34 -5 40 -16 c 8 -14 4 -38 -6 -62 z"/>
+      <path d="M574 884 c -10 26 -14 48 -6 62 c 6 11 20 16 40 16 c 20 0 37 -5 46 -16 c 10 -12 10 -36 -2 -62 z"/>
+    </g>
+
+    <!-- tail: standing, so carried up and curved over the line of the back -->
+    <path fill="#8a5230" d="M626 372 c 34 -14 66 -46 82 -88 c 14 -38 14 -72 2 -96 l 44 -16 c 18 36 16 84 0 128 c -20 56 -60 96 -100 114 z"/>
+    <path fill="#dda97b" d="M710 188 c -10 -22 -28 -34 -50 -34 c -16 0 -28 7 -34 18 c 20 -4 38 2 50 14 c 10 10 15 22 16 34 z"/>
+
+    <!-- body: chest and barrel, one continuous silhouette with a lazy waver -->
+    <path fill="#8a5230" d="M512 296
+      c -60 0 -106 20 -128 56
+      c -16 26 -22 62 -20 102
+      c 2 44 6 88 14 124
+      c 7 32 17 56 30 70
+      l 208 0
+      c 13 -14 23 -38 30 -70
+      c 8 -36 12 -80 14 -124
+      c 2 -40 -4 -76 -20 -102
+      c -22 -36 -68 -56 -128 -56 z"/>
+
+    <!-- front legs: thick columns, close together, cream from about the elbow down -->
+    <path fill="#8a5230" d="M428 596 l0 76 l84 0 l0 -76 z"/>
+    <path fill="#8a5230" d="M512 596 l0 76 l84 0 l0 -76 z"/>
+    <path fill="#efd3b4" d="M430 664 c -8 62 -10 138 -8 190 c 2 32 6 54 12 66 c 7 14 20 22 36 22 c 16 0 29 -8 36 -22 c 6 -12 10 -34 12 -66 c 2 -52 0 -128 -8 -190 z"/>
+    <path fill="#efd3b4" d="M514 664 c -8 62 -10 138 -8 190 c 2 32 6 54 12 66 c 7 14 20 22 36 22 c 16 0 29 -8 36 -22 c 6 -12 10 -34 12 -66 c 2 -52 0 -128 -8 -190 z"/>
+    <!-- forefeet: cream mops closing over the toes -->
+    <path fill="#efd3b4" d="M414 892 c -12 28 -12 52 -2 64 c 10 12 28 18 54 18 c 26 0 44 -6 54 -18 c 10 -12 10 -36 -2 -64 z"/>
+    <path fill="#efd3b4" d="M498 892 c -12 28 -12 52 -2 64 c 10 12 28 18 54 18 c 26 0 44 -6 54 -18 c 10 -12 10 -36 -2 -64 z"/>
+
+    <!-- bib: throat and upper chest only, about the size of a bow tie -->
+    <path fill="#efd3b4" d="M512 384 c -30 0 -51 18 -53 47 c -2 30 8 60 22 78 c 10 13 21 19 31 19 c 10 0 21 -6 31 -19 c 14 -18 24 -48 22 -78 c -2 -29 -23 -47 -53 -47 z"/>
+
+    <!-- ears: set low at eye level, two lobes reaching the jawline, the darkest value -->
+    <path fill="#6b3f22" d="M428 238 c -34 -8 -63 6 -74 36 c -13 34 -13 82 -2 118 c 9 30 27 47 49 47 c 24 0 41 -20 47 -52 c 9 -44 6 -110 -20 -149 z"/>
+    <path fill="#6b3f22" d="M596 238 c 34 -8 63 6 74 36 c 13 34 13 82 2 118 c -9 30 -27 47 -49 47 c -24 0 -41 -20 -47 -52 c -9 -44 -6 -110 20 -149 z"/>
+
+    <!-- skull: a round dome under a shapeless unclipped topknot -->
+    <path fill="#8a5230" d="M512 126 c -44 0 -80 16 -100 44 c -18 26 -26 58 -24 92 c 2 40 16 74 40 96 c 22 20 52 30 84 30 c 32 0 62 -10 84 -30 c 24 -22 38 -56 40 -96 c 2 -34 -6 -66 -24 -92 c -20 -28 -56 -44 -100 -44 z"/>
+
+    <!-- muzzle: a short blunt stub; the cream band wraps it and stops short of the eyes -->
+    <path fill="#efd3b4" d="M512 288 c -34 0 -58 15 -58 41 c 0 24 6 44 16 56 c 10 12 26 19 42 19 c 16 0 32 -7 42 -19 c 10 -12 16 -32 16 -56 c 0 -26 -24 -41 -58 -41 z"/>
+
+    <!-- nose: large for the short muzzle, liver brown, never black -->
+    <path fill="#a9663b" d="M512 300 c -20 0 -33 8 -33 21 c 0 14 15 28 33 28 c 18 0 33 -14 33 -28 c 0 -13 -13 -21 -33 -21 z"/>
+    <path d="M512 349 l0 22" stroke-width="4" fill="none"/>
+    <path d="M486 372 q26 12 52 0" stroke-width="4" fill="none"/>
+
+    <!-- eyes: small, round, wide-set, level, flat amber with a flat dark pupil -->
+    <circle cx="457" cy="244" r="15" fill="#c4834e"/>
+    <circle cx="567" cy="244" r="15" fill="#c4834e"/>
+    <circle cx="457" cy="244" r="7" fill="#3d2313" stroke="none"/>
+    <circle cx="567" cy="244" r="7" fill="#3d2313" stroke="none"/>
+
+    <!-- brow pips: two level cream ovals, one directly above each eye -->
+    <ellipse cx="455" cy="206" rx="17" ry="9" fill="#efd3b4"/>
+    <ellipse cx="569" cy="206" rx="17" ry="9" fill="#efd3b4"/>
+
+    <!-- a few open coat loops, and nothing more -->
+    <g fill="none" stroke-width="4">
+      <path d="M462 486 q22 -14 40 4"/>
+      <path d="M552 570 q24 -12 40 8"/>
+      <path d="M456 170 q22 -18 44 -2"/>
+      <path d="M400 300 q-14 -18 -2 -34"/>
+    </g>
+  </g>
+</svg>

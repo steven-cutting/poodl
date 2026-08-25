@@ -71,7 +71,11 @@ drawn but not yet accepted stays unticked.
   [The fixed face](biscuit_pics/raw/README.md#the-fixed-face). **Deliverable:** the master
   vector and a PDF or PNG of the sheet, under the proposed `docs/design/biscuit_sheet/`.
   **Done when** the owner has approved it against the bible and every open question it
-  can close has been closed in the bible's decisions table.
+  can close has been closed in the bible's decisions table. _A third generated draft landed
+  on 2026-08-24 at [Biscuit character reference sheet](biscuit_sheet/README.md), after the
+  two of 2026-08-22 were deleted as failures. It is not accepted and this item stays open:
+  it carries no master vector, its stroke weight is not single, and the register itself is
+  the thing the owner has to rule on._
 - [ ] **0.3 The mark candidates.** The illustrator's brief the direction reserves for the
   mark: at least three constructions, each abstract and geometric — one from a curl, one
   from an ear, one from a letterform — and each with its single wrong element named, per
@@ -212,6 +216,8 @@ is written down.
 
 ## Related pages
 
+- [Biscuit character reference sheet](biscuit_sheet/README.md) — the draft of item 0.2,
+  and what it does and does not settle.
 - [Biscuit character bible](biscuit-character-bible.md) — how every image above is drawn
   and reviewed.
 - [Design direction](direction.md) — the pose set as a budget, and where she may be.
