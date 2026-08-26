@@ -20,8 +20,9 @@
 --   - Starting over: one action clears the numbers and the pool together.
 --
 -- Excludes
---   - Playing a game (game.allium). This module never reads a guess; it reads
---     only the mode, the outcome and the number of attempts used.
+--   - Playing a game (game.allium). This module never reads a guess; it
+--     reads only the requested mode, the outcome, the attempt count and
+--     whether the game counted.
 --   - Per-mode or per-day breakdowns. There is one block, not several.
 --   - Where the numbers are stored.
 --
@@ -78,6 +79,9 @@ entity GuessDistributionBucket {
     win_count: Integer
 
     invariant BucketIsAnAttemptNumber {
+        -- The reference's cross-module config form; allium 3.5.3 resolves
+        -- config within one module only.
+        -- allium-ignore allium.reference.unknownName
         guesses_used >= 1 and guesses_used <= game/config.max_attempts
     }
 
@@ -176,9 +180,9 @@ rule RecordLoss {
 -- only its parameters. game.allium discards an abandoned game once it has
 -- been retired, and nothing here may depend on reaching that game afterwards.
 rule RecordAbandonmentAsLoss {
-    when: game/GameAbandoned(_, mode, attempts)
+    when: game/GameAbandoned(_, attempts, stat_eligible)
 
-    requires: mode in {random, endless}
+    requires: stat_eligible
     requires: attempts >= 1
 
     ensures:
@@ -196,10 +200,10 @@ rule DrawPooledAnswer {
 
     requires: mode in {random, endless}
 
-    let answer_words = filter(words/Words, w => w.in_answer_list)
-    let unused = filter(answer_words, w => w not in pool.used)
+    let answers = words/answer_words()
+    let unused = filter(answers, w => w not in pool.used)
     let pool_exhausted = unused.count = 0
-    let candidates = if pool_exhausted: answer_words else: unused
+    let candidates = if pool_exhausted: answers else: unused
     let drawn = uniform_choice(candidates)
 
     ensures:
@@ -255,13 +259,13 @@ surface StatisticsPanel {
     facing viewer: game/Player
 
     let stats = primary
-    let answer_words = filter(words/Words, w => w.in_answer_list)
-    let answers_unseen = filter(answer_words, w => w not in pool.used).count
+    let answers_unseen = filter(words/answer_words(), w => w not in pool.used).count
     let answers_may_repeat = pool.has_recycled
 
     exposes:
         stats.games_played
         stats.wins
+        stats.losses
         stats.win_percentage
         stats.current_streak
         stats.max_streak

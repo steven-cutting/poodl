@@ -146,6 +146,21 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The Allium diagnostic baseline is retired. Every structural diagnostic the five modules
+  carried is fixed or waived in place: `StatisticsPanel` exposes the losses it already
+  showed, the dead `Player.games` and `Game.is_complete` fields are gone, practice and
+  the answer pool draw from `WordListSource`'s own `answer_words()` rather than filtering
+  a collection the checker cannot resolve, `GameAbandoned` leads its ensures block and
+  carries the eligibility verdict so statistics stops re-deciding which modes count, a
+  new `Arrival` surface provides `PlayerOpensPoodl`, and the fourteen remaining checker
+  gaps carry reasoned whole-line `-- allium-ignore` waivers — a directive the 3.5.3
+  binary honours but documents nowhere, which corrects this log's earlier "neither offers
+  a way to waive one". `just check-specs` now reports no diagnostics and exits 0;
+  `just analyse-specs` still reports the two `missing_producer` findings the analyser
+  cannot trace through `Game.created`. Both recipes stay outside `just check` — gating is
+  the follow-up [decision 0011](docs/decisions/0011-project-managed-allium-cli.md) leaves
+  open — and [Work with the specifications](docs/how-to/work-with-the-specs.md) carries
+  the waiver terms. No observable behaviour changes.
 - The default answer list is an easier one: 1,122 words supplied by the maintainer, trimmed
   by hand (duplicates, entries that were not five letters, one trademark, fifteen obscure
   words and one ethnic slur, which stays in the append-only guess dictionary and is simply

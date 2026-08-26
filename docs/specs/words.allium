@@ -58,6 +58,14 @@ contract WordListSource {
         -- Every word in answer_words also appears in guess_words. A player
         -- can therefore always type the answer as a guess.
 
+    @invariant TheSetsAreTheMembershipFlags
+        -- answer_words() is exactly the Words carrying in_answer_list, and
+        -- guess_words() exactly the Words carrying in_guess_dictionary. The
+        -- contract's sets and the entity's flags are one fact stated from
+        -- two sides, so a rule may draw from answer_words() while an
+        -- invariant filters on the flag, and neither can drift from the
+        -- other.
+
     @invariant AnswerListIsFamiliarVocabulary
         -- The answer list is curated for familiarity: a player who loses
         -- should recognise the answer. The guess dictionary carries no such

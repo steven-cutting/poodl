@@ -25,13 +25,15 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 10 | `check-clean` | The run changed nothing. |
 
 Three checks are deliberately missing from that table. `just check-specs` runs
-`allium check` over the specifications and `just analyse-specs` runs `allium analyse` over
-them; both report rather than gate, because `allium check` exits non-zero on warnings as
-well as errors, `allium analyse` exits non-zero while any finding remains, neither offers a
-way to waive one, and the modules carry a known baseline of both. `check-links-online` sits
+`allium check` over the specifications; since the diagnostic baseline was retired it
+reports no diagnostics and exits 0 on a clean checkout, but it stays outside the aggregate: the
+pinned binary is a per-worktree install the gate cannot assume, and joining `just check`
+is the follow-up [decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves
+open. `just analyse-specs` runs `allium analyse`, which exits non-zero while any finding
+remains; findings cannot be waived, and two are baseline. `check-links-online` sits
 outside the aggregate for a reason of the same class: it needs the network, and a check
 that can fail because a third party is down is not a gate. All three are listed in
-[Commands](commands.md), and the baseline is in
+[Commands](commands.md); the waiver terms and the analyse baseline are in
 [Work with the specifications](../how-to/work-with-the-specs.md).
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure

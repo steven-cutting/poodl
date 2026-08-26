@@ -61,14 +61,25 @@ warnings as well as errors, it offers no configuration file, no severity thresho
 way to waive a diagnostic, and the modules carry a known baseline of warnings. Gating on it
 today would fail the build for findings nobody has triaged yet.
 
+> Superseded in part on 2026-08-25. The baseline was triaged and retired: every
+> diagnostic is fixed or waived in place, and `allium check` now reports no
+> diagnostics and exits 0. The binary turned out to honour an undocumented whole-line
+> `-- allium-ignore <code>` comment, so "no way to waive a diagnostic" was wrong — the
+> waiver terms are in
+> [Work with the specifications](../how-to/work-with-the-specs.md). The recipes still
+> sit outside the aggregate: `allium analyse` cannot reach zero while its two remaining
+> findings stand, and joining the gate is a follow-up this decision leaves open.
+
 Only the four unix targets are supported. The release also carries a Windows zip; a target
 nobody here runs would be a checksum nobody re-verifies.
 
 ## What would reopen this
 
 Upstream publishing checksums for the platform binaries, which would remove the hand
-computation. A distribution channel that a lockfile can name. Or the baseline reaching
-zero, at which point `check-specs` should join `just check` and become a real gate.
+computation. A distribution channel that a lockfile can name. The third condition this
+section used to carry — the baseline reaching zero — was met on 2026-08-25, so what
+remains open is its consequence: `check-specs` joining `just check` and becoming a real
+gate.
 
 [upstream]: https://github.com/juxt/allium-tools
 

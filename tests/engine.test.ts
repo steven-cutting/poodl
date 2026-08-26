@@ -11,8 +11,9 @@ beforeEach(() => {
 });
 
 /*
- * game.allium — Arriving. Opening Poodl is the one trigger no surface provides:
- * it is an arrival, not a control, and every surface is reached by arriving.
+ * game.allium — Arriving. Opening Poodl is the Arrival surface's one trigger:
+ * a doorway rather than a control, and every other surface is something
+ * reached by having arrived.
  */
 describe('arriving', () => {
   // ShowWelcomeOnOpening.
@@ -186,6 +187,20 @@ describe('retiring the outgoing game', () => {
   // AbandonRetiredGame, then RecordAbandonmentAsLoss in statistics.allium.
   it('counts a stat-eligible game that had a guess in it as a loss', () => {
     const played = playGuess(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }), 'crumb');
+    const state = run(env, played, { kind: 'new_game', mode: 'random' });
+
+    expect(state.statistics.gamesPlayed).toBe(1);
+    expect(state.statistics.wins).toBe(0);
+    expect(state.statistics.currentStreak).toBe(0);
+  });
+
+  // AbandonRetiredGame carries the eligibility verdict; endless counts too.
+  it('counts an abandoned endless game the same way', () => {
+    const played = playGuess(
+      env,
+      run(env, fresh(), { kind: 'new_game', mode: 'endless' }),
+      'crumb'
+    );
     const state = run(env, played, { kind: 'new_game', mode: 'random' });
 
     expect(state.statistics.gamesPlayed).toBe(1);

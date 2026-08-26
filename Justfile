@@ -135,19 +135,21 @@ check-docs:
 check-agents:
     uv run --frozen python scripts/validate_agents.py
 
-# The specifications, checked mechanically rather than by review. Deliberately
-# outside `just check`: `allium check` exits non-zero on warnings as well as
-# errors, and the modules carry a known baseline of them. See
-# docs/how-to/work-with-the-specs.md for what that baseline is.
+# The specifications, checked mechanically rather than by review. Reports
+# no diagnostics and exits 0 on a clean checkout: the old diagnostic baseline is
+# fixed or waived in place, so anything reported is a regression. Still
+# deliberately outside `just check` — the binary is a per-worktree install
+# the gate cannot assume, and gating is the follow-up decision 0011 leaves
+# open. Waiver terms: docs/how-to/work-with-the-specs.md.
 check-specs:
     uv run --frozen python scripts/install_allium.py --check
     .tools/bin/allium check docs/specs/
 
 # The same modules read for process completeness rather than structure: data
 # flow, reachability, deadlocks, conflicts and invariants. It repeats everything
-# `check-specs` reports and adds findings of its own. Outside `just check` for
-# its own version of the same reason: it exits non-zero while any finding
-# remains, and four do. The baseline sits on the same page.
+# `check-specs` reports and adds findings of its own. Outside `just check`
+# because it exits non-zero while any finding remains: findings cannot be
+# waived, and two are baseline. They sit on the same page.
 analyse-specs:
     uv run --frozen python scripts/install_allium.py --check
     .tools/bin/allium analyse docs/specs/

@@ -84,9 +84,11 @@ installation exactly where it was. `just install-allium` also replaces a binary 
 longer runs, so an installation damaged by other means repairs itself rather than needing
 `.tools/` cleared by hand.
 
-A version change can move the diagnostic baseline recorded in
-[Work with the specifications](work-with-the-specs.md). Update those tables in the same
-commit, so a later reader can tell a new diagnostic from an old one.
+A version change can move what the checker reports, and the `-- allium-ignore` waivers
+in the modules lean on behaviour upstream documents nowhere, verified against 3.5.3
+only. After moving the pin, run `just check-specs` and `just analyse-specs`, drop any
+waiver the new version no longer needs, and update the analyse table in
+[Work with the specifications](work-with-the-specs.md) in the same commit.
 
 ## Actions in the workflows
 

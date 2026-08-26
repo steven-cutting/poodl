@@ -343,7 +343,12 @@ surface ShareCurrentAnswer {
         fulfils game/DirectManipulation
 
     related:
+        -- Real surfaces in game.allium; allium 3.5.3 resolves no surface
+        -- across modules.
+        -- allium-ignore allium.reference.unknownName
         game/GameBoard(current_game)
+        -- As above: no cross-module surface resolution in 3.5.3.
+        -- allium-ignore allium.reference.unknownName
         game/GameConclusion(current_game)
             when current_game.is_finished_by_play
 
@@ -445,6 +450,9 @@ surface ShareResults {
         fulfils ShareGridFormat
 
     related:
+        -- A real surface in game.allium; allium 3.5.3 resolves no surface
+        -- across modules.
+        -- allium-ignore allium.reference.unknownName
         game/GameConclusion(finished)
 
     @guarantee SharedTextGivesNothingAway

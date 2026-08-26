@@ -32,8 +32,9 @@ another module's `Excludes`, it belongs there.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
-5. Run `just check-specs` and confirm it reports no diagnostic the baseline below does
-   not already record.
+5. Run `just check-specs` and confirm it reports no diagnostics and exits 0. A
+   diagnostic is a regression: fix it, or — for a verified checker gap — waive it on the terms below.
+   Then run `just analyse-specs` and compare its findings against the table below.
 6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
@@ -67,50 +68,47 @@ references, and names a module reaches for that no import defines. The second ru
 findings on top — data flow, edge reachability, deadlocks, conflicts and invariants. The
 `spec-change` skill in `.agents/skills/` carries the procedure for agents.
 
-### The current baseline
+### Diagnostics, waivers and the analyse baseline
 
-Neither recipe is part of `just check`. `allium check` exits non-zero on warnings as well
-as errors, and offers no configuration file, no severity threshold and no way to waive a
-diagnostic; `allium analyse` exits non-zero while any finding remains. So both report
-rather than gate until the tables below are empty.
+Neither recipe is part of `just check`; gating them is the follow-up
+[decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves open. But they no
+longer agree on a clean checkout: `allium check` reports no diagnostics and exits 0 —
+it still prints one JSON block per module, each with an empty diagnostics array — while
+`allium analyse` exits non-zero for the two findings below.
 
-Each diagnostic is recorded by the code that raised it rather than only counted, because a
-total that has not moved is no evidence that nothing was added: one diagnostic can arrive
-as another leaves. `words.allium` and `settings.allium` raise none.
+`just check-specs` reporting anything at all is therefore a regression in the change
+under review. Fix it at the root. When the diagnostic itself is wrong — the construct is
+valid Allium that the pinned checker cannot resolve — waive it in place instead:
 
-| Module | Code | Severity | Count |
-| --- | --- | --- | --- |
-| `statistics.allium` | `allium.reference.unknownName` | warning | 3 |
-| `statistics.allium` | `allium.field.unused` | info | 1 |
-| `statistics.allium` | `allium.rule.unreachableTrigger` | info | 1 |
-| `sharing.allium` | `allium.reference.unknownName` | warning | 3 |
-| `game.allium` | `allium.reference.unknownName` | warning | 8 |
-| `game.allium` | `allium.field.unused` | info | 4 |
-| `game.allium` | `allium.rule.unreachableTrigger` | info | 3 |
-| `game.allium` | `allium.definition.unused` | warning | 1 |
-| `game.allium` | `allium.status.unreachableValue` | warning | 1 |
+```text
+-- Why the checker is wrong here, in a sentence.
+-- allium-ignore allium.reference.unknownName
+```
 
-Twenty-five in total: sixteen warnings and nine informational. Fourteen are
-`allium.reference.unknownName`, where a module reaches for a name its import does not
-define — half of those against `words/config`, the rest against `words/Words`,
-`game/config`, `game/GameBoard` and `game/GameConclusion`.
+The directive is a whole-line comment holding the full diagnostic code and nothing else —
+prose on the directive line disables it, which is why the reason sits on its own line
+above — and it covers only the line directly beneath it. One rule, one line, one stated
+reason. Upstream documents none of this: the directive was found in the 3.5.3 binary and
+verified against it, so every waiver must be re-verified whenever the pinned version
+moves — see [Maintain dependencies](maintain-dependencies.md). The fourteen waivers
+currently in the modules cover three shapes of checker gap, each a construct the language
+reference sanctions: cross-module `config` references, cross-module surfaces named in
+`related:`, and definitions whose only uses sit in another module or in positions the
+checker does not count — an emission payload's type, a status set inside `Game.created`.
 
-`allium analyse` adds four findings on top, all of them in `game.allium`, each named here
-for the same reason:
+`just analyse-specs` still exits non-zero: findings cannot be waived, and two remain,
+both in `game.allium` and both the same absence:
 
 | Type | Subject |
 | --- | --- |
 | `missing_producer` | Nothing establishes `Game.mode = endless`, which `ArmEndlessCountdown` requires. |
 | `missing_producer` | The same absence, reached from `EndlessCountdownElapses`. |
-| `unreachable_trigger` | No surface provides `GameAbandoned`, though `DiscardAbandonedGame` listens for it. |
-| `unreachable_trigger` | No surface provides `PlayerOpensPoodl`, though `ShowWelcomeOnOpening` and `ContinueOnOpeningWithoutWelcome` listen for it. |
 
-**Compare the diagnostics, not the count — and never the exit code.** Both
-recipes print JSON, and every diagnostic in it carries a `code` and a `severity`. Read
-those and match them against the tables above, ignoring `line` and `col`, which any edit to
-a module shifts. A change should raise no count here, introduce no code these tables do not
-list, and add no finding. If one goes down, say so and edit this page in the same commit,
-because that is progress worth recording.
+`BeginGame` creates every game with `mode: mode`, a trigger parameter rather than a
+literal, so the analyser never sees a producer of the literal value `endless`. Read the
+findings, not the exit code, and compare them against this table: a change should add
+none, and one that removes one should edit this page in the same commit, because that is
+progress worth recording.
 
 ## Related pages
 

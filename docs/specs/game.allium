@@ -240,6 +240,10 @@ enum StartableMode { random | endless | practice }
 
 enum LetterMark { correct | present | absent }
 
+-- The closed set of reasons a submission is refused. It types the
+-- GuessRejected payload, which Allium gives no way to declare, so the
+-- checker cannot count that use.
+-- allium-ignore allium.definition.unused
 enum GuessRejectionReason { incomplete | not_in_dictionary | hard_mode_violation }
 
 ------------------------------------------------------------
@@ -260,9 +264,6 @@ entity Player {
     -- Whether the welcome screen is what the player is looking at.
     awaiting_welcome: Boolean
 
-    -- Relationships
-    games: Game with player = this
-
     -- Derived: whether the welcome screen has anything to offer as Continue —
     -- a game to resume, or a mode to start another in.
     can_continue: current_game != null or last_mode != null
@@ -281,6 +282,10 @@ entity Game {
     player: Player
     mode: GameMode
     answer: words/Word
+    -- in_progress arrives with the entity: BeginGame sets it inside
+    -- Game.created, the let-bound creation form the checker does not count
+    -- as an assignment.
+    -- allium-ignore allium.status.unreachableValue
     status: in_progress | won | lost | abandoned
 
     -- Whether hard mode was on when this game began. Deliberately a record
@@ -320,10 +325,12 @@ entity Game {
     is_current: player.current_game = this
     attempts_used: guesses.count
     attempts_remaining: config.max_attempts - guesses.count
-    is_complete: status in {won, lost, abandoned}
     is_finished_by_play: status in {won, lost}
     is_stat_eligible: mode in {random, endless}
     input_length: length(current_input)
+    -- The reference's cross-module config form; allium 3.5.3 resolves
+    -- config within one module only.
+    -- allium-ignore allium.reference.unknownName
     is_input_complete: input_length = words/config.word_length
 
     -- Derived: what the guesses so far have revealed
@@ -350,6 +357,9 @@ entity Game {
         and present_results.all(r => contains_letter(candidate.text, r.letter))
 
     -- Whether hard mode may be turned on now without invalidating history.
+    -- Read by settings.allium's hard-mode guard; the checker counts uses
+    -- within one module only.
+    -- allium-ignore allium.field.unused
     hard_mode_admissible: respects_hard_mode(guesses)
 
     invariant NeverMoreThanTheAttemptLimit {
@@ -378,6 +388,9 @@ entity Guess {
     }
 
     invariant OneResultPerLetter {
+        -- The reference's cross-module config form; allium 3.5.3 resolves
+        -- config within one module only.
+        -- allium-ignore allium.reference.unknownName
         results.count = words/config.word_length
     }
 }
@@ -453,9 +466,9 @@ config {
 -- nothing to continue, so the screen appears regardless — there is no board
 -- to go back to and no mode to resume.
 --
--- PlayerOpensPoodl is deliberately the one trigger no surface provides:
--- opening the app is an arrival, not a control, and every surface is
--- something reached by arriving.
+-- PlayerOpensPoodl comes from the Arrival surface: opening the app is a
+-- doorway rather than a control, and every other surface is something
+-- reached by having arrived.
 rule ShowWelcomeOnOpening {
     when: PlayerOpensPoodl(player)
 
@@ -513,7 +526,7 @@ rule ProvidePracticeAnswer {
 
     requires: mode = practice
 
-    let candidates = filter(words/Words, w => w.in_answer_list)
+    let candidates = words/answer_words()
     let drawn = uniform_choice(candidates)
 
     ensures: AnswerDrawn(player: player, mode: practice, answer: drawn)
@@ -582,15 +595,27 @@ rule AbandonRetiredGame {
     requires: game.guesses.count >= 1
 
     ensures:
+        GameAbandoned(
+            game: game,
+            attempts: game.attempts_used,
+            stat_eligible: game.is_stat_eligible
+        )
         game.status = abandoned
         game.completed_at = now
-        GameAbandoned(game: game, mode: game.mode, attempts: game.attempts_used)
 
     @guidance
-        -- The mode and the attempt count ride along even though the game is
-        -- a parameter too. statistics.allium reads only those two, so that
-        -- recording the loss and discarding the game can happen in either
-        -- order without one of them reading an entity the other has removed.
+        -- The attempt count and the eligibility verdict ride along even
+        -- though the game is a parameter too. statistics.allium reads only
+        -- those two, so that recording the loss and discarding the game can
+        -- happen in either order without one of them reading an entity the
+        -- other has removed. Eligibility is judged here, where
+        -- is_stat_eligible lives, rather than re-decided from the mode by
+        -- the module that counts it.
+        --
+        -- The emission leads the ensures block. The clauses are one
+        -- simultaneous outcome, so the order changes nothing; leading with
+        -- the consequence other modules hear is also what lets the checker
+        -- see it emitted.
 }
 
 -- Nothing reads an abandoned game once its loss has been recorded, so it goes
@@ -633,6 +658,9 @@ rule PlayerEntersLetter {
     requires: exists game
     requires: game.status = in_progress
     requires: is_letter(letter)
+    -- The reference's cross-module config form; allium 3.5.3 resolves
+    -- config within one module only.
+    -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
     ensures: game.current_input = append(game.current_input, lowercase(letter))
@@ -660,6 +688,9 @@ rule RejectIncompleteGuess {
 
     requires: exists game
     requires: game.status = in_progress
+    -- The reference's cross-module config form; allium 3.5.3 resolves
+    -- config within one module only.
+    -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
     ensures: GuessRejected(game: game, reason: incomplete)
@@ -837,12 +868,34 @@ invariant AnswersAreAlwaysGuessable {
 
 invariant InputNeverExceedsWordLength {
     for g in Games:
+        -- The reference's cross-module config form; allium 3.5.3 resolves
+        -- config within one module only.
+        -- allium-ignore allium.reference.unknownName
         g.input_length <= words/config.word_length
 }
 
 ------------------------------------------------------------
 -- Surfaces
 ------------------------------------------------------------
+
+-- Opening Poodl. The doorway rather than a control: navigating here — a
+-- first visit, a reload, a return — is itself the whole action, and it is
+-- over by the time anything is on screen. Every other surface is something
+-- reached by having arrived.
+surface Arrival {
+    facing viewer: Player
+
+    provides:
+        PlayerOpensPoodl(viewer)
+
+    @guarantee ArrivingIsTheOnlyActionHere
+        -- PlayerOpensPoodl fires once per opening, before the player has
+        -- done anything. Whether that lands on the welcome screen or goes
+        -- straight to continuing is decided by the arrival rules, never
+        -- here: there is nothing on this surface to operate, which is why
+        -- it owes none of the obligations a control-bearing surface
+        -- carries.
+}
 
 -- What a player meets on opening. A short introduction the first time, and
 -- afterwards a way back into what they were doing alongside the three modes
@@ -994,6 +1047,9 @@ surface GameBoard {
 
     provides:
         PlayerEntersLetter(viewer, letter)
+            -- The reference's cross-module config form; allium 3.5.3
+            -- resolves config within one module only.
+            -- allium-ignore allium.reference.unknownName
             when game.status = in_progress and game.input_length < words/config.word_length
         PlayerDeletesLetter(viewer)
             when game.status = in_progress and game.input_length > 0
@@ -1094,6 +1150,9 @@ surface PhysicalKeyboardInput {
 
     provides:
         PlayerEntersLetter(viewer, letter)
+            -- The reference's cross-module config form; allium 3.5.3
+            -- resolves config within one module only.
+            -- allium-ignore allium.reference.unknownName
             when physical_input_enabled and game.input_length < words/config.word_length
         PlayerDeletesLetter(viewer)
             when physical_input_enabled and game.input_length > 0

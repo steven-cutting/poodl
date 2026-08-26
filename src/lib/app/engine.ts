@@ -224,9 +224,10 @@ function beginGame(state: AppState, mode: GameMode, answer: string, env: Env): A
  * `statistics.allium`.
  *
  * Every path removes the game, so this returns only what survives it. The
- * abandonment loss is recorded from the mode and the attempt count — what the
- * emission carries — rather than from the game, because the game is about to go
- * and neither half may be left reading what the other has removed.
+ * abandonment loss is recorded from the attempt count and the eligibility
+ * verdict — what the emission carries — rather than from the game, because the
+ * game is about to go and neither half may be left reading what the other has
+ * removed.
  *
  * A game the player never guessed in leaves no trace at all: no loss, no broken
  * streak, nothing counted.
