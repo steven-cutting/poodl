@@ -162,6 +162,19 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `game.allium` states `HardModeIsNeverOnOverAGameThatBreaksIt`, and the last
+  `-- allium-ignore` waiver goes with it. Hard mode is never on over a game whose history
+  breaks it: it is the property `settings.allium`'s two hard-mode guards and `AcceptGuess`'s
+  live check exist to maintain, it was true of the specification, and it was asserted
+  nowhere in it. Stating it gives `Game.hard_mode_admissible` a reader in the module that
+  declares it, which retires the `allium.field.unused` the entry below calls the one
+  remaining waiver. That waiver was legitimate — 3.6.1 counts uses within one module only —
+  and the point is that a truthful thing to say turned out to be available instead, which
+  is the better move wherever it exists. No waiver is now left in the modules.
+  `tests/settings.test.ts` asserts the invariant at every step of four runs rather than at
+  the end of them; the implementation already held it, and both mechanisms that hold it
+  were broken in turn to confirm the assertion bites. No observable behaviour changes.
+
 - The Allium checker moves from 3.5.3 to 3.6.1, and eight of the nine `-- allium-ignore`
   waivers go with it. 3.6.1 closes three gaps in the cross-module reference checking 3.5.3
   introduced, and the one that reaches these modules is the config-reference form the

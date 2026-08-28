@@ -84,14 +84,16 @@ installation exactly where it was. `just install-allium` also replaces a binary 
 longer runs, so an installation damaged by other means repairs itself rather than needing
 `.tools/` cleared by hand.
 
-A version change can move what the checker reports, and the `-- allium-ignore` waivers
-in the modules lean on behaviour upstream documents nowhere, verified against 3.6.1
-only. After moving the pin, run `just check-specs` and `just analyse-specs`, drop any
-waiver the new version no longer needs, and update the waiver count and shapes in
-[Work with the specifications](work-with-the-specs.md) in the same commit. Editing
-`scripts/install_allium.py` is itself a trigger for both specification hooks, so the gate
-re-reads the modules against the new version on the commit that moves the pin — but only
-after `just install-allium` has actually installed it.
+A version change can move what the checker reports, in both directions. After moving the
+pin, run `just check-specs` and `just analyse-specs`: a new version can report something
+the modules were clean of, and it can also stop needing a waiver they carry. The modules
+carry none at present, but the directive leans on behaviour upstream documents nowhere and
+was verified against 3.6.1 only, so any waiver added later must be re-verified on the
+commit that moves the pin, dropped where the new version no longer needs it, and its count
+and shape updated in [Work with the specifications](work-with-the-specs.md) in that same
+commit. Editing `scripts/install_allium.py` is itself a trigger for both specification
+hooks, so the gate re-reads the modules against the new version on the commit that moves
+the pin — but only after `just install-allium` has actually installed it.
 
 ## Actions in the workflows
 

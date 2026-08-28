@@ -80,10 +80,10 @@ empty `findings` array, and both recipes print one JSON block per module and exi
 
 Neither recipe reads the exit code, because neither exit code carries what this project
 means by clean. `allium check` exits 0 on an `info` diagnostic — `allium.field.unused` is
-one, so the waiver below was never what kept the recipe green — and `allium analyse` keys
-its status on findings alone, so a module that does not parse passes it with the `error`
-sitting in the JSON it has just printed. `scripts/run_allium.py` reads the arrays
-instead.
+one, so the waiver the modules used to carry for it was never what kept the recipe green —
+and `allium analyse` keys its status on findings alone, so a module that does not parse
+passes it with the `error` sitting in the JSON it has just printed.
+`scripts/run_allium.py` reads the arrays instead.
 
 Either recipe reporting anything at all is therefore a regression in the change under
 review. Fix it at the root. A finding cannot be waived. A diagnostic can, but only when the
@@ -100,19 +100,29 @@ prose on the directive line disables it, which is why the reason sits on its own
 above — and it covers only the line directly beneath it. One rule, one line, one stated
 reason. Upstream documents none of this: the directive was found in the binary and
 re-verified against 3.6.1, so every waiver must be re-verified whenever the pinned version
-moves — see [Maintain dependencies](maintain-dependencies.md). One waiver is currently in
-the modules, covering the single shape of checker gap that survives: a definition whose
-only use sits in another module. Eight more stood in for cross-module `config` references
-until 3.6.1 resolved `alias/config.param`, and they were retired with that upgrade.
+moves — see [Maintain dependencies](maintain-dependencies.md). No waiver is currently in
+the modules. Nine stood there before the checker moved to 3.6.1: eight for cross-module
+`config` references, retired with that upgrade once `alias/config.param` resolved, and one
+that the next two paragraphs are about.
 
-Another shape used to sit beside it and was retired rather than waived. `sharing.allium`
-named `game.allium`'s `GameBoard` and `GameConclusion` in `related:` clauses, which the
-checker still cannot resolve across a module alias — but neither can the language
-reference be read to sanction it: rule 31 asks only that a surface in `related:` be
-defined, and no example anywhere qualifies a surface name with an alias. Where a waiver
-would have asserted the checker was wrong, the honest form was prose, so the adjacency now
-sits in the guarantees of `ShareCurrentAnswer` and `ShareResults`. Prefer that reading of
-a gap: waive only what the reference plainly permits.
+Two shapes were retired rather than waived, and where that route exists it is the better
+one. `sharing.allium` named `game.allium`'s `GameBoard` and `GameConclusion` in `related:`
+clauses, which the checker still cannot resolve across a module alias — but neither can
+the language reference be read to sanction it: rule 31 asks only that a surface in
+`related:` be defined, and no example anywhere qualifies a surface name with an alias.
+Where a waiver would have asserted the checker was wrong, the honest form was prose, so
+the adjacency now sits in the guarantees of `ShareCurrentAnswer` and `ShareResults`.
+
+The last one was `allium.field.unused` on `Game.hard_mode_admissible`, a definition whose
+only readers sat in `settings.allium`. That waiver was legitimate on these terms — 3.6.1
+counts uses within one module only, and the language has always allowed a module to read
+another's fields — and it went anyway, because the field turned out to have something to
+say in the module that declares it. `HardModeIsNeverOnOverAGameThatBreaksIt` states the
+property `settings.allium`'s two hard-mode guards exist to maintain, which the
+specification was already true of and had asserted nowhere. Read a cross-module-only
+definition twice before waiving it: the diagnostic can be wrong about the language and
+still right that something is missing. Prefer both of these readings of a gap — waive only
+what the reference plainly permits, and only when there is nothing truthful to say instead.
 
 One gap is worth knowing about because it is fixed by restructuring rather than waived:
 the checker sees a `.created(...)` call only when it stands alone as an ensures statement,

@@ -358,9 +358,8 @@ entity Game {
         and present_results.all(r => contains_letter(candidate.text, r.letter))
 
     -- Whether hard mode may be turned on now without invalidating history.
-    -- Read by settings.allium's hard-mode guard; the checker counts uses
-    -- within one module only.
-    -- allium-ignore allium.field.unused
+    -- Read by settings.allium's hard-mode guard, and by the invariant below
+    -- that the guard exists to maintain.
     hard_mode_admissible: respects_hard_mode(guesses)
 
     invariant NeverMoreThanTheAttemptLimit {
@@ -869,6 +868,19 @@ invariant LostGamesUsedEveryAttempt {
 invariant AbandonedGamesHadAGuess {
     for g in Games:
         g.status = abandoned implies g.guesses.count >= 1
+}
+
+-- Hard mode is never on over a game whose history breaks it. A guess accepted
+-- while it was on was judged live against what the guesses before it had
+-- revealed, and settings.allium refuses to turn it on part way through a game
+-- unless everything already submitted would have complied. That pair of rules
+-- is what holds this; stating it here is what makes it an obligation rather
+-- than a consequence nobody wrote down, and it is the only reading of
+-- hard_mode_admissible in the module that declares it.
+invariant HardModeIsNeverOnOverAGameThatBreaksIt {
+    for g in Games:
+        g.status = in_progress and play_settings.hard_mode
+            implies g.hard_mode_admissible
 }
 
 -- The keyboard never contradicts the guesses. The other direction, that every

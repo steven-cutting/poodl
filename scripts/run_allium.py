@@ -4,8 +4,10 @@ Neither subcommand's exit code carries what this project means by clean, so
 neither can be the gate on its own.
 
 `allium check` exits 0 on an `info` diagnostic. `allium.field.unused` is one, so
-the waiver in `game.allium` was never what kept the recipe green -- the exit
-code would have been 0 either way. `allium analyse` fails the other direction:
+the waiver `game.allium` used to carry for it was never what kept the recipe
+green -- the exit code would have been 0 either way. The modules carry no waiver
+at all now, and that changes nothing here: an `info` still exits 0, and this
+script is what refuses it. `allium analyse` fails the other direction:
 it keys its exit code on findings alone and ignores diagnostics entirely, so a
 module that does not parse passes it, with the `error` sitting in the JSON it
 has just printed.

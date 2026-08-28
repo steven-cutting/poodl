@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import type { Command } from '../src/lib/app/commands';
 import type { Env } from '../src/lib/app/engine';
 import { hardModeMayBeEnabled } from '../src/lib/app/engine';
 import type { AppState } from '../src/lib/app/state';
+import { respectsHardMode } from '../src/lib/domain/hardMode';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
 
 let env: Env;
@@ -166,6 +168,123 @@ describe('turning hard mode off', () => {
     const state = started();
 
     expect(run(env, state, { kind: 'disable_hard_mode' })).toBe(state);
+  });
+});
+
+/*
+ * game.allium — HardModeIsNeverOnOverAGameThatBreaksIt. The invariant the two
+ * guards above exist to maintain, together with the live check AcceptGuess
+ * makes on every submission. It is asserted at each step of a run rather than
+ * at the end of one, because a run that ends legal can still have passed
+ * through a state that was not.
+ */
+describe('hard mode over a game that would break it', () => {
+  /*
+   * The invariant read straight off the state. Deliberately not
+   * hardModeMayBeEnabled: that function also fences the one-way door, so
+   * asserting it here would be asserting a guard against itself rather than
+   * against the property it is guarding.
+   */
+  function holds(state: AppState): boolean {
+    const game = state.currentGame;
+
+    if (game === null || game.status !== 'in_progress' || !state.settings.hardMode) {
+      return true;
+    }
+    return respectsHardMode(game.guesses);
+  }
+
+  /** Fold a run one command at a time, asserting the invariant at every step. */
+  function stepping(state: AppState, ...commands: readonly Command[]): AppState {
+    expect(holds(state)).toBe(true);
+
+    return commands.reduce((current, command) => {
+      const next = run(env, current, command);
+
+      expect(holds(next)).toBe(true);
+      return next;
+    }, state);
+  }
+
+  /** Typing a word and submitting it, as the commands the run is stepped by. */
+  function guessing(word: string): Command[] {
+    const letters: Command[] = [...word].map((letter) => ({ kind: 'enter_letter', letter }));
+
+    return [...letters, { kind: 'submit_guess' }];
+  }
+
+  // ADOPT against APPLE reveals A in place and P somewhere; AMPLE keeps both.
+  it('holds while hard mode is on and every guess complies', () => {
+    env.random = pick('apple');
+    const state = stepping(
+      fresh(),
+      { kind: 'new_game', mode: 'random' },
+      { kind: 'enable_hard_mode' },
+      ...guessing('adopt'),
+      ...guessing('ample'),
+      ...guessing('apple')
+    );
+
+    expect(state.currentGame?.status).toBe('won');
+  });
+
+  // The live check: a guess that would break it never becomes a guess.
+  it('holds because a submission that would break it is refused', () => {
+    env.random = pick('apple');
+    const state = stepping(
+      fresh(),
+      { kind: 'new_game', mode: 'random' },
+      { kind: 'enable_hard_mode' },
+      ...guessing('adopt'),
+      ...guessing('crumb')
+    );
+
+    expect(state.notice).toEqual({ kind: 'guess_rejected', reason: 'hard_mode_violation' });
+    expect(state.currentGame?.guesses).toHaveLength(1);
+  });
+
+  /*
+   * The second guard, from the invariant's side. Turning hard mode on over a
+   * history that would not have complied is the one move that could put the
+   * setting on over a game that breaks it, so the refusal is what holds this.
+   */
+  it('holds when hard mode is turned on part way through a game', () => {
+    env.random = pick('apple');
+    const complying = stepping(
+      fresh(),
+      { kind: 'new_game', mode: 'random' },
+      ...guessing('adopt'),
+      { kind: 'enable_hard_mode' }
+    );
+    const broken = stepping(
+      fresh(),
+      { kind: 'new_game', mode: 'random' },
+      ...guessing('adopt'),
+      ...guessing('crumb'),
+      { kind: 'enable_hard_mode' }
+    );
+
+    expect(complying.settings.hardMode).toBe(true);
+    expect(broken.settings.hardMode).toBe(false);
+  });
+
+  // Released mid-game, played on, and the door opening again at the next game.
+  it('holds across the one-way door and into the next game', () => {
+    env.random = pick('apple');
+    const state = stepping(
+      fresh(),
+      { kind: 'new_game', mode: 'random' },
+      { kind: 'enable_hard_mode' },
+      ...guessing('adopt'),
+      { kind: 'disable_hard_mode' },
+      ...guessing('crumb'),
+      { kind: 'enable_hard_mode' },
+      { kind: 'new_game', mode: 'random' },
+      { kind: 'enable_hard_mode' }
+    );
+
+    expect(state.settings.hardMode).toBe(true);
+    expect(state.currentGame?.guesses).toEqual([]);
   });
 });
 
