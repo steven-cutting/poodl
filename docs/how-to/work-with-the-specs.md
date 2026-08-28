@@ -32,10 +32,10 @@ another module's `Excludes`, it belongs there.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
-5. Run `just check-specs` and confirm it reports no diagnostics and exits 0. A
-   diagnostic is a regression: fix it, or — for a verified checker gap — waive it on the terms below.
-   Then run `just analyse-specs` and confirm it reports no findings; a finding is a
-   regression too, and findings cannot be waived.
+5. Run `just check-specs`. It fails on any diagnostic at all, whatever its severity, so
+   a diagnostic is a regression: fix it, or — for a verified checker gap — waive it on the
+   terms below. Then run `just analyse-specs`, which fails on a diagnostic or a finding;
+   a finding cannot be waived.
 6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
@@ -71,11 +71,19 @@ findings on top — data flow, edge reachability, deadlocks, conflicts and invar
 
 ### Diagnostics and waivers
 
-Neither recipe is part of `just check`; gating them is the follow-up
-[decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves open. Both are
-clean on an untouched checkout: `allium check` reports no diagnostics and `allium analyse`
-reports no findings, and each exits 0 — still printing one JSON block per module, each
-with an empty array.
+Both recipes are part of `just check`, and both run as hooks in the read-only gate, so a
+commit that touches `docs/specs/` is held to them. That closes the follow-up
+[decision 0011](../decisions/0011-project-managed-allium-cli.md) left open, and it means a
+worktree needs `just install-allium` before `just lint` or `just check` will pass. Both are
+clean on an untouched checkout: every module reports an empty `diagnostics` array and an
+empty `findings` array, and both recipes print one JSON block per module and exit 0.
+
+Neither recipe reads the exit code, because neither exit code carries what this project
+means by clean. `allium check` exits 0 on an `info` diagnostic — `allium.field.unused` is
+one, so the waiver below was never what kept the recipe green — and `allium analyse` keys
+its status on findings alone, so a module that does not parse passes it with the `error`
+sitting in the JSON it has just printed. `scripts/run_allium.py` reads the arrays
+instead.
 
 Either recipe reporting anything at all is therefore a regression in the change under
 review. Fix it at the root. A finding cannot be waived. A diagnostic can, but only when the

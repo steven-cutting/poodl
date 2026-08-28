@@ -88,7 +88,10 @@ A version change can move what the checker reports, and the `-- allium-ignore` w
 in the modules lean on behaviour upstream documents nowhere, verified against 3.6.1
 only. After moving the pin, run `just check-specs` and `just analyse-specs`, drop any
 waiver the new version no longer needs, and update the waiver count and shapes in
-[Work with the specifications](work-with-the-specs.md) in the same commit.
+[Work with the specifications](work-with-the-specs.md) in the same commit. Editing
+`scripts/install_allium.py` is itself a trigger for both specification hooks, so the gate
+re-reads the modules against the new version on the commit that moves the pin — but only
+after `just install-allium` has actually installed it.
 
 ## Actions in the workflows
 

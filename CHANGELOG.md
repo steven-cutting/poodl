@@ -9,6 +9,22 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The specifications are gated rather than merely checkable. `just check-specs` and
+  `just analyse-specs` run as hooks in `.pre-commit-config.yaml`, as steps in the
+  `documents` job, and as gates 10 and 11 of `just check`, which closes the follow-up
+  [decision 0011](docs/decisions/0011-project-managed-allium-cli.md) left open when the
+  diagnostic baseline was retired. Neither gate reads the tool's exit code, because
+  neither status means what this project means by clean: `allium check` exits 0 on an
+  `info` diagnostic — `allium.field.unused` is one, so the surviving waiver was never what
+  kept the recipe green — and `allium analyse` keys its status on findings alone, so a
+  module that fails to parse passes it with the `error` in the JSON it has just printed.
+  `scripts/run_allium.py` runs the subcommand, prints its output whole, and asserts the
+  contract the handbook states: an empty `diagnostics` array and an empty `findings` array
+  in every module. It costs what decision 0011 predicted — the binary is a per-worktree
+  install in a gitignored directory, so a worktree that has not run `just initialize` fails
+  `just lint` and `just check` until `just install-allium` puts one there, and CI installs
+  it explicitly. A gate that skipped itself when its tool was absent would assert nothing.
+
 - The Biscuit Games design system, ported from its Claude Design project per
   [decision 0010](docs/decisions/0010-biscuit-games-design-system.md). `src/app.css`
   carries the full token vocabulary — pure neutrals and the biscuit ramp, result hues

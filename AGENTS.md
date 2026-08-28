@@ -165,8 +165,10 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
 - The Allium checker for `docs/specs/` as a project-managed binary: pinned by
   version and SHA-256 in `scripts/install_allium.py`, installed into the
   gitignored `.tools/bin/` by `just install-allium`, and run by
-  `just check-specs`. A clean checkout reports no diagnostics; the recipe is
-  deliberately not part of `just check`. See
+  `just check-specs` and `just analyse-specs`, which read the reported JSON rather
+  than the exit code neither subcommand makes trustworthy. Both are hooks in the
+  read-only gate and recipes inside `just check`, so a fresh worktree needs
+  `just install-allium` before the gate passes. See
   [decision 0011](docs/decisions/0011-project-managed-allium-cli.md).
 - Storybook as a component workshop: stories under `stories/`, each one rendered
   in Chromium with axe run over it, gated by `just check`. See

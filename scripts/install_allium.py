@@ -182,7 +182,12 @@ def _install() -> int:
     return 0
 
 
-def _check() -> int:
+def check() -> int:
+    """Report whether the pinned version is installed, and say what is wrong if not.
+
+    Public because `run_allium.py` asks the same question before it runs the
+    binary, and the pin must have exactly one reader.
+    """
     present = _version_of(BINARY)
     if present == VERSION:
         return 0
@@ -206,7 +211,7 @@ def main() -> int:
     )
     arguments = parser.parse_args()
     try:
-        return _check() if arguments.check else _install()
+        return check() if arguments.check else _install()
     except (RuntimeError, OSError, tarfile.TarError) as error:
         # OSError covers urllib's URLError and HTTPError, and the TimeoutError a
         # stalled download raises, so a refused connection, a moved release or a

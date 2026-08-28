@@ -135,24 +135,25 @@ check-docs:
 check-agents:
     uv run --frozen python scripts/validate_agents.py
 
-# The specifications, checked mechanically rather than by review. Reports
-# no diagnostics and exits 0 on a clean checkout: the old diagnostic baseline is
-# fixed or waived in place, so anything reported is a regression. Still
-# deliberately outside `just check` — the binary is a per-worktree install
-# the gate cannot assume, and gating is the follow-up decision 0011 leaves
-# open. Waiver terms: docs/how-to/work-with-the-specs.md.
+# The specifications, checked mechanically rather than by review: syntax,
+# references, and names a module reaches for that no import defines. Every
+# module must report an empty `diagnostics` array; anything reported is a
+# regression. Waiver terms: docs/how-to/work-with-the-specs.md.
+#
+# The wrapper is what asserts that, because neither subcommand's exit code
+# does. `allium check` exits 0 on an `info` diagnostic and `allium analyse`
+# ignores diagnostics altogether, so both recipes read the JSON instead of
+# trusting the status. Both need the pinned binary, which `just initialize`
+# installs and `just install-allium` repairs.
 check-specs:
-    uv run --frozen python scripts/install_allium.py --check
-    .tools/bin/allium check docs/specs/
+    uv run --frozen python scripts/run_allium.py check
 
 # The same modules read for process completeness rather than structure: data
 # flow, reachability, deadlocks, conflicts and invariants. It repeats everything
-# `check-specs` reports and adds findings of its own. Reports no findings and
-# exits 0 on a clean checkout; findings cannot be waived, so anything reported
-# is a regression. Outside `just check` for the same reason as `check-specs`.
+# `check-specs` reports and adds findings of its own, and findings cannot be
+# waived, so anything reported is a regression.
 analyse-specs:
-    uv run --frozen python scripts/install_allium.py --check
-    .tools/bin/allium analyse docs/specs/
+    uv run --frozen python scripts/run_allium.py analyse
 
 check-links-online:
     uv run --frozen prek run --all-files --hook-stage manual lychee-online

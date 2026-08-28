@@ -75,6 +75,29 @@ today would fail the build for findings nobody has triaged yet.
 > unbinding that creation removed both, together with the waiver it had also cost. Both
 > recipes now report nothing and exit 0 on a clean checkout. Joining the gate is still
 > the open follow-up.
+>
+> Superseded in full on 2026-08-28. Both recipes are gates: hooks in
+> `.pre-commit-config.yaml` triggered by `docs/specs/` and by the pin itself, steps in the
+> `documents` CI job, and gates 10 and 11 of `just check`.
+>
+> Gating took more than moving a line in the `Justfile`, because no exit code here carries
+> the verdict. The paragraph this section opens with is right that `allium check` exits
+> non-zero on warnings as well as errors; it is incomplete rather than wrong. Severity
+> `info` exits 0, and `allium.field.unused` — the sole surviving waiver — is an `info`, so
+> that waiver was never what kept the recipe green. `allium analyse` sits further from the
+> purpose again: its status keys on findings alone and ignores diagnostics entirely, so a
+> module that fails to parse passes it with the `error` in the JSON it has just printed.
+> Neither status means clean, so `scripts/run_allium.py` runs the subcommand, prints its
+> output whole, and asserts what the contract says — an empty `diagnostics` array and an
+> empty `findings` array in every module. That opening paragraph's one real error, "no way
+> to waive a diagnostic", was corrected on 2026-08-25 and stands corrected: a diagnostic
+> can be waived, a finding cannot.
+>
+> The cost is the one this decision predicted. The binary is a per-worktree install in a
+> gitignored directory, so a worktree that has not run `just initialize` now fails
+> `just lint` and `just check` until `just install-allium` puts one there. That was
+> accepted rather than softened: a gate that skips itself when its tool is missing
+> asserts nothing.
 
 Only the four unix targets are supported. The release also carries a Windows zip; a target
 nobody here runs would be a checksum nobody re-verifies.
@@ -82,10 +105,12 @@ nobody here runs would be a checksum nobody re-verifies.
 ## What would reopen this
 
 Upstream publishing checksums for the platform binaries, which would remove the hand
-computation. A distribution channel that a lockfile can name. The third condition this
-section used to carry — the baseline reaching zero — was met on 2026-08-25, so what
-remains open is its consequence: `check-specs` joining `just check` and becoming a real
-gate.
+computation. A distribution channel that a lockfile can name — which would also let
+`just sync` install the checker, and so remove the one cost gating it imposed.
+
+Two conditions this section used to carry are both met and no longer open: the baseline
+reached zero on 2026-08-25, and its consequence — the recipes becoming real gates — landed
+on 2026-08-28.
 
 [upstream]: https://github.com/juxt/allium-tools
 

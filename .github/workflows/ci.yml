@@ -62,12 +62,22 @@ jobs:
       - run: uv python install 3.14
       - run: uv tool install rust-just==1.51.0
       - run: npm install --global npm@11.17.0
-      # `just lint` runs the whole hook gate, which includes ESLint and the two
-      # validators, so both node_modules and the uv environment must exist.
+      # `just lint` runs the whole hook gate, which includes ESLint, the two
+      # validators and the two specification gates, so node_modules, the uv
+      # environment and the pinned allium binary must all exist.
       - run: just sync
+      # Over the network, into the gitignored .tools/bin. No lockfile can name a
+      # binary, so `just sync` deliberately does not install it and this does.
+      # It is not cached: 1.6 MB downloads faster than a cache round trip.
+      - run: just install-allium
       - run: just lint
       - run: just check-docs
       - run: just check-agents
+      # Already run by the hook gate above; repeated here so a specification
+      # regression names itself in the step list rather than inside `lint`. The
+      # same duplication as check-docs and check-agents, for the same reason.
+      - run: just check-specs
+      - run: just analyse-specs
 
   # The two story gates need a browser, which no lockfile accounts for, so they
   # get their own job rather than lengthening `frontend` with a download.
