@@ -240,10 +240,8 @@ enum StartableMode { random | endless | practice }
 
 enum LetterMark { correct | present | absent }
 
--- The closed set of reasons a submission is refused. It types the
--- GuessRejected payload, which Allium gives no way to declare, so the
--- checker cannot count that use.
--- allium-ignore allium.definition.unused
+-- The closed set of reasons a submission is refused. It types both what the
+-- board shows about the last submission and the GuessRejected payload.
 enum GuessRejectionReason { incomplete | not_in_dictionary | hard_mode_violation }
 
 ------------------------------------------------------------
@@ -302,6 +300,11 @@ entity Game {
     -- The letters typed but not yet submitted, between zero and word_length
     -- of them.
     current_input: String
+
+    -- Why the last submission was refused, while that is what the board is
+    -- telling the player. A rejection describes a submission, so editing the
+    -- letters clears it, and so does the next accepted guess. Null otherwise.
+    rejection: GuessRejectionReason?
 
     started_at: Timestamp
     completed_at: Timestamp when status = won | lost | abandoned
@@ -565,6 +568,7 @@ rule BeginGame {
             hard_mode_at_start: play_settings.hard_mode,
             hard_mode_released: false,
             current_input: "",
+            rejection: null,
             started_at: now
         )
         player.current_game = game
@@ -663,7 +667,9 @@ rule PlayerEntersLetter {
     -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
-    ensures: game.current_input = append(game.current_input, lowercase(letter))
+    ensures:
+        game.current_input = append(game.current_input, lowercase(letter))
+        game.rejection = null
 }
 
 rule PlayerDeletesLetter {
@@ -675,7 +681,9 @@ rule PlayerDeletesLetter {
     requires: game.status = in_progress
     requires: game.input_length > 0
 
-    ensures: game.current_input = drop_last(game.current_input)
+    ensures:
+        game.current_input = drop_last(game.current_input)
+        game.rejection = null
 }
 
 -- Submitting a guess ----------------------------------------------------
@@ -693,7 +701,9 @@ rule RejectIncompleteGuess {
     -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
-    ensures: GuessRejected(game: game, reason: incomplete)
+    ensures:
+        GuessRejected(game: game, reason: incomplete)
+        game.rejection = incomplete
 }
 
 -- Five letters, but not a word Poodl accepts.
@@ -711,7 +721,9 @@ rule RejectUnknownWord {
 
     requires: not exists candidate or not candidate.in_guess_dictionary
 
-    ensures: GuessRejected(game: game, reason: not_in_dictionary)
+    ensures:
+        GuessRejected(game: game, reason: not_in_dictionary)
+        game.rejection = not_in_dictionary
 }
 
 -- A real word, but it drops a letter the player has already been shown. Hard
@@ -733,7 +745,9 @@ rule RejectHardModeViolation {
     requires: play_settings.hard_mode
     requires: not game.satisfies_hard_mode(candidate)
 
-    ensures: GuessRejected(game: game, reason: hard_mode_violation)
+    ensures:
+        GuessRejected(game: game, reason: hard_mode_violation)
+        game.rejection = hard_mode_violation
 }
 
 -- The guess stands: it is scored, it spends an attempt, and it may end the
@@ -763,6 +777,7 @@ rule AcceptGuess {
             results: score_guess(candidate, game.answer)
         )
         game.current_input = ""
+        game.rejection = null
         if submitted.is_winning:
             game.status = won
             game.completed_at = now
@@ -1037,6 +1052,7 @@ surface GameBoard {
         game.attempts_used
         game.attempts_remaining
         game.current_input
+        game.rejection
         for submitted in game.guesses:
             submitted.position
             submitted.word.text
@@ -1114,8 +1130,11 @@ surface GameBoard {
     @guarantee EveryRejectionIsAnnounced
         -- A GuessRejected outcome is made perceivable both visually and to
         -- assistive technology, and says which of the three reasons applied.
-        -- A rejected guess spends no attempt: the typed letters stay on the
-        -- board for the player to correct.
+        -- game.rejection is the visible half: it stays on the board until the
+        -- player edits the letters, and it is announced each time it is set,
+        -- so the same refusal twice over is heard twice. A rejected guess
+        -- spends no attempt: the typed letters stay on the board for the
+        -- player to correct.
 
     @guarantee FullyKeyboardOperable
         -- Every operation on this surface can be reached and invoked from the
