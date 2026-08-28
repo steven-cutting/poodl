@@ -119,7 +119,10 @@ rule pick the entity up.
 One more thing 3.6.1 changed cuts the other way. It resolves the alias but does not check
 the name behind the dot, so a mistyped `words/config.word_lenth` draws nothing at all —
 upstream calls field-level checking of `alias/config.field` unimplemented. A cross-module
-config reference is read by eye or not at all.
+config reference is read by eye or not at all. A local one is reported as
+`allium.config.undefinedReference` from a derived value, a rule or a module-level
+invariant, but not from inside an entity-level `invariant` block, so the attempt-limit
+invariants on `Game`, `Guess` and `GuessDistributionBucket` are read by eye too.
 
 ## Related pages
 

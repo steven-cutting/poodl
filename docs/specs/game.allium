@@ -327,6 +327,11 @@ entity Game {
     is_finished_by_play: status in {won, lost}
     is_stat_eligible: mode in {random, endless}
     input_length: length(current_input)
+
+    -- The one place this module reads the word length for play. Every rule
+    -- and surface that asks whether there is room for another letter asks
+    -- the negation of this instead, which is the same question because
+    -- InputNeverExceedsWordLength rules out the input being longer.
     is_input_complete: input_length = words/config.word_length
 
     -- Derived: what the guesses so far have revealed
@@ -667,7 +672,7 @@ rule PlayerEntersLetter {
     requires: exists game
     requires: game.status = in_progress
     requires: is_letter(letter)
-    requires: game.input_length < words/config.word_length
+    requires: not game.is_input_complete
 
     ensures:
         game.current_input = append(game.current_input, lowercase(letter))
@@ -698,7 +703,7 @@ rule RejectIncompleteGuess {
 
     requires: exists game
     requires: game.status = in_progress
-    requires: game.input_length < words/config.word_length
+    requires: not game.is_input_complete
 
     ensures:
         GuessRejected(game: game, reason: incomplete)
@@ -1059,7 +1064,7 @@ surface GameBoard {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            when game.status = in_progress and game.input_length < words/config.word_length
+            when game.status = in_progress and not game.is_input_complete
         PlayerDeletesLetter(viewer)
             when game.status = in_progress and game.input_length > 0
         PlayerSubmitsGuess(viewer)
@@ -1162,7 +1167,7 @@ surface PhysicalKeyboardInput {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            when physical_input_enabled and game.input_length < words/config.word_length
+            when physical_input_enabled and not game.is_input_complete
         PlayerDeletesLetter(viewer)
             when physical_input_enabled and game.input_length > 0
         PlayerSubmitsGuess(viewer)
