@@ -4,8 +4,9 @@ import type { StartableMode, ThemeChoice } from '$lib/domain/types';
  * Everything that can happen to Poodl, as one closed set.
  *
  * There is one command per trigger the specifications name, and the names are
- * theirs. Two are not player actions: `open` is `PlayerOpensPoodl`, the arrival
- * that no surface provides, and `countdown_elapsed` is the temporal trigger
+ * theirs. Two are not player actions: `open` is `PlayerOpensPoodl` — provided
+ * by the `Arrival` surface, which is a doorway rather than a control — and
+ * `countdown_elapsed` is the temporal trigger
  * `EndlessCountdownElapses` waits on — the shell watches the clock and says
  * when. `clipboard_settled` reports back from the one asynchronous effect the
  * engine emits.

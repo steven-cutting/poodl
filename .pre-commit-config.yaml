@@ -48,6 +48,27 @@ repos:
         pass_filenames: false
         files: ^(AGENTS\.md|CLAUDE\.md|\.agents/|\.claude/|\.codex/|\.github/copilot-instructions\.md|scripts/validate_agents\.py)
 
+      # The specifications, which outrank the code, held to the same standard as
+      # the two contracts above. Both need the pinned binary in the gitignored
+      # .tools/bin, so a worktree that has never run `just initialize` fails here
+      # until `just install-allium` puts one there. That is deliberate: a gate
+      # that skips itself when its tool is absent asserts nothing. The pin
+      # itself is a trigger, because a waiver is only ever valid against the
+      # version it was verified on.
+      - id: check-specs
+        name: Specification diagnostics
+        entry: uv run --frozen python scripts/run_allium.py check
+        language: system
+        pass_filenames: false
+        files: ^(docs/specs/|scripts/run_allium\.py|scripts/install_allium\.py)
+
+      - id: analyse-specs
+        name: Specification analysis
+        entry: uv run --frozen python scripts/run_allium.py analyse
+        language: system
+        pass_filenames: false
+        files: ^(docs/specs/|scripts/run_allium\.py|scripts/install_allium\.py)
+
   - repo: builtin
     hooks:
       - id: check-added-large-files

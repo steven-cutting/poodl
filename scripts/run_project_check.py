@@ -25,6 +25,8 @@ RECIPES = (
     "storybook-test",
     "check-docs",
     "check-agents",
+    "check-specs",
+    "analyse-specs",
 )
 
 

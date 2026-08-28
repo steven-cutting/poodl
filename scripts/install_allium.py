@@ -26,7 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 INSTALL_DIRECTORY = PROJECT_ROOT / ".tools" / "bin"
 BINARY = INSTALL_DIRECTORY / "allium"
 
-VERSION = "3.5.3"
+VERSION = "3.6.1"
 RELEASE = (
     "https://github.com/juxt/allium-tools/releases/download/v{version}/allium-{target}.tar.gz"
 )
@@ -44,10 +44,10 @@ DOWNLOAD_TIMEOUT_SECONDS = 30
 # The two Homebrew does publish match the values below. Moving VERSION means
 # recomputing all four; see docs/how-to/maintain-dependencies.md.
 CHECKSUMS = {
-    "aarch64-apple-darwin": "3bca3e586cfe6f8f7ac976e426f6f9dffe5ca9cc6d85c3d9561257cf8e5d51e7",
-    "x86_64-apple-darwin": "2025287262661a68bb49cb7a7fcc4e66c9490d4b945880477082a44276a0e072",
-    "aarch64-unknown-linux-gnu": "ea626c3d9ecf2b64b12b2820cb2fc41444bd30c53e591b990c022872da94d7c6",
-    "x86_64-unknown-linux-gnu": "bd14f8b323c4e233c153c8873fcba46f779b4ffbc84b0d22af0a5d34b7b1f5b6",
+    "aarch64-apple-darwin": "ecfae02fcf8e60475a014944183158ccde4104f6f0223e1bf91f98519fcb19eb",
+    "x86_64-apple-darwin": "db7f387a10f7449dd7da578fdf211fd36b3105f148412788b43aac9b76ccbe1c",
+    "aarch64-unknown-linux-gnu": "e5ce96393db198b4f7d23ccd2494573e753936cc7b03ca1ecbac3cb20f993ff4",
+    "x86_64-unknown-linux-gnu": "e00c99ae234b10207719257a70e7c2dcad73060864468cd293fb7ad40524e970",
 }
 
 # The release also carries a Windows zip. It is left out because every supported
@@ -90,7 +90,7 @@ def _version_of(binary: Path) -> str | None:
         return None
     if result.returncode != 0:
         return None
-    # `allium 3.5.3 (language versions: 1, 2, 3)`
+    # `allium 3.6.1 (language versions: 1, 2, 3)`
     fields = result.stdout.decode(errors="backslashreplace").split()
     return fields[1] if len(fields) > 1 and fields[0] == "allium" else None
 
@@ -182,7 +182,12 @@ def _install() -> int:
     return 0
 
 
-def _check() -> int:
+def check() -> int:
+    """Report whether the pinned version is installed, and say what is wrong if not.
+
+    Public because `run_allium.py` asks the same question before it runs the
+    binary, and the pin must have exactly one reader.
+    """
     present = _version_of(BINARY)
     if present == VERSION:
         return 0
@@ -206,7 +211,7 @@ def main() -> int:
     )
     arguments = parser.parse_args()
     try:
-        return _check() if arguments.check else _install()
+        return check() if arguments.check else _install()
     except (RuntimeError, OSError, tarfile.TarError) as error:
         # OSError covers urllib's URLError and HTTPError, and the TimeoutError a
         # stalled download raises, so a refused connection, a moved release or a

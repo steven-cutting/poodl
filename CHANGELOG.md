@@ -9,6 +9,22 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- The specifications are gated rather than merely checkable. `just check-specs` and
+  `just analyse-specs` run as hooks in `.pre-commit-config.yaml`, as steps in the
+  `documents` job, and as gates 10 and 11 of `just check`, which closes the follow-up
+  [decision 0011](docs/decisions/0011-project-managed-allium-cli.md) left open when the
+  diagnostic baseline was retired. Neither gate reads the tool's exit code, because
+  neither status means what this project means by clean: `allium check` exits 0 on an
+  `info` diagnostic — `allium.field.unused` is one, so the surviving waiver was never what
+  kept the recipe green — and `allium analyse` keys its status on findings alone, so a
+  module that fails to parse passes it with the `error` in the JSON it has just printed.
+  `scripts/run_allium.py` runs the subcommand, prints its output whole, and asserts the
+  contract the handbook states: an empty `diagnostics` array and an empty `findings` array
+  in every module. It costs what decision 0011 predicted — the binary is a per-worktree
+  install in a gitignored directory, so a worktree that has not run `just initialize` fails
+  `just lint` and `just check` until `just install-allium` puts one there, and CI installs
+  it explicitly. A gate that skipped itself when its tool was absent would assert nothing.
+
 - The Biscuit Games design system, ported from its Claude Design project per
   [decision 0010](docs/decisions/0010-biscuit-games-design-system.md). `src/app.css`
   carries the full token vocabulary — pure neutrals and the biscuit ramp, result hues
@@ -146,6 +162,56 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `game.allium` states `HardModeIsNeverOnOverAGameThatBreaksIt`, and the last
+  `-- allium-ignore` waiver goes with it. Hard mode is never on over a game whose history
+  breaks it: it is the property `settings.allium`'s two hard-mode guards and `AcceptGuess`'s
+  live check exist to maintain, it was true of the specification, and it was asserted
+  nowhere in it. Stating it gives `Game.hard_mode_admissible` a reader in the module that
+  declares it, which retires the `allium.field.unused` the entry below calls the one
+  remaining waiver. That waiver was legitimate — 3.6.1 counts uses within one module only —
+  and the point is that a truthful thing to say turned out to be available instead, which
+  is the better move wherever it exists. No waiver is now left in the modules.
+  `tests/settings.test.ts` asserts the invariant at every step of four runs rather than at
+  the end of them; the implementation already held it, and both mechanisms that hold it
+  were broken in turn to confirm the assertion bites. No observable behaviour changes.
+
+- The Allium checker moves from 3.5.3 to 3.6.1, and eight of the nine `-- allium-ignore`
+  waivers go with it. 3.6.1 closes three gaps in the cross-module reference checking 3.5.3
+  introduced, and the one that reaches these modules is the config-reference form the
+  language reference documents: `alias/config.param` resolves now, so the eight waivers
+  standing in for it — one in `statistics.allium`, seven in `game.allium` — are deleted
+  rather than left asserting a gap that has closed. One waiver remains, the
+  `allium.field.unused` on `Game.hard_mode_admissible` whose only reader is
+  `settings.allium`'s hard-mode guard, and with it one shape of checker gap where
+  [Work with the specifications](docs/how-to/work-with-the-specs.md) recorded two. The
+  fourteen this log counted had already fallen to nine across three changes it did not
+  record: an unused-definition ignore resolved at the root, the `Game.status` ignore that
+  went when the `Game.created` binding did — taking `analyse`'s last two `missing_producer`
+  findings with it — and three `related:` waivers in `sharing.allium` retired as prose. The
+  fix cuts both ways: 3.6.1 resolves the alias but not the name behind the dot, so a
+  mistyped cross-module config field now draws nothing at all. It also exports every
+  emission in an `ensures:` block rather than only the first, so `GameAbandoned` leading
+  its block — recorded below as a baseline fix — is no longer what lets the checker see
+  it emitted, and the guidance in `game.allium` now says so. All four checksums in
+  `scripts/install_allium.py` were recomputed by hand, as moving the pin requires, and the
+  two the Homebrew formula publishes still match. `just check-specs` and `just analyse-specs`
+  both still report nothing and exit 0. No observable behaviour changes.
+
+- The Allium diagnostic baseline is retired. Every structural diagnostic the five modules
+  carried is fixed or waived in place: `StatisticsPanel` exposes the losses it already
+  showed, the dead `Player.games` and `Game.is_complete` fields are gone, practice and
+  the answer pool draw from `WordListSource`'s own `answer_words()` rather than filtering
+  a collection the checker cannot resolve, `GameAbandoned` leads its ensures block and
+  carries the eligibility verdict so statistics stops re-deciding which modes count, a
+  new `Arrival` surface provides `PlayerOpensPoodl`, and the fourteen remaining checker
+  gaps carry reasoned whole-line `-- allium-ignore` waivers — a directive the 3.5.3
+  binary honours but documents nowhere, which corrects this log's earlier "neither offers
+  a way to waive one". `just check-specs` now reports no diagnostics and exits 0;
+  `just analyse-specs` still reports the two `missing_producer` findings the analyser
+  cannot trace through `Game.created`. Both recipes stay outside `just check` — gating is
+  the follow-up [decision 0011](docs/decisions/0011-project-managed-allium-cli.md) leaves
+  open — and [Work with the specifications](docs/how-to/work-with-the-specs.md) carries
+  the waiver terms. No observable behaviour changes.
 - The default answer list is an easier one: 1,122 words supplied by the maintainer, trimmed
   by hand (duplicates, entries that were not five letters, one trademark, fifteen obscure
   words and one ethnic slur, which stays in the append-only guess dictionary and is simply

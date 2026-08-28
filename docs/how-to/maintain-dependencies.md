@@ -61,7 +61,7 @@ Upstream publishes no checksums for these files — its `SHA256SUMS.txt` covers 
 editor extension and the language server — so all four have to be recomputed by hand:
 
 ```console
-V=3.5.3
+V=3.6.1
 for t in aarch64-apple-darwin x86_64-apple-darwin \
          aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu; do
   printf '%s  ' "$t"
@@ -84,9 +84,16 @@ installation exactly where it was. `just install-allium` also replaces a binary 
 longer runs, so an installation damaged by other means repairs itself rather than needing
 `.tools/` cleared by hand.
 
-A version change can move the diagnostic baseline recorded in
-[Work with the specifications](work-with-the-specs.md). Update those tables in the same
-commit, so a later reader can tell a new diagnostic from an old one.
+A version change can move what the checker reports, in both directions. After moving the
+pin, run `just check-specs` and `just analyse-specs`: a new version can report something
+the modules were clean of, and it can also stop needing a waiver they carry. The modules
+carry none at present, but the directive leans on behaviour upstream documents nowhere and
+was verified against 3.6.1 only, so any waiver added later must be re-verified on the
+commit that moves the pin, dropped where the new version no longer needs it, and its count
+and shape updated in [Work with the specifications](work-with-the-specs.md) in that same
+commit. Editing `scripts/install_allium.py` is itself a trigger for both specification
+hooks, so the gate re-reads the modules against the new version on the commit that moves
+the pin — but only after `just install-allium` has actually installed it.
 
 ## Actions in the workflows
 

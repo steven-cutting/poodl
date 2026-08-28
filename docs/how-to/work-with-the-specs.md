@@ -32,8 +32,10 @@ another module's `Excludes`, it belongs there.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
-5. Run `just check-specs` and confirm it reports no diagnostic the baseline below does
-   not already record.
+5. Run `just check-specs`. It fails on any diagnostic at all, whatever its severity, so
+   a diagnostic is a regression: fix it, or — for a verified checker gap — waive it on the
+   terms below. Then run `just analyse-specs`, which fails on a diagnostic or a finding;
+   a finding cannot be waived.
 6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
@@ -67,50 +69,78 @@ references, and names a module reaches for that no import defines. The second ru
 findings on top — data flow, edge reachability, deadlocks, conflicts and invariants. The
 `spec-change` skill in `.agents/skills/` carries the procedure for agents.
 
-### The current baseline
+### Diagnostics and waivers
 
-Neither recipe is part of `just check`. `allium check` exits non-zero on warnings as well
-as errors, and offers no configuration file, no severity threshold and no way to waive a
-diagnostic; `allium analyse` exits non-zero while any finding remains. So both report
-rather than gate until the tables below are empty.
+Both recipes are part of `just check`, and both run as hooks in the read-only gate, so a
+commit that touches `docs/specs/` is held to them. That closes the follow-up
+[decision 0011](../decisions/0011-project-managed-allium-cli.md) left open, and it means a
+worktree needs `just install-allium` before `just lint` or `just check` will pass. Both are
+clean on an untouched checkout: every module reports an empty `diagnostics` array and an
+empty `findings` array, and both recipes print one JSON block per module and exit 0.
 
-Each diagnostic is recorded by the code that raised it rather than only counted, because a
-total that has not moved is no evidence that nothing was added: one diagnostic can arrive
-as another leaves. `words.allium` and `settings.allium` raise none.
+Neither recipe reads the exit code, because neither exit code carries what this project
+means by clean. `allium check` exits 0 on an `info` diagnostic — `allium.field.unused` is
+one, so the waiver the modules used to carry for it was never what kept the recipe green —
+and `allium analyse` keys its status on findings alone, so a module that does not parse
+passes it with the `error` sitting in the JSON it has just printed.
+`scripts/run_allium.py` reads the arrays instead.
 
-| Module | Code | Severity | Count |
-| --- | --- | --- | --- |
-| `statistics.allium` | `allium.reference.unknownName` | warning | 3 |
-| `statistics.allium` | `allium.field.unused` | info | 1 |
-| `statistics.allium` | `allium.rule.unreachableTrigger` | info | 1 |
-| `sharing.allium` | `allium.reference.unknownName` | warning | 3 |
-| `game.allium` | `allium.reference.unknownName` | warning | 8 |
-| `game.allium` | `allium.field.unused` | info | 4 |
-| `game.allium` | `allium.rule.unreachableTrigger` | info | 3 |
-| `game.allium` | `allium.definition.unused` | warning | 1 |
-| `game.allium` | `allium.status.unreachableValue` | warning | 1 |
+Either recipe reporting anything at all is therefore a regression in the change under
+review. Fix it at the root. A finding cannot be waived. A diagnostic can, but only when the
+diagnostic itself is wrong — the construct is valid Allium that the pinned checker cannot
+resolve — and then it is waived in place:
 
-Twenty-five in total: sixteen warnings and nine informational. Fourteen are
-`allium.reference.unknownName`, where a module reaches for a name its import does not
-define — half of those against `words/config`, the rest against `words/Words`,
-`game/config`, `game/GameBoard` and `game/GameConclusion`.
+```text
+-- Why the checker is wrong here, in a sentence.
+-- allium-ignore allium.reference.unknownName
+```
 
-`allium analyse` adds four findings on top, all of them in `game.allium`, each named here
-for the same reason:
+The directive is a whole-line comment holding the full diagnostic code and nothing else —
+prose on the directive line disables it, which is why the reason sits on its own line
+above — and it covers only the line directly beneath it. One rule, one line, one stated
+reason. Upstream documents none of this: the directive was found in the binary and
+re-verified against 3.6.1, so every waiver must be re-verified whenever the pinned version
+moves — see [Maintain dependencies](maintain-dependencies.md). No waiver is currently in
+the modules. Nine stood there before the checker moved to 3.6.1: eight for cross-module
+`config` references, retired with that upgrade once `alias/config.param` resolved, and one
+that the next two paragraphs are about.
 
-| Type | Subject |
-| --- | --- |
-| `missing_producer` | Nothing establishes `Game.mode = endless`, which `ArmEndlessCountdown` requires. |
-| `missing_producer` | The same absence, reached from `EndlessCountdownElapses`. |
-| `unreachable_trigger` | No surface provides `GameAbandoned`, though `DiscardAbandonedGame` listens for it. |
-| `unreachable_trigger` | No surface provides `PlayerOpensPoodl`, though `ShowWelcomeOnOpening` and `ContinueOnOpeningWithoutWelcome` listen for it. |
+Two shapes were retired rather than waived, and where that route exists it is the better
+one. `sharing.allium` named `game.allium`'s `GameBoard` and `GameConclusion` in `related:`
+clauses, which the checker still cannot resolve across a module alias — but neither can
+the language reference be read to sanction it: rule 31 asks only that a surface in
+`related:` be defined, and no example anywhere qualifies a surface name with an alias.
+Where a waiver would have asserted the checker was wrong, the honest form was prose, so
+the adjacency now sits in the guarantees of `ShareCurrentAnswer` and `ShareResults`.
 
-**Compare the diagnostics, not the count — and never the exit code.** Both
-recipes print JSON, and every diagnostic in it carries a `code` and a `severity`. Read
-those and match them against the tables above, ignoring `line` and `col`, which any edit to
-a module shifts. A change should raise no count here, introduce no code these tables do not
-list, and add no finding. If one goes down, say so and edit this page in the same commit,
-because that is progress worth recording.
+The last one was `allium.field.unused` on `Game.hard_mode_admissible`, a definition whose
+only readers sat in `settings.allium`. That waiver was legitimate on these terms — 3.6.1
+counts uses within one module only, and the language has always allowed a module to read
+another's fields — and it went anyway, because the field turned out to have something to
+say in the module that declares it. `HardModeIsNeverOnOverAGameThatBreaksIt` states the
+property `settings.allium`'s two hard-mode guards exist to maintain, which the
+specification was already true of and had asserted nowhere. Read a cross-module-only
+definition twice before waiving it: the diagnostic can be wrong about the language and
+still right that something is missing. Prefer both of these readings of a gap — waive only
+what the reference plainly permits, and only when there is nothing truthful to say instead.
+
+One gap is worth knowing about because it is fixed by restructuring rather than waived:
+the checker sees a `.created(...)` call only when it stands alone as an ensures statement,
+at 3.6.1 exactly as at 3.5.3. Bind the creation — `let game = Game.created(...)`, or
+assign it straight into a field — and both the status it sets and every field it
+establishes vanish from the checker's status scan and from the analyser's producer search.
+`MakeNewGameCurrent` in `game.allium` exists for this reason: `BeginGame` used to bind its
+creation so that the next clause could make the new game current, and that single `let`
+cost one waiver and the last two `analyse` findings. Create unbound, and let a `.created`
+rule pick the entity up.
+
+One more thing 3.6.1 changed cuts the other way. It resolves the alias but does not check
+the name behind the dot, so a mistyped `words/config.word_lenth` draws nothing at all —
+upstream calls field-level checking of `alias/config.field` unimplemented. A cross-module
+config reference is read by eye or not at all. A local one is reported as
+`allium.config.undefinedReference` from a derived value, a rule or a module-level
+invariant, but not from inside an entity-level `invariant` block, so the attempt-limit
+invariants on `Game`, `Guess` and `GuessDistributionBucket` are read by eye too.
 
 ## Related pages
 

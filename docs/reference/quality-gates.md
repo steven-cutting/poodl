@@ -22,17 +22,32 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 7 | `storybook-test` | Every story renders in Chromium, passes axe, and its play function completes. |
 | 8 | `check-docs` | The documentation contract holds. |
 | 9 | `check-agents` | The agent contract holds. |
-| 10 | `check-clean` | The run changed nothing. |
+| 10 | `check-specs` | Every specification reports an empty `diagnostics` array. |
+| 11 | `analyse-specs` | Every specification reports an empty `findings` array too. |
+| 12 | `check-clean` | The run changed nothing. |
 
-Three checks are deliberately missing from that table. `just check-specs` runs
-`allium check` over the specifications and `just analyse-specs` runs `allium analyse` over
-them; both report rather than gate, because `allium check` exits non-zero on warnings as
-well as errors, `allium analyse` exits non-zero while any finding remains, neither offers a
-way to waive one, and the modules carry a known baseline of both. `check-links-online` sits
-outside the aggregate for a reason of the same class: it needs the network, and a check
-that can fail because a third party is down is not a gate. All three are listed in
-[Commands](commands.md), and the baseline is in
-[Work with the specifications](../how-to/work-with-the-specs.md).
+Gates 10 and 11 joined the aggregate on 2026-08-28, which closes the follow-up
+[decision 0011](../decisions/0011-project-managed-allium-cli.md) left open. They cost
+the gate something real: the pinned `allium` binary lives in the gitignored `.tools/bin/`,
+which is a per-worktree install, so a worktree that has never run `just initialize` now
+fails `just lint` and `just check` until `just install-allium` puts one there. The
+alternative was a gate that skipped itself whenever its tool was absent, which asserts
+nothing.
+
+Neither gate trusts the tool's exit code, because neither exit code means what this
+project means by clean. `allium check` exits 0 on an `info` diagnostic —
+`allium.field.unused` is one — and `allium analyse` keys its status on findings alone and
+ignores diagnostics entirely, so a module that does not parse passes it with the `error`
+sitting in the JSON it has just printed. `scripts/run_allium.py` runs the subcommand,
+prints its output whole, and asserts what the contract actually says: every module reports
+an empty `diagnostics` array and an empty `findings` array. A diagnostic may be waived
+only where the checker itself is wrong, on the terms in
+[Work with the specifications](../how-to/work-with-the-specs.md); a finding cannot be
+waived at all.
+
+One check is still deliberately missing from the table. `check-links-online` needs the
+network, and a check that can fail because a third party is down is not a gate. It is
+listed in [Commands](commands.md).
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure
 screenshots. All of them are ignored by Git, because a gate that changes one byte of the
@@ -50,6 +65,7 @@ configuration, and it is the one installed as the pre-commit hook.
 | `editorconfig-checker` | Whitespace, line endings, final newlines. |
 | `eslint` | ESLint and `prettier --check` across the application, the stories, and the workshop configuration. |
 | `validate-docs`, `validate-agents` | The two contracts, so a hook catches them before the aggregate does. |
+| `check-specs`, `analyse-specs` | The specifications, through `allium`. Needs the pinned binary; see above. |
 | `markdownlint-cli2` | Markdown structure. Prettier does not touch Markdown, so they cannot disagree. |
 | `typos` | Spelling, excluding the lockfiles and the word lists. |
 | `lychee` | Link targets, offline. |
@@ -79,8 +95,9 @@ installed as a hook and runs only from `just fix`.
 
 `.github/workflows/ci.yml` runs the same recipes in three jobs. `frontend` runs the
 install, the lockfile dry run, `frontend-static`, `frontend-coverage` and `frontend-build`;
-`documents` runs `sync`, `lint`, `check-docs` and `check-agents`; `stories` restores the
-Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
+`documents` runs `sync`, then `install-allium` — the binary no lockfile can name — then
+`lint`, `check-docs`, `check-agents`, `check-specs` and `analyse-specs`; `stories`
+restores the Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
 Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build the
 gate makes is proved and then discarded: that one is uploaded nowhere.
 

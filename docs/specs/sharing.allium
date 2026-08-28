@@ -342,10 +342,10 @@ surface ShareCurrentAnswer {
         fulfils AnswerObfuscation
         fulfils game/DirectManipulation
 
-    related:
-        game/GameBoard(current_game)
-        game/GameConclusion(current_game)
-            when current_game.is_finished_by_play
+    -- No related clause names game.allium's surfaces. The language reference
+    -- shows no related clause crossing modules and the checker resolves none,
+    -- so the adjacency those entries carried is stated in
+    -- AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard instead.
 
     @guarantee TheAnswerIsNeverShownInOrderToShareIt
         -- current_game.answer is deliberately absent from the exposed set.
@@ -372,6 +372,9 @@ surface ShareCurrentAnswer {
         -- Random, endless, practice and custom alike, from before the first
         -- guess through to after the game is over. Nothing here depends on
         -- having guessed anything, or on how the game turned out.
+        -- game.allium's GameBoard is reachable from here for as long as the
+        -- game is current, and its GameConclusion as well once the game is
+        -- finished by play.
 
     @guarantee AWordSomebodySentYouCanBeSentOn
         -- A custom game's answer can be shared onward like any other. The
@@ -444,8 +447,8 @@ surface ShareResults {
         fulfils game/DirectManipulation
         fulfils ShareGridFormat
 
-    related:
-        game/GameConclusion(finished)
+    -- No related clause here either, for the reason ShareCurrentAnswer gives:
+    -- SharingIsAvailableOnceTheGameIsOver carries the adjacency instead.
 
     @guarantee SharedTextGivesNothingAway
         -- The text placed on the clipboard names no letter, no word and no
@@ -473,9 +476,10 @@ surface ShareResults {
 
     @guarantee SharingIsAvailableOnceTheGameIsOver
         -- Sharing is offered for a game the player finished by playing it
-        -- out, won or lost, and never while one is still in progress. A game
-        -- that was abandoned is never on the board to share: it is replaced
-        -- the instant it is abandoned.
+        -- out, won or lost, and never while one is still in progress.
+        -- game.allium's GameConclusion, the surface that shows a finished
+        -- game, is reachable from here. A game that was abandoned is never on
+        -- the board to share: it is replaced the instant it is abandoned.
 
     @guarantee TheGridIsAvailableAsText
         -- What gets copied is text. It is shown as text as well as placed on

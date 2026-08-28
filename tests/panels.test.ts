@@ -208,6 +208,7 @@ describe('StatisticsPanel', () => {
     render(StatisticsPanel, statisticsProps());
 
     expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /statistics/i })).toHaveTextContent(/Lost\s*1/);
     expect(screen.getByRole('dialog', { name: /statistics/i })).toHaveTextContent('67%');
     expect(screen.getByRole('list', { name: /distribution/i })).toHaveTextContent(
       '3 guesses: 2 wins'

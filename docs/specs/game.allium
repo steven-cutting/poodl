@@ -240,6 +240,8 @@ enum StartableMode { random | endless | practice }
 
 enum LetterMark { correct | present | absent }
 
+-- The closed set of reasons a submission is refused. It types both what the
+-- board shows about the last submission and the GuessRejected payload.
 enum GuessRejectionReason { incomplete | not_in_dictionary | hard_mode_violation }
 
 ------------------------------------------------------------
@@ -259,9 +261,6 @@ entity Player {
 
     -- Whether the welcome screen is what the player is looking at.
     awaiting_welcome: Boolean
-
-    -- Relationships
-    games: Game with player = this
 
     -- Derived: whether the welcome screen has anything to offer as Continue —
     -- a game to resume, or a mode to start another in.
@@ -298,6 +297,11 @@ entity Game {
     -- of them.
     current_input: String
 
+    -- Why the last submission was refused, while that is what the board is
+    -- telling the player. A rejection describes a submission, so editing the
+    -- letters clears it, and so does the next accepted guess. Null otherwise.
+    rejection: GuessRejectionReason?
+
     started_at: Timestamp
     completed_at: Timestamp when status = won | lost | abandoned
 
@@ -320,10 +324,14 @@ entity Game {
     is_current: player.current_game = this
     attempts_used: guesses.count
     attempts_remaining: config.max_attempts - guesses.count
-    is_complete: status in {won, lost, abandoned}
     is_finished_by_play: status in {won, lost}
     is_stat_eligible: mode in {random, endless}
     input_length: length(current_input)
+
+    -- The one place this module reads the word length for play. Every rule
+    -- and surface that asks whether there is room for another letter asks
+    -- the negation of this instead, which is the same question because
+    -- InputNeverExceedsWordLength rules out the input being longer.
     is_input_complete: input_length = words/config.word_length
 
     -- Derived: what the guesses so far have revealed
@@ -350,6 +358,8 @@ entity Game {
         and present_results.all(r => contains_letter(candidate.text, r.letter))
 
     -- Whether hard mode may be turned on now without invalidating history.
+    -- Read by settings.allium's hard-mode guard, and by the invariant below
+    -- that the guard exists to maintain.
     hard_mode_admissible: respects_hard_mode(guesses)
 
     invariant NeverMoreThanTheAttemptLimit {
@@ -453,9 +463,9 @@ config {
 -- nothing to continue, so the screen appears regardless — there is no board
 -- to go back to and no mode to resume.
 --
--- PlayerOpensPoodl is deliberately the one trigger no surface provides:
--- opening the app is an arrival, not a control, and every surface is
--- something reached by arriving.
+-- PlayerOpensPoodl comes from the Arrival surface: opening the app is a
+-- doorway rather than a control, and every other surface is something
+-- reached by having arrived.
 rule ShowWelcomeOnOpening {
     when: PlayerOpensPoodl(player)
 
@@ -513,7 +523,7 @@ rule ProvidePracticeAnswer {
 
     requires: mode = practice
 
-    let candidates = filter(words/Words, w => w.in_answer_list)
+    let candidates = words/answer_words()
     let drawn = uniform_choice(candidates)
 
     ensures: AnswerDrawn(player: player, mode: practice, answer: drawn)
@@ -535,7 +545,9 @@ rule ProvidePracticeAnswer {
 -- get the same treatment.
 --
 -- It is also the single place every game start passes through, which is why
--- the welcome screen is dismissed here rather than by a rule of its own.
+-- the welcome screen is dismissed here rather than by a rule of its own. The
+-- one thing it leaves to MakeNewGameCurrent is putting the new game on the
+-- board.
 rule BeginGame {
     when: AnswerDrawn(player, mode, answer)
 
@@ -544,7 +556,7 @@ rule BeginGame {
     ensures:
         if exists outgoing:
             RetireGame(game: outgoing)
-        let game = Game.created(
+        Game.created(
             player: player,
             mode: mode,
             answer: answer,
@@ -552,9 +564,9 @@ rule BeginGame {
             hard_mode_at_start: play_settings.hard_mode,
             hard_mode_released: false,
             current_input: "",
+            rejection: null,
             started_at: now
         )
-        player.current_game = game
         player.awaiting_welcome = false
         if mode = random:
             player.last_mode = random
@@ -571,6 +583,18 @@ rule BeginGame {
         -- out rather than happening by accident.
 }
 
+-- The new game takes the board. This is its own rule rather than a clause of
+-- BeginGame because a creation the checker can see is one that stands alone:
+-- binding it with let, so that the next clause can name it, hides both the
+-- in_progress it sets and the mode it carries from the checker's status and
+-- producer scans. The outcome is the same either way — no game is created
+-- without becoming current — and the checker now sees it.
+rule MakeNewGameCurrent {
+    when: game: Game.created
+
+    ensures: game.player.current_game = game
+}
+
 -- Abandoning a game that was under way counts as a loss. The outcome travels
 -- on the emission rather than being read off the game afterwards, because the
 -- game itself is about to be discarded and statistics.allium must not be left
@@ -582,15 +606,29 @@ rule AbandonRetiredGame {
     requires: game.guesses.count >= 1
 
     ensures:
+        GameAbandoned(
+            game: game,
+            attempts: game.attempts_used,
+            stat_eligible: game.is_stat_eligible
+        )
         game.status = abandoned
         game.completed_at = now
-        GameAbandoned(game: game, mode: game.mode, attempts: game.attempts_used)
 
     @guidance
-        -- The mode and the attempt count ride along even though the game is
-        -- a parameter too. statistics.allium reads only those two, so that
-        -- recording the loss and discarding the game can happen in either
-        -- order without one of them reading an entity the other has removed.
+        -- The attempt count and the eligibility verdict ride along even
+        -- though the game is a parameter too. statistics.allium reads only
+        -- those two, so that recording the loss and discarding the game can
+        -- happen in either order without one of them reading an entity the
+        -- other has removed. Eligibility is judged here, where
+        -- is_stat_eligible lives, rather than re-decided from the mode by
+        -- the module that counts it.
+        --
+        -- The emission leads the ensures block. The clauses are one
+        -- simultaneous outcome, so the order changes nothing; it leads
+        -- because the consequence other modules hear is the point of the
+        -- rule. The position used to be load-bearing as well — allium
+        -- 3.5.3 exported only a leading emission — but 3.6.1 exports
+        -- every emission in the block.
 }
 
 -- Nothing reads an abandoned game once its loss has been recorded, so it goes
@@ -633,9 +671,11 @@ rule PlayerEntersLetter {
     requires: exists game
     requires: game.status = in_progress
     requires: is_letter(letter)
-    requires: game.input_length < words/config.word_length
+    requires: not game.is_input_complete
 
-    ensures: game.current_input = append(game.current_input, lowercase(letter))
+    ensures:
+        game.current_input = append(game.current_input, lowercase(letter))
+        game.rejection = null
 }
 
 rule PlayerDeletesLetter {
@@ -647,7 +687,9 @@ rule PlayerDeletesLetter {
     requires: game.status = in_progress
     requires: game.input_length > 0
 
-    ensures: game.current_input = drop_last(game.current_input)
+    ensures:
+        game.current_input = drop_last(game.current_input)
+        game.rejection = null
 }
 
 -- Submitting a guess ----------------------------------------------------
@@ -660,9 +702,11 @@ rule RejectIncompleteGuess {
 
     requires: exists game
     requires: game.status = in_progress
-    requires: game.input_length < words/config.word_length
+    requires: not game.is_input_complete
 
-    ensures: GuessRejected(game: game, reason: incomplete)
+    ensures:
+        GuessRejected(game: game, reason: incomplete)
+        game.rejection = incomplete
 }
 
 -- Five letters, but not a word Poodl accepts.
@@ -680,7 +724,9 @@ rule RejectUnknownWord {
 
     requires: not exists candidate or not candidate.in_guess_dictionary
 
-    ensures: GuessRejected(game: game, reason: not_in_dictionary)
+    ensures:
+        GuessRejected(game: game, reason: not_in_dictionary)
+        game.rejection = not_in_dictionary
 }
 
 -- A real word, but it drops a letter the player has already been shown. Hard
@@ -702,7 +748,9 @@ rule RejectHardModeViolation {
     requires: play_settings.hard_mode
     requires: not game.satisfies_hard_mode(candidate)
 
-    ensures: GuessRejected(game: game, reason: hard_mode_violation)
+    ensures:
+        GuessRejected(game: game, reason: hard_mode_violation)
+        game.rejection = hard_mode_violation
 }
 
 -- The guess stands: it is scored, it spends an attempt, and it may end the
@@ -732,6 +780,7 @@ rule AcceptGuess {
             results: score_guess(candidate, game.answer)
         )
         game.current_input = ""
+        game.rejection = null
         if submitted.is_winning:
             game.status = won
             game.completed_at = now
@@ -821,6 +870,19 @@ invariant AbandonedGamesHadAGuess {
         g.status = abandoned implies g.guesses.count >= 1
 }
 
+-- Hard mode is never on over a game whose history breaks it. A guess accepted
+-- while it was on was judged live against what the guesses before it had
+-- revealed, and settings.allium refuses to turn it on part way through a game
+-- unless everything already submitted would have complied. That pair of rules
+-- is what holds this; stating it here is what makes it an obligation rather
+-- than a consequence nobody wrote down, and it is the only reading of
+-- hard_mode_admissible in the module that declares it.
+invariant HardModeIsNeverOnOverAGameThatBreaksIt {
+    for g in Games:
+        g.status = in_progress and play_settings.hard_mode
+            implies g.hard_mode_admissible
+}
+
 -- The keyboard never contradicts the guesses. The other direction, that every
 -- letter of the alphabet has an entry, is an obligation on the
 -- KeyboardKnowledge contract.
@@ -843,6 +905,25 @@ invariant InputNeverExceedsWordLength {
 ------------------------------------------------------------
 -- Surfaces
 ------------------------------------------------------------
+
+-- Opening Poodl. The doorway rather than a control: navigating here — a
+-- first visit, a reload, a return — is itself the whole action, and it is
+-- over by the time anything is on screen. Every other surface is something
+-- reached by having arrived.
+surface Arrival {
+    facing viewer: Player
+
+    provides:
+        PlayerOpensPoodl(viewer)
+
+    @guarantee ArrivingIsTheOnlyActionHere
+        -- PlayerOpensPoodl fires once per opening, before the player has
+        -- done anything. Whether that lands on the welcome screen or goes
+        -- straight to continuing is decided by the arrival rules, never
+        -- here: there is nothing on this surface to operate, which is why
+        -- it owes none of the obligations a control-bearing surface
+        -- carries.
+}
 
 -- What a player meets on opening. A short introduction the first time, and
 -- afterwards a way back into what they were doing alongside the three modes
@@ -984,6 +1065,7 @@ surface GameBoard {
         game.attempts_used
         game.attempts_remaining
         game.current_input
+        game.rejection
         for submitted in game.guesses:
             submitted.position
             submitted.word.text
@@ -994,7 +1076,7 @@ surface GameBoard {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            when game.status = in_progress and game.input_length < words/config.word_length
+            when game.status = in_progress and not game.is_input_complete
         PlayerDeletesLetter(viewer)
             when game.status = in_progress and game.input_length > 0
         PlayerSubmitsGuess(viewer)
@@ -1058,8 +1140,11 @@ surface GameBoard {
     @guarantee EveryRejectionIsAnnounced
         -- A GuessRejected outcome is made perceivable both visually and to
         -- assistive technology, and says which of the three reasons applied.
-        -- A rejected guess spends no attempt: the typed letters stay on the
-        -- board for the player to correct.
+        -- game.rejection is the visible half: it stays on the board until the
+        -- player edits the letters, and it is announced each time it is set,
+        -- so the same refusal twice over is heard twice. A rejected guess
+        -- spends no attempt: the typed letters stay on the board for the
+        -- player to correct.
 
     @guarantee FullyKeyboardOperable
         -- Every operation on this surface can be reached and invoked from the
@@ -1094,7 +1179,7 @@ surface PhysicalKeyboardInput {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            when physical_input_enabled and game.input_length < words/config.word_length
+            when physical_input_enabled and not game.is_input_complete
         PlayerDeletesLetter(viewer)
             when physical_input_enabled and game.input_length > 0
         PlayerSubmitsGuess(viewer)

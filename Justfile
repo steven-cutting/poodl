@@ -135,22 +135,25 @@ check-docs:
 check-agents:
     uv run --frozen python scripts/validate_agents.py
 
-# The specifications, checked mechanically rather than by review. Deliberately
-# outside `just check`: `allium check` exits non-zero on warnings as well as
-# errors, and the modules carry a known baseline of them. See
-# docs/how-to/work-with-the-specs.md for what that baseline is.
+# The specifications, checked mechanically rather than by review: syntax,
+# references, and names a module reaches for that no import defines. Every
+# module must report an empty `diagnostics` array; anything reported is a
+# regression. Waiver terms: docs/how-to/work-with-the-specs.md.
+#
+# The wrapper is what asserts that, because neither subcommand's exit code
+# does. `allium check` exits 0 on an `info` diagnostic and `allium analyse`
+# ignores diagnostics altogether, so both recipes read the JSON instead of
+# trusting the status. Both need the pinned binary, which `just initialize`
+# installs and `just install-allium` repairs.
 check-specs:
-    uv run --frozen python scripts/install_allium.py --check
-    .tools/bin/allium check docs/specs/
+    uv run --frozen python scripts/run_allium.py check
 
 # The same modules read for process completeness rather than structure: data
 # flow, reachability, deadlocks, conflicts and invariants. It repeats everything
-# `check-specs` reports and adds findings of its own. Outside `just check` for
-# its own version of the same reason: it exits non-zero while any finding
-# remains, and four do. The baseline sits on the same page.
+# `check-specs` reports and adds findings of its own, and findings cannot be
+# waived, so anything reported is a regression.
 analyse-specs:
-    uv run --frozen python scripts/install_allium.py --check
-    .tools/bin/allium analyse docs/specs/
+    uv run --frozen python scripts/run_allium.py analyse
 
 check-links-online:
     uv run --frozen prek run --all-files --hook-stage manual lychee-online
