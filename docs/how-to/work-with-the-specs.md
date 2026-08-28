@@ -90,30 +90,36 @@ resolve — and then it is waived in place:
 The directive is a whole-line comment holding the full diagnostic code and nothing else —
 prose on the directive line disables it, which is why the reason sits on its own line
 above — and it covers only the line directly beneath it. One rule, one line, one stated
-reason. Upstream documents none of this: the directive was found in the 3.5.3 binary and
-verified against it, so every waiver must be re-verified whenever the pinned version
-moves — see [Maintain dependencies](maintain-dependencies.md). The nine waivers currently
-in the modules cover two shapes of checker gap, each a construct the language reference
-sanctions: cross-module `config` references, and a definition whose only use sits in
-another module.
+reason. Upstream documents none of this: the directive was found in the binary and
+re-verified against 3.6.1, so every waiver must be re-verified whenever the pinned version
+moves — see [Maintain dependencies](maintain-dependencies.md). One waiver is currently in
+the modules, covering the single shape of checker gap that survives: a definition whose
+only use sits in another module. Eight more stood in for cross-module `config` references
+until 3.6.1 resolved `alias/config.param`, and they were retired with that upgrade.
 
-A third shape used to sit beside them and was retired rather than waived. `sharing.allium`
-named `game.allium`'s `GameBoard` and `GameConclusion` in `related:` clauses, which 3.5.3
-cannot resolve across a module alias — but neither can the language reference be read to
-sanction it: rule 31 asks only that a surface in `related:` be defined, and no example
-anywhere qualifies a surface name with an alias. Where a waiver would have asserted the
-checker was wrong, the honest form was prose, so the adjacency now sits in the guarantees
-of `ShareCurrentAnswer` and `ShareResults`. Prefer that reading of a gap: waive only what
-the reference plainly permits.
+Another shape used to sit beside it and was retired rather than waived. `sharing.allium`
+named `game.allium`'s `GameBoard` and `GameConclusion` in `related:` clauses, which the
+checker still cannot resolve across a module alias — but neither can the language
+reference be read to sanction it: rule 31 asks only that a surface in `related:` be
+defined, and no example anywhere qualifies a surface name with an alias. Where a waiver
+would have asserted the checker was wrong, the honest form was prose, so the adjacency now
+sits in the guarantees of `ShareCurrentAnswer` and `ShareResults`. Prefer that reading of
+a gap: waive only what the reference plainly permits.
 
 One gap is worth knowing about because it is fixed by restructuring rather than waived:
-3.5.3 sees a `.created(...)` call only when it stands alone as an ensures statement. Bind
-the creation — `let game = Game.created(...)`, or assign it straight into a field — and
-both the status it sets and every literal it carries vanish from the checker's status
-scan and from the analyser's producer search. `MakeNewGameCurrent` in `game.allium` exists
-for this reason: `BeginGame` used to bind its creation so that the next clause could make
-the new game current, and that single `let` cost one waiver and the last two `analyse`
-findings. Create unbound, and let a `.created` rule pick the entity up.
+the checker sees a `.created(...)` call only when it stands alone as an ensures statement,
+at 3.6.1 exactly as at 3.5.3. Bind the creation — `let game = Game.created(...)`, or
+assign it straight into a field — and both the status it sets and every field it
+establishes vanish from the checker's status scan and from the analyser's producer search.
+`MakeNewGameCurrent` in `game.allium` exists for this reason: `BeginGame` used to bind its
+creation so that the next clause could make the new game current, and that single `let`
+cost one waiver and the last two `analyse` findings. Create unbound, and let a `.created`
+rule pick the entity up.
+
+One more thing 3.6.1 changed cuts the other way. It resolves the alias but does not check
+the name behind the dot, so a mistyped `words/config.word_lenth` draws nothing at all —
+upstream calls field-level checking of `alias/config.field` unimplemented. A cross-module
+config reference is read by eye or not at all.
 
 ## Related pages
 

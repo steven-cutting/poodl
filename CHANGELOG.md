@@ -146,6 +146,28 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The Allium checker moves from 3.5.3 to 3.6.1, and eight of the nine `-- allium-ignore`
+  waivers go with it. 3.6.1 closes three gaps in the cross-module reference checking 3.5.3
+  introduced, and the one that reaches these modules is the config-reference form the
+  language reference documents: `alias/config.param` resolves now, so the eight waivers
+  standing in for it — one in `statistics.allium`, seven in `game.allium` — are deleted
+  rather than left asserting a gap that has closed. One waiver remains, the
+  `allium.field.unused` on `Game.hard_mode_admissible` whose only reader is
+  `settings.allium`'s hard-mode guard, and with it one shape of checker gap where
+  [Work with the specifications](docs/how-to/work-with-the-specs.md) recorded two. The
+  fourteen this log counted had already fallen to nine across three changes it did not
+  record: an unused-definition ignore resolved at the root, the `Game.status` ignore that
+  went when the `Game.created` binding did — taking `analyse`'s last two `missing_producer`
+  findings with it — and three `related:` waivers in `sharing.allium` retired as prose. The
+  fix cuts both ways: 3.6.1 resolves the alias but not the name behind the dot, so a
+  mistyped cross-module config field now draws nothing at all. It also exports every
+  emission in an `ensures:` block rather than only the first, so `GameAbandoned` leading
+  its block — recorded below as a baseline fix — is no longer what lets the checker see
+  it emitted, and the guidance in `game.allium` now says so. All four checksums in
+  `scripts/install_allium.py` were recomputed by hand, as moving the pin requires, and the
+  two the Homebrew formula publishes still match. `just check-specs` and `just analyse-specs`
+  both still report nothing and exit 0. No observable behaviour changes.
+
 - The Allium diagnostic baseline is retired. Every structural diagnostic the five modules
   carried is fixed or waived in place: `StatisticsPanel` exposes the losses it already
   showed, the dead `Player.games` and `Game.is_complete` fields are gone, practice and

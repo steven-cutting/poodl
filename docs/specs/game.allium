@@ -327,9 +327,6 @@ entity Game {
     is_finished_by_play: status in {won, lost}
     is_stat_eligible: mode in {random, endless}
     input_length: length(current_input)
-    -- The reference's cross-module config form; allium 3.5.3 resolves
-    -- config within one module only.
-    -- allium-ignore allium.reference.unknownName
     is_input_complete: input_length = words/config.word_length
 
     -- Derived: what the guesses so far have revealed
@@ -387,9 +384,6 @@ entity Guess {
     }
 
     invariant OneResultPerLetter {
-        -- The reference's cross-module config form; allium 3.5.3 resolves
-        -- config within one module only.
-        -- allium-ignore allium.reference.unknownName
         results.count = words/config.word_length
     }
 }
@@ -588,7 +582,7 @@ rule BeginGame {
 -- The new game takes the board. This is its own rule rather than a clause of
 -- BeginGame because a creation the checker can see is one that stands alone:
 -- binding it with let, so that the next clause can name it, hides both the
--- in_progress it sets and the mode it carries from allium 3.5.3's status and
+-- in_progress it sets and the mode it carries from the checker's status and
 -- producer scans. The outcome is the same either way — no game is created
 -- without becoming current — and the checker now sees it.
 rule MakeNewGameCurrent {
@@ -626,9 +620,11 @@ rule AbandonRetiredGame {
         -- the module that counts it.
         --
         -- The emission leads the ensures block. The clauses are one
-        -- simultaneous outcome, so the order changes nothing; leading with
-        -- the consequence other modules hear is also what lets the checker
-        -- see it emitted.
+        -- simultaneous outcome, so the order changes nothing; it leads
+        -- because the consequence other modules hear is the point of the
+        -- rule. The position used to be load-bearing as well — allium
+        -- 3.5.3 exported only a leading emission — but 3.6.1 exports
+        -- every emission in the block.
 }
 
 -- Nothing reads an abandoned game once its loss has been recorded, so it goes
@@ -671,9 +667,6 @@ rule PlayerEntersLetter {
     requires: exists game
     requires: game.status = in_progress
     requires: is_letter(letter)
-    -- The reference's cross-module config form; allium 3.5.3 resolves
-    -- config within one module only.
-    -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
     ensures:
@@ -705,9 +698,6 @@ rule RejectIncompleteGuess {
 
     requires: exists game
     requires: game.status = in_progress
-    -- The reference's cross-module config form; allium 3.5.3 resolves
-    -- config within one module only.
-    -- allium-ignore allium.reference.unknownName
     requires: game.input_length < words/config.word_length
 
     ensures:
@@ -892,9 +882,6 @@ invariant AnswersAreAlwaysGuessable {
 
 invariant InputNeverExceedsWordLength {
     for g in Games:
-        -- The reference's cross-module config form; allium 3.5.3 resolves
-        -- config within one module only.
-        -- allium-ignore allium.reference.unknownName
         g.input_length <= words/config.word_length
 }
 
@@ -1072,9 +1059,6 @@ surface GameBoard {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            -- The reference's cross-module config form; allium 3.5.3
-            -- resolves config within one module only.
-            -- allium-ignore allium.reference.unknownName
             when game.status = in_progress and game.input_length < words/config.word_length
         PlayerDeletesLetter(viewer)
             when game.status = in_progress and game.input_length > 0
@@ -1178,9 +1162,6 @@ surface PhysicalKeyboardInput {
 
     provides:
         PlayerEntersLetter(viewer, letter)
-            -- The reference's cross-module config form; allium 3.5.3
-            -- resolves config within one module only.
-            -- allium-ignore allium.reference.unknownName
             when physical_input_enabled and game.input_length < words/config.word_length
         PlayerDeletesLetter(viewer)
             when physical_input_enabled and game.input_length > 0

@@ -61,7 +61,7 @@ Upstream publishes no checksums for these files — its `SHA256SUMS.txt` covers 
 editor extension and the language server — so all four have to be recomputed by hand:
 
 ```console
-V=3.5.3
+V=3.6.1
 for t in aarch64-apple-darwin x86_64-apple-darwin \
          aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu; do
   printf '%s  ' "$t"
@@ -85,7 +85,7 @@ longer runs, so an installation damaged by other means repairs itself rather tha
 `.tools/` cleared by hand.
 
 A version change can move what the checker reports, and the `-- allium-ignore` waivers
-in the modules lean on behaviour upstream documents nowhere, verified against 3.5.3
+in the modules lean on behaviour upstream documents nowhere, verified against 3.6.1
 only. After moving the pin, run `just check-specs` and `just analyse-specs`, drop any
 waiver the new version no longer needs, and update the waiver count and shapes in
 [Work with the specifications](work-with-the-specs.md) in the same commit.

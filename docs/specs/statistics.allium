@@ -79,9 +79,6 @@ entity GuessDistributionBucket {
     win_count: Integer
 
     invariant BucketIsAnAttemptNumber {
-        -- The reference's cross-module config form; allium 3.5.3 resolves
-        -- config within one module only.
-        -- allium-ignore allium.reference.unknownName
         guesses_used >= 1 and guesses_used <= game/config.max_attempts
     }
 
