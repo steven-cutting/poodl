@@ -34,7 +34,8 @@ another module's `Excludes`, it belongs there.
 4. Implement until they pass, without weakening any test.
 5. Run `just check-specs` and confirm it reports no diagnostics and exits 0. A
    diagnostic is a regression: fix it, or — for a verified checker gap — waive it on the terms below.
-   Then run `just analyse-specs` and compare its findings against the table below.
+   Then run `just analyse-specs` and confirm it reports no findings; a finding is a
+   regression too, and findings cannot be waived.
 6. Run `just frontend-unit`, then `just check`.
 
 ## Handle an open question
@@ -68,17 +69,18 @@ references, and names a module reaches for that no import defines. The second ru
 findings on top — data flow, edge reachability, deadlocks, conflicts and invariants. The
 `spec-change` skill in `.agents/skills/` carries the procedure for agents.
 
-### Diagnostics, waivers and the analyse baseline
+### Diagnostics and waivers
 
 Neither recipe is part of `just check`; gating them is the follow-up
-[decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves open. But they no
-longer agree on a clean checkout: `allium check` reports no diagnostics and exits 0 —
-it still prints one JSON block per module, each with an empty diagnostics array — while
-`allium analyse` exits non-zero for the two findings below.
+[decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves open. Both are
+clean on an untouched checkout: `allium check` reports no diagnostics and `allium analyse`
+reports no findings, and each exits 0 — still printing one JSON block per module, each
+with an empty array.
 
-`just check-specs` reporting anything at all is therefore a regression in the change
-under review. Fix it at the root. When the diagnostic itself is wrong — the construct is
-valid Allium that the pinned checker cannot resolve — waive it in place instead:
+Either recipe reporting anything at all is therefore a regression in the change under
+review. Fix it at the root. A finding cannot be waived. A diagnostic can, but only when the
+diagnostic itself is wrong — the construct is valid Allium that the pinned checker cannot
+resolve — and then it is waived in place:
 
 ```text
 -- Why the checker is wrong here, in a sentence.
@@ -90,25 +92,28 @@ prose on the directive line disables it, which is why the reason sits on its own
 above — and it covers only the line directly beneath it. One rule, one line, one stated
 reason. Upstream documents none of this: the directive was found in the 3.5.3 binary and
 verified against it, so every waiver must be re-verified whenever the pinned version
-moves — see [Maintain dependencies](maintain-dependencies.md). The fourteen waivers
-currently in the modules cover three shapes of checker gap, each a construct the language
-reference sanctions: cross-module `config` references, cross-module surfaces named in
-`related:`, and definitions whose only uses sit in another module or in positions the
-checker does not count — an emission payload's type, a status set inside `Game.created`.
+moves — see [Maintain dependencies](maintain-dependencies.md). The nine waivers currently
+in the modules cover two shapes of checker gap, each a construct the language reference
+sanctions: cross-module `config` references, and a definition whose only use sits in
+another module.
 
-`just analyse-specs` still exits non-zero: findings cannot be waived, and two remain,
-both in `game.allium` and both the same absence:
+A third shape used to sit beside them and was retired rather than waived. `sharing.allium`
+named `game.allium`'s `GameBoard` and `GameConclusion` in `related:` clauses, which 3.5.3
+cannot resolve across a module alias — but neither can the language reference be read to
+sanction it: rule 31 asks only that a surface in `related:` be defined, and no example
+anywhere qualifies a surface name with an alias. Where a waiver would have asserted the
+checker was wrong, the honest form was prose, so the adjacency now sits in the guarantees
+of `ShareCurrentAnswer` and `ShareResults`. Prefer that reading of a gap: waive only what
+the reference plainly permits.
 
-| Type | Subject |
-| --- | --- |
-| `missing_producer` | Nothing establishes `Game.mode = endless`, which `ArmEndlessCountdown` requires. |
-| `missing_producer` | The same absence, reached from `EndlessCountdownElapses`. |
-
-`BeginGame` creates every game with `mode: mode`, a trigger parameter rather than a
-literal, so the analyser never sees a producer of the literal value `endless`. Read the
-findings, not the exit code, and compare them against this table: a change should add
-none, and one that removes one should edit this page in the same commit, because that is
-progress worth recording.
+One gap is worth knowing about because it is fixed by restructuring rather than waived:
+3.5.3 sees a `.created(...)` call only when it stands alone as an ensures statement. Bind
+the creation — `let game = Game.created(...)`, or assign it straight into a field — and
+both the status it sets and every literal it carries vanish from the checker's status
+scan and from the analyser's producer search. `MakeNewGameCurrent` in `game.allium` exists
+for this reason: `BeginGame` used to bind its creation so that the next clause could make
+the new game current, and that single `let` cost one waiver and the last two `analyse`
+findings. Create unbound, and let a `.created` rule pick the entity up.
 
 ## Related pages
 
