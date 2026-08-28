@@ -29,11 +29,12 @@ Three checks are deliberately missing from that table. `just check-specs` runs
 reports no diagnostics and exits 0 on a clean checkout, but it stays outside the aggregate: the
 pinned binary is a per-worktree install the gate cannot assume, and joining `just check`
 is the follow-up [decision 0011](../decisions/0011-project-managed-allium-cli.md) leaves
-open. `just analyse-specs` runs `allium analyse`, which exits non-zero while any finding
-remains; findings cannot be waived, and two are baseline. `check-links-online` sits
+open. `just analyse-specs` runs `allium analyse`, which also reports nothing and exits 0
+on a clean checkout, and stays outside for the same reason; findings cannot be waived, so
+any finding is a regression. `check-links-online` sits
 outside the aggregate for a reason of the same class: it needs the network, and a check
 that can fail because a third party is down is not a gate. All three are listed in
-[Commands](commands.md); the waiver terms and the analyse baseline are in
+[Commands](commands.md); the waiver terms are in
 [Work with the specifications](../how-to/work-with-the-specs.md).
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure

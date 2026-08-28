@@ -69,6 +69,12 @@ today would fail the build for findings nobody has triaged yet.
 > [Work with the specifications](../how-to/work-with-the-specs.md). The recipes still
 > sit outside the aggregate: `allium analyse` cannot reach zero while its two remaining
 > findings stand, and joining the gate is a follow-up this decision leaves open.
+>
+> Superseded further on 2026-08-27. `allium analyse` reached zero: its two findings were
+> one checker blind spot — a `let`-bound `Game.created` the analyser could not see — and
+> unbinding that creation removed both, together with the waiver it had also cost. Both
+> recipes now report nothing and exit 0 on a clean checkout. Joining the gate is still
+> the open follow-up.
 
 Only the four unix targets are supported. The release also carries a Windows zip; a target
 nobody here runs would be a checksum nobody re-verifies.

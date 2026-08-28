@@ -87,7 +87,7 @@ longer runs, so an installation damaged by other means repairs itself rather tha
 A version change can move what the checker reports, and the `-- allium-ignore` waivers
 in the modules lean on behaviour upstream documents nowhere, verified against 3.5.3
 only. After moving the pin, run `just check-specs` and `just analyse-specs`, drop any
-waiver the new version no longer needs, and update the analyse table in
+waiver the new version no longer needs, and update the waiver count and shapes in
 [Work with the specifications](work-with-the-specs.md) in the same commit.
 
 ## Actions in the workflows

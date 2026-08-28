@@ -67,7 +67,7 @@ rather than in a shell history.
 | `just check-docs` | markdownlint, `typos`, offline link check, then the documentation contract. |
 | `just check-agents` | The agent contract: inventory, adapters, and skill bridges. |
 | `just check-specs` | `allium check` over `docs/specs/`. Reports no diagnostics and exits 0 on a clean checkout; any diagnostic is a regression. Waiver terms: [Work with the specifications](../how-to/work-with-the-specs.md). |
-| `just analyse-specs` | `allium analyse` over `docs/specs/`: the same structural diagnostics plus data flow, reachability, deadlocks and conflicts. Exits non-zero while any finding remains; two are baseline, on the same page. |
+| `just analyse-specs` | `allium analyse` over `docs/specs/`: the same structural diagnostics plus data flow, reachability, deadlocks and conflicts. Reports no findings and exits 0 on a clean checkout; findings cannot be waived, so any finding is a regression. |
 | `just check-links-online` | Follow external links. Manual; needs the network. |
 
 ## Publish

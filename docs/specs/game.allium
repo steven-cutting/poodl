@@ -280,10 +280,6 @@ entity Game {
     player: Player
     mode: GameMode
     answer: words/Word
-    -- in_progress arrives with the entity: BeginGame sets it inside
-    -- Game.created, the let-bound creation form the checker does not count
-    -- as an assignment.
-    -- allium-ignore allium.status.unreachableValue
     status: in_progress | won | lost | abandoned
 
     -- Whether hard mode was on when this game began. Deliberately a record
@@ -551,7 +547,9 @@ rule ProvidePracticeAnswer {
 -- get the same treatment.
 --
 -- It is also the single place every game start passes through, which is why
--- the welcome screen is dismissed here rather than by a rule of its own.
+-- the welcome screen is dismissed here rather than by a rule of its own. The
+-- one thing it leaves to MakeNewGameCurrent is putting the new game on the
+-- board.
 rule BeginGame {
     when: AnswerDrawn(player, mode, answer)
 
@@ -560,7 +558,7 @@ rule BeginGame {
     ensures:
         if exists outgoing:
             RetireGame(game: outgoing)
-        let game = Game.created(
+        Game.created(
             player: player,
             mode: mode,
             answer: answer,
@@ -571,7 +569,6 @@ rule BeginGame {
             rejection: null,
             started_at: now
         )
-        player.current_game = game
         player.awaiting_welcome = false
         if mode = random:
             player.last_mode = random
@@ -586,6 +583,18 @@ rule BeginGame {
         -- so last_mode is left as it was. GameMode and StartableMode are
         -- separate types precisely so that this conversion has to be written
         -- out rather than happening by accident.
+}
+
+-- The new game takes the board. This is its own rule rather than a clause of
+-- BeginGame because a creation the checker can see is one that stands alone:
+-- binding it with let, so that the next clause can name it, hides both the
+-- in_progress it sets and the mode it carries from allium 3.5.3's status and
+-- producer scans. The outcome is the same either way — no game is created
+-- without becoming current — and the checker now sees it.
+rule MakeNewGameCurrent {
+    when: game: Game.created
+
+    ensures: game.player.current_game = game
 }
 
 -- Abandoning a game that was under way counts as a loss. The outcome travels

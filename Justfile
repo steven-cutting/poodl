@@ -147,9 +147,9 @@ check-specs:
 
 # The same modules read for process completeness rather than structure: data
 # flow, reachability, deadlocks, conflicts and invariants. It repeats everything
-# `check-specs` reports and adds findings of its own. Outside `just check`
-# because it exits non-zero while any finding remains: findings cannot be
-# waived, and two are baseline. They sit on the same page.
+# `check-specs` reports and adds findings of its own. Reports no findings and
+# exits 0 on a clean checkout; findings cannot be waived, so anything reported
+# is a regression. Outside `just check` for the same reason as `check-specs`.
 analyse-specs:
     uv run --frozen python scripts/install_allium.py --check
     .tools/bin/allium analyse docs/specs/
