@@ -25,6 +25,10 @@
     '  so after one, Continue offers the last mode the player chose for themselves. The',
     '  **After a custom game** story is that case.',
     '- `@guarantee FullyKeyboardOperable`, proved by the play function below.',
+    '- `daily.allium`’s `@guarantee TheDayIsPerceivable` and `@guarantee ANewDayReplacesTheOldGame`,',
+    '  on the same terms **GameNavigation** says them: while the daily game waits off the board,',
+    '  how it stands is text beside the choice that would bring it back — or, once the date has',
+    '  moved on, end it. The **Today’s daily is waiting** story is the first case.',
     '',
     '`@guarantee ThePreviousModeSurvivesBetweenSessions` and',
     '`@guarantee ShownOnEveryArrivalUntilTurnedOff` are not this component’s to keep: the first',
@@ -123,5 +127,28 @@
 
     await userEvent.keyboard('{Enter}');
     await expect(onnewgame).toHaveBeenCalledWith('practice');
+  }}
+/>
+
+<!--
+  Today's daily game waits off the board behind a random one. Welcome offers
+  Daily, so how the daily game stands is text here before the choice is taken.
+-->
+<Story
+  name="Today's daily is waiting"
+  args={{
+    isFirstVisit: false,
+    canContinue: true,
+    lastMode: 'random',
+    currentMode: 'random',
+    currentStatus: 'in_progress',
+    todaysDaily: { day: 7, status: 'in_progress', isCurrent: false, isTodays: true, today: 7 }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheDayIsPerceivable
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 7/i)).toBeInTheDocument();
+    await expect(canvas.getByText(/waiting where you left it/i)).toBeInTheDocument();
   }}
 />

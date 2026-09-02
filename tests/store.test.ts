@@ -19,6 +19,9 @@ import { dayOf } from '../src/lib/domain/calendar';
 import { createFakeWordList } from '../src/lib/ports/words';
 import { ANSWERS, EXTRA, PAGE, createEnv, daysAfterEpoch, fresh, run } from './engineHarness';
 
+/** How often the store looks at the calendar between dispatches. */
+const A_MINUTE = 60_000;
+
 interface Harness {
   store: Store;
   storage: StoragePort;
@@ -106,18 +109,55 @@ describe('the store', () => {
     expect(store.state.currentGame?.startedAt).toBe(5_000);
   });
 
-  /*
-   * `TodaysGame.today`: `day_of(now)`, following the clock exactly as `now`
-   * does — as of the last dispatch, not ticking on its own. See daily.allium's
-   * `@guidance` on why a live tick-driven refresh is a follow-up, not this.
-   */
-  it('reports the day, from the clock as of the last dispatch', () => {
+  // `TodaysGame.today`: `day_of(now)`, read from the clock at every dispatch.
+  it('reports the day, from the clock at the last dispatch', () => {
     const { store, clock } = harness();
 
     clock.set(daysAfterEpoch(5));
     store.dispatch({ kind: 'open' });
 
     expect(store.today).toBe(dayOf(daysAfterEpoch(5)));
+  });
+
+  /*
+   * And watched between dispatches, through the timer port, so a tab left
+   * open across midnight turns the day on its own: TheNextWordIsAnnouncedIn
+   * Advance wants the earlier day's game said to be that day's once the date
+   * has moved on, and nobody dispatches anything to an idle tab. Within a day
+   * the watcher moves nothing.
+   */
+  it('turns the day on its own while the tab sits idle across midnight', () => {
+    const { store, clock, timer } = harness();
+
+    clock.set(daysAfterEpoch(5));
+    store.dispatch({ kind: 'new_game', mode: 'daily' });
+
+    clock.advance(A_MINUTE);
+    timer.advance(A_MINUTE);
+
+    expect(store.today).toBe(dayOf(daysAfterEpoch(5)));
+    expect(store.todaysGame.isTodays).toBe(true);
+
+    clock.set(daysAfterEpoch(6));
+    timer.advance(A_MINUTE);
+
+    expect(store.today).toBe(dayOf(daysAfterEpoch(6)));
+    expect(store.todaysGame.keptDay).toBe(dayOf(daysAfterEpoch(5)));
+    expect(store.todaysGame.isTodays).toBe(false);
+  });
+
+  it('stops watching the day once the store is thrown away', () => {
+    const live_ = harness();
+
+    live_.clock.set(daysAfterEpoch(5));
+    live_.store.dispatch({ kind: 'open' });
+    live_.store.destroy();
+
+    live_.clock.set(daysAfterEpoch(6));
+    live_.timer.advance(A_MINUTE);
+
+    expect(live_.store.today).toBe(dayOf(daysAfterEpoch(5)));
+    live = null;
   });
 
   /*

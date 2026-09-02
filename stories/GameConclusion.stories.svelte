@@ -30,7 +30,9 @@
     '- `@guarantee NothingButDailyIsRationed`. Outside Daily, another game is always one action',
     '  away, whatever the date and however many have been played. Inside it,',
     '  `daily.allium`’s `@guarantee ThereIsNoNewGameInDaily` withholds exactly the repeat control —',
-    '  the **Daily, finished for today** story shows **TodaysGame** standing in its place.',
+    '  the **Daily, finished for today** story shows **TodaysGame** standing in its place, with',
+    '  the other three modes beside it so that they stay one action away from inside a dialog',
+    '  that keeps the keyboard.',
     '- `@guarantee ConclusionIsAnnounced` is **Announcer**’s, not this one’s: the modal shows the',
     '  conclusion and the live region says it.',
     '- `ShareCurrentAnswer.@guarantee FullyKeyboardOperable` and',
@@ -131,10 +133,16 @@
   }}
   play={async ({ canvasElement }) => {
     // GameConclusion.@guarantee ThereIsNoNewGameInDaily
+    // GameConclusion.@guarantee NothingButDailyIsRationed
     const canvas = within(canvasElement);
 
     await expect(canvas.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
     await expect(canvas.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+
+    for (const name of ['Random', 'Endless', 'Practice']) {
+      await expect(canvas.getByRole('button', { name })).toBeInTheDocument();
+    }
+    await expect(canvas.queryByRole('button', { name: 'Daily' })).not.toBeInTheDocument();
   }}
 />
 

@@ -31,6 +31,17 @@ import type { WordListPort } from '$lib/ports/words';
 const TICK_MS = 250;
 
 /**
+ * How often the calendar is looked at, so the day turns on a tab left open.
+ *
+ * `TodaysGame.today` is `day_of(now)`, and `TheNextWordIsAnnouncedInAdvance`
+ * wants an earlier day's game said to be that day's once the date has moved
+ * on — which a tab sitting idle across midnight would never say if `now`
+ * moved only on dispatch. A minute is fine enough for a boundary that comes
+ * once a day.
+ */
+const DAY_WATCH_MS = 60_000;
+
+/**
  * `daily.allium`'s `TodaysGame` surface, as one value.
  *
  * Every field the surface exposes, derived together rather than one getter
@@ -85,10 +96,9 @@ export interface Store {
   /** `SettingsPanel.hard_mode_blocker` — which reason, when it may not be. */
   readonly hardModeBlocker: HardModeBlocker;
   /**
-   * `daily.allium` — `TodaysGame.today`, `day_of(now)`. Follows the clock as
-   * of the last dispatch, exactly as `now` itself does: there is no ticker
-   * that refreshes it purely from wall-clock time passing while the tab sits
-   * idle across a midnight boundary — a reload, or any dispatch, catches it up.
+   * `daily.allium` — `TodaysGame.today`, `day_of(now)`. Follows the clock on
+   * every dispatch, and once a minute besides, so a tab left open across
+   * midnight turns the day on its own rather than waiting for a keystroke.
    */
   readonly today: number;
   /** `daily.allium` — the whole `TodaysGame` surface, today included. */
@@ -114,6 +124,20 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     prefersDark = ports.preferences.prefersDark();
     prefersReducedMotion = ports.preferences.prefersReducedMotion();
     prefersMoreContrast = ports.preferences.prefersMoreContrast();
+  });
+
+  /*
+   * Watch the day rather than the clock: `now` moves here only when the
+   * calendar date in the zone has turned, so nothing re-renders for time
+   * merely passing and no rule runs — which day it is is a fact the surfaces
+   * read, not a command.
+   */
+  const stopWatchingDay = ports.timer.every(DAY_WATCH_MS, () => {
+    const current = ports.clock.now();
+
+    if (dayOf(current) !== dayOf(now)) {
+      now = current;
+    }
   });
 
   function countdownAt(): number | null {
@@ -244,6 +268,7 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
       discarded = true;
       stopTicking?.();
       stopTicking = null;
+      stopWatchingDay();
       stopWatchingDevice();
     }
   };

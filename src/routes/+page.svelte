@@ -119,14 +119,22 @@
   const todaysGame = $derived(store?.todaysGame ?? null);
   const dailyOnBoard = $derived(game?.mode === 'daily' ? todaysGame : null);
 
-  /** How today's daily stands, for the surface that offers Daily as a choice. */
+  /*
+   * How the kept daily game stands, for the surfaces that offer Daily as a
+   * choice: its day, how it ended, whether it is on the board, and whether it
+   * is today's at all — once the date has moved on, choosing Daily discards an
+   * earlier day's game rather than bringing it back, and
+   * `ANewDayReplacesTheOldGame` asks for that to be said where the choice is.
+   */
   const todaysDaily = $derived(
     todaysGame === null || todaysGame.keptDay === null || todaysGame.keptStatus === null
       ? null
       : {
           day: todaysGame.keptDay,
           status: todaysGame.keptStatus,
-          isCurrent: todaysGame.keptIsCurrent
+          isCurrent: todaysGame.keptIsCurrent,
+          isTodays: todaysGame.isTodays,
+          today: todaysGame.today
         }
   );
 
@@ -282,6 +290,7 @@
           currentMode={game?.mode ?? null}
           currentStatus={game?.status ?? null}
           dailyIsTodays={todaysGame?.isTodays ?? true}
+          {todaysDaily}
           oncontinue={() => {
             store?.dispatch({ kind: 'continue' });
           }}

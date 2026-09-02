@@ -23,6 +23,7 @@
     currentMode = null,
     currentStatus = null,
     dailyIsTodays = true,
+    todaysDaily = null,
     oncontinue,
     onnewgame
   }: {
@@ -36,6 +37,20 @@
      * Game`, said here on the same terms `GameNavigation` says it.
      */
     dailyIsTodays?: boolean;
+    /**
+     * How the kept daily game stands while it waits off the board, or null when
+     * there is none — the sentence `GameNavigation` carries, said here on the
+     * same terms because Daily is offered here too: `TheDayIsPerceivable` while
+     * today's game waits, and `ANewDayReplacesTheOldGame` once the date has
+     * moved on and choosing Daily would discard an earlier day's game.
+     */
+    todaysDaily?: {
+      day: number;
+      status: GameStatus;
+      isCurrent: boolean;
+      isTodays: boolean;
+      today: number;
+    } | null;
     oncontinue: () => void;
     onnewgame: (mode: StartableMode) => void;
   } = $props();
@@ -100,6 +115,34 @@
       </li>
     {/each}
   </ul>
+
+  <!--
+    The standing sentence GameNavigation carries, on the same terms: while the
+    daily game waits off the board this is a surface that offers Daily, so how
+    it stands is text here — and once the date has moved on, that choosing
+    Daily ends an earlier day's game is said before the choice is taken.
+  -->
+  {#if todaysDaily !== null && !todaysDaily.isCurrent}
+    <p class="daily-standing">
+      {#if todaysDaily.isTodays}
+        Today's daily is day {todaysDaily.day}:
+        {#if todaysDaily.status === 'won'}
+          won.
+        {:else if todaysDaily.status === 'lost'}
+          lost.
+        {:else}
+          under way, waiting where you left it.
+        {/if}
+      {:else if todaysDaily.status === 'in_progress'}
+        Day {todaysDaily.day}'s daily game is still waiting, unfinished. Today's word — day
+        {todaysDaily.today} — is available: choosing Daily starts it and ends day {todaysDaily.day}'s
+        game for good.
+      {:else}
+        Day {todaysDaily.day}'s daily game is over. Today's word — day {todaysDaily.today} — is available:
+        choosing Daily starts it.
+      {/if}
+    </p>
+  {/if}
 
   <!--
     ContinuingNeverCostsAGame retires the board "on exactly the terms
@@ -172,13 +215,15 @@
   }
 
   .cost,
-  .hint {
+  .hint,
+  .daily-standing {
     margin: 0;
     color: var(--text-2);
     text-align: center;
   }
 
-  .cost {
+  .cost,
+  .daily-standing {
     font-size: var(--fs-small);
   }
 

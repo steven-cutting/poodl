@@ -43,12 +43,22 @@
      */
     dailyIsTodays?: boolean;
     /**
-     * How today's daily game stands while it waits off the board, or null when
+     * How the kept daily game stands while it waits off the board, or null when
      * there is none. `TheDayIsPerceivable` asks for whether today's game has
      * been played and how it ended to be readable as text, and while the daily
      * game is set aside behind another mode's there is nowhere else to read it.
+     * Once the date has moved on the kept game is an earlier day's, and
+     * choosing Daily discards it rather than bringing it back —
+     * `ANewDayReplacesTheOldGame` asks for that to be said before the choice is
+     * taken, so `isTodays` and `today` come with it.
      */
-    todaysDaily?: { day: number; status: GameStatus; isCurrent: boolean } | null;
+    todaysDaily?: {
+      day: number;
+      status: GameStatus;
+      isCurrent: boolean;
+      isTodays: boolean;
+      today: number;
+    } | null;
     onclose: () => void;
   } = $props();
 
@@ -81,26 +91,47 @@
         }}>{label(startable)}</Button
       >
     {/each}
-    <Button
-      onclick={() => {
-        onnewgame(repeatMode);
-      }}>New game</Button
-    >
+    <!--
+      ThereIsNoNewGameInDaily: no control offers a second daily game. When the
+      mode New game would repeat is Daily, the Daily control above already does
+      all that asking again could — return to today's game, or start a new
+      day's — so a repeat control would offer a game it cannot give.
+    -->
+    {#if repeatMode !== 'daily'}
+      <Button
+        onclick={() => {
+          onnewgame(repeatMode);
+        }}>New game</Button
+      >
+    {/if}
   </div>
   <!--
     TheDayIsPerceivable, for the case no other surface can carry: while the
     daily game waits off the board, this is where a player looks before
-    choosing Daily, so how today's game stands is said here as text.
+    choosing Daily, so how today's game stands is said here as text. Once the
+    date has moved on the kept game is an earlier day's, and choosing Daily
+    discards it rather than bringing it back — ANewDayReplacesTheOldGame asks
+    for that to be said before the choice is taken, where calling it "today's
+    daily" would promise the opposite.
   -->
   {#if todaysDaily !== null && !todaysDaily.isCurrent}
     <p class="daily-standing">
-      Today's daily is day {todaysDaily.day}:
-      {#if todaysDaily.status === 'won'}
-        won.
-      {:else if todaysDaily.status === 'lost'}
-        lost.
+      {#if todaysDaily.isTodays}
+        Today's daily is day {todaysDaily.day}:
+        {#if todaysDaily.status === 'won'}
+          won.
+        {:else if todaysDaily.status === 'lost'}
+          lost.
+        {:else}
+          under way, waiting where you left it.
+        {/if}
+      {:else if todaysDaily.status === 'in_progress'}
+        Day {todaysDaily.day}'s daily game is still waiting, unfinished. Today's word — day
+        {todaysDaily.today} — is available: choosing Daily starts it and ends day {todaysDaily.day}'s
+        game for good.
       {:else}
-        under way, waiting where you left it.
+        Day {todaysDaily.day}'s daily game is over. Today's word — day {todaysDaily.today} — is available:
+        choosing Daily starts it.
       {/if}
     </p>
   {/if}

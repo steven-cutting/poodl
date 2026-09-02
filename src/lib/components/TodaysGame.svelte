@@ -17,8 +17,8 @@
    *
    * `ThereIsNoNewGameInDaily` is why `GameConclusion` mounts this in place of
    * its repeat control: Daily offers the other modes and the time the next
-   * word arrives, not a second go at the same word. The other modes stay
-   * reachable through the header's mode chip, which this does not duplicate.
+   * word arrives, not a second go at the same word. The time is this
+   * component's; the other modes are `GameConclusion`'s own controls beside it.
    */
   let { todaysGame }: { todaysGame: TodaysGameView } = $props();
 

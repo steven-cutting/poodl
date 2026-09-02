@@ -162,13 +162,13 @@ describe('Wordmark', () => {
  * words and nothing else.
  */
 describe('HowToPlay', () => {
-  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, and
-  // as many games as they like.
-  it('says how many attempts, how long a word is, and that there is no limit', () => {
+  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, as
+  // many games as they like, and one word a day that everybody shares.
+  it('says how many attempts, how long a word is, that there is no limit, and one word a day', () => {
     render(HowToPlay, {});
 
     expect(screen.getByText(/6 attempts/)).toHaveTextContent(/5-letter word/);
-    expect(screen.getByText(/as many as you like/i)).toBeInTheDocument();
+    expect(screen.getByText(/as many as you like/i)).toHaveTextContent(/one word a day/i);
     expect(screen.getAllByRole('listitem')).toHaveLength(3);
   });
 

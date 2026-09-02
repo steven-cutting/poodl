@@ -19,7 +19,10 @@
    * `NothingButDailyIsRationed` is why another game is always one action away
    * outside Daily. Inside it, `ThereIsNoNewGameInDaily` withholds exactly the
    * repeat control: `TodaysGame` takes its place, saying when the next word
-   * arrives rather than offering a second go at the same one.
+   * arrives rather than offering a second go at the same one, and the other
+   * three modes are offered beside it — this dialog keeps the keyboard, so the
+   * header's chip is not one action away from in here, and
+   * `NothingButDailyIsRationed` says they must be.
    *
    * It closes, and the board offers it back. The specification gives the modal
    * no dismissal and says the board stays visible behind it, but a dialog that
@@ -74,6 +77,13 @@
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
+
+  /** What Daily offers where the other modes offer a new game of the same kind. */
+  const OTHER_MODES: readonly StartableMode[] = ['random', 'endless', 'practice'];
+
+  function label(startable: StartableMode): string {
+    return `${startable.charAt(0).toUpperCase()}${startable.slice(1)}`;
+  }
 
   /*
    * `EndlessContinuesUnlessStopped` asks for stopping to be available "at any
@@ -139,6 +149,13 @@
       {#if todaysGame !== null}
         <TodaysGame {todaysGame} />
       {/if}
+      {#each OTHER_MODES as startable (startable)}
+        <Button
+          onclick={() => {
+            onnewgame(startable);
+          }}>{label(startable)}</Button
+        >
+      {/each}
     {:else}
       <Button
         variant="primary"

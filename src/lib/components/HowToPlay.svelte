@@ -7,11 +7,12 @@
    * What Poodl is — the body of the explanation, and only the body.
    *
    * `Welcome.@guarantee AFirstVisitIsExplained` asks for five letters, six
-   * attempts and as many games as they like, "reachable again afterwards
-   * rather than being shown once and lost". Two surfaces say it — `WelcomeScreen`
-   * inside a framed group on arrival, `HowToPlayPanel` inside the dialog the
-   * header's info button opens from anywhere — so the words live here once and
-   * each consumer supplies its own frame and its own name.
+   * attempts, as many games as they like and one word a day that everybody
+   * shares, "reachable again afterwards rather than being shown once and
+   * lost". Two surfaces say it — `WelcomeScreen` inside a framed group on
+   * arrival, `HowToPlayPanel` inside the dialog the header's info button opens
+   * from anywhere — so the words live here once and each consumer supplies its
+   * own frame and its own name.
    *
    * The example beside each mark is the board's own `Tile`, so the bar a player
    * is told about is the bar the board draws, in every theme and both palettes
@@ -59,7 +60,10 @@
       </li>
     {/each}
   </ul>
-  <p class="note">Play as many as you like. Your statistics are saved in this browser.</p>
+  <p class="note">
+    Play as many as you like, and one word a day that everybody shares. Your statistics are saved in
+    this browser.
+  </p>
 </div>
 
 <style>
