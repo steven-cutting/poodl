@@ -3,9 +3,11 @@ import type { AppState, GameState, Settings } from '$lib/app/state';
 import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
 import { EMPTY_POOL } from '$lib/domain/answerPool';
 import type { AnswerPool } from '$lib/domain/answerPool';
+import { EMPTY_DAILY_STATISTICS } from '$lib/domain/dailyStatistics';
+import type { DailyStatistics } from '$lib/domain/dailyStatistics';
 import { EMPTY_STATISTICS } from '$lib/domain/statistics';
 import type { Statistics } from '$lib/domain/statistics';
-import type { Guess, StartableMode } from '$lib/domain/types';
+import type { GameMode, Guess, StartableMode } from '$lib/domain/types';
 import { scoreGuess } from '$lib/domain/scoring';
 import { isPartialWordText, isWordText } from '$lib/domain/words';
 import type { StoragePort } from '$lib/ports/storage';
@@ -36,8 +38,10 @@ interface Stored {
   version: number;
   lastMode: StartableMode | null;
   game: GameState | null;
+  setAsideDaily: GameState | null;
   settings: Settings;
   statistics: Statistics;
+  dailyStatistics: DailyStatistics;
   pool: AnswerPool;
 }
 
@@ -62,13 +66,17 @@ export function saveState(storage: StoragePort, state: AppState): void {
     version: SCHEMA_VERSION,
     lastMode: state.lastMode,
     game: state.currentGame === null ? null : { ...state.currentGame, autoContinueAt: null },
+    setAsideDaily: state.setAsideDaily,
     settings: state.settings,
     statistics: state.statistics,
+    dailyStatistics: state.dailyStatistics,
     pool: state.pool
   };
 
   storage.write(STORAGE_KEY, JSON.stringify(stored));
 }
+
+const ALL_MODES: readonly GameMode[] = ['random', 'endless', 'practice', 'custom', 'daily'];
 
 /** The state a device holds, or a fresh one when it holds nothing usable. */
 export function loadState(storage: StoragePort): AppState {
@@ -85,12 +93,20 @@ export function loadState(storage: StoragePort): AppState {
     return initial;
   }
 
+  const currentGame = readGame(stored['game'], ALL_MODES);
+  const setAsideDaily = readGame(stored['setAsideDaily'], ['daily']);
+
   return {
     ...initial,
     lastMode: readStartableMode(stored['lastMode']),
-    currentGame: readGame(stored['game']),
+    currentGame,
+    // ThereIsOnlyOneDailyGame: a blob where both slots hold a daily game
+    // disagrees with itself — only damage or an older write could produce
+    // it, and the one on the board wins.
+    setAsideDaily: currentGame?.mode === 'daily' ? null : setAsideDaily,
     settings: readSettings(stored['settings']),
     statistics: readStatistics(stored['statistics']),
+    dailyStatistics: readDailyStatistics(stored['dailyStatistics']),
     pool: readPool(stored['pool'])
   };
 }
@@ -118,7 +134,7 @@ function isCount(value: unknown): value is number {
 }
 
 function readStartableMode(value: unknown): StartableMode | null {
-  return isOneOf(value, ['random', 'endless', 'practice'] as const) ? value : null;
+  return isOneOf(value, ['random', 'endless', 'practice', 'daily'] as const) ? value : null;
 }
 
 function readSettings(value: unknown): Settings {
@@ -205,6 +221,61 @@ function readStatistics(value: unknown): Statistics {
   return statistics;
 }
 
+/**
+ * A daily statistics block, or an empty one unless it is one `daily.allium`
+ * says can exist — the same five invariants `DailyStatistics` states by name,
+ * mirroring `readStatistics` above. `AStreakImpliesAWin` has no counterpart on
+ * the primary block: `Statistics` has no `last_won_day` for a streak to imply
+ * anything about.
+ */
+function readDailyStatistics(value: unknown): DailyStatistics {
+  if (!isRecord(value)) {
+    return EMPTY_DAILY_STATISTICS;
+  }
+
+  const buckets: unknown = value['buckets'];
+  const counts = ['daysPlayed', 'daysWon', 'currentStreak', 'maxStreak'];
+  const lastWonDay: unknown = value['lastWonDay'];
+
+  if (
+    counts.some((key) => !isCount(value[key])) ||
+    !(lastWonDay === null || isCount(lastWonDay)) ||
+    !Array.isArray(buckets) ||
+    buckets.length !== MAX_ATTEMPTS ||
+    !buckets.every((count) => isCount(count))
+  ) {
+    return EMPTY_DAILY_STATISTICS;
+  }
+
+  const dailyStatistics: DailyStatistics = {
+    daysPlayed: value['daysPlayed'] as number,
+    daysWon: value['daysWon'] as number,
+    currentStreak: value['currentStreak'] as number,
+    maxStreak: value['maxStreak'] as number,
+    lastWonDay: lastWonDay,
+    buckets: buckets
+  };
+
+  const counted = dailyStatistics.buckets.reduce((total, bucket) => total + bucket, 0);
+
+  if (
+    // `WinsFallWithinDaysPlayed`.
+    dailyStatistics.daysWon > dailyStatistics.daysPlayed ||
+    // `CurrentStreakNeverExceedsMaximum`.
+    dailyStatistics.currentStreak > dailyStatistics.maxStreak ||
+    // `StreakCannotExceedWins`.
+    dailyStatistics.currentStreak > dailyStatistics.daysWon ||
+    // `DistributionAccountsForEveryWin`.
+    counted !== dailyStatistics.daysWon ||
+    // `AStreakImpliesAWin`.
+    (dailyStatistics.currentStreak > 0 && dailyStatistics.lastWonDay === null)
+  ) {
+    return EMPTY_DAILY_STATISTICS;
+  }
+
+  return dailyStatistics;
+}
+
 function readPool(value: unknown): AnswerPool {
   if (
     !isRecord(value) ||
@@ -232,10 +303,13 @@ function readPool(value: unknown): AnswerPool {
  * checks below mean anything.
  *
  * `abandoned` is absent from the statuses deliberately. Every retirement path
- * removes the game it retires, so Poodl never writes one, and
- * `OnlyTheCurrentGameIsKept` is why it never could.
+ * removes the game it retires unless it is daily, and
+ * `OnlyTheCurrentAndTheDailyGameAreKept` is why nothing else could be kept.
+ *
+ * `allowedModes` restricts what a caller believes: the board accepts any of
+ * the five modes, the set-aside slot only `daily` — `TheKeptDailyGameIsADailyGame`.
  */
-function readGame(value: unknown): GameState | null {
+function readGame(value: unknown, allowedModes: readonly GameMode[]): GameState | null {
   if (value === null || !isRecord(value)) {
     return null;
   }
@@ -252,7 +326,7 @@ function readGame(value: unknown): GameState | null {
 
   if (
     guesses === null ||
-    !isOneOf(value['mode'], ['random', 'endless', 'practice', 'custom'] as const) ||
+    !isOneOf(value['mode'], allowedModes) ||
     !isOneOf(status, ['in_progress', 'won', 'lost'] as const) ||
     // The shape as well as the length. `PlayerEntersLetter` appends
     // `lowercase(letter)` behind an `is_letter` guard, so uppercase text,

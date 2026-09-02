@@ -6,6 +6,7 @@ import type { AppState } from '../src/lib/app/state';
 import { CUSTOM_GAME_PARAM } from '../src/lib/domain/links';
 import { decodeToken } from '../src/lib/domain/obfuscation';
 import { renderShareGrid } from '../src/lib/domain/share';
+import type { StartableMode } from '../src/lib/domain/types';
 import {
   PAGE,
   UNKNOWN_WORD,
@@ -24,7 +25,7 @@ beforeEach(() => {
   env = createEnv();
 });
 
-function started(mode: 'random' | 'endless' | 'practice' = 'random'): AppState {
+function started(mode: StartableMode = 'random'): AppState {
   return run(env, fresh(), { kind: 'new_game', mode });
 }
 
@@ -200,7 +201,7 @@ describe('making a custom game', () => {
 describe('passing on the answer in play', () => {
   // AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard.
   it('works in every mode, before a guess and after the game is over', () => {
-    for (const mode of ['random', 'endless', 'practice'] as const) {
+    for (const mode of ['random', 'endless', 'practice', 'daily'] as const) {
       const state = run(env, started(mode), { kind: 'share_current_answer' });
 
       expect(decodeToken(tokenIn(linkFrom(state)))).toBe(state.currentGame?.answer);
@@ -314,7 +315,7 @@ describe('sharing a result', () => {
     const won = winInOne(env, started());
     const { state, effects } = reduce(won, { kind: 'share_results' }, env);
     const grid = renderShareGrid(
-      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [] },
+      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [], day: null },
       'standard'
     );
 
@@ -332,7 +333,7 @@ describe('sharing a result', () => {
     const won = winInOne(env, started());
     const shared = run(env, won, { kind: 'share_results' });
     const grid = renderShareGrid(
-      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [] },
+      { mode: 'random', status: 'won', guesses: won.currentGame?.guesses ?? [], day: null },
       'standard'
     );
 

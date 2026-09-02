@@ -14,9 +14,9 @@
     '',
     'Guarantees this component carries:',
     '',
-    '- `@guarantee ContinueAndTheThreeModesAreEqualChoices`. There is no question to answer and',
-    '  nothing to decline. Continue sits alongside Random, Endless and Practice as one of four',
-    '  choices, each one action away, and Continue names the mode it would resume or start.',
+    '- `@guarantee ContinueAndTheFourModesAreEqualChoices`. There is no question to answer and',
+    '  nothing to decline. Continue sits alongside Daily, Random, Endless and Practice as one of',
+    '  five choices, each one action away, and Continue names the mode it would resume or start.',
     '- `@guarantee AFirstVisitIsExplained`. The explanation is a framed group around the shared',
     '  `HowToPlay` body, present on every visit rather than a paragraph only a first visit sees —',
     '  the specification asks for it to be "reachable again afterwards rather than being shown',
@@ -55,7 +55,7 @@
   });
 </script>
 
-<!-- A first visit: the explanation, the three modes, and nothing to continue. -->
+<!-- A first visit: the explanation, the four modes, and nothing to continue. -->
 <Story name="A first visit" />
 
 <!-- A game half played. Continue resumes it, and says which one it would resume. -->
@@ -109,12 +109,12 @@
   args={{ isFirstVisit: false, canContinue: true, lastMode: 'random' }}
   play={async ({ canvasElement }) => {
     // Welcome.@guarantee FullyKeyboardOperable
-    // Welcome.@guarantee ContinueAndTheThreeModesAreEqualChoices
+    // Welcome.@guarantee ContinueAndTheFourModesAreEqualChoices
     onnewgame.mockClear();
     const canvas = within(canvasElement);
     const choices = canvas.getAllByRole('button');
 
-    await expect(choices).toHaveLength(4);
+    await expect(choices).toHaveLength(5);
 
     for (const choice of choices) {
       await userEvent.tab();

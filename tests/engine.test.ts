@@ -158,7 +158,7 @@ describe('starting a game', () => {
   });
 
   it('remembers each mode a player chose for themselves', () => {
-    for (const mode of ['random', 'endless', 'practice'] as const) {
+    for (const mode of ['random', 'endless', 'practice', 'daily'] as const) {
       expect(run(env, fresh(), { kind: 'new_game', mode }).lastMode).toBe(mode);
     }
   });
@@ -253,7 +253,8 @@ describe('retiring the outgoing game', () => {
     expect(state.statistics.currentStreak).toBe(1);
   });
 
-  // OnlyTheCurrentGameIsKept.
+  // OnlyTheCurrentAndTheDailyGameAreKept: the non-daily half — switching
+  // between two non-daily modes still keeps exactly one game.
   it('keeps exactly one game', () => {
     const state = run(
       env,

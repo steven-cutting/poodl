@@ -6,8 +6,15 @@
    * count are text, so the distribution can be read rather than inferred from
    * the length of a bar. The bar is decoration on top of the sentence, and is
    * hidden from assistive technology because it says nothing the text does not.
+   *
+   * `label` distinguishes this chart's accessible name from another one on the
+   * same page — `StatisticsPanel` composes both the primary and the daily
+   * chart together, and two lists named alike would be unreachable by name.
    */
-  let { distribution = [] }: { distribution?: readonly number[] } = $props();
+  let {
+    distribution = [],
+    label: chartLabel = 'Guess distribution'
+  }: { distribution?: readonly number[]; label?: string } = $props();
 
   const most = $derived(Math.max(1, ...distribution));
 
@@ -17,7 +24,7 @@
   }
 </script>
 
-<ol aria-label="Guess distribution">
+<ol aria-label={chartLabel}>
   {#each distribution as wins, index (index)}
     <li>
       <span>{label(index + 1, wins)}</span>

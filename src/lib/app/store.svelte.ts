@@ -1,8 +1,12 @@
 import type { Command } from '$lib/app/commands';
-import { hardModeMayBeEnabled, reduce, resultsGrid } from '$lib/app/engine';
+import type { HardModeBlocker } from '$lib/app/engine';
+import { hardModeBlocker, hardModeMayBeEnabled, reduce, resultsGrid } from '$lib/app/engine';
 import { loadState, saveState } from '$lib/app/persistence';
+import { keptDailyGame } from '$lib/app/state';
 import type { AppState, ShareableView } from '$lib/app/state';
 import { animationsActive, darkActive, highContrastActive } from '$lib/domain/appearance';
+import { dayOf, dayStart } from '$lib/domain/calendar';
+import type { GameStatus } from '$lib/domain/types';
 import type { ClipboardPort } from '$lib/ports/clipboard';
 import type { ClockPort } from '$lib/ports/clock';
 import type { PreferencesPort } from '$lib/ports/preferences';
@@ -25,6 +29,29 @@ import type { WordListPort } from '$lib/ports/words';
 
 /** How often the countdown is looked at. Fine enough to read as seconds. */
 const TICK_MS = 250;
+
+/**
+ * `daily.allium`'s `TodaysGame` surface, as one value.
+ *
+ * Every field the surface exposes, derived together rather than one getter
+ * each: `TheDayIsPerceivable` and `TheNextWordIsAnnouncedInAdvance` both need
+ * the kept game's own day read against today's, and a surface handed only
+ * `today` cannot tell an earlier day's game from this one's.
+ */
+export interface TodaysGameView {
+  /** `today` — `day_of(now)`. */
+  today: number;
+  /** `kept_day` — the kept game's own day, or null when there is no kept game. */
+  keptDay: number | null;
+  /** `kept?.status`. */
+  keptStatus: GameStatus | null;
+  /** `kept?.is_current` — whether the kept game is the one on the board. */
+  keptIsCurrent: boolean;
+  /** `is_todays` — false when there is no kept game, since null is not today. */
+  isTodays: boolean;
+  /** `next_word_at` — `day_start(today + 1)`, always a local midnight. */
+  nextWordAt: number;
+}
 
 export interface Ports {
   storage: StoragePort;
@@ -55,6 +82,17 @@ export interface Store {
   readonly shareable: ShareableView | null;
   /** `SettingsPanel.hard_mode_may_be_enabled`. */
   readonly hardModeMayBeEnabled: boolean;
+  /** `SettingsPanel.hard_mode_blocker` — which reason, when it may not be. */
+  readonly hardModeBlocker: HardModeBlocker;
+  /**
+   * `daily.allium` — `TodaysGame.today`, `day_of(now)`. Follows the clock as
+   * of the last dispatch, exactly as `now` itself does: there is no ticker
+   * that refreshes it purely from wall-clock time passing while the tab sits
+   * idle across a midnight boundary — a reload, or any dispatch, catches it up.
+   */
+  readonly today: number;
+  /** `daily.allium` — the whole `TodaysGame` surface, today included. */
+  readonly todaysGame: TodaysGameView;
   /** Whole seconds left on an armed countdown, or null when none is running. */
   readonly secondsRemaining: number | null;
   dispatch(command: Command): void;
@@ -176,6 +214,26 @@ export function createStore(ports: Ports, options: { pageUrl: string }): Store {
     },
     get hardModeMayBeEnabled(): boolean {
       return hardModeMayBeEnabled(state);
+    },
+    get hardModeBlocker(): HardModeBlocker {
+      return hardModeBlocker(state);
+    },
+    get today(): number {
+      return dayOf(now);
+    },
+    get todaysGame(): TodaysGameView {
+      const today = dayOf(now);
+      const kept = keptDailyGame(state);
+      const keptDay = kept === null ? null : dayOf(kept.startedAt);
+
+      return {
+        today,
+        keptDay,
+        keptStatus: kept?.status ?? null,
+        keptIsCurrent: kept !== null && kept === state.currentGame,
+        isTodays: keptDay === today,
+        nextWordAt: dayStart(today + 1)
+      };
     },
     get secondsRemaining(): number | null {
       const at = countdownAt();

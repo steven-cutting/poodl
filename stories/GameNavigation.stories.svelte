@@ -18,9 +18,12 @@
     '- `@guarantee AvailableWhetherOrNotAGameExists`. The chip that opens this is in the header',
     '  unconditionally — see **HeaderBar** — so the **No game yet** story is a first visit: no',
     '  game, no history, and it can still start one.',
-    '- `@guarantee ThreeModesCanBeStartedFromHere`. Random, endless and practice. Custom is not',
-    '  among them — a custom game exists only because someone made a link — which the',
+    '- `@guarantee FourModesCanBeStartedFromHere`. Daily, random, endless and practice. Custom is',
+    '  not among them — a custom game exists only because someone made a link — which the',
     '  **Playing a custom game** story shows by offering no control for it.',
+    '- `daily.allium`’s `@guarantee TheDayIsPerceivable`, for the one case no other surface can',
+    '  carry: while today’s daily game waits off the board, the **Today’s daily is waiting** story',
+    '  is where how it stands is readable, because this is the surface that offers Daily.',
     '- `@guarantee CurrentModeIsPerceivable`. Which mode is being played, and whether a game is',
     '  under way at all, are a sentence here and the chip’s word in the header, rather than a',
     '  control that looks selected. The selected control is `aria-current` as well, so they',
@@ -68,12 +71,33 @@
 
     await expect(canvas.getByRole('dialog', { name: 'Games' })).toHaveFocus();
 
-    for (const name of ['Close', 'Random', 'Endless', 'Practice', 'New game']) {
+    for (const name of ['Close', 'Daily', 'Random', 'Endless', 'Practice', 'New game']) {
       await userEvent.tab();
       await expect(canvas.getByRole('button', { name })).toHaveFocus();
     }
 
     await userEvent.keyboard('[Space]');
     await expect(onnewgame).toHaveBeenCalledWith('endless');
+  }}
+/>
+
+<!--
+  TheDayIsPerceivable while the daily game is set aside behind another mode's:
+  which day it is and how it ended are text here, because this is where a
+  player looks before choosing Daily.
+-->
+<Story
+  name="Today's daily is waiting"
+  args={{
+    mode: 'random',
+    status: 'in_progress',
+    todaysDaily: { day: 7, status: 'in_progress', isCurrent: false }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheDayIsPerceivable
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 7/i)).toBeInTheDocument();
+    await expect(canvas.getByText(/waiting where you left it/i)).toBeInTheDocument();
   }}
 />

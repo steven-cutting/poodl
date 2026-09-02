@@ -2,8 +2,10 @@
   import { tick } from 'svelte';
 
   import Button from '$lib/components/Button.svelte';
+  import DailyStatisticsPanel from '$lib/components/DailyStatisticsPanel.svelte';
   import DistributionChart from '$lib/components/DistributionChart.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import type { DailyStatistics } from '$lib/domain/dailyStatistics';
   import { losses, winPercentage } from '$lib/domain/statistics';
   import type { Statistics } from '$lib/domain/statistics';
 
@@ -17,6 +19,10 @@
    *
    * `ResettingIsDeliberate`: the reset is a two-step, and the confirmation names
    * what will go rather than asking whether the player is sure.
+   * `ResettingClearsThePoolToo` and daily.allium's `ResetDailyStatisticsToo` are
+   * why the confirmation names the daily record as well, and why resetting here
+   * clears `DailyStatisticsPanel`, composed below — `ShownBesideThePrimaryBlock`
+   * — rather than that panel keeping a reset control of its own.
    *
    * `FullyKeyboardOperable` asks for the confirmation to be "reachable and
    * announced". Each step replaces the control that was pressed, so focus is
@@ -27,12 +33,16 @@
    */
   let {
     statistics,
+    dailyStatistics,
+    today,
     answersUnseen,
     answersMayRepeat,
     onreset,
     onclose
   }: {
     statistics: Statistics;
+    dailyStatistics: DailyStatistics;
+    today: number;
     answersUnseen: number;
     answersMayRepeat: boolean;
     onreset: () => void;
@@ -73,6 +83,8 @@
   <h3>Guess distribution</h3>
   <DistributionChart distribution={statistics.distribution} />
 
+  <DailyStatisticsPanel {dailyStatistics} {today} />
+
   <p class="pool">
     {answersUnseen.toLocaleString('en-GB')} answers not yet seen.{answersMayRepeat
       ? ' Every answer has been used once, so answers may repeat from now on.'
@@ -88,8 +100,8 @@
     <fieldset class="confirm" tabindex="-1" bind:this={confirmation}>
       <legend>Reset everything?</legend>
       <p>
-        This clears the numbers, both streaks, the guess distribution and the record of which
-        answers you have seen. None of it can be recovered.
+        This clears the numbers, both streaks, the guess distribution, the daily record and the
+        record of which answers you have seen. None of it can be recovered.
       </p>
       <div class="actions">
         <!--

@@ -5,7 +5,9 @@ import { describe, expect, it, vi } from 'vitest';
 import Board from '../src/lib/components/Board.svelte';
 import Keyboard from '../src/lib/components/Keyboard.svelte';
 import Tile from '../src/lib/components/Tile.svelte';
+import TodaysGame from '../src/lib/components/TodaysGame.svelte';
 import { MAX_ATTEMPTS } from '../src/lib/config';
+import { dayStart } from '../src/lib/domain/calendar';
 import { keyboardKnowledge } from '../src/lib/domain/keyboard';
 import { scoreGuess } from '../src/lib/domain/scoring';
 import type { ScoredGuess } from '../src/lib/domain/types';
@@ -260,5 +262,64 @@ describe('Keyboard', () => {
 
     expect(screen.getByRole('button', { name: 'A, correct' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'O, not in the word' })).toBeDisabled();
+  });
+});
+
+/*
+ * daily.allium — the `TodaysGame` surface's next-word announcement,
+ * `ThereIsNoNewGameInDaily`: "Daily offers... the time the next word
+ * arrives." Mounted inside `GameConclusion` in place of a repeat control.
+ */
+describe('TodaysGame', () => {
+  /** The surface's own fields, for a game on the board on the day it started. */
+  function todaysGame(overrides: Record<string, unknown> = {}) {
+    return {
+      today: 4,
+      keptDay: 4,
+      keptStatus: 'won' as const,
+      keptIsCurrent: true,
+      isTodays: true,
+      nextWordAt: dayStart(5),
+      ...overrides
+    };
+  }
+
+  it('says when the next word arrives, as text', () => {
+    render(TodaysGame, { todaysGame: todaysGame() });
+
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+    expect(screen.getByText(/12:00 AM/)).toBeInTheDocument();
+  });
+
+  // TheDayIsPerceivable: the day number as text, not a colour or a selection.
+  it('states which day the word on the board belongs to', () => {
+    render(TodaysGame, { todaysGame: todaysGame({ keptDay: 12, today: 12 }) });
+
+    expect(screen.getByText(/day 12/i)).toBeInTheDocument();
+  });
+
+  // TheDayIsPerceivable: and how today's game ended, as text.
+  it.each([
+    ['won', /won/i],
+    ['lost', /lost/i],
+    ['in_progress', /under way/i]
+  ])('says today’s game is %s', (keptStatus, expected) => {
+    render(TodaysGame, { todaysGame: todaysGame({ keptStatus }) });
+
+    expect(screen.getByText(expected)).toBeInTheDocument();
+  });
+
+  /*
+   * TheNextWordIsAnnouncedInAdvance's second sentence: once the date has moved
+   * on, the game still on the board is said to be the earlier day's and the
+   * new word is said to be available — rather than being left looking like
+   * today's, which announcing "tomorrow's word" would do.
+   */
+  it('says an earlier day’s game is that day’s, and that today’s word is available', () => {
+    render(TodaysGame, { todaysGame: todaysGame({ today: 5, keptDay: 4, isTodays: false }) });
+
+    expect(screen.getByText(/day 4/i)).toBeInTheDocument();
+    expect(screen.getByText(/available/i)).toBeInTheDocument();
+    expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
   });
 });

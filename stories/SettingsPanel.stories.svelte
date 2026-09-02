@@ -24,9 +24,9 @@
     '',
     'Guarantees this component carries:',
     '',
-    '- `@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn`. Two stories below are the two',
-    '  reasons, and each one is bound to the control with `aria-describedby` rather than shown',
-    '  only as a visual state.',
+    '- `@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn`. The stories below are the reasons —',
+    '  this game’s own two, and the same pair over a daily game set aside — each bound to the',
+    '  control with `aria-describedby` rather than shown only as a visual state.',
     '- `@guarantee TurningHardModeOffMidGameIsAOneWayDoor`. The control says what it will cost',
     '  **before** it is used, so the cost is known in advance rather than discovered afterwards.',
     '- `@guarantee HardModeCanAlwaysBeTurnedOff`. Whatever else is true, the control that turns',
@@ -55,7 +55,7 @@
       settings: SETTINGS,
       highContrastActive: false,
       hardModeMayBeEnabled: true,
-      hardModeReleased: false,
+      hardModeBlocker: null,
       hardModeCostsThisGame: false,
       ...handlers
     },
@@ -66,7 +66,11 @@
         description: 'High contrast as it applies: the setting, or the device asking.'
       },
       hardModeMayBeEnabled: { control: 'boolean' },
-      hardModeReleased: { control: 'boolean', description: 'Which of the two reasons applies.' },
+      hardModeBlocker: {
+        control: 'select',
+        options: [null, 'released', 'history', 'daily-released', 'daily-history'],
+        description: 'Which reason applies, when it may not be enabled.'
+      },
       hardModeCostsThisGame: { control: 'boolean', description: 'Whether turning it off bars it.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
@@ -88,7 +92,7 @@
 <!-- The first reason it cannot be turned on: it was switched off during this game. -->
 <Story
   name="Unavailable: switched off this game"
-  args={{ hardModeMayBeEnabled: false, hardModeReleased: true }}
+  args={{ hardModeMayBeEnabled: false, hardModeBlocker: 'released' }}
   play={async ({ canvasElement }) => {
     // SettingsPanel.@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
     // The explanation has to reach assistive technology, not only the eye.
@@ -102,12 +106,28 @@
 <!-- The second: a guess already submitted would have broken the rule. -->
 <Story
   name="Unavailable: a guess would have broken it"
-  args={{ hardModeMayBeEnabled: false, hardModeReleased: false }}
+  args={{ hardModeMayBeEnabled: false, hardModeBlocker: 'history' }}
   play={async ({ canvasElement }) => {
     // SettingsPanel.@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
     await expect(
       within(canvasElement).getByRole('checkbox', { name: /hard mode/i })
     ).toHaveAccessibleDescription(/already submitted/i);
+  }}
+/>
+
+<!--
+  The third: daily.allium's set-aside daily game, not the game on the board —
+  the case a released random game with zero guesses of its own cannot say for
+  itself.
+-->
+<Story
+  name="Unavailable: today's daily game, set aside"
+  args={{ hardModeMayBeEnabled: false, hardModeBlocker: 'daily-history' }}
+  play={async ({ canvasElement }) => {
+    // SettingsPanel.@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
+    await expect(
+      within(canvasElement).getByRole('checkbox', { name: /hard mode/i })
+    ).toHaveAccessibleDescription(/daily/i);
   }}
 />
 

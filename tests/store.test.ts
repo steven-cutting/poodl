@@ -15,8 +15,9 @@ import { createFakeStorage } from '../src/lib/ports/storage';
 import type { StoragePort } from '../src/lib/ports/storage';
 import { createFakeTimer } from '../src/lib/ports/timer';
 import type { FakeTimer } from '../src/lib/ports/timer';
+import { dayOf } from '../src/lib/domain/calendar';
 import { createFakeWordList } from '../src/lib/ports/words';
-import { ANSWERS, EXTRA, PAGE, createEnv, fresh, run } from './engineHarness';
+import { ANSWERS, EXTRA, PAGE, createEnv, daysAfterEpoch, fresh, run } from './engineHarness';
 
 interface Harness {
   store: Store;
@@ -103,6 +104,74 @@ describe('the store', () => {
     store.dispatch({ kind: 'new_game', mode: 'random' });
 
     expect(store.state.currentGame?.startedAt).toBe(5_000);
+  });
+
+  /*
+   * `TodaysGame.today`: `day_of(now)`, following the clock exactly as `now`
+   * does — as of the last dispatch, not ticking on its own. See daily.allium's
+   * `@guidance` on why a live tick-driven refresh is a follow-up, not this.
+   */
+  it('reports the day, from the clock as of the last dispatch', () => {
+    const { store, clock } = harness();
+
+    clock.set(daysAfterEpoch(5));
+    store.dispatch({ kind: 'open' });
+
+    expect(store.today).toBe(dayOf(daysAfterEpoch(5)));
+  });
+
+  /*
+   * The rest of the `TodaysGame` surface. `TheDayIsPerceivable` needs the kept
+   * game's own day and how it ended to reach a surface at all, and
+   * `TheNextWordIsAnnouncedInAdvance` needs `is_todays` to tell an earlier
+   * day's game from today's — none of which `today` alone can say.
+   */
+  it('reports the kept daily game beside today, so an earlier day is not mistaken for today', () => {
+    const { store, clock } = harness();
+
+    clock.set(daysAfterEpoch(2));
+    store.dispatch({ kind: 'new_game', mode: 'daily' });
+
+    const onDay = store.todaysGame;
+
+    expect(onDay.today).toBe(dayOf(daysAfterEpoch(2)));
+    expect(onDay.keptDay).toBe(onDay.today);
+    expect(onDay.keptStatus).toBe('in_progress');
+    expect(onDay.keptIsCurrent).toBe(true);
+    expect(onDay.isTodays).toBe(true);
+
+    // The clock moves on; the same game is now an earlier day's.
+    clock.set(daysAfterEpoch(3));
+    store.dispatch({ kind: 'enter_letter', letter: 'a' });
+
+    const nextDay = store.todaysGame;
+
+    expect(nextDay.today).toBe(dayOf(daysAfterEpoch(3)));
+    expect(nextDay.keptDay).toBe(dayOf(daysAfterEpoch(2)));
+    expect(nextDay.isTodays).toBe(false);
+  });
+
+  it('reports no kept game when there is none', () => {
+    const { store } = harness();
+
+    store.dispatch({ kind: 'open' });
+
+    expect(store.todaysGame.keptDay).toBeNull();
+    expect(store.todaysGame.keptStatus).toBeNull();
+    expect(store.todaysGame.isTodays).toBe(false);
+  });
+
+  // The kept game is still reported while it waits off the board.
+  it('reports a set-aside daily game, which is not the one on the board', () => {
+    const { store, clock } = harness();
+
+    clock.set(daysAfterEpoch(2));
+    store.dispatch({ kind: 'new_game', mode: 'daily' });
+    store.dispatch({ kind: 'new_game', mode: 'random' });
+
+    expect(store.todaysGame.keptDay).toBe(dayOf(daysAfterEpoch(2)));
+    expect(store.todaysGame.keptIsCurrent).toBe(false);
+    expect(store.todaysGame.isTodays).toBe(true);
   });
 });
 

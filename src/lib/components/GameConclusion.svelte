@@ -5,7 +5,9 @@
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
+  import TodaysGame from '$lib/components/TodaysGame.svelte';
   import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { TodaysGameView } from '$lib/app/store.svelte';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
 
@@ -14,12 +16,15 @@
    * indefinitely; endless counts down and moves on unless the player stops it.
    *
    * `OutcomeAnswerAndAttemptsAreAllShown` on a win as well as on a loss, and
-   * `NoDailyLimit` is why another game is always one action away.
+   * `NothingButDailyIsRationed` is why another game is always one action away
+   * outside Daily. Inside it, `ThereIsNoNewGameInDaily` withholds exactly the
+   * repeat control: `TodaysGame` takes its place, saying when the next word
+   * arrives rather than offering a second go at the same one.
    *
    * It closes, and the board offers it back. The specification gives the modal
    * no dismissal and says the board stays visible behind it, but a dialog that
    * traps the keyboard with no way out would take `GameNavigation` with it —
-   * and that surface carries `ThreeModesCanBeStartedFromHere` and
+   * and that surface carries `FourModesCanBeStartedFromHere` and
    * `AvailableWhetherOrNotAGameExists`. Nothing is lost by closing, because
    * `GameScreen` offers the result again for as long as the finished game is on
    * the board, which is what `ResumeCurrentGame` means by a game coming back
@@ -32,6 +37,7 @@
     attemptsUsed,
     secondsRemaining = null,
     repeatMode,
+    todaysGame = null,
     onstop,
     onnewgame,
     onshareresults,
@@ -48,6 +54,8 @@
     attemptsUsed: number;
     secondsRemaining?: number | null;
     repeatMode: StartableMode;
+    /** `daily.allium`'s `TodaysGame` surface, relevant only while `mode` is `daily`. */
+    todaysGame?: TodaysGameView | null;
     onstop: () => void;
     onnewgame: (mode: StartableMode) => void;
     onshareresults: () => void;
@@ -127,12 +135,18 @@
     outcome: content first, then commitment.
   -->
   {#snippet footer()}
-    <Button
-      variant="primary"
-      onclick={() => {
-        onnewgame(repeatMode);
-      }}>New game</Button
-    >
+    {#if mode === 'daily'}
+      {#if todaysGame !== null}
+        <TodaysGame {todaysGame} />
+      {/if}
+    {:else}
+      <Button
+        variant="primary"
+        onclick={() => {
+          onnewgame(repeatMode);
+        }}>New game</Button
+      >
+    {/if}
     <Button
       onclick={() => {
         onshareresults();

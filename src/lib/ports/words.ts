@@ -1,8 +1,9 @@
 import answersData from '$lib/data/answers.txt?raw';
+import dailyScheduleData from '$lib/data/daily-schedule.txt?raw';
 import guessesData from '$lib/data/guesses.txt?raw';
 
 /**
- * The two word lists Poodl plays from.
+ * The three word lists Poodl plays from.
  *
  * This realises the `WordListSource` contract in `docs/specs/words.allium`.
  * The lists are replaceable data, not content this code owns: swapping the
@@ -13,6 +14,8 @@ export interface WordListPort {
   answerWords(): readonly string[];
   /** Everything Poodl accepts as a guess. Answers are a subset of these. */
   guessWords(): ReadonlySet<string>;
+  /** The answer list in the fixed order Daily plays it, `daily.allium`'s `daily_answer`. */
+  dailySchedule(): readonly string[];
 }
 
 function parse(data: string): string[] {
@@ -26,9 +29,11 @@ function parse(data: string): string[] {
 export function createBundledWordList(): WordListPort {
   const answers = parse(answersData);
   const guesses = new Set(parse(guessesData));
+  const schedule = parse(dailyScheduleData);
   return {
     answerWords: () => answers,
-    guessWords: () => guesses
+    guessWords: () => guesses,
+    dailySchedule: () => schedule
   };
 }
 
@@ -43,11 +48,13 @@ export function createBundledWordList(): WordListPort {
  */
 export function createFakeWordList(
   answers: readonly string[],
-  extraGuesses: readonly string[] = []
+  extraGuesses: readonly string[] = [],
+  schedule: readonly string[] = answers
 ): WordListPort {
   const guesses = new Set([...answers, ...extraGuesses]);
   return {
     answerWords: () => [...answers],
-    guessWords: () => guesses
+    guessWords: () => guesses,
+    dailySchedule: () => [...schedule]
   };
 }

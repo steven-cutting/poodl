@@ -1,14 +1,15 @@
 <script lang="ts">
   import Modal from '$lib/components/Modal.svelte';
+  import type { HardModeBlocker } from '$lib/app/engine';
   import type { Settings } from '$lib/app/state';
   import type { ThemeChoice } from '$lib/domain/types';
 
   /**
    * `settings.allium` — the `SettingsPanel` surface.
    *
-   * Three controls carry more than their label. Hard mode says which of the two
-   * reasons blocks turning it on, and what turning it off will cost before it is
-   * used — `HardModeIsExplainedWhenItCannotBeTurnedOn` and
+   * Three controls carry more than their label. Hard mode says which reason
+   * blocks turning it on — this game's own, or the daily game set aside — and what turning it off will cost
+   * before it is used — `HardModeIsExplainedWhenItCannotBeTurnedOn` and
    * `TurningHardModeOffMidGameIsAOneWayDoor`. The physical keyboard says what
    * off surrenders, so it never reads as though it would make the game
    * unplayable. High contrast says when it is the device asking rather than the
@@ -21,7 +22,7 @@
     settings,
     highContrastActive,
     hardModeMayBeEnabled,
-    hardModeReleased,
+    hardModeBlocker,
     hardModeCostsThisGame,
     onclose,
     onchoosetheme,
@@ -36,8 +37,8 @@
     /** `Settings.high_contrast_active` — the setting or the device, whichever asked. */
     highContrastActive: boolean;
     hardModeMayBeEnabled: boolean;
-    /** Which of the two reasons blocks re-enabling: switched off, or history. */
-    hardModeReleased: boolean;
+    /** Which reason blocks re-enabling, when it is blocked. */
+    hardModeBlocker: HardModeBlocker;
     /** Whether turning it off now would bar it for the rest of this game. */
     hardModeCostsThisGame: boolean;
     onclose: () => void;
@@ -90,9 +91,16 @@
     if (hardModeMayBeEnabled) {
       return 'Revealed letters must be reused. It applies from your very next guess.';
     }
-    return hardModeReleased
-      ? 'Unavailable: hard mode was switched off part way through this game. It can be turned on again when the next game starts.'
-      : 'Unavailable: a guess already submitted in this game would have broken the rule.';
+    switch (hardModeBlocker) {
+      case 'released':
+        return 'Unavailable: hard mode was switched off part way through this game. It can be turned on again when the next game starts.';
+      case 'daily-released':
+        return "Unavailable: hard mode was switched off part way through today's daily game, which is set aside and waiting. Finishing it — or the next day replacing it — turns this on again.";
+      case 'daily-history':
+        return "Unavailable: a guess already submitted to today's daily game, set aside and waiting, would have broken the rule. Finishing it — or the next day replacing it — turns this on again.";
+      default:
+        return 'Unavailable: a guess already submitted in this game would have broken the rule.';
+    }
   });
 
   function toggleHardMode(): void {

@@ -112,6 +112,24 @@
     game !== null && game.mode !== 'custom' ? game.mode : (app?.lastMode ?? 'random')
   );
 
+  /*
+   * `daily.allium`'s `TodaysGame` surface, passed only where a daily game is
+   * actually on the board — every other surface has no day to speak of.
+   */
+  const todaysGame = $derived(store?.todaysGame ?? null);
+  const dailyOnBoard = $derived(game?.mode === 'daily' ? todaysGame : null);
+
+  /** How today's daily stands, for the surface that offers Daily as a choice. */
+  const todaysDaily = $derived(
+    todaysGame === null || todaysGame.keptDay === null || todaysGame.keptStatus === null
+      ? null
+      : {
+          day: todaysGame.keptDay,
+          status: todaysGame.keptStatus,
+          isCurrent: todaysGame.keptIsCurrent
+        }
+  );
+
   const hardModeCostsThisGame = $derived(
     game !== null && game.status === 'in_progress' && game.guesses.length >= 1
   );
@@ -263,6 +281,7 @@
           lastMode={app.lastMode}
           currentMode={game?.mode ?? null}
           currentStatus={game?.status ?? null}
+          dailyIsTodays={todaysGame?.isTodays ?? true}
           oncontinue={() => {
             store?.dispatch({ kind: 'continue' });
           }}
@@ -292,6 +311,7 @@
           shareable={panel === null && !conclusionShowing ? shareable : null}
           announcement={app.announcement}
           announcementSequence={app.announcementSequence}
+          todaysGame={dailyOnBoard}
           onletter={(letter: string) => {
             store?.dispatch({ kind: 'enter_letter', letter });
           }}
@@ -322,6 +342,7 @@
             attemptsUsed={game.guesses.length}
             secondsRemaining={store.secondsRemaining}
             {repeatMode}
+            todaysGame={dailyOnBoard}
             onstop={() => {
               store?.dispatch({ kind: 'stop_countdown' });
             }}
@@ -360,7 +381,7 @@
           settings={app.settings}
           highContrastActive={store.highContrastActive}
           hardModeMayBeEnabled={store.hardModeMayBeEnabled}
-          hardModeReleased={game?.hardModeReleased ?? false}
+          hardModeBlocker={store.hardModeBlocker}
           {hardModeCostsThisGame}
           onclose={() => (panel = null)}
           onchoosetheme={(choice: ThemeChoice) => {
@@ -388,6 +409,8 @@
       {:else if panel === 'statistics'}
         <StatisticsPanel
           statistics={app.statistics}
+          dailyStatistics={app.dailyStatistics}
+          today={store.today}
           answersUnseen={answersUnseen(app.pool, words.answerWords())}
           answersMayRepeat={app.pool.hasRecycled}
           onreset={() => {
@@ -424,6 +447,8 @@
         <GameNavigation
           mode={game?.mode ?? null}
           status={game?.status ?? null}
+          dailyIsTodays={todaysGame?.isTodays ?? true}
+          {todaysDaily}
           {repeatMode}
           onnewgame={(mode: StartableMode) => {
             store?.dispatch({ kind: 'new_game', mode });

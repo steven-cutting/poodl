@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import type { Command } from '../src/lib/app/commands';
 import type { Env } from '../src/lib/app/engine';
-import { hardModeMayBeEnabled } from '../src/lib/app/engine';
+import { hardModeBlocker, hardModeMayBeEnabled } from '../src/lib/app/engine';
 import type { AppState } from '../src/lib/app/state';
 import { respectsHardMode } from '../src/lib/domain/hardMode';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
@@ -127,6 +127,35 @@ describe('turning hard mode on', () => {
     const finished = run(env, winInOne(env, started()), { kind: 'disable_hard_mode' });
 
     expect(hardModeMayBeEnabled(finished)).toBe(true);
+  });
+});
+
+/*
+ * settings.allium — HardModeIsExplainedWhenItCannotBeTurnedOn. Which of the
+ * reasons applies, for whichever guard above refused it. daily.allium's
+ * third reason — a set-aside daily game, not the game on the board — lives in
+ * daily.test.ts beside the rest of its own describe block.
+ */
+describe('why hard mode cannot be turned on', () => {
+  it('names nothing between games, or before anything is submitted', () => {
+    expect(hardModeBlocker(fresh())).toBeNull();
+    expect(hardModeBlocker(started())).toBeNull();
+  });
+
+  it('names history when a guess already submitted would have broken the rule', () => {
+    env.random = pick('apple');
+    const played = playGuess(env, playGuess(env, started(), 'adopt'), 'crumb');
+
+    expect(hardModeBlocker(played)).toBe('history');
+  });
+
+  it('names release when it was switched off during this game', () => {
+    env.random = pick('apple');
+    const strict = run(env, started(), { kind: 'enable_hard_mode' });
+    const played = playGuess(env, strict, 'adopt');
+    const released = run(env, played, { kind: 'disable_hard_mode' });
+
+    expect(hardModeBlocker(released)).toBe('released');
   });
 });
 

@@ -4,14 +4,16 @@
 export type LetterMark = 'correct' | 'present' | 'absent';
 
 /** `game.allium` — the `GameMode` enumeration: every mode a game can have. */
-export type GameMode = 'random' | 'endless' | 'practice' | 'custom';
+export type GameMode = 'random' | 'endless' | 'practice' | 'custom' | 'daily';
 
 /**
  * `game.allium` — the `StartableMode` enumeration: what a player may ask to
  * start. Custom is deliberately absent, which is what makes asking for a custom
- * game unrepresentable rather than merely refused.
+ * game unrepresentable rather than merely refused. Daily is present: choosing
+ * it is always a valid request, even though it may resolve to returning to a
+ * kept game rather than starting a new one.
  */
-export type StartableMode = 'random' | 'endless' | 'practice';
+export type StartableMode = 'random' | 'endless' | 'practice' | 'daily';
 
 /** `game.allium` — the states of `Game.status`. */
 export type GameStatus = 'in_progress' | 'won' | 'lost' | 'abandoned';

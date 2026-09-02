@@ -24,6 +24,13 @@ list the game shipped with before the easier list replaced it. Nothing imports i
 not bundled; it is kept so the harder curation can be restored by swapping the two file
 names, and because it is what the SCOWL and 12dicts filtering described below produced.
 
+A fourth, `src/lib/data/daily-schedule.txt`, is the order Daily mode plays `answers.txt`
+in — day 1 plays its first line, day 2 its second, wrapping once every entry has played.
+It is not a fifth vocabulary: `TheScheduleIsTheAnswerListInAFixedOrder` in `words.allium`
+requires it to hold exactly the words `answers.txt` does, each once, in an order the supply
+fixes rather than the sorted order the answer list is stored in — a sorted schedule would
+play the alphabet.
+
 ## Provenance and licence
 
 These files ship inside the published site, so the licence travels with the deployment.
@@ -112,9 +119,21 @@ From the `WordListSource` contract in [`words.allium`](../specs/words.allium):
   accepts, and a custom link issued months ago still decode to a playable word. Check a
   new dictionary against the outgoing one before shipping it; a word that disappears
   breaks links already in other people's hands, silently.
+- **`daily-schedule.txt`'s positions are frozen across releases**, the schedule's own
+  append-only obligation: a later supply keeps every existing entry at the same position.
+  A word added to `answers.txt` is appended to the schedule's end; a word withdrawn from
+  `answers.txt` has its schedule slot filled by a word not already scheduled rather than
+  removed; nothing already there is reordered or deleted. This is what makes a day already
+  scheduled keep its word — moving an entry would change which word a past or future day
+  plays, silently, the same failure `guesses.txt`'s append-only rule guards against for
+  links.
 
 `tests/words.test.ts` asserts all of these against whatever is in the files, so a
-truncated or malformed list fails the gate rather than shipping.
+truncated or malformed list fails the gate rather than shipping. The frozen-position
+obligation is the one exception: it holds across releases, which a single run of the
+bundled data cannot check on its own — the test instead pins a snapshot of the schedule's
+first entries, which fails loudly if the file is ever regenerated wholesale instead of
+edited by the procedure below.
 
 ## The procedure
 
@@ -146,18 +165,26 @@ truncated or malformed list fails the gate rather than shipping.
    sort -u -o src/lib/data/guesses.txt src/lib/data/guesses.txt
    ```
 
-6. Run `just frontend-unit`, then `just check`.
+6. Update `daily-schedule.txt` to match: append every genuinely new word in `answers.txt`
+   to the schedule's end, in any order — the supply fixes it, so nothing about a new
+   entry's position is prescribed. For every word `answers.txt` no longer carries,
+   overwrite its line in the schedule with a word not already scheduled — an appended one
+   is fine — rather than deleting the line, which would shift every entry after it.
+   `tests/words.test.ts`'s frozen-prefix snapshot will need updating by hand when it
+   covers a position this touched; that is the point, not friction to route around.
+7. Run `just frontend-unit`, then `just check`.
 
 ## Two things not to do
 
 - **Do not correct a word to satisfy the spell-checker.** `src/lib/data/` is excluded
   from `typos` in `pyproject.toml` precisely because a five-letter dictionary is
   indistinguishable from a list of misspellings.
-- **Do not withdraw a word from `guesses.txt` to make a diff smaller.** The append-only
-  obligation is what makes `ReplacingTheListsBreaksNothingAlreadyInPlay` true: a game in
-  progress keeps an answer Poodl still accepts, and a custom link issued by an earlier
-  release still decodes to a word that can be played. A word that disappears breaks links
-  already in other people's hands, silently.
+- **Do not withdraw a word from `guesses.txt` to make a diff smaller, or reorder or delete
+  a line in `daily-schedule.txt`.** The append-only obligations are what make
+  `ReplacingTheListsBreaksNothingAlreadyInPlay` true: a game in progress keeps an answer
+  Poodl still accepts, a custom link issued by an earlier release still decodes to a word
+  that can be played, and a day already scheduled keeps its word. Each is a word that
+  disappears or moves breaking something already in someone's hands, silently.
 
 ## Related pages
 

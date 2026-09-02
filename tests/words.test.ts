@@ -54,6 +54,49 @@ describe('the bundled word lists', () => {
     expect(answers.length).toBeGreaterThanOrEqual(MIN_ANSWER_WORDS);
     expect(guesses.size).toBeGreaterThanOrEqual(MIN_GUESS_WORDS);
   });
+
+  // TheScheduleIsTheAnswerListInAFixedOrder: the schedule is the answer list,
+  // each member exactly once, not necessarily in the same order it is stored.
+  it('schedules every answer exactly once', () => {
+    const schedule = words.dailySchedule();
+
+    expect(schedule).toHaveLength(answers.length);
+    expect([...schedule].sort()).toEqual([...answers].sort());
+  });
+
+  /*
+   * SchedulePositionsAreFrozenAcrossReleases is a cross-release maintenance
+   * obligation — no single run of the bundled data can prove positions stay
+   * put release over release. What one run *can* catch is an accidental
+   * wholesale reshuffle: this snapshot of the first entries fails loudly if
+   * the file is ever regenerated instead of edited, while still permitting an
+   * append past this prefix or an in-place replacement of a withdrawn word
+   * within it (which requires touching this literal, which is the point).
+   */
+  it('keeps its first entries in place', () => {
+    expect(words.dailySchedule().slice(0, 20)).toEqual([
+      'chief',
+      'squad',
+      'chose',
+      'tempt',
+      'wrest',
+      'clump',
+      'hotel',
+      'tripe',
+      'jelly',
+      'truce',
+      'slime',
+      'spank',
+      'beset',
+      'orbit',
+      'aired',
+      'ninja',
+      'manor',
+      'paper',
+      'curve',
+      'clone'
+    ]);
+  });
 });
 
 describe('createFakeWordList', () => {
@@ -69,5 +112,17 @@ describe('createFakeWordList', () => {
 
     expect(words.guessWords().has('apple')).toBe(true);
     expect(words.guessWords().size).toBe(1);
+  });
+
+  it('defaults the schedule to the answer list, in the order given', () => {
+    const words = createFakeWordList(['apple', 'adopt']);
+
+    expect(words.dailySchedule()).toEqual(['apple', 'adopt']);
+  });
+
+  it('takes an explicit schedule instead, when a test needs a different order', () => {
+    const words = createFakeWordList(['apple', 'adopt'], [], ['adopt', 'apple']);
+
+    expect(words.dailySchedule()).toEqual(['adopt', 'apple']);
   });
 });

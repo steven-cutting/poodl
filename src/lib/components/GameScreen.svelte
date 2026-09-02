@@ -6,7 +6,9 @@
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
+  import TodaysGame from '$lib/components/TodaysGame.svelte';
   import type { GameState, Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { TodaysGameView } from '$lib/app/store.svelte';
   import type { KeyKnowledge } from '$lib/domain/types';
 
   /**
@@ -30,6 +32,7 @@
     shareable = null,
     announcement = null,
     announcementSequence = 0,
+    todaysGame = null,
     onletter,
     ondelete,
     onsubmit,
@@ -53,6 +56,12 @@
     shareable?: ShareableView | null;
     announcement?: string | null;
     announcementSequence?: number;
+    /**
+     * `daily.allium`'s `TodaysGame` surface, passed only for a daily game.
+     * `TheDayIsPerceivable` asks for which day's word is on the board to be
+     * readable as text while it is being played, not only once it is over.
+     */
+    todaysGame?: TodaysGameView | null;
     onletter: (letter: string) => void;
     ondelete: () => void;
     onsubmit: () => void;
@@ -67,6 +76,10 @@
 
 {#if physicalKeyboard && playing}
   <PhysicalKeyboard {onletter} {ondelete} {onsubmit} />
+{/if}
+
+{#if todaysGame !== null}
+  <TodaysGame {todaysGame} />
 {/if}
 
 <Board guesses={game.guesses} currentInput={game.currentInput} />

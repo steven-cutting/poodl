@@ -2,12 +2,18 @@ import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import DailyStatisticsPanel from '../src/lib/components/DailyStatisticsPanel.svelte';
 import HowToPlayPanel from '../src/lib/components/HowToPlayPanel.svelte';
 import InvalidLinkNotice from '../src/lib/components/InvalidLinkNotice.svelte';
 import SettingsPanel from '../src/lib/components/SettingsPanel.svelte';
 import SharePanel from '../src/lib/components/SharePanel.svelte';
 import StatisticsPanel from '../src/lib/components/StatisticsPanel.svelte';
 import { DEFAULT_SETTINGS } from '../src/lib/app/state';
+import {
+  EMPTY_DAILY_STATISTICS,
+  recordDailyLoss,
+  recordDailyWin
+} from '../src/lib/domain/dailyStatistics';
 import { EMPTY_STATISTICS, recordLoss, recordWin } from '../src/lib/domain/statistics';
 
 function settingsProps(overrides: Record<string, unknown> = {}) {
@@ -15,7 +21,7 @@ function settingsProps(overrides: Record<string, unknown> = {}) {
     settings: { ...DEFAULT_SETTINGS },
     highContrastActive: false,
     hardModeMayBeEnabled: true,
-    hardModeReleased: false,
+    hardModeBlocker: null,
     hardModeCostsThisGame: false,
     onclose: vi.fn(),
     onchoosetheme: vi.fn(),
@@ -134,11 +140,14 @@ describe('SettingsPanel', () => {
 
   /*
    * HardModeIsExplainedWhenItCannotBeTurnedOn: the control says which of the
-   * two reasons applies, and says it to assistive technology rather than only
-   * as a visual state.
+   * three reasons applies, and says it to assistive technology rather than
+   * only as a visual state.
    */
   it('says hard mode was switched off during this game', () => {
-    render(SettingsPanel, settingsProps({ hardModeMayBeEnabled: false, hardModeReleased: true }));
+    render(
+      SettingsPanel,
+      settingsProps({ hardModeMayBeEnabled: false, hardModeBlocker: 'released' })
+    );
     const control = screen.getByRole('checkbox', { name: /hard mode/i });
 
     expect(control).toBeDisabled();
@@ -146,11 +155,39 @@ describe('SettingsPanel', () => {
   });
 
   it('says a guess already submitted would have broken the rule', () => {
-    render(SettingsPanel, settingsProps({ hardModeMayBeEnabled: false, hardModeReleased: false }));
+    render(
+      SettingsPanel,
+      settingsProps({ hardModeMayBeEnabled: false, hardModeBlocker: 'history' })
+    );
 
     expect(screen.getByRole('checkbox', { name: /hard mode/i })).toHaveAccessibleDescription(
       /already submitted/i
     );
+  });
+
+  // daily.allium — the third reason: a set-aside daily game, not this one.
+  it('says a guess broke the rule in a set-aside daily game', () => {
+    render(
+      SettingsPanel,
+      settingsProps({ hardModeMayBeEnabled: false, hardModeBlocker: 'daily-history' })
+    );
+
+    expect(screen.getByRole('checkbox', { name: /hard mode/i })).toHaveAccessibleDescription(
+      /daily.*already submitted|already submitted.*daily/i
+    );
+  });
+
+  // And the other cause, which no guess is responsible for.
+  it('says a set-aside daily game had hard mode switched off, without blaming a guess', () => {
+    render(
+      SettingsPanel,
+      settingsProps({ hardModeMayBeEnabled: false, hardModeBlocker: 'daily-released' })
+    );
+    const control = screen.getByRole('checkbox', { name: /hard mode/i });
+
+    expect(control).toHaveAccessibleDescription(/daily/i);
+    expect(control).toHaveAccessibleDescription(/switched off/i);
+    expect(control).not.toHaveAccessibleDescription(/already submitted/i);
   });
 
   // TurningHardModeOffMidGameIsAOneWayDoor: said before it is used.
@@ -196,6 +233,8 @@ describe('StatisticsPanel', () => {
   function statisticsProps(overrides: Record<string, unknown> = {}) {
     return {
       statistics: played,
+      dailyStatistics: EMPTY_DAILY_STATISTICS,
+      today: 1,
       answersUnseen: 2_391,
       answersMayRepeat: false,
       onreset: vi.fn(),
@@ -210,7 +249,7 @@ describe('StatisticsPanel', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: /statistics/i })).toHaveTextContent(/Lost\s*1/);
     expect(screen.getByRole('dialog', { name: /statistics/i })).toHaveTextContent('67%');
-    expect(screen.getByRole('list', { name: /distribution/i })).toHaveTextContent(
+    expect(screen.getByRole('list', { name: 'Guess distribution' })).toHaveTextContent(
       '3 guesses: 2 wins'
     );
   });
@@ -250,6 +289,8 @@ describe('StatisticsPanel', () => {
     expect(confirmation).toHaveTextContent(/streak/i);
     expect(confirmation).toHaveTextContent(/distribution/i);
     expect(confirmation).toHaveTextContent(/answers/i);
+    // ResettingClearsThePoolToo: the daily block goes with the rest.
+    expect(confirmation).toHaveTextContent(/daily/i);
 
     await userEvent.click(screen.getByRole('button', { name: /clear everything/i }));
 
@@ -291,6 +332,52 @@ describe('StatisticsPanel', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /keep/i }));
     expect(screen.getByRole('button', { name: /reset/i })).toHaveFocus();
+  });
+});
+
+/*
+ * daily.allium — the `DailyStatisticsPanel` surface, shown beside the
+ * primary block. Kept separate: `OnlyDailyGamesAreCountedHere`.
+ */
+describe('DailyStatisticsPanel', () => {
+  it('states every number as text', () => {
+    const played = recordDailyLoss(recordDailyWin(EMPTY_DAILY_STATISTICS, 1, 3));
+    render(DailyStatisticsPanel, { dailyStatistics: played, today: 2 });
+
+    const region = screen.getByRole('region', { name: /daily/i });
+
+    expect(region).toHaveTextContent(/Days played\s*2/);
+    expect(region).toHaveTextContent(/Days won\s*1/);
+    expect(region).toHaveTextContent(/Days lost\s*1/);
+    expect(region).toHaveTextContent('50%');
+    expect(region).toHaveTextContent(/Best streak\s*1/);
+    expect(
+      within(screen.getByRole('list', { name: 'Daily guess distribution' })).getAllByRole(
+        'listitem'
+      )
+    ).toHaveLength(6);
+  });
+
+  // AStreakIsConsecutiveDays: shown as it stands today, while today is the win day or the day after.
+  it('shows the streak live while today is the win day or the day after', () => {
+    const won = recordDailyWin(recordDailyWin(EMPTY_DAILY_STATISTICS, 1, 3), 2, 4);
+    render(DailyStatisticsPanel, { dailyStatistics: won, today: 3 });
+
+    expect(screen.getByRole('region', { name: /daily/i })).toHaveTextContent(/Current streak\s*2/);
+  });
+
+  it('reads no streak once a day has passed unwon, even though the stored streak has not changed', () => {
+    const won = recordDailyWin(recordDailyWin(EMPTY_DAILY_STATISTICS, 1, 3), 2, 4);
+    render(DailyStatisticsPanel, { dailyStatistics: won, today: 10 });
+
+    expect(screen.getByRole('region', { name: /daily/i })).toHaveTextContent(/Current streak\s*0/);
+  });
+
+  // ResetTogetherWithTheRest: no reset control of its own.
+  it('has no reset control of its own', () => {
+    render(DailyStatisticsPanel, { dailyStatistics: EMPTY_DAILY_STATISTICS, today: 1 });
+
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 });
 

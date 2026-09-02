@@ -6,9 +6,9 @@
   /**
    * `game.allium` — the `Welcome` surface. What a player meets on opening.
    *
-   * `ContinueAndTheThreeModesAreEqualChoices`: there is no question to answer
-   * and nothing to decline. Continue sits alongside Random, Endless and
-   * Practice as one of four choices, and each is one action away.
+   * `ContinueAndTheFourModesAreEqualChoices`: there is no question to answer
+   * and nothing to decline. Continue sits alongside Daily, Random, Endless and
+   * Practice as one of five choices, and each is one action away.
    *
    * `AFirstVisitIsExplained`: a player with nothing played is told what Poodl is
    * before being asked to choose, and the explanation stays reachable rather
@@ -22,6 +22,7 @@
     lastMode = null,
     currentMode = null,
     currentStatus = null,
+    dailyIsTodays = true,
     oncontinue,
     onnewgame
   }: {
@@ -30,11 +31,17 @@
     lastMode?: StartableMode | null;
     currentMode?: GameMode | null;
     currentStatus?: GameStatus | null;
+    /**
+     * Whether the daily game on the board is today's — `ANewDayReplacesTheOld
+     * Game`, said here on the same terms `GameNavigation` says it.
+     */
+    dailyIsTodays?: boolean;
     oncontinue: () => void;
     onnewgame: (mode: StartableMode) => void;
   } = $props();
 
   const MODES: readonly { mode: StartableMode; label: string; description: string }[] = [
+    { mode: 'daily', label: 'Daily', description: 'One word a day, the same for everyone.' },
     { mode: 'random', label: 'Random', description: 'One word at a time, counted.' },
     { mode: 'endless', label: 'Endless', description: 'The next word starts by itself.' },
     { mode: 'practice', label: 'Practice', description: 'Nothing is counted or remembered.' }
@@ -102,8 +109,16 @@
   -->
   {#if currentStatus === 'in_progress'}
     <p class="cost">
-      Choosing a mode ends the game on the board. With a guess in it, that counts as a loss in
-      random and endless; with none, it goes without trace.
+      {#if currentMode === 'daily' && dailyIsTodays}
+        Choosing another mode leaves today's game set aside rather than ending it. Choosing Daily
+        again brings it back.
+      {:else if currentMode === 'daily'}
+        This is an earlier day's game. Choosing Daily starts today's word and ends this one for
+        good; choosing another mode sets it aside instead.
+      {:else}
+        Choosing a mode ends the game on the board. With a guess in it, that counts as a loss in
+        random and endless; with none, it goes without trace.
+      {/if}
     </p>
   {/if}
 

@@ -361,7 +361,7 @@ describe('the page', () => {
 
   /*
    * The conclusion covers the board, and GameNavigation — which carries
-   * ThreeModesCanBeStartedFromHere — sits behind the header's chip. Closing
+   * FourModesCanBeStartedFromHere — sits behind the header's chip. Closing
    * the conclusion reaches the chip again, the dialog it opens can start
    * another game, and the board offers the conclusion back so nothing is lost.
    */
