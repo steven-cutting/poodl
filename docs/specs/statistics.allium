@@ -11,7 +11,8 @@
 --     current and maximum streak, and the distribution of winning guess
 --     counts.
 --   - Which games count. Only random and endless games ever touch the block.
---     Practice records nothing at all; custom games record nothing either.
+--     Practice records nothing at all; custom games record nothing either;
+--     daily games keep a block of their own, in daily.allium.
 --   - How a completion moves the numbers, including an abandoned game, which
 --     counts as a loss.
 --   - The answer pool: random and endless draw from one shared set of
@@ -23,7 +24,9 @@
 --   - Playing a game (game.allium). This module never reads a guess; it
 --     reads only the requested mode, the outcome, the attempt count and
 --     whether the game counted.
---   - Per-mode or per-day breakdowns. There is one block, not several.
+--   - Per-mode breakdowns of this block. There is one, not several; the
+--     daily record is a separate block in daily.allium, because a streak of
+--     days is a different quantity from a streak of games.
 --   - Where the numbers are stored.
 --
 -- Dependencies
@@ -88,7 +91,8 @@ entity GuessDistributionBucket {
 }
 
 -- The answers random and endless have already served up. Practice ignores
--- this entirely, and custom games never come near it.
+-- this entirely, custom games never come near it, and daily games draw from
+-- the schedule instead.
 entity AnswerPool {
     used: Set<words/Word>
 
@@ -279,9 +283,10 @@ surface StatisticsPanel {
         fulfils game/DirectManipulation
 
     @guarantee OnlyRandomAndEndlessAreCounted
-        -- Practice and custom games never move any number on this panel.
-        -- Practice keeps no record of any kind: no games played, no answers
-        -- recorded, nothing.
+        -- Practice, custom and daily games never move any number on this
+        -- panel. Practice keeps no record of any kind: no games played, no
+        -- answers recorded, nothing. Daily moves daily.allium's own block,
+        -- shown beside this one.
 
     @guarantee AbandonmentCostsTheSameAsALoss
         -- Leaving a stat-eligible game part way through — starting a new
@@ -307,13 +312,14 @@ surface StatisticsPanel {
         -- Resetting sets every number to zero and empties the record of used
         -- answers together. They are one record of play, so afterwards the
         -- statistics are untouched by history and every answer can be drawn
-        -- again.
+        -- again. daily.allium clears its block on the same action, so there
+        -- is one reset and not two.
 
     @guarantee ResettingIsDeliberate
         -- Resetting is confirmed before anything is cleared, and the
         -- confirmation says what will go: the numbers, the streaks, the
-        -- distribution and the record of which answers have been seen.
-        -- Nothing here is recoverable afterwards.
+        -- distribution, the record of which answers have been seen, and the
+        -- daily record. Nothing here is recoverable afterwards.
 
     @guarantee FullyKeyboardOperable
         -- The panel can be opened, read, reset and dismissed from the

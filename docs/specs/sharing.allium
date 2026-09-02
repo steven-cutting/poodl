@@ -35,6 +35,9 @@
 --     The effective value, not the raw setting: the device can turn high
 --     contrast on, and a grid that read the setting would stop matching the
 --     board whenever it did.
+--   daily.allium — how a daily game's day is numbered, which the heading
+--     carries. Named in prose only: the heading reads the day off the game's
+--     start, and no expression here reaches into that module.
 
 use "./words.allium" as words
 use "./game.allium" as game
@@ -99,10 +102,13 @@ contract ShareGridFormat {
 
     @invariant Heading
         -- The first line is config.share_heading; then, when the game's mode
-        -- is custom and not otherwise, a space and config.custom_marker; then
-        -- a space, the number of attempts used, a slash and
-        -- game/config.max_attempts — "Poodl 4/6", or "Poodl custom 4/6". A
-        -- game that was lost uses "X" in place of the number: "Poodl X/6".
+        -- is custom, a space and config.custom_marker; when the game's mode
+        -- is daily, a space, config.daily_marker, a space and the number of
+        -- the day the game was started on, as daily.allium's DailyCalendar
+        -- numbers it; then a space, the number of attempts used, a slash and
+        -- game/config.max_attempts — "Poodl 4/6", "Poodl custom 4/6", or
+        -- "Poodl daily 12 4/6". A game that was lost uses "X" in place of
+        -- the attempt count: "Poodl X/6".
 
     @invariant NoLinkTravelsWithTheGrid
         -- The rendered text carries no URL. Nothing in a shared result lets a
@@ -147,6 +153,11 @@ config {
     -- What marks a grid as coming from someone else's word. It names the
     -- mode and says nothing about the answer.
     custom_marker: String = "custom"
+
+    -- What marks a grid as coming from the day's word. It is followed by the
+    -- day number, so that two players can tell they played the same word
+    -- without either naming it.
+    daily_marker: String = "daily"
 
     standard_correct_tile: String = "🟩"
     standard_present_tile: String = "🟨"
@@ -369,9 +380,13 @@ surface ShareCurrentAnswer {
         -- exchange is told the word.
 
     @guarantee AvailableInEveryModeAndForAsLongAsTheGameIsOnTheBoard
-        -- Random, endless, practice and custom alike, from before the first
-        -- guess through to after the game is over. Nothing here depends on
-        -- having guessed anything, or on how the game turned out.
+        -- Daily, random, endless, practice and custom alike, from before the
+        -- first guess through to after the game is over. Nothing here depends
+        -- on having guessed anything, or on how the game turned out. Today's
+        -- word travels like any other: a recipient who opens the link before
+        -- playing their own daily game has been handed its answer, and Poodl
+        -- does not try to hold that line, for the reason
+        -- AWordSomebodySentYouCanBeSentOn gives.
         -- game.allium's GameBoard is reachable from here for as long as the
         -- game is current, and its GameConclusion as well once the game is
         -- finished by play.
@@ -473,6 +488,13 @@ surface ShareResults {
         -- and nothing else: it says the word came from a link rather than from
         -- Poodl, and reveals nothing about which word it was, nor who set it,
         -- nor whether whoever sent the link knew it themselves.
+
+    @guarantee ADailyResultSaysWhichDay
+        -- A grid from a daily game carries the marker and the day number, so
+        -- two players can tell they played the same word without either
+        -- naming it, and a grid pasted a week later still says which day it
+        -- was. Like the custom marker it names the mode and nothing else: no
+        -- letter, no hint, nothing about the word.
 
     @guarantee SharingIsAvailableOnceTheGameIsOver
         -- Sharing is offered for a game the player finished by playing it

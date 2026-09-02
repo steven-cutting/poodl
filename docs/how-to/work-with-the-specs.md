@@ -8,7 +8,7 @@ requires: []
 
 # Work with the specifications
 
-The five Allium modules under `docs/specs/` decide what the game does. This page is the
+The six Allium modules under `docs/specs/` decide what the game does. This page is the
 procedure; [Specifications](../explanation/specifications.md) is the reasoning.
 
 ## Find the module that owns the behaviour
@@ -20,6 +20,7 @@ procedure; [Specifications](../explanation/specifications.md) is the reasoning.
 | [`settings.allium`](../specs/settings.allium) | Preferences, and when each may change. |
 | [`statistics.allium`](../specs/statistics.allium) | What is remembered across games, and the answer pool. |
 | [`sharing.allium`](../specs/sharing.allium) | Custom links and the shared results grid. |
+| [`daily.allium`](../specs/daily.allium) | The daily word: the calendar, the schedule, the one game a day and its own record. |
 
 Each module opens with `Scope`, `Includes` and `Excludes`. If your change falls under
 another module's `Excludes`, it belongs there.
@@ -28,7 +29,7 @@ another module's `Excludes`, it belongs there.
 
 1. Change the specification first. Add or amend the rule, its triggers, its guards and
    its outcomes.
-2. Check the modules that depend on it. `game.allium` is depended on by the other three.
+2. Check the modules that depend on it. `game.allium` is depended on by the other four.
 3. Derive tests from the changed clauses and confirm they fail before implementing. A
    test that is green before you write any code is either already covered or vacuous.
 4. Implement until they pass, without weakening any test.
@@ -41,9 +42,9 @@ another module's `Excludes`, it belongs there.
 ## Handle an open question
 
 An `open question` block records a product decision nobody has made yet, so the gap is
-visible rather than silently filled in. None are outstanding: the twenty the modules
-started with have all been answered. Treat that as the settled state, not as a reason to
-stop adding them.
+visible rather than silently filled in. Two are outstanding, in `settings.allium` and
+`daily.allium`; the twenty the modules started with have all been answered. Treat a low
+count as the settled state, not as a reason to stop adding them.
 
 - If your change depends on one, raise it. Do not answer it in code.
 - If your change creates a new gap, add an `open question` rather than picking an answer.

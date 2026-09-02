@@ -8,23 +8,28 @@
 --   core module; the other modules hang off it.
 --
 -- Includes
---   - The four modes, and the lifecycle of a single Game.
+--   - The five modes, and the lifecycle of a single Game.
 --   - The guess-scoring contract: two-pass duplicate handling, stated
 --     precisely enough to test against.
 --   - Input rules: letter entry, deletion, submission, and the two kinds of
 --     rejection that consume no attempt.
 --   - Per-letter keyboard knowledge derived from the guesses so far.
 --   - Abandonment: what happens to the outgoing game when a new one starts,
---     and the discarding of every game that is no longer the current one.
+--     and the discarding of every game that is no longer the current one —
+--     bar the daily game, which is kept on daily.allium's terms.
 --   - The endless-mode auto-continue countdown.
 --   - Arriving: the welcome screen a player meets on opening, the mode they
 --     last chose themselves, and the game-navigation surface.
 --
 -- Excludes
 --   - Where an answer comes from for random and endless games (the no-repeat
---     answer pool lives in statistics.allium) and for custom games (the link
---     decoding lives in sharing.allium). Both supply an answer by emitting
---     AnswerDrawn; this module creates the game from it.
+--     answer pool lives in statistics.allium), for custom games (the link
+--     decoding lives in sharing.allium) and for daily games (the calendar
+--     and the schedule live in daily.allium). All three supply an answer by
+--     emitting AnswerDrawn; this module creates the game from it. What is
+--     kept of a daily game once it leaves the board, and for how long, is
+--     daily.allium's as well: this module only declares the slot it is kept
+--     in.
 --   - Anything counted or remembered across games (statistics.allium).
 --   - Where the player's settings are stored and changed (settings.allium).
 --     This module reads only what it needs to play, through the PlaySettings
@@ -230,13 +235,13 @@ contract DirectManipulation {
 
 -- What a game turned out to be. Every mode a game can have, including the one
 -- nobody can ask for.
-enum GameMode { random | endless | practice | custom }
+enum GameMode { random | endless | practice | custom | daily }
 
 -- What a player may ask to start. Custom is deliberately absent: a custom game
 -- exists only because someone made a link, so it is reached by opening that
 -- link and can never be chosen from a menu. Keeping it out of this type is
 -- what makes asking for it impossible rather than merely refused.
-enum StartableMode { random | endless | practice }
+enum StartableMode { random | endless | practice | daily }
 
 enum LetterMark { correct | present | absent }
 
@@ -254,6 +259,13 @@ entity Player {
     -- replaced. Null before the first game.
     current_game: Game?
 
+    -- The daily game, on the board or set aside: the one game the player
+    -- gets on the day it was started, kept until a later day's game takes
+    -- its place. Null before the first daily game. daily.allium is what
+    -- sets it and what removes what it held; it is declared here because
+    -- the invariant below has to name it.
+    daily_game: Game?
+
     -- The mode this player last chose for themselves. Custom never lands
     -- here: a custom game cannot be started again, because its answer only
     -- ever came from a link. Null until the first game the player chose.
@@ -266,13 +278,20 @@ entity Player {
     -- a game to resume, or a mode to start another in.
     can_continue: current_game != null or last_mode != null
 
-    -- Only the current game is kept. A game that stops being current is
-    -- retired, and every retirement path removes it: with no guesses it goes
-    -- without trace, with guesses it is abandoned and then discarded, and one
-    -- already won or lost is discarded outright.
-    invariant OnlyTheCurrentGameIsKept {
+    -- Only the current game and the daily game are kept. A game that stops
+    -- being current is retired, and every retirement path removes it: with
+    -- no guesses it goes without trace, with guesses it is abandoned and then
+    -- discarded, and one already won or lost is discarded outright. The daily
+    -- game is the exception: leaving the board does not remove it, and it
+    -- stays as daily_game until the next daily game takes its place, on
+    -- daily.allium's terms.
+    invariant OnlyTheCurrentAndTheDailyGameAreKept {
         for g in Games:
-            g.is_current
+            g.is_current or g.is_daily_kept
+    }
+
+    invariant TheKeptDailyGameIsADailyGame {
+        daily_game = null or daily_game.mode = daily
     }
 }
 
@@ -322,6 +341,7 @@ entity Game {
 
     -- Derived: the game's state
     is_current: player.current_game = this
+    is_daily_kept: player.daily_game = this
     attempts_used: guesses.count
     attempts_remaining: config.max_attempts - guesses.count
     is_finished_by_play: status in {won, lost}
@@ -516,7 +536,8 @@ rule ContinueInPreviousMode {
 
 -- Practice draws straight from the answer list: no pool, no record, repeats
 -- allowed. Random and endless are answered by statistics.allium, which draws
--- from the no-repeat pool. Custom games never arrive this way; they arrive as
+-- from the no-repeat pool, and daily by daily.allium, which reads the day's
+-- entry from the schedule. Custom games never arrive this way; they arrive as
 -- an AnswerDrawn emitted by sharing.allium when a link is opened.
 rule ProvidePracticeAnswer {
     when: NewGameRequested(player, mode)
@@ -574,6 +595,8 @@ rule BeginGame {
             player.last_mode = endless
         else if mode = practice:
             player.last_mode = practice
+        else if mode = daily:
+            player.last_mode = daily
 
     @guidance
         -- The mode is recorded branch by branch, and a custom game falls off
@@ -595,6 +618,11 @@ rule MakeNewGameCurrent {
     ensures: game.player.current_game = game
 }
 
+-- Retiring a daily game is the exception to the three rules that follow: none
+-- of them fires for one. A daily game leaving the board is kept, as
+-- Player.daily_game, and daily.allium removes it only when the next daily
+-- game is created — the single place a daily game ever goes.
+--
 -- Abandoning a game that was under way counts as a loss. The outcome travels
 -- on the emission rather than being read off the game afterwards, because the
 -- game itself is about to be discarded and statistics.allium must not be left
@@ -602,6 +630,7 @@ rule MakeNewGameCurrent {
 rule AbandonRetiredGame {
     when: RetireGame(game)
 
+    requires: game.mode != daily
     requires: game.status = in_progress
     requires: game.guesses.count >= 1
 
@@ -644,6 +673,7 @@ rule DiscardAbandonedGame {
 rule DiscardRetiredGame {
     when: RetireGame(game)
 
+    requires: game.mode != daily
     requires: game.status = in_progress
     requires: game.guesses.count = 0
 
@@ -656,6 +686,7 @@ rule DiscardRetiredGame {
 rule DiscardRetiredFinishedGame {
     when: RetireGame(game)
 
+    requires: game.mode != daily
     requires: game.status in {won, lost}
 
     ensures: not exists game
@@ -870,6 +901,16 @@ invariant AbandonedGamesHadAGuess {
         g.status = abandoned implies g.guesses.count >= 1
 }
 
+-- Every daily game is the kept one, so there is never more than one. A daily
+-- game is created only by BeginGame answering daily.allium's draw, and
+-- daily.allium's KeepTodaysDailyGame keeps it and removes its predecessor in
+-- the same step; a daily game that was not kept would be one nothing could
+-- reach.
+invariant ThereIsOnlyOneDailyGame {
+    for g in Games:
+        g.mode = daily implies g.is_daily_kept
+}
+
 -- Hard mode is never on over a game whose history breaks it. A guess accepted
 -- while it was on was judged live against what the guesses before it had
 -- revealed, and settings.allium refuses to turn it on part way through a game
@@ -926,7 +967,7 @@ surface Arrival {
 }
 
 -- What a player meets on opening. A short introduction the first time, and
--- afterwards a way back into what they were doing alongside the three modes
+-- afterwards a way back into what they were doing alongside the four modes
 -- they could start instead.
 surface Welcome {
     facing viewer: Player
@@ -966,12 +1007,13 @@ surface Welcome {
     @guarantee AFirstVisitIsExplained
         -- A player with nothing played and nothing remembered is told what
         -- Poodl is before being asked to choose: five letters, six attempts,
-        -- and as many games as they like. The explanation is reachable again
-        -- afterwards rather than being shown once and lost.
+        -- as many games as they like, and one word a day that everybody
+        -- shares. The explanation is reachable again afterwards rather than
+        -- being shown once and lost.
 
-    @guarantee ContinueAndTheThreeModesAreEqualChoices
+    @guarantee ContinueAndTheFourModesAreEqualChoices
         -- There is no question to answer and nothing to decline. Continue
-        -- sits alongside Random, Endless and Practice as one of four
+        -- sits alongside Daily, Random, Endless and Practice as one of five
         -- choices, and any of them is one action away. Continue names the
         -- mode it would resume or start, so it never acts on a mode the
         -- player cannot see.
@@ -980,7 +1022,9 @@ surface Welcome {
         -- Continue with a game in progress resumes it exactly as it was: no
         -- game is retired, no streak is broken and no attempt is spent.
         -- Continue with an empty board starts a fresh game in the remembered
-        -- mode. Choosing a different mode instead retires whatever was on the
+        -- mode — or, when that mode is Daily, returns to today's game if
+        -- there is one, on daily.allium's terms, and starts it otherwise.
+        -- Choosing a different mode instead retires whatever was on the
         -- board, on exactly the terms GameNavigation states.
 
     @guarantee CustomGamesAreNotRemembered
@@ -1030,11 +1074,11 @@ surface GameNavigation {
         -- fresh game in the mode last played. No game begins without the
         -- player asking for one.
 
-    @guarantee ThreeModesCanBeStartedFromHere
-        -- Random, endless and practice are the modes a player can start.
-        -- Custom is not among them: a custom game exists only because someone
-        -- made a link, so it is reached by opening that link and never by
-        -- choosing a mode.
+    @guarantee FourModesCanBeStartedFromHere
+        -- Daily, random, endless and practice are the modes a player can
+        -- start. Custom is not among them: a custom game exists only because
+        -- someone made a link, so it is reached by opening that link and
+        -- never by choosing a mode.
 
     @guarantee StartingAGameEndsTheOneUnderWay
         -- Asking for a new game, in the same mode or a different one, retires
@@ -1042,6 +1086,9 @@ surface GameNavigation {
         -- guess in it, it counts as a loss in a mode that counts; if it had no
         -- guesses, it goes without trace. This is stated where the player acts
         -- on it, so the cost of switching mode mid-game is never a surprise.
+        -- A daily game is the one exception: it leaves the board rather than
+        -- being retired, kept with its guesses, and choosing Daily brings it
+        -- back — daily.allium states the terms.
 
     @guarantee CurrentModeIsPerceivable
         -- Which mode is being played, and whether a game is under way at all,
@@ -1203,7 +1250,8 @@ surface PhysicalKeyboardInput {
 }
 
 -- The end-of-game modal. Random waits here indefinitely; endless counts down
--- and moves on unless the player stops it.
+-- and moves on unless the player stops it; daily waits too, and daily.allium
+-- says when the next word arrives.
 surface GameConclusion {
     facing viewer: Player
 
@@ -1250,9 +1298,13 @@ surface GameConclusion {
         -- other game. Leaving endless altogether is not a separate action
         -- either — it is starting a game in another mode.
 
-    @guarantee NoDailyLimit
-        -- A new game can always be requested. Poodl never withholds a game
-        -- because of the date or because of how many have been played.
+    @guarantee NothingButDailyIsRationed
+        -- Outside Daily, a new game can always be requested: Poodl never
+        -- withholds a random, endless or practice game because of the date
+        -- or because of how many have been played. Daily is one word a day
+        -- by definition, and even there nothing is withheld but a second go
+        -- at the same word — the other three modes stay one action away, and
+        -- tomorrow's word arrives on its own.
 
     @guarantee ConclusionIsAnnounced
         -- The outcome, the answer and the attempt count are announced to

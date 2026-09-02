@@ -9,9 +9,11 @@
 -- Includes
 --   - Theme, high contrast, hard mode, animations, physical-keyboard input
 --     and whether opening Poodl lands on the welcome screen.
---   - The guard on turning hard mode on part way through a game. Turning it
---     off is never guarded, but during a game that has guesses in it, doing
---     so is a one-way door: it cannot be turned back on until the next game.
+--   - The guard on turning hard mode on part way through a game — the game
+--     on the board, and the daily game set aside while another is played,
+--     since hard mode is one setting over both. Turning it off is never
+--     guarded, but during a game that has guesses in it, doing so is a
+--     one-way door: it cannot be turned back on until that game is over.
 --   - Theme starting dark, with system as the choice that follows the device
 --     as it changes; animations deferring to a reduced-motion preference; and
 --     high contrast turning on for a device that asks for more of it.
@@ -27,8 +29,8 @@
 --     says how far apart two things must be, never what either one is.
 --
 -- Dependencies
---   game.allium — the Player, and the game in progress that the hard-mode
---   guard has to inspect.
+--   game.allium — the Player, and the games in progress — on the board and
+--   set aside — that the hard-mode guard has to inspect.
 --
 --   game.allium declares an external PlaySettings entity with hard_mode,
 --   physical_keyboard and show_welcome on it, and reads those three fields
@@ -166,15 +168,26 @@ rule PlayerSetsShowWelcome {
 -- switched it off to escape the constraint; hard_mode_admissible catches the
 -- game where hard mode was simply never on and the guesses so far would not
 -- have complied.
+--
+-- The same two conditions are asked of the daily game set aside while another
+-- mode is played. Hard mode is one setting over every game in progress, and
+-- game.allium's HardModeIsNeverOnOverAGameThatBreaksIt quantifies over all of
+-- them, so a game off the board is as much a reason to refuse as the one on
+-- it. When the daily game is the one on the board, the two bindings are the
+-- same game and the second guard repeats the first.
 rule PlayerEnablesHardMode {
     when: PlayerEnablesHardMode(player)
 
     let current = player.current_game
+    let kept = player.daily_game
 
     requires: player_settings.hard_mode = false
     requires: not exists current
         or current.status != in_progress
         or (not current.hard_mode_released and current.hard_mode_admissible)
+    requires: not exists kept
+        or kept.status != in_progress
+        or (not kept.hard_mode_released and kept.hard_mode_admissible)
 
     ensures: player_settings.hard_mode = true
 }
@@ -199,6 +212,11 @@ rule PlayerDisablesHardMode {
         -- A game with no guesses in it is untouched: turning hard mode off
         -- before playing anything is the same as never having had it on, so
         -- it can be turned straight back on.
+        --
+        -- Only the game on the board is marked. A daily game set aside while
+        -- this happens is not released by it — nobody was escaping its
+        -- constraint — and when it comes back, turning hard mode on is judged
+        -- afresh on its own history by PlayerEnablesHardMode.
 }
 
 ------------------------------------------------------------
@@ -210,10 +228,16 @@ surface SettingsPanel {
 
     let settings = player_settings
     let current = viewer.current_game
-    let hard_mode_may_be_enabled =
+    let kept = viewer.daily_game
+    let current_admits_hard_mode =
         not exists current
         or current.status != in_progress
         or (not current.hard_mode_released and current.hard_mode_admissible)
+    let kept_admits_hard_mode =
+        not exists kept
+        or kept.status != in_progress
+        or (not kept.hard_mode_released and kept.hard_mode_admissible)
+    let hard_mode_may_be_enabled = current_admits_hard_mode and kept_admits_hard_mode
 
     exposes:
         settings.theme
@@ -241,17 +265,22 @@ surface SettingsPanel {
 
     @guarantee HardModeIsExplainedWhenItCannotBeTurnedOn
         -- hard_mode_may_be_enabled is exposed so that an unavailable
-        -- hard-mode control can say which of the two reasons applies: it was
-        -- switched off part way through this game, or a guess already
-        -- submitted would have broken the rule. The explanation is available
-        -- to assistive technology, not only as a visual state.
+        -- hard-mode control can say which of the reasons applies: it was
+        -- switched off part way through this game, a guess already submitted
+        -- would have broken the rule, or the same is true of today's daily
+        -- game, set aside part way through and waiting off the board. The
+        -- explanation is available to assistive technology, not only as a
+        -- visual state.
 
     @guarantee TurningHardModeOffMidGameIsAOneWayDoor
         -- Switching hard mode off during a game that has guesses in it bars
-        -- turning it back on until the next game. The control says so before
-        -- it is used, so the cost is known in advance rather than discovered
-        -- afterwards. A game with no guesses in it costs nothing: hard mode
-        -- can be turned straight back on.
+        -- turning it back on until that game is over. The control says so
+        -- before it is used, so the cost is known in advance rather than
+        -- discovered afterwards. A game with no guesses in it costs nothing:
+        -- hard mode can be turned straight back on. A daily game released
+        -- this way and then set aside is still that game, so the door stays
+        -- shut while it waits, and finishing it — or the next day replacing
+        -- it — is what opens it again.
 
     @guarantee HighContrastGovernsTheSharedGridToo
         -- One preference, not two. High contrast changes the colours on screen

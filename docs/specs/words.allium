@@ -3,9 +3,10 @@
 -- Poodl — word lists
 --
 -- Scope
---   The two word lists Poodl plays from, and the properties every entry in
---   them must satisfy. This module knows nothing about games, guesses,
---   scoring or statistics.
+--   The two word lists Poodl plays from, the order the daily word follows
+--   through the answer list, and the properties every entry must satisfy.
+--   This module knows nothing about games, guesses, scoring, statistics or
+--   days.
 --
 -- Includes
 --   - The Word entity, and its membership of the curated answer list and of
@@ -20,17 +21,20 @@
 --   - The provisioning contract through which the lists arrive: they are
 --     replaceable data, not content authored in this specification, and the
 --     guess dictionary only ever grows.
+--   - The daily schedule: the answer list in a fixed order, supplied as data
+--     like the lists, whose positions never move once shipped.
 --
 -- Excludes
 --   - Curation. How a word is judged familiar enough for the answer list, and
 --     where either list comes from, is outside this specification; see the
 --     deferred WordListCuration below.
 --   - Any notion of play: a game, an attempt, a mark, a statistic.
+--   - Which day plays which entry of the schedule (daily.allium).
 --   - How the lists are stored, encoded, bundled or loaded.
 --
 -- Dependencies
---   None. This is the root module. game.allium, statistics.allium and
---   sharing.allium depend on it.
+--   None. This is the root module. game.allium, statistics.allium,
+--   sharing.allium and daily.allium depend on it.
 
 ------------------------------------------------------------
 -- Contracts
@@ -46,6 +50,7 @@
 contract WordListSource {
     answer_words: () -> Set<Word>
     guess_words: () -> Set<Word>
+    daily_schedule: () -> List<Word>
 
     @invariant EveryEntryIsAFiveLetterLowercaseWord
         -- Every word in either list is exactly config.word_length letters
@@ -89,10 +94,31 @@ contract WordListSource {
         -- release still decodes to a word that can be played, so replacing
         -- the lists invalidates nothing that is already in someone's hands.
 
+    @invariant TheScheduleIsTheAnswerListInAFixedOrder
+        -- daily_schedule() holds exactly the words of answer_words(), each
+        -- exactly once, in an order the supply fixes. It is the answer list
+        -- with an order, not a third vocabulary: a word joins the schedule
+        -- when it joins the answer list, and no word is scheduled that a
+        -- losing player could not be shown.
+
+    @invariant SchedulePositionsAreFrozenAcrossReleases
+        -- A later supply keeps every entry of the previous one at the same
+        -- position. New words are appended after the last entry; a word
+        -- withdrawn from the answer list is replaced at its position by one
+        -- not already scheduled, never removed; nothing is inserted or
+        -- reordered. So nothing before the end ever moves, and a day already
+        -- scheduled keeps its word — the daily counterpart of the append-only
+        -- dictionary above, and what lets the answer list grow without
+        -- disturbing a single day.
+
     @guidance
-        -- The two lists are expected to ship as separate replaceable data
-        -- files. Nothing in this specification depends on their order, so a
-        -- source may present them in any order it likes.
+        -- The lists and the schedule are expected to ship as separate
+        -- replaceable data files. Nothing in this specification depends on
+        -- the order of either list, so a source may present them in any
+        -- order it likes. The schedule is the exception: its order is its
+        -- whole content, and a useful one is a shuffle rather than the sorted
+        -- order the answer list is kept in, because a schedule in that order
+        -- would walk the alphabet a day at a time.
 }
 
 ------------------------------------------------------------
@@ -200,7 +226,10 @@ surface WordListProvisioning {
         -- WordListSource changes what Poodl plays with and nothing else. No
         -- rule in any module names a specific word. The one thing a
         -- replacement must carry over is config.game_name, which every
-        -- supply is obliged to contain.
+        -- supply is obliged to contain. The schedule is replaceable only on
+        -- the terms SchedulePositionsAreFrozenAcrossReleases states —
+        -- appended to, or repaired in place, and never reordered — because
+        -- its order is the one thing every supply carries forward.
 
     @guarantee OnlyTheGameNameIsAuthoredHere
         -- This specification contains no word list content beyond
@@ -212,7 +241,10 @@ surface WordListProvisioning {
         -- changes the lists leaves every game in progress playable and every
         -- custom link already issued still openable. A player is never
         -- interrupted mid-game, and a link handed to a friend last month
-        -- does not stop working because the vocabulary moved on.
+        -- does not stop working because the vocabulary moved on. And because
+        -- the schedule's positions are frozen, every day already scheduled
+        -- keeps its word: a release lands without changing what today's
+        -- players are playing.
 }
 
 ------------------------------------------------------------
