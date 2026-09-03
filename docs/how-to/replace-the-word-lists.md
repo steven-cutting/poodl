@@ -131,9 +131,11 @@ From the `WordListSource` contract in [`words.allium`](../specs/words.allium):
 `tests/words.test.ts` asserts all of these against whatever is in the files, so a
 truncated or malformed list fails the gate rather than shipping. The frozen-position
 obligation is the one exception: it holds across releases, which a single run of the
-bundled data cannot check on its own — the test instead pins a snapshot of the schedule's
-first entries, which fails loudly if the file is ever regenerated wholesale instead of
-edited by the procedure below.
+bundled data cannot check on its own. What the test can do — and does — is pin a digest of
+every position shipped so far, which *is* the previous release, committed. Any entry that
+moves fails it; only an append past that prefix leaves it alone, which is why the procedure
+below is append-only. Reproduce the digest with
+`head -n 1122 src/lib/data/daily-schedule.txt | shasum -a 256`.
 
 ## The procedure
 
@@ -170,8 +172,10 @@ edited by the procedure below.
    entry's position is prescribed. For every word `answers.txt` no longer carries,
    overwrite its line in the schedule with a word not already scheduled — an appended one
    is fine — rather than deleting the line, which would shift every entry after it.
-   `tests/words.test.ts`'s frozen-prefix snapshot will need updating by hand when it
-   covers a position this touched; that is the point, not friction to route around.
+   `tests/words.test.ts`'s frozen-position digest changes when a repair lands inside the
+   prefix it covers, so copy the new value in by hand from the test's failure output and
+   say in the commit which position was repaired and why; that is the point, not friction
+   to route around. An append alone never moves it.
 7. Run `just frontend-unit`, then `just check`.
 
 ## Two things not to do

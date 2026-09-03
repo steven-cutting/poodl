@@ -121,7 +121,7 @@
   itself.
 -->
 <Story
-  name="Unavailable: today's daily game, set aside"
+  name="Unavailable: a daily game, set aside"
   args={{ hardModeMayBeEnabled: false, hardModeBlocker: 'daily-history' }}
   play={async ({ canvasElement }) => {
     // SettingsPanel.@guarantee HardModeIsExplainedWhenItCannotBeTurnedOn

@@ -85,19 +85,28 @@
   const hardModeNote = $derived.by(() => {
     if (settings.hardMode) {
       return hardModeCostsThisGame
-        ? 'Revealed letters must be reused. Turning it off now cannot be turned back on until the next game.'
+        ? 'Revealed letters must be reused. Turning it off now cannot be turned back on until this game is over.'
         : 'Revealed letters must be reused. Turning it off costs nothing before the first guess.';
     }
     if (hardModeMayBeEnabled) {
       return 'Revealed letters must be reused. It applies from your very next guess.';
     }
+    /*
+     * None of these names a day, and none promises the next game will open the
+     * door. `TurningHardModeOffMidGameIsAOneWayDoor` says what actually does:
+     * finishing the game, or a later day's daily game taking its place. A
+     * daily game set aside is left exactly where it is until Daily is chosen
+     * again — the date moving on removes nothing — so calling it "today's"
+     * would name the wrong game the morning after, while "the next game"
+     * would promise a release that starting a random game does not bring.
+     */
     switch (hardModeBlocker) {
       case 'released':
-        return 'Unavailable: hard mode was switched off part way through this game. It can be turned on again when the next game starts.';
+        return 'Unavailable: hard mode was switched off part way through this game. It can be turned on again once this game is over.';
       case 'daily-released':
-        return "Unavailable: hard mode was switched off part way through today's daily game, which is set aside and waiting. Finishing it — or the next day replacing it — turns this on again.";
+        return "Unavailable: hard mode was switched off part way through a daily game that is set aside and waiting. Finishing that game — or starting a later day's daily game in its place — turns this on again.";
       case 'daily-history':
-        return "Unavailable: a guess already submitted to today's daily game, set aside and waiting, would have broken the rule. Finishing it — or the next day replacing it — turns this on again.";
+        return "Unavailable: a guess already submitted to a daily game, set aside and waiting, would have broken the rule. Finishing that game — or starting a later day's daily game in its place — turns this on again.";
       default:
         return 'Unavailable: a guess already submitted in this game would have broken the rule.';
     }

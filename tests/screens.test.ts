@@ -170,10 +170,61 @@ describe('WelcomeScreen', () => {
       lastMode: 'random',
       currentMode: 'random',
       currentStatus: 'in_progress',
-      todaysDaily: { day: 7, status: 'won', isCurrent: false, isTodays: true, today: 7 }
+      todaysDaily: {
+        day: 7,
+        status: 'won',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
     });
 
     expect(screen.getByText(/today's daily is day 7:\s*won/i)).toBeInTheDocument();
+    // TheNextWordIsAnnouncedInAdvance: the time, from the moment it is over.
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+  });
+
+  /*
+   * TheNextWordIsAnnouncedInAdvance is scoped to today's finished game. A game
+   * still under way is not over, and an earlier day's next word is today's —
+   * which the sentence beside it already says is available, so a time a day in
+   * the past would only confuse.
+   */
+  it('announces the next word only once today’s daily game is over', () => {
+    const waiting = {
+      day: 7,
+      status: 'in_progress' as const,
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    };
+
+    const { unmount } = render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: waiting
+    });
+
+    expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
+    unmount();
+
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: { ...waiting, day: 4, status: 'lost', isTodays: false, today: 5 }
+    });
+
+    expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
   });
 
   it('warns that an earlier day’s set-aside game ends for good if Daily is chosen', () => {
@@ -184,7 +235,14 @@ describe('WelcomeScreen', () => {
       lastMode: 'random',
       currentMode: 'random',
       currentStatus: 'in_progress',
-      todaysDaily: { day: 4, status: 'in_progress', isCurrent: false, isTodays: false, today: 5 }
+      todaysDaily: {
+        day: 4,
+        status: 'in_progress',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
     });
 
     expect(screen.getByText(/day 4.*for good/i)).toBeInTheDocument();
@@ -332,11 +390,42 @@ describe('GameNavigation', () => {
       ...base,
       mode: 'random',
       status: 'in_progress',
-      todaysDaily: { day: 7, status: 'won', isCurrent: false, isTodays: true, today: 7 }
+      todaysDaily: {
+        day: 7,
+        status: 'won',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
     });
 
     expect(screen.getByText(/day 7/i)).toBeInTheDocument();
     expect(screen.getByText(/won/i)).toBeInTheDocument();
+  });
+
+  /*
+   * TheNextWordIsAnnouncedInAdvance: "available as text from the moment
+   * today's game is over". The game that carries the time on the board is off
+   * it, and coming back to it costs the game that took its place, so the time
+   * is said here rather than sold at that price.
+   */
+  it('says when the next word arrives, for a finished daily game set aside', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'random',
+      status: 'in_progress',
+      todaysDaily: {
+        day: 7,
+        status: 'lost',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
+    });
+
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
   });
 
   it('says nothing about a daily game when there is none', () => {
@@ -357,7 +446,14 @@ describe('GameNavigation', () => {
       ...base,
       mode: 'random',
       status: 'in_progress',
-      todaysDaily: { day: 4, status: 'in_progress', isCurrent: false, isTodays: false, today: 5 }
+      todaysDaily: {
+        day: 4,
+        status: 'in_progress',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
     });
 
     expect(screen.getByText(/day 4.*for good/i)).toBeInTheDocument();
@@ -370,7 +466,14 @@ describe('GameNavigation', () => {
       ...base,
       mode: 'random',
       status: 'in_progress',
-      todaysDaily: { day: 4, status: 'won', isCurrent: false, isTodays: false, today: 5 }
+      todaysDaily: {
+        day: 4,
+        status: 'won',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
     });
 
     expect(screen.getByText(/day 4.*over/i)).toBeInTheDocument();

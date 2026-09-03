@@ -479,6 +479,45 @@ describe('the page', () => {
     expect(grid).toBeInTheDocument();
   });
 
+  /*
+   * `daily.allium`'s `OneGameADay`: choosing Daily brings today's game back
+   * "in whatever state it was left — under way with its guesses and typed
+   * letters, or finished with its conclusion showing".
+   *
+   * Daily is the only mode that returns a game rather than making one, so it
+   * is the only mode whose incoming game can carry a moment the player has
+   * already dismissed the conclusion for. Left alone, that marker outlived the
+   * choice and the finished game came back to a bare board.
+   */
+  it('brings a finished daily game back onto its conclusion, dismissal and all', async () => {
+    render(Page);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Daily' }));
+    await playItOut();
+
+    expect(screen.getByRole('dialog', { name: /you won|you lost/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(screen.getByRole('button', { name: /show the result again/i })).toBeInTheDocument();
+
+    // Away to another mode, which sets today's game aside rather than ending it.
+    await userEvent.click(screen.getByRole('button', { name: /change game/i }));
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Games' })).getByRole('button', { name: 'Random' })
+    );
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    // And back to it.
+    await userEvent.click(screen.getByRole('button', { name: /change game/i }));
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Games' })).getByRole('button', { name: 'Daily' })
+    );
+
+    expect(screen.getByRole('dialog', { name: /you won|you lost/i })).toBeInTheDocument();
+  });
+
   // GameConclusion is scoped to a game finished by play, so nothing of it is on
   // screen while one is in progress — and neither is the answer.
   it('keeps the conclusion, and the answer, off screen while a game runs', async () => {

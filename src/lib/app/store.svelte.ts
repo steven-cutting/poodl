@@ -36,8 +36,15 @@ const TICK_MS = 250;
  * `TodaysGame.today` is `day_of(now)`, and `TheNextWordIsAnnouncedInAdvance`
  * wants an earlier day's game said to be that day's once the date has moved
  * on — which a tab sitting idle across midnight would never say if `now`
- * moved only on dispatch. A minute is fine enough for a boundary that comes
- * once a day.
+ * moved only on dispatch.
+ *
+ * A minute is the interval `DailyCalendar`'s guidance leaves to be chosen
+ * here: `day_of` is exact and a surface reading it is not, so the day turns
+ * on screen when this next looks rather than at the instant it passes.
+ * Nothing rule-bearing waits on that — `dispatch` reads the clock as it is
+ * called, so a player who chooses Daily a second after midnight gets the new
+ * day's word whatever the last look said, and a stale minute costs a sentence
+ * and nothing else.
  */
 const DAY_WATCH_MS = 60_000;
 

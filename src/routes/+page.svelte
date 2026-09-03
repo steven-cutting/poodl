@@ -125,6 +125,11 @@
    * is today's at all — once the date has moved on, choosing Daily discards an
    * earlier day's game rather than bringing it back, and
    * `ANewDayReplacesTheOldGame` asks for that to be said where the choice is.
+   *
+   * `nextWordAt` rides along because `TheNextWordIsAnnouncedInAdvance` wants
+   * that time readable from the moment today's game is over, and while the
+   * finished game waits off the board `TodaysGame` — the one surface that
+   * renders it — is not on screen at all.
    */
   const todaysDaily = $derived(
     todaysGame === null || todaysGame.keptDay === null || todaysGame.keptStatus === null
@@ -134,7 +139,8 @@
           status: todaysGame.keptStatus,
           isCurrent: todaysGame.keptIsCurrent,
           isTodays: todaysGame.isTodays,
-          today: todaysGame.today
+          today: todaysGame.today,
+          nextWordAt: todaysGame.nextWordAt
         }
   );
 
@@ -147,12 +153,31 @@
    * started. A game is identified by that rather than by the object, because
    * every dispatch replaces the object; two games cannot share the moment,
    * because starting one always retires the other first.
+   *
+   * Daily is the one mode that puts a game back rather than making one, so it
+   * is the one mode whose incoming game can carry a moment already dismissed.
+   * `startGame` below is why that does not outlive the choice.
    */
   let closedConclusionFor = $state<number | null>(null);
 
   const conclusionShowing = $derived(
     game !== null && isFinishedByPlay(game) && closedConclusionFor !== game.startedAt
   );
+
+  /*
+   * Choosing a mode, from wherever it is offered.
+   *
+   * The dismissal is cleared first because Daily does not always start a game:
+   * `ReturnToTodaysDailyGame` puts today's kept game back with the moment it
+   * started intact, and `OneGameADay` says a finished one comes back "with its
+   * conclusion showing", exactly as Continue brings one back. A marker left
+   * over from the last time that same game was on the board would answer the
+   * choice with a bare board instead.
+   */
+  function startGame(mode: StartableMode): void {
+    closedConclusionFor = null;
+    store?.dispatch({ kind: 'new_game', mode });
+  }
 
   /*
    * One notice, one place, applied to the one kind that has a surface of its
@@ -295,7 +320,7 @@
             store?.dispatch({ kind: 'continue' });
           }}
           onnewgame={(mode: StartableMode) => {
-            store?.dispatch({ kind: 'new_game', mode });
+            startGame(mode);
           }}
         />
       {:else if game !== null}
@@ -356,7 +381,7 @@
               store?.dispatch({ kind: 'stop_countdown' });
             }}
             onnewgame={(mode: StartableMode) => {
-              store?.dispatch({ kind: 'new_game', mode });
+              startGame(mode);
             }}
             onwelcome={() => {
               store?.dispatch({ kind: 'return_to_welcome' });
@@ -463,7 +488,7 @@
           {todaysDaily}
           {repeatMode}
           onnewgame={(mode: StartableMode) => {
-            store?.dispatch({ kind: 'new_game', mode });
+            startGame(mode);
             // The dialog must not sit over the fresh board it just asked for.
             panel = null;
           }}

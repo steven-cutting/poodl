@@ -190,6 +190,31 @@ describe('SettingsPanel', () => {
     expect(control).not.toHaveAccessibleDescription(/already submitted/i);
   });
 
+  /*
+   * The explanation names no way out it cannot deliver.
+   *
+   * A daily game set aside stays where it is until Daily is chosen again, so
+   * by the next morning it is not today's game and can never be finished —
+   * dating it would name the wrong game. And starting a game in another mode
+   * sets a daily game aside rather than ending it, so "the next game" would
+   * promise a release that never comes. Both guarantees on the SettingsPanel
+   * surface in `settings.allium` say so, as amended.
+   */
+  it.each(['released', 'daily-released', 'daily-history'] as const)(
+    'explains the %s blocker without dating the game or promising the next one',
+    (blocker) => {
+      render(
+        SettingsPanel,
+        settingsProps({ hardModeMayBeEnabled: false, hardModeBlocker: blocker })
+      );
+      const control = screen.getByRole('checkbox', { name: /hard mode/i });
+
+      expect(control).not.toHaveAccessibleDescription(/today/i);
+      expect(control).not.toHaveAccessibleDescription(/next game/i);
+      expect(control).not.toHaveAccessibleDescription(/next day/i);
+    }
+  );
+
   // TurningHardModeOffMidGameIsAOneWayDoor: said before it is used.
   it('warns what turning hard mode off will cost, before it is used', () => {
     render(

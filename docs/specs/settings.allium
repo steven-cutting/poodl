@@ -267,10 +267,13 @@ surface SettingsPanel {
         -- hard_mode_may_be_enabled is exposed so that an unavailable
         -- hard-mode control can say which of the reasons applies: it was
         -- switched off part way through this game, a guess already submitted
-        -- would have broken the rule, or the same is true of today's daily
-        -- game, set aside part way through and waiting off the board. The
-        -- explanation is available to assistive technology, not only as a
-        -- visual state.
+        -- would have broken the rule, or the same is true of a daily game
+        -- set aside part way through and waiting off the board. That game
+        -- need not be today's: the date may have moved on while it waited,
+        -- and daily.allium's ANewDayReplacesTheOldGame leaves it where it is
+        -- until Daily is chosen again. So the reason names the game without
+        -- dating it, and names no way out it cannot deliver. The explanation
+        -- is available to assistive technology, not only as a visual state.
 
     @guarantee TurningHardModeOffMidGameIsAOneWayDoor
         -- Switching hard mode off during a game that has guesses in it bars
@@ -279,8 +282,12 @@ surface SettingsPanel {
         -- discovered afterwards. A game with no guesses in it costs nothing:
         -- hard mode can be turned straight back on. A daily game released
         -- this way and then set aside is still that game, so the door stays
-        -- shut while it waits, and finishing it — or the next day replacing
-        -- it — is what opens it again.
+        -- shut while it waits, and finishing it — or a later day's daily
+        -- game taking its place, which is what choosing Daily on a new day
+        -- does — is what opens it again. Starting a game in another mode
+        -- does not, because that sets the daily game aside rather than
+        -- ending it; the control promises no release the next game will not
+        -- bring.
 
     @guarantee HighContrastGovernsTheSharedGridToo
         -- One preference, not two. High contrast changes the colours on screen

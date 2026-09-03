@@ -69,8 +69,14 @@ contract DailyCalendar {
         -- day at the same instant.
 
     @invariant DayStartIsTheBoundary
-        -- day_start(d) is the earliest moment whose day_of is d. It is what a
-        -- surface shows as the moment the next word arrives.
+        -- day_start(d) is the earliest moment whose day_of is d, for every
+        -- day from two onwards. Day one is the exception
+        -- DaysAreCountedFromTheEpoch makes: it folds every earlier moment
+        -- into itself, so day one has no earliest moment to name, and
+        -- day_start(1) is the epoch date's own local midnight — where the
+        -- day would have begun had the clamp not reached back past it.
+        -- Either way it is what a surface shows as the moment the next word
+        -- arrives.
 
     @invariant Deterministic
         -- The same moment yields the same day on every device and every
@@ -84,6 +90,16 @@ contract DailyCalendar {
         -- twenty-four hours to find the next boundary is wrong twice a year.
         -- The zone's own rules, as the platform's time zone data states them,
         -- are the intended source; nothing in this module restates them.
+        --
+        -- day_of is exact; a surface reading it is not. These invariants
+        -- constrain a function of a moment, not how often anything asks for
+        -- one. A view already on screen crosses the boundary when it next
+        -- looks, so it may go on naming the earlier day for a short while
+        -- after midnight, by an interval the implementation chooses and
+        -- states rather than one stated here. Nothing rule-bearing rides on
+        -- that lag: every request reads the clock as it is made, so a player
+        -- who chooses Daily a second after midnight gets the new day's word
+        -- whatever the last look said.
 }
 
 -- Which word a day gets. The schedule is data, supplied on words.allium's
@@ -507,7 +523,11 @@ surface TodaysGame {
         -- today's game is over. Once the date in config.calendar_zone has
         -- moved on, a game from the earlier day still on the board is said
         -- to be that day's, and the new word is said to be available, rather
-        -- than the old game being left looking like today's.
+        -- than the old game being left looking like today's. Available means
+        -- available where the player is looking: while today's finished game
+        -- waits off the board, the surfaces that offer Daily say the time
+        -- too, because the game that would otherwise carry it is not on
+        -- screen and coming back to it costs the game that is.
 
     @guarantee LeavingDailyDoesNotSpendTheDay
         -- Starting a game in another mode, or opening a custom link, sets

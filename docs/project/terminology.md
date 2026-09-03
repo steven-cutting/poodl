@@ -29,14 +29,14 @@ them loosely is how a review ends up arguing about vocabulary instead of behavio
 
 | Term | Meaning |
 | --- | --- |
-| Daily | One word a day, the same for everyone, playable once. The day turns at local midnight on the Pacific coast. Set aside rather than abandoned when another mode is chosen, and brought back by choosing Daily. Counts towards its own daily record, never the primary statistics. |
+| Daily | One word a day, the same for everyone, playable once. The day turns at local midnight on the Pacific coast. Set aside rather than abandoned when another mode is chosen, and brought back by choosing Daily on the same day. Counts towards its own daily record, never the primary statistics. |
 | Random | A single game, drawn from the pool of answers not yet used. Counts towards statistics. |
 | Endless | The same, but the next game starts by itself after a ten-second countdown unless the player stops it. Stopping is final: the countdown does not resume. Counts towards statistics. |
 | Practice | Draws directly from the answer list, repeats allowed. Records nothing at all. |
 | Custom | The answer came from a link someone made. Records nothing, and is never remembered as the previous mode. |
 | Startable mode | Daily, random, endless or practice — the four a player can ask for. A separate type from the mode a game has, so that asking for a custom game cannot be expressed. |
 | Abandoned | A game replaced while in progress after at least one guess. Counts as a loss. A game replaced with no guesses in it leaves no trace. A daily game is never abandoned: it is set aside. |
-| Set aside | A daily game off the board but kept, with its guesses, while another mode is played. Nothing is counted, and choosing Daily brings it back. |
+| Set aside | A daily game off the board but kept, with its guesses, while another mode is played. Nothing is counted, and choosing Daily brings it back — on the same day. Once the date has moved on, choosing Daily starts the new day's word instead, and the kept game goes. |
 | Day | A number, counted from 1 on the epoch date, that turns at local midnight in `America/Los_Angeles`. The daily word is indexed by it, and a shared daily grid carries it. |
 | Schedule | The answer list in a fixed, append-only order, shipped as data. Day n plays entry n. |
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
+  import { describeNextWord } from '$lib/domain/calendar';
   import type { GameMode, GameStatus, StartableMode } from '$lib/domain/types';
 
   /**
@@ -50,6 +51,12 @@
       isCurrent: boolean;
       isTodays: boolean;
       today: number;
+      /**
+       * `next_word_at`. Required rather than optional so that dropping it from
+       * the route's projection is a type error: no test rendering this
+       * component can see what the route hands it.
+       */
+      nextWordAt: number;
     } | null;
     oncontinue: () => void;
     onnewgame: (mode: StartableMode) => void;
@@ -142,6 +149,16 @@
         choosing Daily starts it.
       {/if}
     </p>
+    <!--
+      TheNextWordIsAnnouncedInAdvance, on the terms GameNavigation carries it:
+      the time from the moment today's game is over, said where the game that
+      would otherwise carry it is off the board. An earlier day's game says
+      nothing, because its next word is today's and the sentence above has
+      already said today's is available.
+    -->
+    {#if todaysDaily.isTodays && todaysDaily.status !== 'in_progress'}
+      <p class="daily-next">{describeNextWord(todaysDaily.nextWordAt)}</p>
+    {/if}
   {/if}
 
   <!--
@@ -216,15 +233,21 @@
 
   .cost,
   .hint,
-  .daily-standing {
+  .daily-standing,
+  .daily-next {
     margin: 0;
     color: var(--text-2);
     text-align: center;
   }
 
   .cost,
-  .daily-standing {
+  .daily-standing,
+  .daily-next {
     font-size: var(--fs-small);
+  }
+
+  .daily-next {
+    margin-block-start: var(--s-2);
   }
 
   @media (max-width: 30rem) {

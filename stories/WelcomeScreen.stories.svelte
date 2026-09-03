@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import WelcomeScreen from '../src/lib/components/WelcomeScreen.svelte';
+  import { dayStart } from '../src/lib/domain/calendar';
 
   const oncontinue = fn();
   const onnewgame = fn();
@@ -142,7 +143,14 @@
     lastMode: 'random',
     currentMode: 'random',
     currentStatus: 'in_progress',
-    todaysDaily: { day: 7, status: 'in_progress', isCurrent: false, isTodays: true, today: 7 }
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    }
   }}
   play={async ({ canvasElement }) => {
     // TodaysGame.@guarantee TheDayIsPerceivable

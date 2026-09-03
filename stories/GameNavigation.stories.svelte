@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameNavigation from '../src/lib/components/GameNavigation.svelte';
+  import { dayStart } from '../src/lib/domain/calendar';
 
   const onnewgame = fn();
   const onclose = fn();
@@ -97,7 +98,14 @@
   args={{
     mode: 'random',
     status: 'in_progress',
-    todaysDaily: { day: 7, status: 'in_progress', isCurrent: false, isTodays: true, today: 7 }
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    }
   }}
   play={async ({ canvasElement }) => {
     // TodaysGame.@guarantee TheDayIsPerceivable
@@ -118,7 +126,14 @@
   args={{
     mode: 'random',
     status: 'in_progress',
-    todaysDaily: { day: 7, status: 'in_progress', isCurrent: false, isTodays: false, today: 8 }
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: false,
+      today: 8,
+      nextWordAt: dayStart(9)
+    }
   }}
   play={async ({ canvasElement }) => {
     // TodaysGame.@guarantee ANewDayReplacesTheOldGame

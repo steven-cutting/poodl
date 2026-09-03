@@ -1,6 +1,7 @@
 <script lang="ts">
   import Button from '$lib/components/Button.svelte';
   import Modal from '$lib/components/Modal.svelte';
+  import { describeNextWord } from '$lib/domain/calendar';
   import type { GameMode, GameStatus, StartableMode } from '$lib/domain/types';
 
   /**
@@ -58,6 +59,12 @@
       isCurrent: boolean;
       isTodays: boolean;
       today: number;
+      /**
+       * `next_word_at`. Required rather than optional so that dropping it from
+       * the route's projection is a type error: no test rendering this
+       * component can see what the route hands it.
+       */
+      nextWordAt: number;
     } | null;
     onclose: () => void;
   } = $props();
@@ -134,6 +141,17 @@
         choosing Daily starts it.
       {/if}
     </p>
+    <!--
+      TheNextWordIsAnnouncedInAdvance, which asks for the time from the moment
+      today's game is over. The game that would otherwise carry it is off the
+      board, and coming back to it costs whatever is on the board instead, so
+      the announcement is made here rather than sold at that price. An earlier
+      day's game says nothing: its next word is today's, and the sentence above
+      has already said today's is available.
+    -->
+    {#if todaysDaily.isTodays && todaysDaily.status !== 'in_progress'}
+      <p class="daily-next">{describeNextWord(todaysDaily.nextWordAt)}</p>
+    {/if}
   {/if}
 
   <!--
@@ -162,6 +180,12 @@
 <style>
   .daily-standing {
     margin-block: var(--s-4) 0;
+    color: var(--text-2);
+    font-size: var(--fs-small);
+  }
+
+  .daily-next {
+    margin-block: var(--s-2) 0;
     color: var(--text-2);
     font-size: var(--fs-small);
   }

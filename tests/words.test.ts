@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import { GAME_NAME, MIN_ANSWER_WORDS, MIN_GUESS_WORDS, WORD_LENGTH } from '../src/lib/config';
@@ -65,37 +67,34 @@ describe('the bundled word lists', () => {
   });
 
   /*
-   * SchedulePositionsAreFrozenAcrossReleases is a cross-release maintenance
-   * obligation — no single run of the bundled data can prove positions stay
-   * put release over release. What one run *can* catch is an accidental
-   * wholesale reshuffle: this snapshot of the first entries fails loudly if
-   * the file is ever regenerated instead of edited, while still permitting an
-   * append past this prefix or an in-place replacement of a withdrawn word
-   * within it (which requires touching this literal, which is the point).
+   * SchedulePositionsAreFrozenAcrossReleases. No single run can see the
+   * previous release — but this digest *is* the previous release, committed.
+   * It covers every position shipped so far, so a swap, an insertion or a
+   * deletion anywhere in the schedule fails here, where a snapshot of the
+   * first few entries would only have caught a wholesale regeneration.
+   *
+   * FROZEN_ENTRIES never grows. An appended word lands past the prefix and
+   * leaves the digest alone, which is what keeps the intended maintenance —
+   * extending the schedule — a green change. Repairing a withdrawn word in
+   * place does change it, and the new digest is copied in by hand: that is
+   * the deliberate friction, not something to route around. Reproduce it with
+   *
+   *     head -n 1122 src/lib/data/daily-schedule.txt | shasum -a 256
    */
-  it('keeps its first entries in place', () => {
-    expect(words.dailySchedule().slice(0, 20)).toEqual([
-      'chief',
-      'squad',
-      'chose',
-      'tempt',
-      'wrest',
-      'clump',
-      'hotel',
-      'tripe',
-      'jelly',
-      'truce',
-      'slime',
-      'spank',
-      'beset',
-      'orbit',
-      'aired',
-      'ninja',
-      'manor',
-      'paper',
-      'curve',
-      'clone'
-    ]);
+  const FROZEN_ENTRIES = 1122;
+  const FROZEN_DIGEST = '274b7249a4db4ad30ef117afa70e8c63a323c18ab1814c8c1e40c2ff3b90596a';
+
+  it('keeps every position it has ever shipped', () => {
+    const schedule = words.dailySchedule();
+
+    // Asserted first, so a truncated file says so rather than failing as an
+    // opaque hash mismatch.
+    expect(schedule.length).toBeGreaterThanOrEqual(FROZEN_ENTRIES);
+    expect(
+      createHash('sha256')
+        .update(`${schedule.slice(0, FROZEN_ENTRIES).join('\n')}\n`)
+        .digest('hex')
+    ).toBe(FROZEN_DIGEST);
   });
 });
 

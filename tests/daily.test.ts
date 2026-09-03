@@ -268,6 +268,37 @@ describe('hard mode with a kept daily game', () => {
     expect(hardModeBlocker(switched)).toBe('daily-released');
   });
 
+  /*
+   * The two facts SettingsPanel's wording rests on, once the date has moved
+   * on. `KeepTodaysDailyGame` removes a kept game only when the next daily
+   * game is created, so a day passing changes nothing: the earlier day's game
+   * still blocks, and it can never be finished, because choosing Daily starts
+   * the new day's word over it. That is why the explanation names neither
+   * "today's" game nor the next game as the way out — `ANewDayReplacesTheOld
+   * Game` says the replacement is choosing Daily, and so does the control.
+   */
+  it('keeps an earlier day’s set-aside game blocking, and only a later daily game releases it', () => {
+    const env = createEnv({ now: daysAfterEpoch(0) });
+    const daily = run(env, fresh(), { kind: 'new_game', mode: 'daily' });
+    const strict = run(env, daily, { kind: 'enable_hard_mode' });
+    const released = run(env, playGuess(env, strict, 'adopt'), { kind: 'disable_hard_mode' });
+    const switched = run(env, released, { kind: 'new_game', mode: 'random' });
+
+    // The next day, with nothing dispatched in between.
+    const nextDay = createEnv({ now: daysAfterEpoch(1) });
+
+    expect(hardModeBlocker(switched)).toBe('daily-released');
+    expect(hardModeMayBeEnabled(switched)).toBe(false);
+
+    const replaced = run(nextDay, switched, { kind: 'new_game', mode: 'daily' });
+
+    // Not the kept game brought back: the new day's, with nothing played in it.
+    expect(replaced.setAsideDaily).toBeNull();
+    expect(replaced.currentGame?.startedAt).toBe(daysAfterEpoch(1));
+    expect(replaced.currentGame?.guesses).toHaveLength(0);
+    expect(hardModeMayBeEnabled(replaced)).toBe(true);
+  });
+
   it('reduces to the single-game case while the daily game is the one on the board', () => {
     const env = createEnv({ now: daysAfterEpoch(0) });
     const daily = run(env, fresh(), { kind: 'new_game', mode: 'daily' });
