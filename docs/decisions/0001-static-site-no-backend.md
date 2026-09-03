@@ -52,6 +52,11 @@ leaderboards, or statistics that follow a player between devices. Each of those 
 server, and none is in scope — see
 [Purpose and scope](../project/purpose-and-scope.md).
 
+**The daily word in that list is superseded by
+[decision 0012](0012-the-daily-word-is-a-function-of-the-date.md).** A word that is a
+function of the date and of data shipped with the site needs no shared state, so Daily
+mode arrived without reopening this decision. The rest of the list stands.
+
 ## Related pages
 
 - [Architecture](../explanation/architecture.md)

@@ -93,6 +93,26 @@ export const MINIMUM_MARK_SEPARATION = 2.0;
 export const SHARE_HEADING = 'Poodl';
 export const CUSTOM_MARKER = 'custom';
 
+/** `sharing.allium` — `config.daily_marker`. */
+export const DAILY_MARKER = 'daily';
+
+/**
+ * `daily.allium` — `config.epoch_date`.
+ *
+ * Day 1 of the schedule. Moving this renumbers every day, so it is fixed
+ * before the mode ships, not something a later change adjusts casually.
+ */
+export const EPOCH_DATE = '2026-09-01';
+
+/**
+ * `daily.allium` — `config.calendar_zone`.
+ *
+ * `TheDayTurnsAtLocalMidnight` in this zone, for every player everywhere —
+ * `Deterministic` rules out the device's own zone, which is why this is a
+ * fixed config value rather than something read from the platform.
+ */
+export const CALENDAR_ZONE = 'America/Los_Angeles';
+
 /** `sharing.allium` — the two tile palettes. Absent is the same in both. */
 export const STANDARD_CORRECT_TILE = '🟩';
 export const STANDARD_PRESENT_TILE = '🟨';

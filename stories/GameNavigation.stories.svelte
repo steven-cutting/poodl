@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameNavigation from '../src/lib/components/GameNavigation.svelte';
+  import { dayStart } from '../src/lib/domain/calendar';
 
   const onnewgame = fn();
   const onclose = fn();
@@ -18,9 +19,18 @@
     '- `@guarantee AvailableWhetherOrNotAGameExists`. The chip that opens this is in the header',
     '  unconditionally — see **HeaderBar** — so the **No game yet** story is a first visit: no',
     '  game, no history, and it can still start one.',
-    '- `@guarantee ThreeModesCanBeStartedFromHere`. Random, endless and practice. Custom is not',
-    '  among them — a custom game exists only because someone made a link — which the',
+    '- `@guarantee FourModesCanBeStartedFromHere`. Daily, random, endless and practice. Custom is',
+    '  not among them — a custom game exists only because someone made a link — which the',
     '  **Playing a custom game** story shows by offering no control for it.',
+    '- `daily.allium`’s `@guarantee TheDayIsPerceivable`, for the one case no other surface can',
+    '  carry: while today’s daily game waits off the board, the **Today’s daily is waiting** story',
+    '  is where how it stands is readable, because this is the surface that offers Daily.',
+    '- `daily.allium`’s `@guarantee ANewDayReplacesTheOldGame`. Once the date has moved on, the',
+    '  set-aside game is an earlier day’s and choosing Daily discards it rather than bringing it',
+    '  back — the **An earlier day’s daily is waiting** story says so before the choice is taken.',
+    '- `daily.allium`’s `@guarantee ThereIsNoNewGameInDaily`. Over a daily game there is no New',
+    '  game control — the **Playing daily** story — because the Daily control already does all',
+    '  that asking again could.',
     '- `@guarantee CurrentModeIsPerceivable`. Which mode is being played, and whether a game is',
     '  under way at all, are a sentence here and the chip’s word in the header, rather than a',
     '  control that looks selected. The selected control is `aria-current` as well, so they',
@@ -68,12 +78,85 @@
 
     await expect(canvas.getByRole('dialog', { name: 'Games' })).toHaveFocus();
 
-    for (const name of ['Close', 'Random', 'Endless', 'Practice', 'New game']) {
+    for (const name of ['Close', 'Daily', 'Random', 'Endless', 'Practice', 'New game']) {
       await userEvent.tab();
       await expect(canvas.getByRole('button', { name })).toHaveFocus();
     }
 
     await userEvent.keyboard('[Space]');
     await expect(onnewgame).toHaveBeenCalledWith('endless');
+  }}
+/>
+
+<!--
+  TheDayIsPerceivable while the daily game is set aside behind another mode's:
+  which day it is and how it ended are text here, because this is where a
+  player looks before choosing Daily.
+-->
+<Story
+  name="Today's daily is waiting"
+  args={{
+    mode: 'random',
+    status: 'in_progress',
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheDayIsPerceivable
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 7/i)).toBeInTheDocument();
+    await expect(canvas.getByText(/waiting where you left it/i)).toBeInTheDocument();
+  }}
+/>
+
+<!--
+  ANewDayReplacesTheOldGame: the set-aside game is an earlier day's, still
+  under way, so choosing Daily discards it rather than bringing it back — said
+  here, before the choice is taken.
+-->
+<Story
+  name="An earlier day's daily is waiting"
+  args={{
+    mode: 'random',
+    status: 'in_progress',
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: false,
+      today: 8,
+      nextWordAt: dayStart(9)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee ANewDayReplacesTheOldGame
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 7.*for good/i)).toBeInTheDocument();
+    await expect(canvas.queryByText(/today's daily/i)).not.toBeInTheDocument();
+  }}
+/>
+
+<!--
+  ThereIsNoNewGameInDaily: over a daily game there is no New game control.
+  Daily is the one way to ask, and it returns to today's game or starts the
+  new day's.
+-->
+<Story
+  name="Playing daily"
+  args={{ mode: 'daily', status: 'in_progress', repeatMode: 'daily' }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee ThereIsNoNewGameInDaily
+    const canvas = within(canvasElement);
+
+    await expect(canvas.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Daily' })).toBeInTheDocument();
   }}
 />

@@ -9,6 +9,7 @@ import PhysicalKeyboard from '../src/lib/components/PhysicalKeyboard.svelte';
 import WelcomeScreen from '../src/lib/components/WelcomeScreen.svelte';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
 import type { GameState } from '../src/lib/app/state';
+import { dayStart } from '../src/lib/domain/calendar';
 import { keyboardKnowledge } from '../src/lib/domain/keyboard';
 
 const env = createEnv();
@@ -41,7 +42,7 @@ function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
 
 /*
  * game.allium — the `Welcome` surface. Opening Poodl lands here, and Continue
- * sits alongside the three modes as one of four equal choices.
+ * sits alongside the four modes as one of five equal choices.
  */
 describe('WelcomeScreen', () => {
   const base = {
@@ -72,12 +73,12 @@ describe('WelcomeScreen', () => {
     expect(screen.getByRole('group', { name: /how to play/i })).toBeInTheDocument();
   });
 
-  // ContinueAndTheThreeModesAreEqualChoices.
-  it('offers the three modes, always', async () => {
+  // ContinueAndTheFourModesAreEqualChoices.
+  it('offers the four modes, always', async () => {
     const onnewgame = vi.fn();
     render(WelcomeScreen, { ...base, onnewgame });
 
-    for (const mode of ['Random', 'Endless', 'Practice']) {
+    for (const mode of ['Random', 'Endless', 'Practice', 'Daily']) {
       expect(screen.getByRole('button', { name: mode })).toBeInTheDocument();
     }
 
@@ -115,6 +116,137 @@ describe('WelcomeScreen', () => {
     render(WelcomeScreen, base);
 
     expect(screen.queryByText(/counts as a loss/i)).not.toBeInTheDocument();
+  });
+
+  // StartingAGameEndsTheOneUnderWay's daily exception, said here on the same terms as GameNavigation.
+  it('says the daily game is set aside rather than lost, while it is the one under way', () => {
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'daily',
+      currentMode: 'daily',
+      currentStatus: 'in_progress',
+      dailyIsTodays: true
+    });
+
+    expect(screen.getByText(/set aside/i)).toBeInTheDocument();
+    expect(screen.queryByText(/counts as a loss/i)).not.toBeInTheDocument();
+  });
+
+  /*
+   * ANewDayReplacesTheOldGame: "Where the choice would discard a game still
+   * under way, it says so before it is taken." Once the day has turned, the
+   * game on the board is an earlier day's and choosing Daily ends it — so the
+   * same-day promise that Daily brings it back would be exactly backwards.
+   */
+  it('warns that choosing Daily ends an earlier day’s game, rather than bringing it back', () => {
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'daily',
+      currentMode: 'daily',
+      currentStatus: 'in_progress',
+      dailyIsTodays: false
+    });
+
+    expect(screen.getByText(/ends this one|goes for good/i)).toBeInTheDocument();
+    expect(screen.queryByText(/brings it back/i)).not.toBeInTheDocument();
+  });
+
+  /*
+   * The standing sentence GameNavigation carries, said here too because Daily
+   * is offered here too: how today's game stands while it waits off the board
+   * (TheDayIsPerceivable), and once the date has moved on, that choosing Daily
+   * ends an earlier day's game (ANewDayReplacesTheOldGame) — before the choice
+   * is taken.
+   */
+  it('says how today’s daily game stands while it waits off the board', () => {
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: {
+        day: 7,
+        status: 'won',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
+    });
+
+    expect(screen.getByText(/today's daily is day 7:\s*won/i)).toBeInTheDocument();
+    // TheNextWordIsAnnouncedInAdvance: the time, from the moment it is over.
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+  });
+
+  /*
+   * TheNextWordIsAnnouncedInAdvance is scoped to today's finished game. A game
+   * still under way is not over, and an earlier day's next word is today's —
+   * which the sentence beside it already says is available, so a time a day in
+   * the past would only confuse.
+   */
+  it('announces the next word only once today’s daily game is over', () => {
+    const waiting = {
+      day: 7,
+      status: 'in_progress' as const,
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    };
+
+    const { unmount } = render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: waiting
+    });
+
+    expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
+    unmount();
+
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: { ...waiting, day: 4, status: 'lost', isTodays: false, today: 5 }
+    });
+
+    expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
+  });
+
+  it('warns that an earlier day’s set-aside game ends for good if Daily is chosen', () => {
+    render(WelcomeScreen, {
+      ...base,
+      isFirstVisit: false,
+      canContinue: true,
+      lastMode: 'random',
+      currentMode: 'random',
+      currentStatus: 'in_progress',
+      todaysDaily: {
+        day: 4,
+        status: 'in_progress',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
+    });
+
+    expect(screen.getByText(/day 4.*for good/i)).toBeInTheDocument();
+    expect(screen.queryByText(/today's daily/i)).not.toBeInTheDocument();
   });
 
   // "Continue names the mode it would resume or start, so it never acts on a
@@ -190,10 +322,13 @@ describe('GameNavigation', () => {
     expect(screen.getByText('Playing endless.')).toBeInTheDocument();
   });
 
-  // ThreeModesCanBeStartedFromHere: custom is not among them.
-  it('offers exactly the three startable modes and a new game', () => {
+  // FourModesCanBeStartedFromHere: custom is not among them.
+  it('offers exactly the four startable modes and a new game', () => {
     render(GameNavigation, { ...base, mode: 'custom', status: 'in_progress' });
 
+    for (const mode of ['Random', 'Endless', 'Practice', 'Daily']) {
+      expect(screen.getByRole('button', { name: mode })).toBeInTheDocument();
+    }
     expect(screen.queryByRole('button', { name: 'Custom' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New game' })).toBeInTheDocument();
   });
@@ -225,6 +360,156 @@ describe('GameNavigation', () => {
 
     expect(screen.queryByText(/counts as a loss/i)).not.toBeInTheDocument();
   });
+
+  /*
+   * StartingAGameEndsTheOneUnderWay's daily exception: "it leaves the board
+   * rather than being retired, kept with its guesses, and choosing Daily
+   * brings it back". A daily game in progress is not at risk of a loss, so
+   * the ordinary cost sentence would misstate it.
+   */
+  it('says the daily game is set aside rather than lost, while it is the one under way', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'daily',
+      status: 'in_progress',
+      dailyIsTodays: true
+    });
+
+    expect(screen.getByText(/set aside/i)).toBeInTheDocument();
+    expect(screen.queryByText(/counts as a loss/i)).not.toBeInTheDocument();
+  });
+
+  /*
+   * TheDayIsPerceivable: "whether today's game has been played and how it
+   * ended" has to be readable as text. While the daily game waits off the
+   * board there is nowhere else to read it — this is the surface that offers
+   * Daily as a choice, so it is where the player looks before choosing.
+   */
+  it('says how today’s daily game stands while it waits off the board', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'random',
+      status: 'in_progress',
+      todaysDaily: {
+        day: 7,
+        status: 'won',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
+    });
+
+    expect(screen.getByText(/day 7/i)).toBeInTheDocument();
+    expect(screen.getByText(/won/i)).toBeInTheDocument();
+  });
+
+  /*
+   * TheNextWordIsAnnouncedInAdvance: "available as text from the moment
+   * today's game is over". The game that carries the time on the board is off
+   * it, and coming back to it costs the game that took its place, so the time
+   * is said here rather than sold at that price.
+   */
+  it('says when the next word arrives, for a finished daily game set aside', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'random',
+      status: 'in_progress',
+      todaysDaily: {
+        day: 7,
+        status: 'lost',
+        isCurrent: false,
+        isTodays: true,
+        today: 7,
+        nextWordAt: dayStart(8)
+      }
+    });
+
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+  });
+
+  it('says nothing about a daily game when there is none', () => {
+    render(GameNavigation, { ...base, mode: 'random', status: 'in_progress' });
+
+    expect(screen.queryByText(/today's daily/i)).not.toBeInTheDocument();
+  });
+
+  /*
+   * ANewDayReplacesTheOldGame, for a game set aside rather than on the board:
+   * once the date has moved on it is an earlier day's, choosing Daily discards
+   * it rather than bringing it back, and the guarantee asks for that to be
+   * said before the choice is taken. Calling it "today's daily" would say the
+   * opposite.
+   */
+  it('warns that an earlier day’s set-aside game ends for good if Daily is chosen', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'random',
+      status: 'in_progress',
+      todaysDaily: {
+        day: 4,
+        status: 'in_progress',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
+    });
+
+    expect(screen.getByText(/day 4.*for good/i)).toBeInTheDocument();
+    expect(screen.getByText(/day 5.*available/i)).toBeInTheDocument();
+    expect(screen.queryByText(/today's daily/i)).not.toBeInTheDocument();
+  });
+
+  it('says an earlier day’s finished game is over, and that today’s word is available', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'random',
+      status: 'in_progress',
+      todaysDaily: {
+        day: 4,
+        status: 'won',
+        isCurrent: false,
+        isTodays: false,
+        today: 5,
+        nextWordAt: dayStart(6)
+      }
+    });
+
+    expect(screen.getByText(/day 4.*over/i)).toBeInTheDocument();
+    expect(screen.getByText(/day 5.*available/i)).toBeInTheDocument();
+    expect(screen.queryByText(/for good/i)).not.toBeInTheDocument();
+  });
+
+  /*
+   * ThereIsNoNewGameInDaily: "No control offers a second daily game." New
+   * game repeats the mode on the board, and over a daily game the request it
+   * would make is answered by StayOnTodaysDailyGame with nothing — so the
+   * control is not offered, and Daily is the one way to ask.
+   */
+  it('offers no New game control while the mode it would repeat is Daily', () => {
+    render(GameNavigation, { ...base, mode: 'daily', status: 'in_progress', repeatMode: 'daily' });
+
+    expect(screen.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Daily' })).toBeInTheDocument();
+  });
+
+  /*
+   * ANewDayReplacesTheOldGame: the earlier day's game is discarded by choosing
+   * Daily, and the guarantee asks for that to be said before it is taken —
+   * where the same-day sentence promises the opposite.
+   */
+  it('warns that choosing Daily ends an earlier day’s game, rather than bringing it back', () => {
+    render(GameNavigation, {
+      ...base,
+      mode: 'daily',
+      status: 'in_progress',
+      dailyIsTodays: false
+    });
+
+    expect(screen.getByText(/ends this one|goes for good/i)).toBeInTheDocument();
+    expect(screen.queryByText(/brings it back/i)).not.toBeInTheDocument();
+  });
 });
 
 /*
@@ -238,11 +523,13 @@ describe('GameConclusion', () => {
     attemptsUsed: 3,
     secondsRemaining: null,
     repeatMode: 'random' as const,
+    todaysGame: null,
     onstop: vi.fn(),
     onnewgame: vi.fn(),
     onshareresults: vi.fn(),
     onshareanswer: vi.fn(),
     onclose: vi.fn(),
+    onwelcome: vi.fn(),
     notice: null,
     noticeSequence: 0,
     shareable: null,
@@ -281,8 +568,8 @@ describe('GameConclusion', () => {
     expect(onstop).toHaveBeenCalledTimes(1);
   });
 
-  // NoDailyLimit: a new game can always be requested.
-  it('always offers another game', async () => {
+  // NothingButDailyIsRationed: outside Daily, a new game can always be requested.
+  it('always offers another game outside Daily', async () => {
     const onnewgame = vi.fn();
     render(GameConclusion, { ...base, onnewgame });
 
@@ -292,8 +579,95 @@ describe('GameConclusion', () => {
   });
 
   /*
+   * ThereIsNoNewGameInDaily: "No control offers a second daily game... Daily
+   * offers the time the next word arrives and the way back to the welcome
+   * screen." The repeat control a finished daily game would otherwise show is
+   * replaced, not merely hidden — a dead "New game" button that no-ops is not
+   * this guarantee's "offers", and NothingButDailyIsRationed says Daily is the
+   * one mode where a second go at the same word is exactly what is withheld.
+   */
+  it('offers no repeat control for a finished daily game, only when the next word arrives', () => {
+    render(GameConclusion, {
+      ...base,
+      mode: 'daily',
+      repeatMode: 'daily',
+      todaysGame: {
+        today: 2,
+        keptDay: 2,
+        keptStatus: 'won',
+        keptIsCurrent: true,
+        isTodays: true,
+        nextWordAt: dayStart(3)
+      }
+    });
+
+    expect(screen.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
+    expect(screen.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+  });
+
+  /*
+   * NothingButDailyIsRationed: "the welcome screen, where the four modes are
+   * equal choices, stays one action away". This is a dialog that keeps the
+   * keyboard, so the header's chip is not one action away from inside it —
+   * the way out is offered here, where ThereIsNoNewGameInDaily puts it:
+   * "Daily offers the time the next word arrives and the way back to the
+   * welcome screen, where another mode is chosen."
+   */
+  it('offers the welcome screen from a finished daily game, one action away', async () => {
+    const onwelcome = vi.fn();
+    render(GameConclusion, {
+      ...base,
+      mode: 'daily',
+      repeatMode: 'daily',
+      todaysGame: {
+        today: 2,
+        keptDay: 2,
+        keptStatus: 'won',
+        keptIsCurrent: true,
+        isTodays: true,
+        nextWordAt: dayStart(3)
+      },
+      onwelcome
+    });
+
+    // No mode is chosen in here: the welcome screen is where they are equal
+    // choices, and offering a subset of them beside it would rank them.
+    for (const mode of ['Daily', 'Random', 'Endless', 'Practice']) {
+      expect(screen.queryByRole('button', { name: mode })).not.toBeInTheDocument();
+    }
+
+    await userEvent.click(screen.getByRole('button', { name: 'Play another mode' }));
+
+    expect(onwelcome).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+   * The same way out from an earlier day's finished game, which is the case
+   * that has nowhere else to go: ANewDayReplacesTheOldGame means today's word
+   * is available, and the welcome screen is where Daily is chosen.
+   */
+  it("offers it from an earlier day's game too", () => {
+    render(GameConclusion, {
+      ...base,
+      mode: 'daily',
+      repeatMode: 'daily',
+      todaysGame: {
+        today: 5,
+        keptDay: 4,
+        keptStatus: 'won',
+        keptIsCurrent: true,
+        isTodays: false,
+        nextWordAt: dayStart(6)
+      }
+    });
+
+    expect(screen.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
+    expect(screen.getByText(/day 5.*is available now/i)).toBeInTheDocument();
+  });
+
+  /*
    * The modal covers GameNavigation, which carries
-   * ThreeModesCanBeStartedFromHere and AvailableWhetherOrNotAGameExists. A
+   * FourModesCanBeStartedFromHere and AvailableWhetherOrNotAGameExists. A
    * conclusion that trapped the keyboard would take those away, so it closes —
    * and the board offers it back, because ResumeCurrentGame says a finished
    * game comes back "with its conclusion still showing".

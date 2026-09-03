@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import WelcomeScreen from '../src/lib/components/WelcomeScreen.svelte';
+  import { dayStart } from '../src/lib/domain/calendar';
 
   const oncontinue = fn();
   const onnewgame = fn();
@@ -14,9 +15,9 @@
     '',
     'Guarantees this component carries:',
     '',
-    '- `@guarantee ContinueAndTheThreeModesAreEqualChoices`. There is no question to answer and',
-    '  nothing to decline. Continue sits alongside Random, Endless and Practice as one of four',
-    '  choices, each one action away, and Continue names the mode it would resume or start.',
+    '- `@guarantee ContinueAndTheFourModesAreEqualChoices`. There is no question to answer and',
+    '  nothing to decline. Continue sits alongside Daily, Random, Endless and Practice as one of',
+    '  five choices, each one action away, and Continue names the mode it would resume or start.',
     '- `@guarantee AFirstVisitIsExplained`. The explanation is a framed group around the shared',
     '  `HowToPlay` body, present on every visit rather than a paragraph only a first visit sees —',
     '  the specification asks for it to be "reachable again afterwards rather than being shown',
@@ -25,6 +26,10 @@
     '  so after one, Continue offers the last mode the player chose for themselves. The',
     '  **After a custom game** story is that case.',
     '- `@guarantee FullyKeyboardOperable`, proved by the play function below.',
+    '- `daily.allium`’s `@guarantee TheDayIsPerceivable` and `@guarantee ANewDayReplacesTheOldGame`,',
+    '  on the same terms **GameNavigation** says them: while the daily game waits off the board,',
+    '  how it stands is text beside the choice that would bring it back — or, once the date has',
+    '  moved on, end it. The **Today’s daily is waiting** story is the first case.',
     '',
     '`@guarantee ThePreviousModeSurvivesBetweenSessions` and',
     '`@guarantee ShownOnEveryArrivalUntilTurnedOff` are not this component’s to keep: the first',
@@ -55,7 +60,7 @@
   });
 </script>
 
-<!-- A first visit: the explanation, the three modes, and nothing to continue. -->
+<!-- A first visit: the explanation, the four modes, and nothing to continue. -->
 <Story name="A first visit" />
 
 <!-- A game half played. Continue resumes it, and says which one it would resume. -->
@@ -109,12 +114,12 @@
   args={{ isFirstVisit: false, canContinue: true, lastMode: 'random' }}
   play={async ({ canvasElement }) => {
     // Welcome.@guarantee FullyKeyboardOperable
-    // Welcome.@guarantee ContinueAndTheThreeModesAreEqualChoices
+    // Welcome.@guarantee ContinueAndTheFourModesAreEqualChoices
     onnewgame.mockClear();
     const canvas = within(canvasElement);
     const choices = canvas.getAllByRole('button');
 
-    await expect(choices).toHaveLength(4);
+    await expect(choices).toHaveLength(5);
 
     for (const choice of choices) {
       await userEvent.tab();
@@ -123,5 +128,35 @@
 
     await userEvent.keyboard('{Enter}');
     await expect(onnewgame).toHaveBeenCalledWith('practice');
+  }}
+/>
+
+<!--
+  Today's daily game waits off the board behind a random one. Welcome offers
+  Daily, so how the daily game stands is text here before the choice is taken.
+-->
+<Story
+  name="Today's daily is waiting"
+  args={{
+    isFirstVisit: false,
+    canContinue: true,
+    lastMode: 'random',
+    currentMode: 'random',
+    currentStatus: 'in_progress',
+    todaysDaily: {
+      day: 7,
+      status: 'in_progress',
+      isCurrent: false,
+      isTodays: true,
+      today: 7,
+      nextWordAt: dayStart(8)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheDayIsPerceivable
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 7/i)).toBeInTheDocument();
+    await expect(canvas.getByText(/waiting where you left it/i)).toBeInTheDocument();
   }}
 />

@@ -1,14 +1,15 @@
 <script lang="ts">
   import Modal from '$lib/components/Modal.svelte';
+  import type { HardModeBlocker } from '$lib/app/engine';
   import type { Settings } from '$lib/app/state';
   import type { ThemeChoice } from '$lib/domain/types';
 
   /**
    * `settings.allium` — the `SettingsPanel` surface.
    *
-   * Three controls carry more than their label. Hard mode says which of the two
-   * reasons blocks turning it on, and what turning it off will cost before it is
-   * used — `HardModeIsExplainedWhenItCannotBeTurnedOn` and
+   * Three controls carry more than their label. Hard mode says which reason
+   * blocks turning it on — this game's own, or the daily game set aside — and what turning it off will cost
+   * before it is used — `HardModeIsExplainedWhenItCannotBeTurnedOn` and
    * `TurningHardModeOffMidGameIsAOneWayDoor`. The physical keyboard says what
    * off surrenders, so it never reads as though it would make the game
    * unplayable. High contrast says when it is the device asking rather than the
@@ -21,7 +22,7 @@
     settings,
     highContrastActive,
     hardModeMayBeEnabled,
-    hardModeReleased,
+    hardModeBlocker,
     hardModeCostsThisGame,
     onclose,
     onchoosetheme,
@@ -36,8 +37,8 @@
     /** `Settings.high_contrast_active` — the setting or the device, whichever asked. */
     highContrastActive: boolean;
     hardModeMayBeEnabled: boolean;
-    /** Which of the two reasons blocks re-enabling: switched off, or history. */
-    hardModeReleased: boolean;
+    /** Which reason blocks re-enabling, when it is blocked. */
+    hardModeBlocker: HardModeBlocker;
     /** Whether turning it off now would bar it for the rest of this game. */
     hardModeCostsThisGame: boolean;
     onclose: () => void;
@@ -84,15 +85,31 @@
   const hardModeNote = $derived.by(() => {
     if (settings.hardMode) {
       return hardModeCostsThisGame
-        ? 'Revealed letters must be reused. Turning it off now cannot be turned back on until the next game.'
+        ? 'Revealed letters must be reused. Turning it off now cannot be turned back on until this game is over.'
         : 'Revealed letters must be reused. Turning it off costs nothing before the first guess.';
     }
     if (hardModeMayBeEnabled) {
       return 'Revealed letters must be reused. It applies from your very next guess.';
     }
-    return hardModeReleased
-      ? 'Unavailable: hard mode was switched off part way through this game. It can be turned on again when the next game starts.'
-      : 'Unavailable: a guess already submitted in this game would have broken the rule.';
+    /*
+     * None of these names a day, and none promises the next game will open the
+     * door. `TurningHardModeOffMidGameIsAOneWayDoor` says what actually does:
+     * finishing the game, or a later day's daily game taking its place. A
+     * daily game set aside is left exactly where it is until Daily is chosen
+     * again — the date moving on removes nothing — so calling it "today's"
+     * would name the wrong game the morning after, while "the next game"
+     * would promise a release that starting a random game does not bring.
+     */
+    switch (hardModeBlocker) {
+      case 'released':
+        return 'Unavailable: hard mode was switched off part way through this game. It can be turned on again once this game is over.';
+      case 'daily-released':
+        return "Unavailable: hard mode was switched off part way through a daily game that is set aside and waiting. Finishing that game — or starting a later day's daily game in its place — turns this on again.";
+      case 'daily-history':
+        return "Unavailable: a guess already submitted to a daily game, set aside and waiting, would have broken the rule. Finishing that game — or starting a later day's daily game in its place — turns this on again.";
+      default:
+        return 'Unavailable: a guess already submitted in this game would have broken the rule.';
+    }
   });
 
   function toggleHardMode(): void {

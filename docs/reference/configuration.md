@@ -95,9 +95,9 @@ go on the preview document's root element, because `src/app.css` keys every pale
 ## Values the specifications decide
 
 `src/lib/config.ts` mirrors the `config` blocks in `docs/specs/`. These are not tunables:
-changing one here without changing it in the specification is drift. All fifteen are below,
-and the file holds nothing else — a constant that appears there without a `config` entry to
-name is drift in the other direction.
+changing one here without changing it in the specification is drift. All twenty-two are
+below, and the file holds nothing else — a constant that appears there without a `config`
+entry to name is drift in the other direction.
 
 | Constant | Value | Specification |
 | --- | --- | --- |
@@ -109,20 +109,28 @@ name is drift in the other direction.
 | `ENDLESS_COUNTDOWN_MS` | 10000 | `game.allium`, `config.endless_countdown`, stated there as `10.seconds` |
 | `MINIMUM_TOUCH_TARGET` | 44 | `game.allium`, `config.minimum_touch_target`, in CSS pixels |
 | `NARROWEST_SUPPORTED_WIDTH` | 320 | `game.allium`, `config.narrowest_supported_width`, in CSS pixels |
+| `MINIMUM_TEXT_CONTRAST` | 4.5 | `game.allium`, `config.minimum_text_contrast`, a contrast ratio |
+| `MINIMUM_BOUNDARY_CONTRAST` | 3.0 | `game.allium`, `config.minimum_boundary_contrast`, a contrast ratio |
+| `MINIMUM_STATE_SEPARATION` | 3.0 | `game.allium`, `config.minimum_state_separation`, a contrast ratio |
+| `MINIMUM_MARK_SEPARATION` | 2.0 | `game.allium`, `config.minimum_mark_separation`, a contrast ratio |
 | `SHARE_HEADING` | `Poodl` | `sharing.allium`, `config.share_heading` |
 | `CUSTOM_MARKER` | `custom` | `sharing.allium`, `config.custom_marker` |
+| `DAILY_MARKER` | `daily` | `sharing.allium`, `config.daily_marker` |
+| `EPOCH_DATE` | `2026-09-01` | `daily.allium`, `config.epoch_date`. Day 1 of the schedule, as a date in `CALENDAR_ZONE`; written once, before the mode shipped, and moving it would renumber every day. |
+| `CALENDAR_ZONE` | `America/Los_Angeles` | `daily.allium`, `config.calendar_zone`, as the IANA time zone database names it |
 | `STANDARD_CORRECT_TILE` | 🟩 | `sharing.allium`, `config.standard_correct_tile` |
 | `STANDARD_PRESENT_TILE` | 🟨 | `sharing.allium`, `config.standard_present_tile` |
 | `HIGH_CONTRAST_CORRECT_TILE` | 🟧 | `sharing.allium`, `config.high_contrast_correct_tile` |
 | `HIGH_CONTRAST_PRESENT_TILE` | 🟦 | `sharing.allium`, `config.high_contrast_present_tile` |
 | `ABSENT_TILE` | ⬛ | `sharing.allium`, `config.absent_tile` |
 
-The last two are the only ones whose real consumer is a stylesheet, and CSS cannot import a
-TypeScript constant. So `44px` is written out in `src/app.css` and `20rem` in
-`Keyboard.svelte`, and the tests are what hold them to the constants: the jsdom suite
-compares the resolved `min-block-size` against `MINIMUM_TOUCH_TARGET`, and the story run
-frames the keyboard at `NARROWEST_SUPPORTED_WIDTH` and measures it there. Change the
-specification and the constant, and the gate names the stylesheet that did not follow.
+`MINIMUM_TOUCH_TARGET` and `NARROWEST_SUPPORTED_WIDTH` are the only ones whose real consumer
+is a stylesheet, and CSS cannot import a TypeScript constant. So `44px` is written out in
+`src/app.css` and `20rem` in `Keyboard.svelte`, and the tests are what hold them to the
+constants: the jsdom suite compares the resolved `min-block-size` against
+`MINIMUM_TOUCH_TARGET`, and the story run frames the keyboard at `NARROWEST_SUPPORTED_WIDTH`
+and measures it there. Change the specification and the constant, and the gate names the
+stylesheet that did not follow.
 
 ## Version pins
 

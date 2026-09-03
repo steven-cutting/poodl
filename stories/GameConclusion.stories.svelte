@@ -3,6 +3,7 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameConclusion from '../src/lib/components/GameConclusion.svelte';
+  import { dayStart } from '../src/lib/domain/calendar';
   import { GRID, GRID_MADE, LINK, LINK_MADE } from './fixtures';
 
   const onstop = fn();
@@ -10,6 +11,7 @@
   const onshareresults = fn();
   const onshareanswer = fn();
   const onclose = fn();
+  const onwelcome = fn();
   const oncopy = fn();
 
   const OVERVIEW = [
@@ -26,8 +28,14 @@
     '  stories below show all three.',
     '- `@guarantee EndlessContinuesUnlessStopped`. The countdown is present only in endless, and',
     '  **Countdown** carries the control itself.',
-    '- `@guarantee NoDailyLimit`. Another game is always one action away, whatever the date and',
-    '  however many have been played.',
+    '- `@guarantee NothingButDailyIsRationed`. Outside Daily, another game is always one action',
+    '  away, whatever the date and however many have been played. Inside it,',
+    '  `daily.allium`’s `@guarantee ThereIsNoNewGameInDaily` withholds exactly the repeat control —',
+    '  the **Daily, finished for today** story shows **TodaysGame** saying when the next word',
+    '  arrives, and **Play another mode** in the footer where a new game would be. That is the',
+    '  welcome screen, where the four modes are equal choices, kept one action away from inside',
+    '  a dialog that keeps the keyboard. No mode is named in here: offering a subset of them',
+    '  beside the day would rank them.',
     '- `@guarantee ConclusionIsAnnounced` is **Announcer**’s, not this one’s: the modal shows the',
     '  conclusion and the live region says it.',
     '- `ShareCurrentAnswer.@guarantee FullyKeyboardOperable` and',
@@ -37,7 +45,7 @@
     'It closes, and that is a decision worth stating. The specification gives the modal no',
     'dismissal, but a dialog that trapped the keyboard with no way out would take',
     '`GameNavigation` with it — and that surface carries',
-    '`@guarantee ThreeModesCanBeStartedFromHere`. Nothing is lost by closing, because the board',
+    '`@guarantee FourModesCanBeStartedFromHere`. Nothing is lost by closing, because the board',
     'offers the result again for as long as the finished game is on it, which is what',
     '`@guarantee ContinuingNeverCostsAGame` means by a game coming back with its conclusion still',
     'showing.'
@@ -54,11 +62,13 @@
       attemptsUsed: 3,
       secondsRemaining: null,
       repeatMode: 'random',
+      todaysGame: null,
       onstop,
       onnewgame,
       onshareresults,
       onshareanswer,
       onclose,
+      onwelcome,
       oncopy,
       notice: null,
       noticeSequence: 0,
@@ -70,6 +80,7 @@
       answer: { control: 'text', description: 'Shown here and nowhere earlier.' },
       attemptsUsed: { control: { type: 'range', min: 1, max: 6 } },
       secondsRemaining: { control: false, description: 'Null in every mode but endless.' },
+      todaysGame: { control: false, description: 'The TodaysGame surface. Daily only.' },
       notice: { control: false, description: 'What Poodl is saying about the last copy.' },
       shareable: { control: false, description: 'What either sharing action produced.' }
     },
@@ -105,6 +116,69 @@
   came from a link rather than from Poodl.
 -->
 <Story name="A word from a link" args={{ mode: 'custom', attemptsUsed: 4 }} />
+
+<!--
+  ThereIsNoNewGameInDaily: no repeat control for a finished daily game — the
+  time the next word arrives stands in its place, and the way to the welcome
+  screen stands where a new game would be.
+-->
+<Story
+  name="Daily, finished for today"
+  args={{
+    mode: 'daily',
+    repeatMode: 'daily',
+    todaysGame: {
+      today: 2,
+      keptDay: 2,
+      keptStatus: 'won',
+      keptIsCurrent: true,
+      isTodays: true,
+      nextWordAt: dayStart(3)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // GameConclusion.@guarantee ThereIsNoNewGameInDaily
+    // GameConclusion.@guarantee NothingButDailyIsRationed
+    const canvas = within(canvasElement);
+
+    await expect(canvas.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
+    await expect(canvas.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
+
+    for (const name of ['Daily', 'Random', 'Endless', 'Practice']) {
+      await expect(canvas.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+  }}
+/>
+
+<!--
+  An earlier day's game, finished and still on the board. The one case with
+  nowhere else to go: today's word is available, and the welcome screen is
+  where Daily is chosen.
+-->
+<Story
+  name="Daily, an earlier day"
+  args={{
+    mode: 'daily',
+    repeatMode: 'daily',
+    todaysGame: {
+      today: 5,
+      keptDay: 4,
+      keptStatus: 'won',
+      keptIsCurrent: true,
+      isTodays: false,
+      nextWordAt: dayStart(6)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheNextWordIsAnnouncedInAdvance
+    // GameConclusion.@guarantee NothingButDailyIsRationed
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 4's word, not today's/i)).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
+  }}
+/>
 
 <!--
   The link a share produced, shown in here rather than on the board. This dialog
@@ -160,7 +234,7 @@
   name="Every action is reachable by Tab"
   play={async ({ canvasElement }) => {
     // GameConclusion.@guarantee FullyKeyboardOperable
-    // GameConclusion.@guarantee NoDailyLimit
+    // GameConclusion.@guarantee NothingButDailyIsRationed
     // ShareCurrentAnswer.@guarantee FullyKeyboardOperable
     onnewgame.mockClear();
     onshareresults.mockClear();

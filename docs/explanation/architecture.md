@@ -62,16 +62,17 @@ written, so nothing found there is believed without being checked.
 | State | Where it lives | Lost when |
 | --- | --- | --- |
 | The current game, and the mode last chosen | Device storage, through the storage port | Browser data is cleared |
-| Statistics and the answer pool | Device storage | Browser data is cleared |
+| Today's daily game, while another mode holds the board | Device storage | A later day's daily game takes its place |
+| Statistics, the daily record and the answer pool | Device storage | Browser data is cleared |
 | Settings | Device storage | Browser data is cleared |
 | A custom game's answer | Inside the link itself | The link is lost |
 | A link just made, and whatever Poodl is saying | Nowhere at all | The page is reloaded |
 
-The fourth row is the interesting one. A custom game has nowhere to be recorded, so the
-answer travels in the URL, obfuscated. That is a deliberate trade, not an oversight; see
+The custom game's row is the interesting one. A custom game has nowhere to be recorded, so
+the answer travels in the URL, obfuscated. That is a deliberate trade, not an oversight; see
 [Decision 0005](../decisions/0005-obfuscation-not-security.md).
 
-The fifth is deliberate in the other direction. A link Poodl has just made is never
+The last row is deliberate in the other direction. A link Poodl has just made is never
 recorded, which is what `NothingAboutTheLinkIsKept` requires of it; and an armed endless
 countdown is not saved either, because one that outlived the session would elapse on the
 next arrival and start a game the player never asked for.
@@ -80,7 +81,9 @@ next arrival and start a game the player never asked for.
 
 Seven things reach outside the pure core: storage, randomness, the clock, the clipboard,
 the word lists, the device's colour-scheme and reduced-motion preferences, and a repeating
-timer for the endless countdown. Each sits behind a port in `src/lib/ports/` with a real
+timer. The timer serves two: it ticks the endless countdown, and it watches the calendar,
+so the day turns on a tab left open across midnight rather than waiting for a keystroke.
+Each sits behind a port in `src/lib/ports/` with a real
 adapter and an in-memory fake, so the entire application above them is testable without a
 browser. The reasoning is in [Decision 0002](../decisions/0002-ports-and-fakes.md).
 

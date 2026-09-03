@@ -1,5 +1,11 @@
 import type { Command, Effect } from '$lib/app/commands';
-import { attemptsRemaining, canContinue, isFinishedByPlay, isStatEligible } from '$lib/app/state';
+import {
+  attemptsRemaining,
+  canContinue,
+  isFinishedByPlay,
+  isStatEligible,
+  keptDailyGame
+} from '$lib/app/state';
 import type { AppState, GameState, Notice, Settings } from '$lib/app/state';
 import { ENDLESS_COUNTDOWN_MS, MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
 import {
@@ -9,6 +15,13 @@ import {
 } from '$lib/domain/announcements';
 import { highContrastActive } from '$lib/domain/appearance';
 import { EMPTY_POOL, drawPooledAnswer } from '$lib/domain/answerPool';
+import { dailyAnswer, dayOf } from '$lib/domain/calendar';
+import {
+  EMPTY_DAILY_STATISTICS,
+  recordDailyLoss,
+  recordDailyWin
+} from '$lib/domain/dailyStatistics';
+import type { DailyStatistics } from '$lib/domain/dailyStatistics';
 import { respectsHardMode, satisfiesHardMode } from '$lib/domain/hardMode';
 import { customGameUrl } from '$lib/domain/links';
 import { decodeToken, encodeAnswer } from '$lib/domain/obfuscation';
@@ -66,6 +79,8 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
       return still(openPoodl(state, env));
     case 'continue':
       return still(playerContinues(state, env));
+    case 'return_to_welcome':
+      return still(returnToWelcome(state));
     case 'new_game':
       return still(newGameRequested(state, command.mode, env));
     case 'enter_letter':
@@ -116,20 +131,55 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
 }
 
 /**
+ * Whether a single game admits turning hard mode on: it is not under way, or
+ * it is and nothing submitted to it so far would have broken the rule.
+ */
+function admitsHardMode(game: GameState | null): boolean {
+  return (
+    game === null ||
+    game.status !== 'in_progress' ||
+    (!game.hardModeReleased && respectsHardMode(game.guesses))
+  );
+}
+
+/**
+ * Which of the three reasons blocks turning hard mode on, or `null` when
+ * nothing does.
+ *
+ * `SettingsPanel.hard_mode_blocker` in `settings.allium`, so an unavailable
+ * control can say which reason applies: it was switched off part way through
+ * a game (`released`), a guess already submitted to one would have broken the
+ * rule (`history`), or the same is true of today's daily game, set aside part
+ * way through and waiting off the board (the `daily-` pair).
+ *
+ * The daily pair keeps the same two causes apart rather than collapsing them:
+ * a game released mid-play has broken no rule, so naming a guess as the cause
+ * would name something that never happened. The board is checked first, so a
+ * violation there is always reported as this game's own.
+ */
+export type HardModeBlocker = 'released' | 'history' | 'daily-released' | 'daily-history' | null;
+
+export function hardModeBlocker(state: AppState): HardModeBlocker {
+  if (!admitsHardMode(state.currentGame)) {
+    return state.currentGame?.hardModeReleased === true ? 'released' : 'history';
+  }
+  if (!admitsHardMode(state.setAsideDaily)) {
+    return state.setAsideDaily?.hardModeReleased === true ? 'daily-released' : 'daily-history';
+  }
+  return null;
+}
+
+/**
  * Whether hard mode may be turned on now without invalidating history.
  *
- * `Game.hard_mode_admissible` in `game.allium`, and what `SettingsPanel` exposes
- * as `hard_mode_may_be_enabled` so that an unavailable control can say which of
- * the two reasons applies.
+ * `Game.hard_mode_admissible` in `game.allium`. `HardModeIsNeverOnOverAGame
+ * ThatBreaksIt` quantifies over every in-progress game, so a set-aside daily
+ * game is judged too — when it is instead the one on the board,
+ * `setAsideDaily` is `null` and trivially admits, so this reduces to the
+ * ordinary single-game check.
  */
 export function hardModeMayBeEnabled(state: AppState): boolean {
-  const current = state.currentGame;
-
-  return (
-    current === null ||
-    current.status !== 'in_progress' ||
-    (!current.hardModeReleased && respectsHardMode(current.guesses))
-  );
+  return hardModeBlocker(state) === null;
 }
 
 // -------------------------------------------------------------- arriving ---
@@ -165,15 +215,33 @@ function playerContinues(state: AppState, env: Env): AppState {
   return state;
 }
 
+/**
+ * `ReturnToWelcome`. Nothing is retired and nothing is drawn: the finished game
+ * stays on the board behind, so `Continue` resumes it with its conclusion still
+ * showing, exactly as `ResumeCurrentGame` says.
+ *
+ * A request rather than an arrival, so `showWelcome` is not consulted —
+ * `TheWelcomeSettingAppliesAtTheNextArrival` scopes that setting to arrivals by
+ * name, and this is the one way out of a finished daily game.
+ */
+function returnToWelcome(state: AppState): AppState {
+  return { ...state, awaitingWelcome: true };
+}
+
 // -------------------------------------------------------- starting a game ---
 
 /**
- * `ProvidePracticeAnswer` in `game.allium` and `DrawPooledAnswer` in
- * `statistics.allium`: the two ways an answer reaches a mode a player can ask
- * for. Practice draws straight from the answer list — no pool, no record,
- * repeats allowed.
+ * `ProvidePracticeAnswer` in `game.allium`, `DrawPooledAnswer` in
+ * `statistics.allium`, and `daily.allium`'s three daily rules: the ways an
+ * answer reaches a mode a player can ask for. Practice draws straight from
+ * the answer list — no pool, no record, repeats allowed. Daily never touches
+ * the pool at all, and is handled before any pool interaction below.
  */
 function newGameRequested(state: AppState, mode: StartableMode, env: Env): AppState {
+  if (mode === 'daily') {
+    return dailyGameRequested(state, env);
+  }
+
   const answers = env.words.answerWords();
 
   if (mode === 'practice') {
@@ -185,6 +253,39 @@ function newGameRequested(state: AppState, mode: StartableMode, env: Env): AppSt
   );
 
   return beginGame({ ...state, pool: drawn.pool }, mode, drawn.answer, env);
+}
+
+/**
+ * `StartTodaysDailyGame`, `ReturnToTodaysDailyGame` and
+ * `StayOnTodaysDailyGame`, whose guards are mutually exclusive over the kept
+ * game's existence, day and board status.
+ *
+ * `KeepTodaysDailyGame` is the trailing `setAsideDaily: null` in the first
+ * branch: `beginGame`'s own `retireGame` call already stashes a stale
+ * on-board daily game there if that is what is outgoing, and this override
+ * always wins afterward, discarding whichever kept game existed either way.
+ */
+function dailyGameRequested(state: AppState, env: Env): AppState {
+  const today = dayOf(env.now);
+  const kept = keptDailyGame(state);
+
+  if (kept === null || dayOf(kept.startedAt) !== today) {
+    return {
+      ...beginGame(state, 'daily', dailyAnswer(today, env.words.dailySchedule()), env),
+      setAsideDaily: null
+    };
+  }
+  if (state.currentGame?.mode !== 'daily') {
+    return {
+      ...putAway(retireGame(state)),
+      currentGame: kept,
+      setAsideDaily: null,
+      awaitingWelcome: false,
+      lastMode: 'daily',
+      notice: null
+    };
+  }
+  return { ...state, awaitingWelcome: false };
 }
 
 /**
@@ -223,8 +324,13 @@ function beginGame(state: AppState, mode: GameMode, answer: string, env: Env): A
  * `DiscardRetiredFinishedGame`, with `RecordAbandonmentAsLoss` in
  * `statistics.allium`.
  *
- * Every path removes the game, so this returns only what survives it. The
- * abandonment loss is recorded from the attempt count and the eligibility
+ * Every path removes the game it retires from the board, so this returns only
+ * what survives it — except a daily game, which each of those rules now
+ * excludes with `requires: game.mode != daily`: leaving the board is not
+ * being retired for it, so it is stashed in `setAsideDaily` instead of
+ * discarded, and nothing about it is counted.
+ *
+ * The abandonment loss is recorded from the attempt count and the eligibility
  * verdict — what the emission carries — rather than from the game, because the
  * game is about to go and neither half may be left reading what the other has
  * removed.
@@ -237,6 +343,9 @@ function retireGame(state: AppState): AppState {
 
   if (outgoing === null) {
     return state;
+  }
+  if (outgoing.mode === 'daily') {
+    return { ...state, currentGame: null, setAsideDaily: outgoing };
   }
 
   const abandoned = outgoing.status === 'in_progress' && outgoing.guesses.length >= 1;
@@ -376,6 +485,10 @@ function acceptGuess(state: AppState, game: GameState, candidate: string, env: E
       ...state,
       currentGame: played,
       statistics: record(state.statistics, game.mode, won, lost, guesses.length),
+      dailyStatistics:
+        game.mode === 'daily'
+          ? recordDaily(state.dailyStatistics, dayOf(game.startedAt), won, lost, guesses.length)
+          : state.dailyStatistics,
       notice: null
     },
     `${submission}${conclusion}`
@@ -397,6 +510,24 @@ function record(
     return recordWin(statistics, attempts);
   }
   return lost ? recordLoss(statistics) : statistics;
+}
+
+/**
+ * `RecordDailyWin` and `RecordDailyLoss`. The day is the game's own —
+ * `day_of(g.started_at)` — never the day it happens to be read on, so a game
+ * finished after midnight still counts for the day it was started.
+ */
+function recordDaily(
+  dailyStatistics: DailyStatistics,
+  day: number,
+  won: boolean,
+  lost: boolean,
+  attempts: number
+): DailyStatistics {
+  if (won) {
+    return recordDailyWin(dailyStatistics, day, attempts);
+  }
+  return lost ? recordDailyLoss(dailyStatistics) : dailyStatistics;
 }
 
 // ----------------------------------------------------------- endless mode ---
@@ -483,11 +614,18 @@ function playerDisablesHardMode(state: AppState): AppState {
 }
 
 /**
- * `PlayerResetsStatistics`. The pool goes with the numbers because they are the
- * same record of play seen from two sides.
+ * `PlayerResetsStatistics` and `ResetDailyStatisticsToo`. The pool goes with
+ * the numbers because they are the same record of play seen from two sides.
+ * The kept daily game — on the board or set aside — is a game, not a
+ * statistic, and neither slot is touched.
  */
 function playerResetsStatistics(state: AppState): AppState {
-  return { ...state, statistics: EMPTY_STATISTICS, pool: EMPTY_POOL };
+  return {
+    ...state,
+    statistics: EMPTY_STATISTICS,
+    dailyStatistics: EMPTY_DAILY_STATISTICS,
+    pool: EMPTY_POOL
+  };
 }
 
 // ---------------------------------------------------------------- sharing ---
@@ -598,7 +736,14 @@ export function resultsGrid(state: AppState, prefersMoreContrast: boolean): stri
   }
 
   return renderShareGrid(
-    { mode: game.mode, status: game.status === 'won' ? 'won' : 'lost', guesses: game.guesses },
+    {
+      mode: game.mode,
+      status: game.status === 'won' ? 'won' : 'lost',
+      guesses: game.guesses,
+      // The game's own day, not today's: a game finished after midnight
+      // still counts for the day it was started.
+      day: game.mode === 'daily' ? dayOf(game.startedAt) : null
+    },
     highContrastActive(state.settings.highContrast, prefersMoreContrast)
       ? 'high_contrast'
       : 'standard'

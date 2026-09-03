@@ -5,7 +5,9 @@
   import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
+  import TodaysGame from '$lib/components/TodaysGame.svelte';
   import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { TodaysGameView } from '$lib/app/store.svelte';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
 
@@ -14,12 +16,20 @@
    * indefinitely; endless counts down and moves on unless the player stops it.
    *
    * `OutcomeAnswerAndAttemptsAreAllShown` on a win as well as on a loss, and
-   * `NoDailyLimit` is why another game is always one action away.
+   * `NothingButDailyIsRationed` is why another game is always one action away
+   * outside Daily. Inside it, `ThereIsNoNewGameInDaily` withholds exactly the
+   * repeat control: `TodaysGame` says when the next word arrives rather than
+   * offering a second go at the same one, and the footer offers the way back
+   * to the welcome screen in place of a new game — this dialog keeps the
+   * keyboard, so the header's chip is not one action away from in here, and
+   * `NothingButDailyIsRationed` says the welcome screen must be. No mode is
+   * named here: the welcome screen is where the four are equal choices, and
+   * offering a subset of them from a dialog would rank them.
    *
    * It closes, and the board offers it back. The specification gives the modal
    * no dismissal and says the board stays visible behind it, but a dialog that
    * traps the keyboard with no way out would take `GameNavigation` with it —
-   * and that surface carries `ThreeModesCanBeStartedFromHere` and
+   * and that surface carries `FourModesCanBeStartedFromHere` and
    * `AvailableWhetherOrNotAGameExists`. Nothing is lost by closing, because
    * `GameScreen` offers the result again for as long as the finished game is on
    * the board, which is what `ResumeCurrentGame` means by a game coming back
@@ -32,8 +42,10 @@
     attemptsUsed,
     secondsRemaining = null,
     repeatMode,
+    todaysGame = null,
     onstop,
     onnewgame,
+    onwelcome,
     onshareresults,
     onshareanswer,
     onclose,
@@ -48,8 +60,12 @@
     attemptsUsed: number;
     secondsRemaining?: number | null;
     repeatMode: StartableMode;
+    /** `daily.allium`'s `TodaysGame` surface, relevant only while `mode` is `daily`. */
+    todaysGame?: TodaysGameView | null;
     onstop: () => void;
     onnewgame: (mode: StartableMode) => void;
+    /** `PlayerReturnsToWelcome`, which Daily offers where the rest offer a new game. */
+    onwelcome: () => void;
     onshareresults: () => void;
     onshareanswer: () => void;
     onclose: () => void;
@@ -110,6 +126,14 @@
     </p>
   </div>
 
+  <!--
+    Which day, and when the next word arrives: content, so it reads with the
+    answer and the attempt count rather than riding in the action row.
+  -->
+  {#if mode === 'daily' && todaysGame !== null}
+    <TodaysGame {todaysGame} />
+  {/if}
+
   {#if secondsRemaining !== null}
     <Countdown seconds={secondsRemaining} {onstop} />
   {/if}
@@ -127,12 +151,25 @@
     outcome: content first, then commitment.
   -->
   {#snippet footer()}
-    <Button
-      variant="primary"
-      onclick={() => {
-        onnewgame(repeatMode);
-      }}>New game</Button
-    >
+    {#if mode === 'daily'}
+      <!--
+        Secondary, and deliberately: `ThereIsNoNewGameInDaily` means there is
+        nothing to recommend doing next, so this is the one conclusion with no
+        primary action.
+      -->
+      <Button
+        onclick={() => {
+          onwelcome();
+        }}>Play another mode</Button
+      >
+    {:else}
+      <Button
+        variant="primary"
+        onclick={() => {
+          onnewgame(repeatMode);
+        }}>New game</Button
+      >
+    {/if}
     <Button
       onclick={() => {
         onshareresults();

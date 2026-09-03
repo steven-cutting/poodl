@@ -12,6 +12,7 @@ import { reduce } from '../src/lib/app/engine';
 import type { Env } from '../src/lib/app/engine';
 import { createInitialState } from '../src/lib/app/state';
 import type { AppState } from '../src/lib/app/state';
+import { EPOCH_DATE } from '../src/lib/config';
 import { encodeAnswer } from '../src/lib/domain/obfuscation';
 import { createFakeRandom } from '../src/lib/ports/random';
 import { createFakeWordList } from '../src/lib/ports/words';
@@ -81,4 +82,14 @@ export function answerOf(state: AppState): string {
 /** A token, made the way the codec makes one rather than through the engine. */
 export function tokenFor(word: string): string {
   return encodeAnswer(word);
+}
+
+/**
+ * A UTC instant `n` LA-calendar-days after `EPOCH_DATE`, safely inside
+ * daytime in `America/Los_Angeles` regardless of the time of year — so tests
+ * can move `Env.now` between days without tripping over a DST transition.
+ */
+export function daysAfterEpoch(n: number): number {
+  const [year, month, day] = EPOCH_DATE.split('-').map(Number) as [number, number, number];
+  return Date.UTC(year, month - 1, day + n, 20, 0, 0);
 }

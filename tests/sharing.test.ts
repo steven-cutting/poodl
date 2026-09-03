@@ -14,7 +14,8 @@ const LOST = ['adopt', 'alarm', 'again', 'aroma', 'aside', 'apply'];
 function finished(
   played: readonly string[],
   status: GameStatus & ('won' | 'lost'),
-  mode: GameMode = 'random'
+  mode: GameMode = 'random',
+  day: number | null = null
 ): FinishedGame {
   const guesses: Guess[] = played.map((word, index) => ({
     position: index + 1,
@@ -22,7 +23,7 @@ function finished(
     results: scoreGuess(word, ANSWER)
   }));
 
-  return { mode, status, guesses };
+  return { mode, status, guesses, day };
 }
 
 /*
@@ -52,8 +53,22 @@ describe('renderShareGrid', () => {
       `Poodl custom X/${MAX_ATTEMPTS}`
     );
 
-    for (const mode of ['random', 'endless', 'practice'] as const) {
-      expect(renderShareGrid(finished(WON, 'won', mode), 'standard')).not.toContain('custom');
+    for (const mode of ['random', 'endless', 'practice', 'daily'] as const) {
+      expect(renderShareGrid(finished(WON, 'won', mode, 12), 'standard')).not.toContain('custom');
+    }
+  });
+
+  // Heading, the daily case: the marker and the day it was started, not the word.
+  it('marks a daily game with its day number, and only a daily game', () => {
+    expect(renderShareGrid(finished(WON, 'won', 'daily', 12), 'standard').split('\n')[0]).toBe(
+      `Poodl daily 12 3/${MAX_ATTEMPTS}`
+    );
+    expect(renderShareGrid(finished(LOST, 'lost', 'daily', 12), 'standard').split('\n')[0]).toBe(
+      `Poodl daily 12 X/${MAX_ATTEMPTS}`
+    );
+
+    for (const mode of ['random', 'endless', 'practice', 'custom'] as const) {
+      expect(renderShareGrid(finished(WON, 'won', mode), 'standard')).not.toContain('daily');
     }
   });
 

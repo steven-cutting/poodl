@@ -23,18 +23,22 @@ them loosely is how a review ends up arguing about vocabulary instead of behavio
 | Present | The letter is in the answer, but not at that position, and the answer still had an unclaimed occurrence of it. |
 | Absent | Everything else, including the second copy of a letter the answer holds once. |
 | Hard mode | Revealed letters must be reused. Judged at submission against the live setting, not the setting the game began with. Turning it off part way through a game bars turning it back on until the next one. |
-| Welcome screen | What opening Poodl lands on: an introduction on a first visit, and afterwards Continue — labelled with the previous mode — alongside the three startable modes. Can be turned off, though it still appears when there is nothing to continue. |
+| Welcome screen | What opening Poodl lands on: an introduction on a first visit, and afterwards Continue — labelled with the previous mode — alongside the four startable modes. Can be turned off, though it still appears when there is nothing to continue. Also asked for from a finished daily game, which offers it where the other modes offer a new game; asking is not an arrival, so the setting does not withhold it. |
 
 ## The modes
 
 | Term | Meaning |
 | --- | --- |
+| Daily | One word a day, the same for everyone, playable once. The day turns at local midnight on the Pacific coast. Set aside rather than abandoned when another mode is chosen, and brought back by choosing Daily on the same day. Counts towards its own daily record, never the primary statistics. |
 | Random | A single game, drawn from the pool of answers not yet used. Counts towards statistics. |
 | Endless | The same, but the next game starts by itself after a ten-second countdown unless the player stops it. Stopping is final: the countdown does not resume. Counts towards statistics. |
 | Practice | Draws directly from the answer list, repeats allowed. Records nothing at all. |
 | Custom | The answer came from a link someone made. Records nothing, and is never remembered as the previous mode. |
-| Startable mode | Random, endless or practice — the three a player can ask for. A separate type from the mode a game has, so that asking for a custom game cannot be expressed. |
-| Abandoned | A game replaced while in progress after at least one guess. Counts as a loss. A game replaced with no guesses in it leaves no trace. |
+| Startable mode | Daily, random, endless or practice — the four a player can ask for. A separate type from the mode a game has, so that asking for a custom game cannot be expressed. |
+| Abandoned | A game replaced while in progress after at least one guess. Counts as a loss. A game replaced with no guesses in it leaves no trace. A daily game is never abandoned: it is set aside. |
+| Set aside | A daily game off the board but kept, with its guesses, while another mode is played. Nothing is counted, and choosing Daily brings it back — on the same day. Once the date has moved on, choosing Daily starts the new day's word instead, and the kept game goes. |
+| Day | A number, counted from 1 on the epoch date, that turns at local midnight in `America/Los_Angeles`. The daily word is indexed by it, and a shared daily grid carries it. |
+| Schedule | The answer list in a fixed, append-only order, shipped as data. Day n plays entry n. |
 
 ## The repository
 

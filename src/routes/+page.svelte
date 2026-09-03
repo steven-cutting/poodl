@@ -112,6 +112,38 @@
     game !== null && game.mode !== 'custom' ? game.mode : (app?.lastMode ?? 'random')
   );
 
+  /*
+   * `daily.allium`'s `TodaysGame` surface, passed only where a daily game is
+   * actually on the board — every other surface has no day to speak of.
+   */
+  const todaysGame = $derived(store?.todaysGame ?? null);
+  const dailyOnBoard = $derived(game?.mode === 'daily' ? todaysGame : null);
+
+  /*
+   * How the kept daily game stands, for the surfaces that offer Daily as a
+   * choice: its day, how it ended, whether it is on the board, and whether it
+   * is today's at all — once the date has moved on, choosing Daily discards an
+   * earlier day's game rather than bringing it back, and
+   * `ANewDayReplacesTheOldGame` asks for that to be said where the choice is.
+   *
+   * `nextWordAt` rides along because `TheNextWordIsAnnouncedInAdvance` wants
+   * that time readable from the moment today's game is over, and while the
+   * finished game waits off the board `TodaysGame` — the one surface that
+   * renders it — is not on screen at all.
+   */
+  const todaysDaily = $derived(
+    todaysGame === null || todaysGame.keptDay === null || todaysGame.keptStatus === null
+      ? null
+      : {
+          day: todaysGame.keptDay,
+          status: todaysGame.keptStatus,
+          isCurrent: todaysGame.keptIsCurrent,
+          isTodays: todaysGame.isTodays,
+          today: todaysGame.today,
+          nextWordAt: todaysGame.nextWordAt
+        }
+  );
+
   const hardModeCostsThisGame = $derived(
     game !== null && game.status === 'in_progress' && game.guesses.length >= 1
   );
@@ -121,12 +153,31 @@
    * started. A game is identified by that rather than by the object, because
    * every dispatch replaces the object; two games cannot share the moment,
    * because starting one always retires the other first.
+   *
+   * Daily is the one mode that puts a game back rather than making one, so it
+   * is the one mode whose incoming game can carry a moment already dismissed.
+   * `startGame` below is why that does not outlive the choice.
    */
   let closedConclusionFor = $state<number | null>(null);
 
   const conclusionShowing = $derived(
     game !== null && isFinishedByPlay(game) && closedConclusionFor !== game.startedAt
   );
+
+  /*
+   * Choosing a mode, from wherever it is offered.
+   *
+   * The dismissal is cleared first because Daily does not always start a game:
+   * `ReturnToTodaysDailyGame` puts today's kept game back with the moment it
+   * started intact, and `OneGameADay` says a finished one comes back "with its
+   * conclusion showing", exactly as Continue brings one back. A marker left
+   * over from the last time that same game was on the board would answer the
+   * choice with a bare board instead.
+   */
+  function startGame(mode: StartableMode): void {
+    closedConclusionFor = null;
+    store?.dispatch({ kind: 'new_game', mode });
+  }
 
   /*
    * One notice, one place, applied to the one kind that has a surface of its
@@ -263,11 +314,13 @@
           lastMode={app.lastMode}
           currentMode={game?.mode ?? null}
           currentStatus={game?.status ?? null}
+          dailyIsTodays={todaysGame?.isTodays ?? true}
+          {todaysDaily}
           oncontinue={() => {
             store?.dispatch({ kind: 'continue' });
           }}
           onnewgame={(mode: StartableMode) => {
-            store?.dispatch({ kind: 'new_game', mode });
+            startGame(mode);
           }}
         />
       {:else if game !== null}
@@ -292,6 +345,7 @@
           shareable={panel === null && !conclusionShowing ? shareable : null}
           announcement={app.announcement}
           announcementSequence={app.announcementSequence}
+          todaysGame={dailyOnBoard}
           onletter={(letter: string) => {
             store?.dispatch({ kind: 'enter_letter', letter });
           }}
@@ -322,11 +376,15 @@
             attemptsUsed={game.guesses.length}
             secondsRemaining={store.secondsRemaining}
             {repeatMode}
+            todaysGame={dailyOnBoard}
             onstop={() => {
               store?.dispatch({ kind: 'stop_countdown' });
             }}
             onnewgame={(mode: StartableMode) => {
-              store?.dispatch({ kind: 'new_game', mode });
+              startGame(mode);
+            }}
+            onwelcome={() => {
+              store?.dispatch({ kind: 'return_to_welcome' });
             }}
             onshareresults={() => {
               store?.dispatch({ kind: 'share_results' });
@@ -360,7 +418,7 @@
           settings={app.settings}
           highContrastActive={store.highContrastActive}
           hardModeMayBeEnabled={store.hardModeMayBeEnabled}
-          hardModeReleased={game?.hardModeReleased ?? false}
+          hardModeBlocker={store.hardModeBlocker}
           {hardModeCostsThisGame}
           onclose={() => (panel = null)}
           onchoosetheme={(choice: ThemeChoice) => {
@@ -388,6 +446,8 @@
       {:else if panel === 'statistics'}
         <StatisticsPanel
           statistics={app.statistics}
+          dailyStatistics={app.dailyStatistics}
+          today={store.today}
           answersUnseen={answersUnseen(app.pool, words.answerWords())}
           answersMayRepeat={app.pool.hasRecycled}
           onreset={() => {
@@ -424,9 +484,11 @@
         <GameNavigation
           mode={game?.mode ?? null}
           status={game?.status ?? null}
+          dailyIsTodays={todaysGame?.isTodays ?? true}
+          {todaysDaily}
           {repeatMode}
           onnewgame={(mode: StartableMode) => {
-            store?.dispatch({ kind: 'new_game', mode });
+            startGame(mode);
             // The dialog must not sit over the fresh board it just asked for.
             panel = null;
           }}

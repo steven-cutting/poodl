@@ -3,8 +3,9 @@
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import StatisticsPanel from '../src/lib/components/StatisticsPanel.svelte';
+  import { EMPTY_DAILY_STATISTICS } from '../src/lib/domain/dailyStatistics';
   import { EMPTY_STATISTICS } from '../src/lib/domain/statistics';
-  import { STATISTICS, STATISTICS_WITH_A_LOSS } from './fixtures';
+  import { DAILY_STATISTICS, STATISTICS, STATISTICS_WITH_A_LOSS, TODAY } from './fixtures';
 
   const onreset = fn();
   const onclose = fn();
@@ -27,7 +28,12 @@
     '- `@guarantee FullyKeyboardOperable`, proved by the play function below.',
     '',
     '`@guarantee OnlyRandomAndEndlessAreCounted` is the engine’s: practice and custom games never',
-    'reach these numbers, and `tests/engine.test.ts` is where that is held.'
+    'reach these numbers, and `tests/engine.test.ts` is where that is held.',
+    '',
+    'Composes `DailyStatisticsPanel` — `@guarantee ShownBesideThePrimaryBlock` in',
+    '`docs/specs/daily.allium` — which has no reset control of its own:',
+    '`@guarantee ResetTogetherWithTheRest` is why resetting here clears both blocks, and the',
+    '“Resetting asks first” story below checks the confirmation names the daily record too.'
   ].join('\n');
 
   const { Story } = defineMeta({
@@ -36,6 +42,8 @@
     tags: ['autodocs'],
     args: {
       statistics: STATISTICS_WITH_A_LOSS,
+      dailyStatistics: DAILY_STATISTICS,
+      today: TODAY,
       answersUnseen: 2_386,
       answersMayRepeat: false,
       onreset,
@@ -43,6 +51,11 @@
     },
     argTypes: {
       statistics: { control: false, description: 'The one block: counts, streaks, distribution.' },
+      dailyStatistics: {
+        control: false,
+        description: 'The daily block, shown by DailyStatisticsPanel.'
+      },
+      today: { control: 'number', description: 'day_of(now), for the daily streak’s live view.' },
       answersUnseen: { control: 'number', description: 'Answers the pool has not served yet.' },
       answersMayRepeat: { control: 'boolean', description: 'Whether the pool has recycled.' }
     },
@@ -54,7 +67,14 @@
 <Story name="A run of games" />
 
 <!-- Nothing played. Every number is still stated rather than hidden. -->
-<Story name="Nothing played yet" args={{ statistics: EMPTY_STATISTICS, answersUnseen: 2_393 }} />
+<Story
+  name="Nothing played yet"
+  args={{
+    statistics: EMPTY_STATISTICS,
+    dailyStatistics: EMPTY_DAILY_STATISTICS,
+    answersUnseen: 2_393
+  }}
+/>
 
 <!-- On a streak: current and best agree. -->
 <Story name="On a streak" args={{ statistics: STATISTICS }} />
@@ -78,6 +98,7 @@
   play={async ({ canvasElement }) => {
     // StatisticsPanel.@guarantee ResettingIsDeliberate
     // StatisticsPanel.@guarantee ResettingClearsThePoolToo
+    // DailyStatisticsPanel.@guarantee ResetTogetherWithTheRest
     onreset.mockClear();
     const canvas = within(canvasElement);
 
@@ -89,6 +110,7 @@
     await expect(confirmation).toHaveTextContent(/streak/i);
     await expect(confirmation).toHaveTextContent(/distribution/i);
     await expect(confirmation).toHaveTextContent(/answers/i);
+    await expect(confirmation).toHaveTextContent(/daily/i);
 
     await userEvent.click(canvas.getByRole('button', { name: /keep/i }));
     await expect(onreset).not.toHaveBeenCalled();

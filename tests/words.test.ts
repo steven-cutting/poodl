@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import { GAME_NAME, MIN_ANSWER_WORDS, MIN_GUESS_WORDS, WORD_LENGTH } from '../src/lib/config';
@@ -54,6 +56,46 @@ describe('the bundled word lists', () => {
     expect(answers.length).toBeGreaterThanOrEqual(MIN_ANSWER_WORDS);
     expect(guesses.size).toBeGreaterThanOrEqual(MIN_GUESS_WORDS);
   });
+
+  // TheScheduleIsTheAnswerListInAFixedOrder: the schedule is the answer list,
+  // each member exactly once, not necessarily in the same order it is stored.
+  it('schedules every answer exactly once', () => {
+    const schedule = words.dailySchedule();
+
+    expect(schedule).toHaveLength(answers.length);
+    expect([...schedule].sort()).toEqual([...answers].sort());
+  });
+
+  /*
+   * SchedulePositionsAreFrozenAcrossReleases. No single run can see the
+   * previous release — but this digest *is* the previous release, committed.
+   * It covers every position shipped so far, so a swap, an insertion or a
+   * deletion anywhere in the schedule fails here, where a snapshot of the
+   * first few entries would only have caught a wholesale regeneration.
+   *
+   * FROZEN_ENTRIES never grows. An appended word lands past the prefix and
+   * leaves the digest alone, which is what keeps the intended maintenance —
+   * extending the schedule — a green change. Repairing a withdrawn word in
+   * place does change it, and the new digest is copied in by hand: that is
+   * the deliberate friction, not something to route around. Reproduce it with
+   *
+   *     head -n 1122 src/lib/data/daily-schedule.txt | shasum -a 256
+   */
+  const FROZEN_ENTRIES = 1122;
+  const FROZEN_DIGEST = '274b7249a4db4ad30ef117afa70e8c63a323c18ab1814c8c1e40c2ff3b90596a';
+
+  it('keeps every position it has ever shipped', () => {
+    const schedule = words.dailySchedule();
+
+    // Asserted first, so a truncated file says so rather than failing as an
+    // opaque hash mismatch.
+    expect(schedule.length).toBeGreaterThanOrEqual(FROZEN_ENTRIES);
+    expect(
+      createHash('sha256')
+        .update(`${schedule.slice(0, FROZEN_ENTRIES).join('\n')}\n`)
+        .digest('hex')
+    ).toBe(FROZEN_DIGEST);
+  });
 });
 
 describe('createFakeWordList', () => {
@@ -69,5 +111,17 @@ describe('createFakeWordList', () => {
 
     expect(words.guessWords().has('apple')).toBe(true);
     expect(words.guessWords().size).toBe(1);
+  });
+
+  it('defaults the schedule to the answer list, in the order given', () => {
+    const words = createFakeWordList(['apple', 'adopt']);
+
+    expect(words.dailySchedule()).toEqual(['apple', 'adopt']);
+  });
+
+  it('takes an explicit schedule instead, when a test needs a different order', () => {
+    const words = createFakeWordList(['apple', 'adopt'], [], ['adopt', 'apple']);
+
+    expect(words.dailySchedule()).toEqual(['adopt', 'apple']);
   });
 });

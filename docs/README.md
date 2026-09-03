@@ -12,7 +12,7 @@ Every page below is registered in `manifest.yml`, owns at least one topic, and i
 reachable from here. That is the whole of the arrangement; the rules behind it are in
 [Documentation contract](reference/documentation-contract.md).
 
-Behaviour is specified separately, in Allium, under `docs/specs/` — five modules rooted
+Behaviour is specified separately, in Allium, under `docs/specs/` — six modules rooted
 at [`words.allium`](specs/words.allium). Those files are not part of this handbook; they
 are its subject. Start at [Specifications](explanation/specifications.md) to understand
 how the two relate.

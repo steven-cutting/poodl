@@ -32,6 +32,7 @@ the specifications under `docs/specs/`, and unresolved ones are recorded there a
 | [0009](0009-poodl-lives-at-pnut-fans.md) | Poodl lives at pnut.fans |
 | [0010](0010-biscuit-games-design-system.md) | The Biscuit Games design system |
 | [0011](0011-project-managed-allium-cli.md) | A project-managed Allium binary |
+| [0012](0012-the-daily-word-is-a-function-of-the-date.md) | The daily word is a function of the date |
 
 ## Writing a new one
 

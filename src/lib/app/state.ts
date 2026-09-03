@@ -1,5 +1,7 @@
 import { EMPTY_POOL } from '$lib/domain/answerPool';
 import type { AnswerPool } from '$lib/domain/answerPool';
+import { EMPTY_DAILY_STATISTICS } from '$lib/domain/dailyStatistics';
+import type { DailyStatistics } from '$lib/domain/dailyStatistics';
 import { EMPTY_STATISTICS } from '$lib/domain/statistics';
 import type { Statistics } from '$lib/domain/statistics';
 import type {
@@ -15,10 +17,11 @@ import type {
  * Everything Poodl knows, in one value.
  *
  * The shape follows `docs/specs/` entity by entity: `Player` and its one
- * `Game`, `Settings`, `Statistics` and `AnswerPool`. There is no collection of
- * games, because `Player.OnlyTheCurrentGameIsKept` says every retirement path
- * removes the game it retires — so a game that is not the current one does not
- * exist to be stored.
+ * `Game`, `Settings`, `Statistics` and `AnswerPool`. game.allium's
+ * `OnlyTheCurrentAndTheDailyGameAreKept` widens the one-game rule: every
+ * retirement path still removes the game it retires, except a daily game
+ * leaving the board, which is kept rather than discarded (`setAsideDaily`
+ * below, and `keptDailyGame`, which reads it back as `Player.daily_game`).
  */
 
 /** `game.allium`'s `Game` entity, less its back reference to the player. */
@@ -110,12 +113,23 @@ export interface ShareableView {
 export interface AppState {
   /** `Player.current_game`: in progress, or just finished and not yet replaced. */
   currentGame: GameState | null;
+  /**
+   * Today's daily game, while it is off the board — `null` both when there is
+   * no kept game and when the kept game is the one current (in which case
+   * `currentGame` already holds it). Read `Player.daily_game` back via
+   * `keptDailyGame`, which checks `currentGame` first: a field that mirrored
+   * `Player.daily_game` unconditionally would go stale the moment a keystroke
+   * replaced `currentGame` with a new object, since nothing else would know to
+   * update a second copy of the same live game.
+   */
+  setAsideDaily: GameState | null;
   /** `Player.last_mode`: the mode this player last chose for themselves. */
   lastMode: StartableMode | null;
   /** `Player.awaiting_welcome`. */
   awaitingWelcome: boolean;
   settings: Settings;
   statistics: Statistics;
+  dailyStatistics: DailyStatistics;
   pool: AnswerPool;
   notice: Notice | null;
   shareable: Shareable | null;
@@ -158,10 +172,12 @@ export const DEFAULT_SETTINGS: Settings = {
 export function createInitialState(): AppState {
   return {
     currentGame: null,
+    setAsideDaily: null,
     lastMode: null,
     awaitingWelcome: false,
     settings: { ...DEFAULT_SETTINGS },
     statistics: EMPTY_STATISTICS,
+    dailyStatistics: EMPTY_DAILY_STATISTICS,
     pool: EMPTY_POOL,
     notice: null,
     shareable: null,
@@ -175,6 +191,14 @@ export function createInitialState(): AppState {
 /** `Player.can_continue`: a game to resume, or a mode to start another in. */
 export function canContinue(state: AppState): boolean {
   return state.currentGame !== null || state.lastMode !== null;
+}
+
+/**
+ * `Player.daily_game`: today's kept game, whether it is on the board or set
+ * aside. Reconstructed rather than stored as one field — see `setAsideDaily`.
+ */
+export function keptDailyGame(state: AppState): GameState | null {
+  return state.currentGame?.mode === 'daily' ? state.currentGame : state.setAsideDaily;
 }
 
 /** `Game.attempts_remaining`. */

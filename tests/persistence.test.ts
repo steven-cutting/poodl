@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { STORAGE_KEY, loadState, saveState } from '../src/lib/app/persistence';
 import { MAX_ATTEMPTS } from '../src/lib/config';
 import { createInitialState } from '../src/lib/app/state';
-import type { AppState } from '../src/lib/app/state';
+import type { AppState, GameState } from '../src/lib/app/state';
+import { EMPTY_DAILY_STATISTICS, recordDailyWin } from '../src/lib/domain/dailyStatistics';
 import { createFakeStorage, createWebStorage } from '../src/lib/ports/storage';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
 
@@ -20,6 +21,23 @@ function lived(): AppState {
     { kind: 'choose_theme', choice: 'light' },
     { kind: 'set_high_contrast', enabled: true }
   );
+}
+
+/**
+ * A daily-shaped `GameState`, built from an ordinary played game rather than
+ * through the reducer — persistence's own contract does not depend on which
+ * mode created the record, only on what the record contains, so this proves
+ * `readGame` accepts a daily game without needing the reducer's daily support
+ * (that lands separately, in `tests/daily.test.ts`).
+ */
+function dailyGame(currentInput = ''): GameState {
+  const played = playGuess(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }), 'crumb');
+  const game = played.currentGame;
+
+  if (game === null) {
+    throw new Error('expected a game');
+  }
+  return { ...game, mode: 'daily', currentInput };
 }
 
 function roundTrip(state: AppState): AppState {
@@ -136,6 +154,146 @@ describe('saving and loading', () => {
     expect(waiting.awaitingWelcome).toBe(true);
     expect(roundTrip(waiting).awaitingWelcome).toBe(false);
   });
+
+  // TheDailyGamePlaysItsDaysWord: a daily game is an ordinary Game once it
+  // exists, so it round-trips like any other mode's.
+  it('brings a daily game on the board back like any other mode', () => {
+    const state: AppState = { ...fresh(), currentGame: dailyGame('ap') };
+    const loaded = roundTrip(state);
+
+    expect(loaded.currentGame).toEqual(state.currentGame);
+  });
+
+  // KeepTodaysDailyGame: a daily game set aside, off the board.
+  it('brings a set-aside daily game back with its guesses and current input', () => {
+    const state: AppState = { ...fresh(), setAsideDaily: dailyGame('ap') };
+    const loaded = roundTrip(state);
+
+    expect(loaded.setAsideDaily).toEqual(state.setAsideDaily);
+    expect(loaded.currentGame).toBeNull();
+  });
+
+  /*
+   * ThereIsOnlyOneDailyGame: a blob where the game on the board and the
+   * set-aside slot disagree (both non-null, both daily) cannot arise from
+   * saveState, only from damage or an older, buggier write — the one on the
+   * board wins, and the stale slot is discarded on load.
+   */
+  it('keeps only one daily game when the board and the set-aside slot disagree', () => {
+    const onBoard = dailyGame('ap');
+    const setAside = dailyGame('a');
+    const state: AppState = { ...fresh(), currentGame: onBoard, setAsideDaily: setAside };
+    const loaded = roundTrip(state);
+
+    expect(loaded.currentGame).toEqual(onBoard);
+    expect(loaded.setAsideDaily).toBeNull();
+  });
+});
+
+/*
+ * daily.allium — the `DailyStatistics` block. Mirrors `Statistics`'s own
+ * persistence tests: each invariant is named, and each case breaks exactly
+ * one clause while satisfying the other four.
+ */
+describe('the daily statistics block', () => {
+  it('brings the daily statistics block back', () => {
+    const dailyStatistics = recordDailyWin(EMPTY_DAILY_STATISTICS, 3, 4);
+    const state: AppState = { ...fresh(), dailyStatistics };
+    const loaded = roundTrip(state);
+
+    expect(loaded.dailyStatistics).toEqual(dailyStatistics);
+  });
+
+  it('refuses a block the specifications say cannot exist', () => {
+    const storage = createFakeStorage();
+    saveState(storage, {
+      ...lived(),
+      dailyStatistics: recordDailyWin(EMPTY_DAILY_STATISTICS, 3, 4)
+    });
+    const stored = JSON.parse(storage.read(STORAGE_KEY) as string) as Record<string, unknown>;
+    const empty = EMPTY_DAILY_STATISTICS;
+
+    const withDaily = (dailyStatistics: Record<string, unknown>): AppState =>
+      loadState(
+        createFakeStorage({ [STORAGE_KEY]: JSON.stringify({ ...stored, dailyStatistics }) })
+      );
+
+    /** Every win taken in one guess, so the buckets account for the number. */
+    const buckets = (wins: number): number[] =>
+      Array.from({ length: MAX_ATTEMPTS }, (_unused, index) => (index === 0 ? wins : 0));
+
+    // WinsFallWithinDaysPlayed.
+    expect(
+      withDaily({
+        daysPlayed: 1,
+        daysWon: 2,
+        currentStreak: 1,
+        maxStreak: 1,
+        lastWonDay: 1,
+        buckets: buckets(2)
+      }).dailyStatistics
+    ).toEqual(empty);
+
+    // CurrentStreakNeverExceedsMaximum.
+    expect(
+      withDaily({
+        daysPlayed: 3,
+        daysWon: 2,
+        currentStreak: 2,
+        maxStreak: 1,
+        lastWonDay: 3,
+        buckets: buckets(2)
+      }).dailyStatistics
+    ).toEqual(empty);
+
+    // StreakCannotExceedWins.
+    expect(
+      withDaily({
+        daysPlayed: 3,
+        daysWon: 1,
+        currentStreak: 2,
+        maxStreak: 2,
+        lastWonDay: 3,
+        buckets: buckets(1)
+      }).dailyStatistics
+    ).toEqual(empty);
+
+    // DistributionAccountsForEveryWin.
+    expect(
+      withDaily({
+        daysPlayed: 3,
+        daysWon: 2,
+        currentStreak: 1,
+        maxStreak: 2,
+        lastWonDay: 3,
+        buckets: buckets(1)
+      }).dailyStatistics
+    ).toEqual(empty);
+
+    // AStreakImpliesAWin.
+    expect(
+      withDaily({
+        daysPlayed: 1,
+        daysWon: 1,
+        currentStreak: 1,
+        maxStreak: 1,
+        lastWonDay: null,
+        buckets: buckets(1)
+      }).dailyStatistics
+    ).toEqual(empty);
+
+    // And a history that holds all five comes back untouched.
+    const honest = {
+      daysPlayed: 3,
+      daysWon: 2,
+      currentStreak: 1,
+      maxStreak: 2,
+      lastWonDay: 5,
+      buckets: [1, 1, 0, 0, 0, 0]
+    };
+
+    expect(withDaily(honest).dailyStatistics).toEqual(honest);
+  });
 });
 
 describe('loading from a device that has nothing usable', () => {
@@ -164,15 +322,20 @@ describe('loading from a device that has nothing usable', () => {
 
   it('ignores fields it does not know about', () => {
     const storage = createFakeStorage();
-    const state = lived();
+    const state: AppState = {
+      ...lived(),
+      setAsideDaily: dailyGame('ap'),
+      dailyStatistics: recordDailyWin(EMPTY_DAILY_STATISTICS, 2, 3)
+    };
     saveState(storage, state);
 
     const stored = JSON.parse(storage.read(STORAGE_KEY) as string) as Record<string, unknown>;
     const extended = JSON.stringify({ ...stored, somethingLater: { of: 'no concern' } });
+    const loaded = loadState(createFakeStorage({ [STORAGE_KEY]: extended }));
 
-    expect(loadState(createFakeStorage({ [STORAGE_KEY]: extended })).currentGame).toEqual(
-      state.currentGame
-    );
+    expect(loaded.currentGame).toEqual(state.currentGame);
+    expect(loaded.setAsideDaily).toEqual(state.setAsideDaily);
+    expect(loaded.dailyStatistics).toEqual(state.dailyStatistics);
   });
 
   /**
@@ -214,7 +377,7 @@ describe('loading from a device that has nothing usable', () => {
         })
       );
 
-    expect(withGame({ mode: 'daily' }).currentGame).toBeNull();
+    expect(withGame({ mode: 'unknown' }).currentGame).toBeNull();
     expect(withGame({ answer: 'apples' }).currentGame).toBeNull();
     expect(withGame({ currentInput: 'toolong' }).currentGame).toBeNull();
     /*

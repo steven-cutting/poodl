@@ -49,6 +49,7 @@ export const LOST: readonly string[] = ['adopt', 'alarm', 'again', 'aroma', 'asi
  */
 
 import { EMPTY_POOL } from '../src/lib/domain/answerPool';
+import { EMPTY_DAILY_STATISTICS, recordDailyWin } from '../src/lib/domain/dailyStatistics';
 import { renderShareGrid } from '../src/lib/domain/share';
 import { EMPTY_STATISTICS, recordLoss, recordWin } from '../src/lib/domain/statistics';
 import { DEFAULT_SETTINGS } from '../src/lib/app/state';
@@ -96,7 +97,7 @@ export const LOST_GAME: GameState = game(LOST, 'lost');
 export const CUSTOM_GAME: GameState = game(IN_PROGRESS, 'in_progress', { mode: 'custom' });
 
 /** A mode a surface can be shown in without a game behind it. */
-export const MODES: readonly GameMode[] = ['random', 'endless', 'practice', 'custom'];
+export const MODES: readonly GameMode[] = ['random', 'endless', 'practice', 'custom', 'daily'];
 
 export const SETTINGS = { ...DEFAULT_SETTINGS };
 
@@ -107,6 +108,15 @@ export const STATISTICS = [3, 4, 4, 5, 3, 4].reduce(
 );
 
 export const STATISTICS_WITH_A_LOSS = recordLoss(STATISTICS);
+
+/** A four-day streak, days 1 through 4, so today reads as still on it. */
+export const DAILY_STATISTICS = [1, 2, 3, 4].reduce(
+  (dailyStatistics, day) => recordDailyWin(dailyStatistics, day, ((day + 2) % 6) + 1),
+  EMPTY_DAILY_STATISTICS
+);
+
+/** Today is `TODAY`: the streak above is still live, not yet decayed. */
+export const TODAY = 4;
 
 export const POOL = EMPTY_POOL;
 
@@ -125,7 +135,7 @@ export const LINK = 'https://steven-cutting.github.io/poodl/?g=yrqt9rd9';
 export const LINK_MADE: ShareableView = { kind: 'custom_link', text: LINK };
 
 export const GRID = renderShareGrid(
-  { mode: 'random', status: 'won', guesses: guessesFrom(WON) },
+  { mode: 'random', status: 'won', guesses: guessesFrom(WON), day: null },
   'standard'
 );
 

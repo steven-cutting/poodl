@@ -1,0 +1,636 @@
+-- allium: 3
+--
+-- Poodl — the daily word
+--
+-- Scope
+--   One word a day, the same for everyone who plays it: which word a day
+--   gets, the one game a player may play on it, what is kept of that game
+--   while another mode is played, and what is remembered across days.
+--
+-- Includes
+--   - The calendar: how days are numbered from an epoch, and where the day
+--     turns — local midnight in one named zone, wherever the player is.
+--   - The day's answer: taken from a schedule supplied as data, in a fixed
+--     order, so that every device carrying the same schedule agrees.
+--   - The one game a day: starting it, returning to it, keeping it aside
+--     while another mode is played, and replacing it when a later day's game
+--     starts.
+--   - Daily statistics: days played, days won, the streak of consecutive
+--     days won, the longest such streak, the distribution of winning guess
+--     counts, and the reset that clears them together with the primary
+--     block.
+--
+-- Excludes
+--   - Playing the game (game.allium). A daily game is an ordinary Game with
+--     mode = daily: letters, scoring, hard mode, winning and losing are all
+--     game.allium's, and this module supplies an answer by emitting
+--     AnswerDrawn exactly as statistics.allium and sharing.allium do.
+--   - What the schedule must satisfy as data (words.allium). This module
+--     reads it through daily_schedule() and states nothing about its shape.
+--   - The daily heading on a shared grid (sharing.allium).
+--   - Random and endless statistics, and the answer pool (statistics.allium).
+--   - How the zone's rules are obtained, how the day is computed, and how
+--     any of this is stored.
+--
+-- Dependencies
+--   words.allium — the Word entity, the answer list and the schedule.
+--   game.allium — Player, Game, NewGameRequested, AnswerDrawn and RetireGame.
+--   statistics.allium — PlayerResetsStatistics, so that one reset clears
+--     both blocks.
+
+use "./words.allium" as words
+use "./game.allium" as game
+use "./statistics.allium" as statistics
+
+------------------------------------------------------------
+-- Contracts
+------------------------------------------------------------
+
+-- Which day it is. Days are numbered, not dated, because a number is what the
+-- schedule is indexed by and what a shared grid carries; the date behind day
+-- one is stated once, in config, and read by nothing else.
+contract DailyCalendar {
+    day_of: (moment: Timestamp) -> Integer
+    day_start: (day: Integer) -> Timestamp
+
+    @invariant DaysAreCountedFromTheEpoch
+        -- day_of is 1 for every moment on config.epoch_date, reckoned as a
+        -- calendar date in config.calendar_zone, 2 for every moment on the
+        -- following date, and so on without gaps. A moment before the epoch
+        -- is treated as day 1 as well: the schedule began then, and a clock
+        -- that says earlier is a clock that is wrong, not a day that is
+        -- missing.
+
+    @invariant TheDayTurnsAtLocalMidnight
+        -- The day advances exactly when the calendar date in
+        -- config.calendar_zone advances, at that zone's own midnight, and at
+        -- no other moment. Where the player is, and what their device's zone
+        -- is, change nothing: two players anywhere on Earth are on the same
+        -- day at the same instant.
+
+    @invariant DayStartIsTheBoundary
+        -- day_start(d) is the earliest moment whose day_of is d, for every
+        -- day from two onwards. Day one is the exception
+        -- DaysAreCountedFromTheEpoch makes: it folds every earlier moment
+        -- into itself, so day one has no earliest moment to name, and
+        -- day_start(1) is the epoch date's own local midnight — where the
+        -- day would have begun had the clamp not reached back past it.
+        -- Either way it is what a surface shows as the moment the next word
+        -- arrives.
+
+    @invariant Deterministic
+        -- The same moment yields the same day on every device and every
+        -- build carrying the same configuration. Nothing here consults the
+        -- player, their settings or their preferences.
+
+    @guidance
+        -- Local midnight in config.calendar_zone is not a fixed offset from
+        -- UTC. The zone observes daylight saving time, so a day is
+        -- occasionally twenty-three or twenty-five hours long, and adding
+        -- twenty-four hours to find the next boundary is wrong twice a year.
+        -- The zone's own rules, as the platform's time zone data states them,
+        -- are the intended source; nothing in this module restates them.
+        --
+        -- day_of is exact; a surface reading it is not. These invariants
+        -- constrain a function of a moment, not how often anything asks for
+        -- one. A view already on screen crosses the boundary when it next
+        -- looks, so it may go on naming the earlier day for a short while
+        -- after midnight, by an interval the implementation chooses and
+        -- states rather than one stated here. Nothing rule-bearing rides on
+        -- that lag: every request reads the clock as it is made, so a player
+        -- who chooses Daily a second after midnight gets the new day's word
+        -- whatever the last look said.
+}
+
+-- Which word a day gets. The schedule is data, supplied on words.allium's
+-- terms; this contract says only how a day indexes into it.
+contract DailyAnswer {
+    daily_answer: (day: Integer) -> words/Word
+
+    @invariant TheDayPlaysItsEntry
+        -- The word for day n is entry ((n - 1) mod count) + 1 of
+        -- words/daily_schedule(), where count is the number of entries: day
+        -- 1 plays the first entry, day count plays the last, and day
+        -- count + 1 starts again from the first. Like GuessScoring's two
+        -- passes, this is the definition and not a suggestion.
+
+    @invariant EveryDailyAnswerIsAnAnswerWord
+        -- daily_answer(n) is in words/answer_words() for every n, because
+        -- the schedule is drawn from that list and from nowhere else.
+
+    @invariant SameDaySameWordEverywhere
+        -- For a given day, every device and every build carrying the same
+        -- schedule produces the same word. The word depends on the day and
+        -- the schedule, never on the player, the device or the clock beyond
+        -- the day it named.
+
+    @invariant NoRepeatWithinOnePass
+        -- Two days in the same pass through the schedule never share a word,
+        -- because no word is scheduled twice; a word comes round again only
+        -- once every entry has had its day.
+
+    @guidance
+        -- The wrap is what happens instead of nothing. Appending to the
+        -- schedule before it runs out is the intended maintenance, and within
+        -- the first pass an append changes no day already played or already
+        -- scheduled: a day that would have wrapped plays the appended word
+        -- instead, which is the point. After a wrap the arithmetic is less
+        -- kind — each append shifts every later day by one — and that is
+        -- stated here rather than hidden, so that whoever extends a schedule
+        -- that has already wrapped knows what moves.
+        --
+        -- The day a game is for is the day it was started on.
+        -- StartTodaysDailyGame reads day_of(now), and BeginGame stamps
+        -- started_at with now in the same chain, so day_of(started_at) is
+        -- the day the word was chosen for. An implementation decides the day
+        -- once and stamps it, rather than reading the clock a second time
+        -- after the emission.
+}
+
+------------------------------------------------------------
+-- Entities and Variants
+------------------------------------------------------------
+
+-- The daily record. One block, declared as a default below rather than
+-- created by any rule, and separate from statistics.allium's: a streak of
+-- days is a different quantity from a streak of games, and a run of random
+-- games neither builds nor breaks it.
+entity DailyStatistics {
+    days_played: Integer
+    days_won: Integer
+
+    -- The run of consecutive days won, as it stood when the last daily game
+    -- was finished by play. A day that has since passed unwon has ended it;
+    -- the panel reads last_won_day to tell, because a rule fires only when a
+    -- game ends and a missed day ends no game.
+    current_streak: Integer
+    max_streak: Integer
+
+    -- The day of the most recent win. Null until the first.
+    last_won_day: Integer?
+
+    -- Relationships
+    buckets: DailyDistributionBucket with block = this
+
+    -- Derived
+    losses: days_played - days_won
+    win_percentage: if days_played = 0: 0.0 else: days_won * 100.0 / days_played
+
+    invariant WinsFallWithinDaysPlayed {
+        days_won >= 0 and days_won <= days_played
+    }
+
+    invariant CurrentStreakNeverExceedsMaximum {
+        current_streak >= 0 and current_streak <= max_streak
+    }
+
+    -- The distribution counts wins and only wins, so it accounts for every
+    -- win and nothing else. A loss moves days_played and the streak, never a
+    -- bucket.
+    invariant DistributionAccountsForEveryWin {
+        sum(buckets, b => b.win_count) = days_won
+    }
+
+    invariant StreakCannotExceedWins {
+        current_streak <= days_won
+    }
+
+    invariant AStreakImpliesAWin {
+        current_streak > 0 implies last_won_day != null
+    }
+}
+
+-- One bucket per attempt count: how many days were won in that many guesses.
+-- statistics.allium's bucket cannot be reused: its back reference is typed to
+-- that module's block.
+entity DailyDistributionBucket {
+    block: DailyStatistics
+    guesses_used: Integer
+    win_count: Integer
+
+    invariant BucketIsAnAttemptNumber {
+        guesses_used >= 1 and guesses_used <= game/config.max_attempts
+    }
+
+    invariant WinCountIsNeverNegative {
+        win_count >= 0
+    }
+}
+
+------------------------------------------------------------
+-- Config
+------------------------------------------------------------
+
+config {
+    -- The calendar date of day 1, as a date in calendar_zone. Every day is
+    -- numbered from here, and the schedule is indexed by that number, so
+    -- moving this renumbers every day and re-pairs every word: it is written
+    -- once, before the mode ships, and then left alone.
+    epoch_date: String = "2026-09-01"
+
+    -- The zone whose local midnight turns the day, named as the IANA time
+    -- zone database names it: the Pacific coast of North America, which
+    -- observes daylight saving time. See DailyCalendar's guidance.
+    calendar_zone: String = "America/Los_Angeles"
+}
+
+------------------------------------------------------------
+-- Defaults
+------------------------------------------------------------
+
+-- Not named "daily": a bound name resolves before an enum literal, and this
+-- module compares modes against daily on every rule.
+default DailyStatistics daily_block = {
+    days_played: 0,
+    days_won: 0,
+    current_streak: 0,
+    max_streak: 0
+}
+
+default DailyDistributionBucket daily_bucket_one = { block: daily_block, guesses_used: 1, win_count: 0 }
+default DailyDistributionBucket daily_bucket_two = { block: daily_block, guesses_used: 2, win_count: 0 }
+default DailyDistributionBucket daily_bucket_three = { block: daily_block, guesses_used: 3, win_count: 0 }
+default DailyDistributionBucket daily_bucket_four = { block: daily_block, guesses_used: 4, win_count: 0 }
+default DailyDistributionBucket daily_bucket_five = { block: daily_block, guesses_used: 5, win_count: 0 }
+default DailyDistributionBucket daily_bucket_six = { block: daily_block, guesses_used: 6, win_count: 0 }
+
+------------------------------------------------------------
+-- Rules
+------------------------------------------------------------
+
+-- Choosing Daily ---------------------------------------------------------
+
+-- Three rules answer the one request, and which fires depends on what is
+-- kept: nothing, or a game from an earlier day; today's game, off the board;
+-- today's game, on the board. The mode guard keeps all three apart from
+-- game.allium's practice rule and statistics.allium's pooled draw, which
+-- answer the same trigger for the other modes.
+
+-- No game for today exists yet, so today's word is drawn. game.allium takes
+-- it from here: BeginGame retires whatever is on the board and creates the
+-- game, and KeepTodaysDailyGame below then keeps it.
+rule StartTodaysDailyGame {
+    when: game/NewGameRequested(player, mode)
+
+    requires: mode = daily
+
+    let today = day_of(now)
+    let kept = player.daily_game
+
+    requires: not exists kept or day_of(kept.started_at) != today
+
+    ensures: game/AnswerDrawn(player: player, mode: daily, answer: daily_answer(today))
+
+    @guidance
+        -- A kept game from an earlier day is not removed here. It goes when
+        -- the new game is created, in KeepTodaysDailyGame, so that the two
+        -- cannot come apart: no daily game is ever removed without another
+        -- taking its place. Nothing about the old game is recorded, finished
+        -- or not: an unfinished day is a day not won, which the streak
+        -- already reads as such (see RecordDailyWin).
+        --
+        -- The mode is a literal, as in ProvidePracticeAnswer: the request
+        -- carries a StartableMode and a game carries a GameMode, and the
+        -- requires clause has already fixed which one this is.
+}
+
+-- Today's game exists and is off the board — set aside while another mode
+-- was played — so it comes back. This is the one way a game becomes current
+-- without being created, which is why it does for itself what BeginGame and
+-- MakeNewGameCurrent do between them: retire the outgoing game, take the
+-- board, dismiss the welcome screen, remember the mode.
+rule ReturnToTodaysDailyGame {
+    when: game/NewGameRequested(player, mode)
+
+    requires: mode = daily
+
+    let today = day_of(now)
+    let kept = player.daily_game
+
+    requires: exists kept
+    requires: day_of(kept.started_at) = today
+    requires: not kept.is_current
+
+    let outgoing = player.current_game
+
+    ensures:
+        if exists outgoing:
+            game/RetireGame(game: outgoing)
+        player.current_game = kept
+        player.awaiting_welcome = false
+        player.last_mode = daily
+
+    @guidance
+        -- The outgoing game is retired on game.allium's ordinary terms, so
+        -- coming back to Daily part way through a random game costs that
+        -- game exactly what starting any other game would: a loss if it had
+        -- a guess in it, nothing if it had none. The kept game comes back
+        -- exactly as it was left — its guesses, its typed letters, and its
+        -- conclusion if it had one.
+}
+
+-- Today's game is already on the board. There is no second game to start and
+-- nothing to retire; only the welcome screen, if that is what the player was
+-- looking at, is dismissed — the same as continuing. Without this rule a
+-- player who reloaded part way through today's game and chose Daily rather
+-- than Continue would be left on the welcome screen.
+rule StayOnTodaysDailyGame {
+    when: game/NewGameRequested(player, mode)
+
+    requires: mode = daily
+
+    let today = day_of(now)
+    let kept = player.daily_game
+
+    requires: exists kept
+    requires: day_of(kept.started_at) = today
+    requires: kept.is_current
+
+    ensures: player.awaiting_welcome = false
+}
+
+-- Keeping the game --------------------------------------------------------
+
+-- The new daily game becomes the kept one, and the one kept until now goes.
+-- This is the single place a daily game is removed: game.allium's retirement
+-- rules leave a daily game alone, so leaving the board never removes one, and
+-- only the next daily game does.
+rule KeepTodaysDailyGame {
+    when: g: game/Game.created
+
+    requires: g.mode = daily
+
+    let previous = g.player.daily_game
+
+    ensures:
+        g.player.daily_game = g
+        if exists previous:
+            not exists previous
+
+    @guidance
+        -- previous is bound before the ensures block, so it is the game kept
+        -- until now and not the one being kept from now on. When that game
+        -- was still on the board, BeginGame has already retired it — to no
+        -- effect, by the guards on game.allium's retirement rules — and
+        -- MakeNewGameCurrent has put the new game there; the removal here
+        -- completes what those two began.
+}
+
+-- Recording a day --------------------------------------------------------
+
+-- A win: one more day played, one more won, a longer streak if yesterday was
+-- won too and a streak of one otherwise, and a mark in the bucket for however
+-- many guesses it took.
+rule RecordDailyWin {
+    when: g: game/Game.status transitions_to won
+
+    requires: g.mode = daily
+
+    let day = day_of(g.started_at)
+    let streak = if daily_block.last_won_day = day - 1: daily_block.current_streak + 1 else: 1
+    let bucket = DailyDistributionBucket{block: daily_block, guesses_used: g.attempts_used}
+
+    requires: exists bucket
+
+    ensures:
+        daily_block.days_played = daily_block.days_played + 1
+        daily_block.days_won = daily_block.days_won + 1
+        daily_block.current_streak = streak
+        daily_block.last_won_day = day
+        bucket.win_count = bucket.win_count + 1
+        if streak > daily_block.max_streak:
+            daily_block.max_streak = streak
+
+    @guidance
+        -- A streak is consecutive days won, not consecutive games: a day
+        -- skipped, or started and never finished, ends it as surely as a
+        -- loss does, because the next win finds last_won_day further back
+        -- than yesterday. A null last_won_day compares false, so the first
+        -- win ever starts a streak of one without a case of its own.
+        --
+        -- The day is the game's, not the clock's: a game finished after
+        -- midnight counts for the day it was started on, which is the day
+        -- whose word it was given. The streak is bound before the ensures
+        -- block for the reason RecordWin gives.
+}
+
+-- A loss: the day counts, the streak goes, and the distribution is untouched.
+rule RecordDailyLoss {
+    when: g: game/Game.status transitions_to lost
+
+    requires: g.mode = daily
+
+    ensures:
+        daily_block.days_played = daily_block.days_played + 1
+        daily_block.current_streak = 0
+}
+
+-- Starting over ----------------------------------------------------------
+
+-- One action clears one record of play. statistics.allium's reset clears the
+-- numbers and the pool; this block goes with them, on the same action, and
+-- the confirmation there names it. The kept game is not touched: it is a
+-- game on the board or set aside, not a statistic, exactly as the primary
+-- reset leaves the current game alone.
+rule ResetDailyStatisticsToo {
+    when: statistics/PlayerResetsStatistics(player)
+
+    ensures:
+        daily_block.days_played = 0
+        daily_block.days_won = 0
+        daily_block.current_streak = 0
+        daily_block.max_streak = 0
+        daily_block.last_won_day = null
+        for b in daily_block.buckets:
+            b.win_count = 0
+}
+
+------------------------------------------------------------
+-- Invariants
+------------------------------------------------------------
+
+-- A daily game plays the word its day was given, and no other. Stated over
+-- stored state — the game's start, not the clock — so that it holds of a
+-- game finished after midnight as much as of one finished before.
+invariant TheDailyGamePlaysItsDaysWord {
+    for g in game/Games:
+        g.mode = daily implies g.answer = daily_answer(day_of(g.started_at))
+}
+
+------------------------------------------------------------
+-- Surfaces
+------------------------------------------------------------
+
+-- What Daily shows that the board does not: which day it is, whether today's
+-- game exists and how it stands, and when the next word arrives. Choosing
+-- Daily is not provided here: it is game.allium's NewGameRequested with mode
+-- daily, offered by Welcome, GameNavigation and GameBoard alongside the other
+-- modes, and this module answers it. GameConclusion is not among them: a
+-- finished daily game offers no mode at all, only the way back to the welcome
+-- screen where they are chosen. No related clause names those surfaces, for
+-- the reason sharing.allium gives; the adjacency is in the guarantees.
+surface TodaysGame {
+    facing viewer: game/Player
+
+    let today = day_of(now)
+    let kept = viewer.daily_game
+
+    -- The kept game's own day, exposed beside today's so that a game from an
+    -- earlier day, still under way or still on the board, is never mistaken
+    -- for no game at all or for today's.
+    let kept_day = if exists kept: day_of(kept.started_at) else: null
+    let is_todays = kept_day = today
+    let next_word_at = day_start(today + 1)
+
+    exposes:
+        today
+        kept_day
+        kept?.status
+        kept?.is_current
+        is_todays
+        next_word_at
+
+    contracts:
+        fulfils DailyCalendar
+        fulfils DailyAnswer
+
+    @guarantee OneWordADayForEveryone
+        -- Every player on the same build plays the same word on the same
+        -- day. The word depends on the day and the schedule, on the terms
+        -- DailyAnswer states, and on nothing about the player; the day
+        -- depends on the moment and config.calendar_zone, on the terms
+        -- DailyCalendar states, and on nothing about where they are. A
+        -- player in another zone gets the new word at the same instant, not
+        -- at their own midnight.
+
+    @guarantee OneGameADay
+        -- Today's word can be played once. Choosing Daily when today's game
+        -- exists brings that game back in whatever state it was left — under
+        -- way with its guesses and typed letters, or finished with its
+        -- conclusion showing — and never starts another game on the same
+        -- word. A finished game comes back onto game.allium's
+        -- GameConclusion, exactly as a finished game resumed by Continue
+        -- does.
+
+    @guarantee TheDayIsPerceivable
+        -- Which day's word is on the board is readable as text — the day
+        -- number — and so is whether today's game has been played and how
+        -- it ended. Neither is signalled only by which control looks
+        -- selected or by a colour.
+
+    @guarantee TheNextWordIsAnnouncedInAdvance
+        -- When the next word arrives is available as text from the moment
+        -- today's game is over. Once the date in config.calendar_zone has
+        -- moved on, a game from the earlier day still on the board is said
+        -- to be that day's, and the new word is said to be available, rather
+        -- than the old game being left looking like today's. Available means
+        -- available where the player is looking: while today's finished game
+        -- waits off the board, the surfaces that offer Daily say the time
+        -- too, because the game that would otherwise carry it is not on
+        -- screen and coming back to it costs the game that is.
+
+    @guarantee LeavingDailyDoesNotSpendTheDay
+        -- Starting a game in another mode, or opening a custom link, sets
+        -- today's game aside with its guesses and its typed letters. It is
+        -- not abandoned, nothing is counted, and choosing Daily brings it
+        -- back. The other modes' games pay their ordinary price when Daily
+        -- is chosen over them: a random game with a guess in it counts as a
+        -- loss, on the terms game.allium's GameNavigation states.
+
+    @guarantee TodaysGameSurvivesReload
+        -- Today's game persists between sessions on the same device and
+        -- browser, on the board or set aside, exactly as game.allium's
+        -- InProgressGameSurvivesReload promises for the game on the board.
+        -- Reopening Poodl with Daily as the remembered mode meets the
+        -- welcome screen, unless it has been turned off, and Continue
+        -- returns to today's game rather than drawing a new one.
+
+    @guarantee ANewDayReplacesTheOldGame
+        -- Once the date in config.calendar_zone has moved on, choosing Daily
+        -- starts the new day's game, and the earlier day's game goes,
+        -- finished or not. An unfinished earlier day is recorded nowhere:
+        -- the streak, which counts consecutive days won, already reads it as
+        -- a day not won. Where the choice would discard a game still under
+        -- way, it says so before it is taken, as
+        -- StartingAGameEndsTheOneUnderWay does for the other modes.
+
+    @guarantee ThereIsNoNewGameInDaily
+        -- No control offers a second daily game. Where the other modes offer
+        -- a new game of the same kind, Daily offers the time the next word
+        -- arrives and the way back to the welcome screen, where another mode
+        -- is chosen; asking for Daily while today's game is on the board
+        -- leaves it exactly where it is.
+
+    @guarantee TheWordIsAsHiddenAsAnyOther
+        -- Today's answer is a function of the date and the bundled schedule,
+        -- so anyone who reads the bundle can find tomorrow's word. That is
+        -- the trade custom links already make — there is no server to keep a
+        -- word on — and it is obfuscation, not security, on the terms
+        -- docs/decisions/0005-obfuscation-not-security.md states. Nothing on
+        -- this surface reveals the answer, or any letter of it, before the
+        -- game ends: AnswerIsNeverExposedWhileInProgress holds for a daily
+        -- game as for any other.
+}
+
+-- The daily record, shown with statistics.allium's panel. It has no control
+-- of its own: the reset that clears it is that panel's, and one action clears
+-- both blocks.
+surface DailyStatisticsPanel {
+    facing viewer: game/Player
+
+    let stats = daily_block
+    let today = day_of(now)
+    let live_streak = if stats.last_won_day >= today - 1: stats.current_streak else: 0
+
+    exposes:
+        stats.days_played
+        stats.days_won
+        stats.losses
+        stats.win_percentage
+        live_streak
+        stats.max_streak
+        for bucket in stats.buckets:
+            bucket.guesses_used
+            bucket.win_count
+
+    @guarantee OnlyDailyGamesAreCountedHere
+        -- Random, endless, practice and custom games never move any number
+        -- on this panel, and daily games never move statistics.allium's. One
+        -- game moves one block.
+
+    @guarantee AStreakIsConsecutiveDays
+        -- The streak counts days won in a row, not games. It is shown as it
+        -- stands today: a day that has passed unwon ends it, and the panel
+        -- shows zero from the next day on, before the player plays again,
+        -- rather than the number the last win left behind. The longest
+        -- streak is unaffected.
+
+    @guarantee DistributionIsReadableWithoutSeeingIt
+        -- Each bucket's attempt number and count are available as text, so
+        -- the distribution can be read by assistive technology rather than
+        -- inferred from the length of a bar.
+
+    @guarantee DailyStatisticsPersistBetweenSessions
+        -- Every number on this panel persists between sessions on the same
+        -- device and browser.
+
+    @guarantee ResetTogetherWithTheRest
+        -- statistics.allium's reset clears this block on the same action,
+        -- and its confirmation says so. There is no separate reset for the
+        -- daily record, and no way to clear one block and keep the other.
+
+    @guarantee ShownBesideThePrimaryBlock
+        -- This record is shown with statistics.allium's StatisticsPanel,
+        -- reachable from wherever that panel is, and labelled as the daily
+        -- record so that its days are never read as that panel's games.
+}
+
+------------------------------------------------------------
+-- Open Questions
+------------------------------------------------------------
+
+-- Today's word is drawn from the schedule and the pool knows nothing of it,
+-- so the same word can come up in a random or endless game on the same day.
+-- Whether the daily answer should be recorded as used, or withheld from the
+-- pool until its day has passed, is not decided.
+open question "Pool overlap - should the day's word be withheld from the random and endless pool?"
