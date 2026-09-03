@@ -19,6 +19,7 @@ export type Command =
   // Arriving — game.allium
   | { kind: 'open' }
   | { kind: 'continue' }
+  | { kind: 'return_to_welcome' }
   | { kind: 'new_game'; mode: StartableMode }
   // Playing — game.allium
   | { kind: 'enter_letter'; letter: string }

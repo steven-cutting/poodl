@@ -18,11 +18,13 @@
    * `OutcomeAnswerAndAttemptsAreAllShown` on a win as well as on a loss, and
    * `NothingButDailyIsRationed` is why another game is always one action away
    * outside Daily. Inside it, `ThereIsNoNewGameInDaily` withholds exactly the
-   * repeat control: `TodaysGame` takes its place, saying when the next word
-   * arrives rather than offering a second go at the same one, and the other
-   * three modes are offered beside it — this dialog keeps the keyboard, so the
-   * header's chip is not one action away from in here, and
-   * `NothingButDailyIsRationed` says they must be.
+   * repeat control: `TodaysGame` says when the next word arrives rather than
+   * offering a second go at the same one, and the footer offers the way back
+   * to the welcome screen in place of a new game — this dialog keeps the
+   * keyboard, so the header's chip is not one action away from in here, and
+   * `NothingButDailyIsRationed` says the welcome screen must be. No mode is
+   * named here: the welcome screen is where the four are equal choices, and
+   * offering a subset of them from a dialog would rank them.
    *
    * It closes, and the board offers it back. The specification gives the modal
    * no dismissal and says the board stays visible behind it, but a dialog that
@@ -43,6 +45,7 @@
     todaysGame = null,
     onstop,
     onnewgame,
+    onwelcome,
     onshareresults,
     onshareanswer,
     onclose,
@@ -61,6 +64,8 @@
     todaysGame?: TodaysGameView | null;
     onstop: () => void;
     onnewgame: (mode: StartableMode) => void;
+    /** `PlayerReturnsToWelcome`, which Daily offers where the rest offer a new game. */
+    onwelcome: () => void;
     onshareresults: () => void;
     onshareanswer: () => void;
     onclose: () => void;
@@ -77,13 +82,6 @@
   } = $props();
 
   const title = $derived(status === 'won' ? 'You won' : 'You lost');
-
-  /** What Daily offers where the other modes offer a new game of the same kind. */
-  const OTHER_MODES: readonly StartableMode[] = ['random', 'endless', 'practice'];
-
-  function label(startable: StartableMode): string {
-    return `${startable.charAt(0).toUpperCase()}${startable.slice(1)}`;
-  }
 
   /*
    * `EndlessContinuesUnlessStopped` asks for stopping to be available "at any
@@ -128,6 +126,14 @@
     </p>
   </div>
 
+  <!--
+    Which day, and when the next word arrives: content, so it reads with the
+    answer and the attempt count rather than riding in the action row.
+  -->
+  {#if mode === 'daily' && todaysGame !== null}
+    <TodaysGame {todaysGame} />
+  {/if}
+
   {#if secondsRemaining !== null}
     <Countdown seconds={secondsRemaining} {onstop} />
   {/if}
@@ -146,16 +152,16 @@
   -->
   {#snippet footer()}
     {#if mode === 'daily'}
-      {#if todaysGame !== null}
-        <TodaysGame {todaysGame} />
-      {/if}
-      {#each OTHER_MODES as startable (startable)}
-        <Button
-          onclick={() => {
-            onnewgame(startable);
-          }}>{label(startable)}</Button
-        >
-      {/each}
+      <!--
+        Secondary, and deliberately: `ThereIsNoNewGameInDaily` means there is
+        nothing to recommend doing next, so this is the one conclusion with no
+        primary action.
+      -->
+      <Button
+        onclick={() => {
+          onwelcome();
+        }}>Play another mode</Button
+      >
     {:else}
       <Button
         variant="primary"

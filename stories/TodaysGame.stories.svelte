@@ -25,8 +25,10 @@
     '  left looking like today’s.',
     '',
     '`daily.allium`’s `@guarantee ThereIsNoNewGameInDaily` — "no control offers a second daily',
-    'game... Daily offers... the time the next word arrives" — is why **GameConclusion** mounts',
-    'this in place of its repeat control. See its "Daily, finished for today" story.'
+    'game... Daily offers the time the next word arrives and the way back to the welcome screen"',
+    '— is why **GameConclusion** mounts this in place of its repeat control. The time is this',
+    'component’s; the way back is **GameConclusion**’s own control. See its "Daily, finished for',
+    'today" story.'
   ].join('\n');
 
   const TODAYS = {

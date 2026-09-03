@@ -11,6 +11,7 @@
   const onshareresults = fn();
   const onshareanswer = fn();
   const onclose = fn();
+  const onwelcome = fn();
   const oncopy = fn();
 
   const OVERVIEW = [
@@ -30,9 +31,11 @@
     '- `@guarantee NothingButDailyIsRationed`. Outside Daily, another game is always one action',
     '  away, whatever the date and however many have been played. Inside it,',
     '  `daily.allium`’s `@guarantee ThereIsNoNewGameInDaily` withholds exactly the repeat control —',
-    '  the **Daily, finished for today** story shows **TodaysGame** standing in its place, with',
-    '  the other three modes beside it so that they stay one action away from inside a dialog',
-    '  that keeps the keyboard.',
+    '  the **Daily, finished for today** story shows **TodaysGame** saying when the next word',
+    '  arrives, and **Play another mode** in the footer where a new game would be. That is the',
+    '  welcome screen, where the four modes are equal choices, kept one action away from inside',
+    '  a dialog that keeps the keyboard. No mode is named in here: offering a subset of them',
+    '  beside the day would rank them.',
     '- `@guarantee ConclusionIsAnnounced` is **Announcer**’s, not this one’s: the modal shows the',
     '  conclusion and the live region says it.',
     '- `ShareCurrentAnswer.@guarantee FullyKeyboardOperable` and',
@@ -65,6 +68,7 @@
       onshareresults,
       onshareanswer,
       onclose,
+      onwelcome,
       oncopy,
       notice: null,
       noticeSequence: 0,
@@ -115,7 +119,8 @@
 
 <!--
   ThereIsNoNewGameInDaily: no repeat control for a finished daily game — the
-  time the next word arrives stands in its place instead.
+  time the next word arrives stands in its place, and the way to the welcome
+  screen stands where a new game would be.
 -->
 <Story
   name="Daily, finished for today"
@@ -138,11 +143,40 @@
 
     await expect(canvas.queryByRole('button', { name: 'New game' })).not.toBeInTheDocument();
     await expect(canvas.getByText(/tomorrow's word arrives/i)).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
 
-    for (const name of ['Random', 'Endless', 'Practice']) {
-      await expect(canvas.getByRole('button', { name })).toBeInTheDocument();
+    for (const name of ['Daily', 'Random', 'Endless', 'Practice']) {
+      await expect(canvas.queryByRole('button', { name })).not.toBeInTheDocument();
     }
-    await expect(canvas.queryByRole('button', { name: 'Daily' })).not.toBeInTheDocument();
+  }}
+/>
+
+<!--
+  An earlier day's game, finished and still on the board. The one case with
+  nowhere else to go: today's word is available, and the welcome screen is
+  where Daily is chosen.
+-->
+<Story
+  name="Daily, an earlier day"
+  args={{
+    mode: 'daily',
+    repeatMode: 'daily',
+    todaysGame: {
+      today: 5,
+      keptDay: 4,
+      keptStatus: 'won',
+      keptIsCurrent: true,
+      isTodays: false,
+      nextWordAt: dayStart(6)
+    }
+  }}
+  play={async ({ canvasElement }) => {
+    // TodaysGame.@guarantee TheNextWordIsAnnouncedInAdvance
+    // GameConclusion.@guarantee NothingButDailyIsRationed
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/day 4's word, not today's/i)).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
   }}
 />
 

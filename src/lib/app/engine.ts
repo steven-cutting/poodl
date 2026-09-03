@@ -79,6 +79,8 @@ export function reduce(state: AppState, command: Command, env: Env): Outcome {
       return still(openPoodl(state, env));
     case 'continue':
       return still(playerContinues(state, env));
+    case 'return_to_welcome':
+      return still(returnToWelcome(state));
     case 'new_game':
       return still(newGameRequested(state, command.mode, env));
     case 'enter_letter':
@@ -211,6 +213,19 @@ function playerContinues(state: AppState, env: Env): AppState {
     return newGameRequested({ ...state, awaitingWelcome: false }, state.lastMode, env);
   }
   return state;
+}
+
+/**
+ * `ReturnToWelcome`. Nothing is retired and nothing is drawn: the finished game
+ * stays on the board behind, so `Continue` resumes it with its conclusion still
+ * showing, exactly as `ResumeCurrentGame` says.
+ *
+ * A request rather than an arrival, so `showWelcome` is not consulted —
+ * `TheWelcomeSettingAppliesAtTheNextArrival` scopes that setting to arrivals by
+ * name, and this is the one way out of a finished daily game.
+ */
+function returnToWelcome(state: AppState): AppState {
+  return { ...state, awaitingWelcome: true };
 }
 
 // -------------------------------------------------------- starting a game ---

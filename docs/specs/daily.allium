@@ -448,10 +448,11 @@ invariant TheDailyGamePlaysItsDaysWord {
 -- What Daily shows that the board does not: which day it is, whether today's
 -- game exists and how it stands, and when the next word arrives. Choosing
 -- Daily is not provided here: it is game.allium's NewGameRequested with mode
--- daily, offered by Welcome, GameNavigation, GameBoard and GameConclusion
--- alongside the other modes, and this module answers it. No related clause
--- names those surfaces, for the reason sharing.allium gives; the adjacency
--- is in the guarantees.
+-- daily, offered by Welcome, GameNavigation and GameBoard alongside the other
+-- modes, and this module answers it. GameConclusion is not among them: a
+-- finished daily game offers no mode at all, only the way back to the welcome
+-- screen where they are chosen. No related clause names those surfaces, for
+-- the reason sharing.allium gives; the adjacency is in the guarantees.
 surface TodaysGame {
     facing viewer: game/Player
 
@@ -535,9 +536,10 @@ surface TodaysGame {
 
     @guarantee ThereIsNoNewGameInDaily
         -- No control offers a second daily game. Where the other modes offer
-        -- a new game of the same kind, Daily offers the other modes and the
-        -- time the next word arrives; asking for Daily while today's game is
-        -- on the board leaves it exactly where it is.
+        -- a new game of the same kind, Daily offers the time the next word
+        -- arrives and the way back to the welcome screen, where another mode
+        -- is chosen; asking for Daily while today's game is on the board
+        -- leaves it exactly where it is.
 
     @guarantee TheWordIsAsHiddenAsAnyOther
         -- Today's answer is a function of the date and the bundled schedule,

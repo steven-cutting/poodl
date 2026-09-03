@@ -23,7 +23,7 @@ them loosely is how a review ends up arguing about vocabulary instead of behavio
 | Present | The letter is in the answer, but not at that position, and the answer still had an unclaimed occurrence of it. |
 | Absent | Everything else, including the second copy of a letter the answer holds once. |
 | Hard mode | Revealed letters must be reused. Judged at submission against the live setting, not the setting the game began with. Turning it off part way through a game bars turning it back on until the next one. |
-| Welcome screen | What opening Poodl lands on: an introduction on a first visit, and afterwards Continue — labelled with the previous mode — alongside the four startable modes. Can be turned off, though it still appears when there is nothing to continue. |
+| Welcome screen | What opening Poodl lands on: an introduction on a first visit, and afterwards Continue — labelled with the previous mode — alongside the four startable modes. Can be turned off, though it still appears when there is nothing to continue. Also asked for from a finished daily game, which offers it where the other modes offer a new game; asking is not an arrival, so the setting does not withhold it. |
 
 ## The modes
 

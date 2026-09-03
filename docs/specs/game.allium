@@ -532,6 +532,19 @@ rule ContinueInPreviousMode {
         NewGameRequested(player: player, mode: player.last_mode)
 }
 
+-- Asking for the welcome screen from a finished daily game. Nothing is
+-- retired and nothing is drawn: the game stays on the board behind, so
+-- Continue brings it back with its conclusion still showing, exactly as
+-- ResumeCurrentGame says. Daily is the one mode with no new game of its own
+-- to offer, and this stands where the other modes offer one. It is a request
+-- rather than an arrival, so play_settings.show_welcome does not withhold it
+-- — settings.allium scopes that setting to arrivals by name.
+rule ReturnToWelcome {
+    when: PlayerReturnsToWelcome(player)
+
+    ensures: player.awaiting_welcome = true
+}
+
 -- Starting a game -------------------------------------------------------
 
 -- Practice draws straight from the answer list: no pool, no record, repeats
@@ -1002,7 +1015,8 @@ surface Welcome {
         -- board can switch this off in the settings, and then opening
         -- continues instead — except when there is nothing to continue, when
         -- this surface appears regardless rather than stranding them on an
-        -- empty board.
+        -- empty board. A finished daily game can also ask for it, which is
+        -- not an arrival: the setting governs opening, not asking.
 
     @guarantee AFirstVisitIsExplained
         -- A player with nothing played and nothing remembered is told what
@@ -1273,6 +1287,8 @@ surface GameConclusion {
         NewGameRequested(viewer, mode)
         PlayerStopsCountdown(viewer, game)
             when game.auto_continue_at != null
+        PlayerReturnsToWelcome(viewer)
+            when game.mode = daily
 
     contracts:
         fulfils DirectManipulation
@@ -1303,8 +1319,9 @@ surface GameConclusion {
         -- withholds a random, endless or practice game because of the date
         -- or because of how many have been played. Daily is one word a day
         -- by definition, and even there nothing is withheld but a second go
-        -- at the same word — the other three modes stay one action away, and
-        -- tomorrow's word arrives on its own.
+        -- at the same word — the welcome screen, where the four modes are
+        -- equal choices, stays one action away, and tomorrow's word arrives
+        -- on its own.
 
     @guarantee ConclusionIsAnnounced
         -- The outcome, the answer and the attempt count are announced to

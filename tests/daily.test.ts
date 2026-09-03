@@ -102,6 +102,30 @@ describe('choosing daily', () => {
     expect(dismissed.currentGame).toBe(daily.currentGame);
     expect(dismissed.awaitingWelcome).toBe(false);
   });
+
+  /*
+   * ThereIsNoNewGameInDaily: "Daily offers the time the next word arrives and
+   * the way back to the welcome screen, where another mode is chosen." Taking
+   * that way out spends nothing — the day's game is still today's when the
+   * player comes back to it, and Daily is still the mode they last chose.
+   */
+  it('spends nothing when the welcome screen is asked for from a finished day', () => {
+    const env = createEnv({ now: daysAfterEpoch(0) });
+    const daily = run(env, fresh(), { kind: 'new_game', mode: 'daily' });
+    const answer = daily.currentGame?.answer as string;
+    const won = playGuess(env, daily, answer);
+    const away = run(env, won, { kind: 'return_to_welcome' });
+
+    expect(away.awaitingWelcome).toBe(true);
+    expect(away.currentGame).toBe(won.currentGame);
+    expect(away.setAsideDaily).toBeNull();
+    expect(away.dailyStatistics).toEqual(won.dailyStatistics);
+
+    const back = run(env, away, { kind: 'new_game', mode: 'daily' });
+
+    expect(back.currentGame).toBe(won.currentGame);
+    expect(back.awaitingWelcome).toBe(false);
+  });
 });
 
 /*

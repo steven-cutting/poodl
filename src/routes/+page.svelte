@@ -358,6 +358,9 @@
             onnewgame={(mode: StartableMode) => {
               store?.dispatch({ kind: 'new_game', mode });
             }}
+            onwelcome={() => {
+              store?.dispatch({ kind: 'return_to_welcome' });
+            }}
             onshareresults={() => {
               store?.dispatch({ kind: 'share_results' });
             }}

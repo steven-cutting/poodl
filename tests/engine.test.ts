@@ -87,6 +87,45 @@ describe('arriving', () => {
     expect(state.currentGame).toBeNull();
     expect(state.lastMode).toBeNull();
   });
+
+  /*
+   * ReturnToWelcome. The way out of a finished daily game, where
+   * ThereIsNoNewGameInDaily leaves no new game of the same kind to offer.
+   * Nothing is retired and nothing is drawn: the game stays on the board.
+   */
+  it('goes back to the welcome screen without retiring the game', () => {
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    const state = run(env, won, { kind: 'return_to_welcome' });
+
+    expect(state.awaitingWelcome).toBe(true);
+    expect(state.currentGame).toEqual(won.currentGame);
+    expect(state.statistics).toEqual(won.statistics);
+  });
+
+  // ResumeCurrentGame answers it: Continue brings the same finished game back.
+  it('brings the same finished game back from there', () => {
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    const state = run(env, won, { kind: 'return_to_welcome' }, { kind: 'continue' });
+
+    expect(state.awaitingWelcome).toBe(false);
+    expect(state.currentGame).toEqual(won.currentGame);
+  });
+
+  /*
+   * "It is a request rather than an arrival, so play_settings.show_welcome does
+   * not withhold it" — settings.allium scopes that setting to arrivals by name.
+   */
+  it('goes back even when the welcome setting is off', () => {
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    const state = run(
+      env,
+      won,
+      { kind: 'set_show_welcome', enabled: false },
+      { kind: 'return_to_welcome' }
+    );
+
+    expect(state.awaitingWelcome).toBe(true);
+  });
 });
 
 /*

@@ -16,9 +16,9 @@
    * looking like today's, which is exactly what the guarantee forbids.
    *
    * `ThereIsNoNewGameInDaily` is why `GameConclusion` mounts this in place of
-   * its repeat control: Daily offers the other modes and the time the next
-   * word arrives, not a second go at the same word. The time is this
-   * component's; the other modes are `GameConclusion`'s own controls beside it.
+   * its repeat control: Daily offers the time the next word arrives and the
+   * way back to the welcome screen, not a second go at the same word. The time
+   * is this component's; the way back is `GameConclusion`'s own control.
    */
   let { todaysGame }: { todaysGame: TodaysGameView } = $props();
 

@@ -426,6 +426,7 @@ describe('GameConclusion', () => {
     onshareresults: vi.fn(),
     onshareanswer: vi.fn(),
     onclose: vi.fn(),
+    onwelcome: vi.fn(),
     notice: null,
     noticeSequence: 0,
     shareable: null,
@@ -476,11 +477,11 @@ describe('GameConclusion', () => {
 
   /*
    * ThereIsNoNewGameInDaily: "No control offers a second daily game... Daily
-   * offers the other modes and the time the next word arrives." The repeat
-   * control a finished daily game would otherwise show is replaced, not
-   * merely hidden — a dead "New game" button that no-ops is not this
-   * guarantee's "offers", and NothingButDailyIsRationed says Daily is the one
-   * mode where a second go at the same word is exactly what is withheld.
+   * offers the time the next word arrives and the way back to the welcome
+   * screen." The repeat control a finished daily game would otherwise show is
+   * replaced, not merely hidden — a dead "New game" button that no-ops is not
+   * this guarantee's "offers", and NothingButDailyIsRationed says Daily is the
+   * one mode where a second go at the same word is exactly what is withheld.
    */
   it('offers no repeat control for a finished daily game, only when the next word arrives', () => {
     render(GameConclusion, {
@@ -502,14 +503,15 @@ describe('GameConclusion', () => {
   });
 
   /*
-   * NothingButDailyIsRationed: "the other three modes stay one action away".
-   * This is a dialog that keeps the keyboard, so the header's chip is not one
-   * action away from inside it — the modes are offered here, where
-   * ThereIsNoNewGameInDaily puts them: "Daily offers the other modes and the
-   * time the next word arrives."
+   * NothingButDailyIsRationed: "the welcome screen, where the four modes are
+   * equal choices, stays one action away". This is a dialog that keeps the
+   * keyboard, so the header's chip is not one action away from inside it —
+   * the way out is offered here, where ThereIsNoNewGameInDaily puts it:
+   * "Daily offers the time the next word arrives and the way back to the
+   * welcome screen, where another mode is chosen."
    */
-  it('offers the other three modes from a finished daily game, one action away', async () => {
-    const onnewgame = vi.fn();
+  it('offers the welcome screen from a finished daily game, one action away', async () => {
+    const onwelcome = vi.fn();
     render(GameConclusion, {
       ...base,
       mode: 'daily',
@@ -522,17 +524,42 @@ describe('GameConclusion', () => {
         isTodays: true,
         nextWordAt: dayStart(3)
       },
-      onnewgame
+      onwelcome
     });
 
-    for (const mode of ['Random', 'Endless', 'Practice']) {
-      expect(screen.getByRole('button', { name: mode })).toBeInTheDocument();
+    // No mode is chosen in here: the welcome screen is where they are equal
+    // choices, and offering a subset of them beside it would rank them.
+    for (const mode of ['Daily', 'Random', 'Endless', 'Practice']) {
+      expect(screen.queryByRole('button', { name: mode })).not.toBeInTheDocument();
     }
-    expect(screen.queryByRole('button', { name: 'Daily' })).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Endless' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Play another mode' }));
 
-    expect(onnewgame).toHaveBeenCalledWith('endless');
+    expect(onwelcome).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+   * The same way out from an earlier day's finished game, which is the case
+   * that has nowhere else to go: ANewDayReplacesTheOldGame means today's word
+   * is available, and the welcome screen is where Daily is chosen.
+   */
+  it("offers it from an earlier day's game too", () => {
+    render(GameConclusion, {
+      ...base,
+      mode: 'daily',
+      repeatMode: 'daily',
+      todaysGame: {
+        today: 5,
+        keptDay: 4,
+        keptStatus: 'won',
+        keptIsCurrent: true,
+        isTodays: false,
+        nextWordAt: dayStart(6)
+      }
+    });
+
+    expect(screen.getByRole('button', { name: 'Play another mode' })).toBeInTheDocument();
+    expect(screen.getByText(/day 5.*is available now/i)).toBeInTheDocument();
   });
 
   /*
