@@ -9,6 +9,31 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Poodl takes its design system from the platform rather than owning a copy.
+  `@steven-cutting/biscuit-games` is installed at 1.0.0 exactly, from GitHub Packages,
+  behind a committed `.npmrc` that names the registry for the scope and holds no token —
+  the token is a contributor's own in `~/.npmrc`, and in continuous integration it is the
+  one GitHub mints for the run. There is no anonymous read, so a first run needs it before
+  `just initialize`, and the registry answers an unauthenticated request by naming the
+  package rather than the missing credential. See
+  [decision 0013](docs/decisions/0013-design-system-as-a-package.md) and
+  [The platform upstream](docs/project/platform.md), which records the installed version.
+
+- `tests/platformSpecs.test.ts`, which is the first thing in the platform's history to
+  compare the two repositories. Poodl restates ten clauses the platform states — the six
+  `Appearance` guarantees and the four `DirectManipulation` invariants — and Allium cannot
+  import across repositories, so nothing had ever held the copies together. This reads the
+  three modules the package ships, from `node_modules` and asserting the path says so, and
+  holds each restatement to the platform's text and each of the six shared figures to its
+  value. It compares clauses by the surface or contract stating them rather than by name,
+  because `FullyKeyboardOperable` is one name for seven Poodl clauses under seven surfaces
+  and one platform clause under its own.
+
+- `GameBoard.@guarantee AScoredKeyStaysLegibleOnceTheGameIsOver`, which is where the two
+  sentences that were Poodl's went when `AnUnavailableControlIsExempt` took the platform's
+  wording: what a finished game's keyboard owes, and what a scored key keeps once it has
+  been switched off.
+
 - The specifications are gated rather than merely checkable. `just check-specs` and
   `just analyse-specs` run as hooks in `.pre-commit-config.yaml`, as steps in the
   `documents` job, and as gates 10 and 11 of `just check`, which closes the follow-up
@@ -119,6 +144,22 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- A dialog could let Tab escape it. The focus trap took whatever `querySelectorAll` matched
+  as the panel's tab stops, which is not the sequential focus order: it matches every radio
+  of a group where the keyboard stops on one, matches a control the layout does not draw,
+  and misses a disclosure's summary. Any of those standing last means the wrap never fires,
+  and Tab leaves a panel that has declared itself modal — where Escape no longer closes it
+  either, because the handler is on the panel. `SettingsPanel` ends in checkboxes, so the
+  defect was latent rather than visible; any panel ending in an exclusive choice would have
+  woken it. The platform's `Modal` computes real tab stops, and taking the package retires
+  the copy and the defect together.
+
+- The physical keyboard surrendered Enter to a focused control but not Space, which
+  activates a button and a summary exactly as Enter does — so a surface binding Space did
+  not make the control fire late, it made it go quiet. And its letter guard folded case
+  under Unicode, which also matches the long s, a character that lowercases to itself and
+  reached the game as a letter no word list has. Both are the platform's rules now.
+
 - The on-screen keyboard scrolled the game sideways on a narrow phone. Width floors of 2rem
   on a letter key and 4rem on Enter and Delete defeat flex-shrink, so the bottom row measured
   416px inside the 320px viewport `game.allium` states as the narrowest supported width. Each
@@ -161,6 +202,49 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   a file is read.
 
 ### Changed
+
+- The ten restated clauses now carry the platform's wording verbatim, with Poodl's module
+  prefix kept on the two contrast references. They had drifted: the platform reworded
+  `EveryControlIsAComfortableTarget` three times after the port, and Poodl's copy still
+  said the on-screen keyboard was the one shape that cannot meet the touch figure, where
+  the platform names two and counts the gaps between controls.
+
+- A mark reaches a rendered cell as the platform's name and Poodl's sentence. The engine
+  still says `correct`; `markFor` translates it to `exact` at the one boundary where a mark
+  is drawn, and `describeResults` is untouched, so row labels and announcements are
+  unchanged. The two identical description maps that lived in `Tile` and `Keyboard` are one
+  map beside the other sentences Poodl speaks.
+
+- The header, the notices and the mode chip say Poodl's words through the platform's
+  shapes. `HeaderBar` takes a brand, a chip and actions; `Notice` takes a sentence and a
+  tone; the words for both live where the state that chooses them lives, and the route
+  hands them down. `Wordmark` becomes `Lockup` and stays, because the platform's wordmark
+  says "biscuit games" and a page has to name itself.
+
+- `tests/contrast.test.ts` and `tests/directManipulation.test.ts` measure the stylesheet
+  the package ships, read from `node_modules` with the path asserted. Every case survived
+  the move; none is retired here.
+
+- `scripts/stage_site.sh` copies the stylesheet and the three faces to the domain root out
+  of `node_modules` rather than `src/`, and refuses to build a site without them.
+
+- Continuous integration authenticates to GitHub Packages with the run's own token, on each
+  step that installs and no other, and the three workflows carry `packages: read`.
+
+- `just storybook-build` reaches the network: the workshop composes the platform's through
+  a Storybook `refs` entry. It cannot fail on it — an unreachable address becomes a sidebar
+  entry that does not open — and [Quality gates](docs/reference/quality-gates.md) states
+  the exception.
+
+- `SettingsPanel`'s rows scope their own layout, because the platform's stylesheet declares
+  a label rule at a specificity a Svelte-scoped element selector loses to. The board keeps
+  its reveal, which moved into `Board`: the platform's cell is still, and how a row of them
+  arrives is an arrangement rather than a cell.
+
+- Three pages left this repository. The design direction, the design resource index and the
+  porting guide are decided upstream, and [The platform upstream](docs/project/platform.md)
+  is the single page that replaces them. Decisions 0009 and 0010 carry dated notes rather
+  than edits, and decision 0010's topic is now Poodl-scoped.
 
 - `game.allium` states `HardModeIsNeverOnOverAGameThatBreaksIt`, and the last
   `-- allium-ignore` waiver goes with it. Hard mode is never on over a game whose history
@@ -293,3 +377,24 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   instead of sampling forty words and tolerating a couple of survivors.
 
 [Unreleased]: https://github.com/steven-cutting/poodl/commits/main/
+
+### Removed
+
+- Every copy the package replaces: `src/app.css` and the two typefaces; the icon set and
+  its map; `Icon`, `IconButton`, `Button`, `Modal`, `Notice`, `Announcer`, `HeaderBar`,
+  `Tile`, `Keyboard` and `PhysicalKeyboard`; the preferences port and the appearance
+  derivations. `ThemeChoice` is re-exported from the package rather than declared.
+
+- The stories and test blocks that went with them, including `tests/primitives.test.ts` —
+  its two surviving subjects were never the design system's, so the explanation moved to
+  `components.test.ts` and the header's vocabulary to `route.test.ts` — and the token
+  specimen sheet, which documented tokens this repository no longer owns.
+
+- The six physical-keyboard guard cases. Which keys a surface may claim is the platform's
+  rule; what is Poodl's is that the port is wired at all, and `screens.test.ts` counts
+  subscribers to prove it rather than trusting a silent keyboard.
+
+- Not removed, and worth saying so: the thirteen contrast cases the platform's own test now
+  duplicates, and the state-separation block it has taken over. Losing the only measurement
+  of a figure to a path change would be the worst available outcome of this work, so they
+  are retired in a change of their own or not at all.
