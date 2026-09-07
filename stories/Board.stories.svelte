@@ -92,7 +92,7 @@
   parameters={{ docs: { story: { inline: false } } }}
   play={async () => {
     // The appearance globals are only useful if they reach the element
-    // `src/app.css` keys on. Nothing else in this suite would notice if they
+    // the platform's stylesheet keys on. Nothing else in this suite would notice if they
     // stopped: both palettes pass the accessibility check, so a global that
     // silently did nothing would leave every story green.
     await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');

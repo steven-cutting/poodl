@@ -1,10 +1,11 @@
 import type { Preview } from '@storybook/sveltekit';
 
-// The design tokens. `app.css` defines the light palette on `:root`, redefines
-// it under `prefers-color-scheme: dark`, and again under `[data-theme='dark']`
-// and `[data-high-contrast='true']`. Importing it here is what makes a story
-// wear the same skin the app does.
-import '../src/app.css';
+// The design tokens, from the package the app imports them from. The
+// stylesheet defines the light palette on `:root`, redefines it under
+// `prefers-color-scheme: dark`, and again under `[data-theme='dark']` and
+// `[data-high-contrast='true']`. Importing it here is what makes a story wear
+// the same skin the app does.
+import '@steven-cutting/biscuit-games/app.css';
 
 /*
  * Appearance globals.

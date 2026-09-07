@@ -17,12 +17,12 @@ there is no backend to be a sibling of.
 ├── Justfile             Every supported command
 ├── package.json         The application: Svelte, SvelteKit, Vite, Vitest
 ├── pyproject.toml       Repository tooling only: prek and ruff
+├── .npmrc               Scopes @steven-cutting to GitHub Packages; holds no token
 ├── src/
-│   ├── app.css          Design tokens
 │   ├── app.html         The page shell
 │   ├── lib/
 │   │   ├── app/         The rules as a pure reducer, plus the rune shell
-│   │   ├── assets/      Committed fonts and icons, with their licence texts
+│   │   ├── assets/      Committed icons, with their licence text
 │   │   ├── components/  PascalCase Svelte components
 │   │   ├── config.ts    The values the specifications declare
 │   │   ├── data/        Word lists, one word per line; answers-scowl.txt is kept but not bundled
@@ -49,7 +49,7 @@ there is no backend to be a sibling of.
 | `src/lib/components/` | Rendering and interaction. Components take callbacks as props and hold no application state of their own. |
 | `src/routes/` | Assembling components into pages, and the only place a store is built. Prerendered, so nothing here may assume a request. |
 | `src/lib/data/` | Replaceable data, not code. Excluded from spell-checking, and from Prettier. |
-| `src/lib/assets/` | Vendored fonts and icons with their licence texts, per [decision 0010](../decisions/0010-biscuit-games-design-system.md); provenance sits in the `src/app.css` header. |
+| `src/lib/assets/` | Vendored icons with their licence text, per [decision 0010](../decisions/0010-biscuit-games-design-system.md). The typefaces and the token stylesheet are the platform package's and live in `node_modules`. |
 | `tests/` | Vitest suites named for what they cover, not for the file they mirror. |
 | `stories/` | Every state of a component, as something that can be looked at. Rendered in Chromium with axe over each. |
 | `site-root/` | The landing page at `pnut.fans/`, and the `.nojekyll` beside it. Not part of the app: `just stage` assembles it around the build. |

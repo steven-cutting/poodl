@@ -272,7 +272,16 @@
    * and the switch drawn below is sized to be aimed at deliberately. Measured
    * in `stories/SettingsPanel.stories.svelte`.
    */
-  label {
+  /*
+   * Scoped to both groups rather than left as a bare `label`, because the
+   * platform's stylesheet declares `label:has(input[type='checkbox'])` and its
+   * radio twin at a specificity a Svelte-scoped element selector loses to. Its
+   * `inline-flex` and its narrower gap would take the `auto` margin below off
+   * the row's end and leave the note indented to a gap nothing uses. The floor
+   * it also declares is welcome and is the same 44px stated here.
+   */
+  .theme label,
+  .switches label {
     display: flex;
     gap: var(--s-5);
     align-items: center;

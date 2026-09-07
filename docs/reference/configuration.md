@@ -86,8 +86,8 @@ contributor's own on a laptop — see
 ### Storybook appearance globals
 
 Set from the workshop toolbar, or pinned by a story with a `globals` prop. The attributes
-go on the preview document's root element, because `src/app.css` keys every palette on
-`:root`.
+go on the preview document's root element, because the design system's stylesheet keys
+every palette on `:root`.
 
 | Global | Values | Effect |
 | --- | --- | --- |

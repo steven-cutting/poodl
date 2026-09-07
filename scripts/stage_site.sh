@@ -21,11 +21,19 @@ set -eu
 project_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
 cd "$project_root"
 
-# Both checks come before anything is created or removed, so an invocation that
+# Every check comes before anything is created or removed, so an invocation that
 # was never going to work leaves the worktree exactly as it found it.
 : "${BASE_PATH:?BASE_PATH must name the path the app was built for}"
 test -d build || {
   printf '%s\n' 'build/ is missing; run a build with the same BASE_PATH first' >&2
+  exit 2
+}
+
+# The design system is a dependency now, so this script reads it from there
+# rather than from a copy in src/. Checked with the other two above.
+package=node_modules/@steven-cutting/biscuit-games
+test -f "$package/src/app.css" || {
+  printf '%s\n' "$package is missing; run just sync first" >&2
   exit 2
 }
 
@@ -35,18 +43,20 @@ mkdir -p site
 # The dot copies the hidden files too, .nojekyll among them.
 cp -R site-root/. site/
 
-# The landing page wears the application's own tokens rather than a second
-# palette. tests/contrast.test.ts enumerates the figures in this file; a copy
+# The landing page wears the design system's tokens rather than a second
+# palette, and takes them from the package the app takes them from.
+# tests/contrast.test.ts measures this same file out of node_modules; a copy
 # beside the page is what puts the page inside that gate.
-cp src/app.css site/app.css
+cp "$package/src/app.css" site/app.css
 
-# The faces the same stylesheet names, at the path it names them by. Inside the
-# app those three url()s go through Vite, which hashes the files and rewrites
-# them; this copy is raw, so the relative paths are resolved by the browser
-# against site/app.css and have to find something there. Mirroring src/ is what
-# lets the stylesheet be copied rather than rewritten, and a rewrite is the one
-# thing that would put a second, drifting copy of decision 0010 in this script.
+# The faces the same stylesheet names, at the path it names them by. Its three
+# url()s are relative to itself and unchanged by the move, so the mirror has to
+# sit beside the copy. Inside the app those url()s go through Vite, which hashes
+# the files and rewrites them; this copy is raw, so the browser resolves them
+# against site/app.css and has to find something there. Mirroring the package's
+# own layout is what lets the stylesheet be copied rather than rewritten, and a
+# rewrite is the one thing that would put a second, drifting copy of it here.
 mkdir -p site/lib/assets/fonts
-cp src/lib/assets/fonts/*.woff2 site/lib/assets/fonts/
+cp "$package"/src/lib/assets/fonts/*.woff2 site/lib/assets/fonts/
 
 mv build "site${BASE_PATH}"

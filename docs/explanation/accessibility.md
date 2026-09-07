@@ -203,7 +203,8 @@ unreadable letter ink in `app.css` and every other component's stories fail whil
 `Keyboard`'s stay green.
 
 So the contrast figures are held by `tests/contrast.test.ts` and by nothing else. It reads
-`src/app.css` from disk, drives each of the four combinations of theme and high contrast
+the stylesheet the platform package ships, from `node_modules` and asserted to be there,
+drives each of the four combinations of theme and high contrast
 through the root attributes, and recomputes every pair — every reading ink on the page and
 the raised surfaces, every letter on its key ground, each control's boundary against the
 page, the example tiles How to play draws on a dialog's own surface, the focus ring, the
