@@ -57,7 +57,7 @@ rather than in a shell history.
 | `just frontend-unit` | Vitest, once. |
 | `just frontend-coverage` | Vitest with the 90% floor enforced. |
 | `just frontend-build` | Production build. Honours `BASE_PATH`. |
-| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. |
+| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. Reaches the network for the platform's workshop, and cannot fail on it. |
 | `just storybook-test` | Every story in real Chromium: axe over each render, play functions as interaction tests. |
 
 ## Documents and agents

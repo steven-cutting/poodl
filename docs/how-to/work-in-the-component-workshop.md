@@ -46,9 +46,22 @@ just storybook-browsers
 ```
 
 This downloads a browser over the network into a cache outside the repository. It is the
-one thing here that cannot run offline. `just initialize` does it for you; run it again
-by hand after the `playwright` pin moves. On Linux, `just storybook-browsers-deps`
+one thing here that cannot run offline at all. `just initialize` does it for you; run it
+again by hand after the `playwright` pin moves. On Linux, `just storybook-browsers-deps`
 installs the system libraries Chromium links against.
+
+## The platform's workshop, beside this one
+
+`.storybook/main.ts` carries a `refs` entry for the platform's published workshop, so its
+components — and the token sheet Poodl no longer keeps — appear under **Biscuit Games** in
+the sidebar, collapsed, below Poodl's own. They are served from where the platform
+publishes them; nothing is built here.
+
+It costs one request. Storybook checks the address while it builds, so `just storybook-build`
+reaches the network on every run of the gate — and cannot fail on it, because an
+unreachable address becomes an entry that does not open rather than an error.
+[Quality gates](../reference/quality-gates.md) states the exception, and the story run
+never fetches at all.
 
 ## Where stories live
 
