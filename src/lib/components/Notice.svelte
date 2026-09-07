@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button } from '@steven-cutting/biscuit-games';
   import Icon from '$lib/components/Icon.svelte';
   import type { Notice } from '$lib/app/state';
   import { describeRejection } from '$lib/domain/announcements';

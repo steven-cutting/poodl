@@ -1,7 +1,6 @@
 <script lang="ts">
-  import Announcer from '$lib/components/Announcer.svelte';
+  import { Announcer, Button } from '@steven-cutting/biscuit-games';
   import Board from '$lib/components/Board.svelte';
-  import Button from '$lib/components/Button.svelte';
   import Keyboard from '$lib/components/Keyboard.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';

@@ -2,37 +2,11 @@ import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import Announcer from '../src/lib/components/Announcer.svelte';
 import Countdown from '../src/lib/components/Countdown.svelte';
 import DistributionChart from '../src/lib/components/DistributionChart.svelte';
 import LinkReady from '../src/lib/components/LinkReady.svelte';
-import Modal from '../src/lib/components/Modal.svelte';
 import Notice from '../src/lib/components/Notice.svelte';
 import ResultsReady from '../src/lib/components/ResultsReady.svelte';
-
-/*
- * The live region three guarantees rest on: `EverySubmittedGuessIsAnnounced`,
- * `EveryRejectionIsAnnounced` and `ConclusionIsAnnounced`.
- */
-describe('Announcer', () => {
-  it('carries the message where assistive technology will find it', () => {
-    render(Announcer, { message: 'Attempt 1: A correct', sequence: 1 });
-
-    expect(screen.getByRole('status')).toHaveTextContent('Attempt 1: A correct');
-  });
-
-  it('says nothing when there is nothing to say', () => {
-    render(Announcer, { message: null, sequence: 0 });
-
-    expect(screen.getByRole('status')).toHaveTextContent('');
-  });
-
-  it('announces politely rather than interrupting', () => {
-    render(Announcer, { message: 'Attempt 1', sequence: 1 });
-
-    expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite');
-  });
-});
 
 /*
  * What Poodl is telling the player right now, visibly and out loud at once.
@@ -172,115 +146,6 @@ describe('ResultsReady', () => {
     await userEvent.keyboard('{Enter}');
 
     expect(oncopy).toHaveBeenCalledTimes(1);
-  });
-});
-
-/*
- * The shell every panel and the end-of-game modal sit in. Each of them carries
- * FullyKeyboardOperable, so the shell is where that is made true once.
- */
-describe('Modal', () => {
-  it('is a dialog with a name', () => {
-    render(Modal, { title: 'Settings' });
-
-    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
-  });
-
-  it('takes focus when it opens, so the keyboard arrives inside it', () => {
-    render(Modal, { title: 'Settings' });
-
-    expect(screen.getByRole('dialog', { name: 'Settings' })).toHaveFocus();
-  });
-
-  /*
-   * The other half of `FullyKeyboardOperable`: the player is put back where
-   * they were. Closing destroys the element focus is on, and the browser falls
-   * back to the body, so without this the next Tab starts again from the top of
-   * the page.
-   */
-  it('gives focus back to whatever opened it', () => {
-    const opener = document.createElement('button');
-    document.body.append(opener);
-    opener.focus();
-
-    const modal = render(Modal, { title: 'Settings' });
-
-    expect(screen.getByRole('dialog', { name: 'Settings' })).toHaveFocus();
-
-    modal.unmount();
-
-    expect(opener).toHaveFocus();
-    opener.remove();
-  });
-
-  // An opener that has gone in the meantime is left alone rather than chased.
-  it('survives an opener that is no longer there', () => {
-    const opener = document.createElement('button');
-    document.body.append(opener);
-    opener.focus();
-
-    const modal = render(Modal, { title: 'Settings' });
-    opener.remove();
-
-    expect(() => {
-      modal.unmount();
-    }).not.toThrow();
-  });
-
-  it('closes on Escape', async () => {
-    const onclose = vi.fn();
-    render(Modal, { title: 'Settings', onclose });
-
-    await userEvent.keyboard('{Escape}');
-
-    expect(onclose).toHaveBeenCalledTimes(1);
-  });
-
-  // A caller that offers no way to close gets no control that pretends to.
-  it('offers no close at all when a caller keeps it open', () => {
-    render(Modal, { title: 'You won' });
-
-    expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
-  });
-
-  it('closes from its own control', async () => {
-    const onclose = vi.fn();
-    render(Modal, { title: 'Settings', onclose });
-
-    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-    expect(onclose).toHaveBeenCalledTimes(1);
-  });
-
-  it('keeps the keyboard inside itself', async () => {
-    const onclose = vi.fn();
-    render(Modal, { title: 'Settings', onclose });
-    const close = screen.getByRole('button', { name: 'Close' });
-
-    await userEvent.tab();
-
-    expect(close).toHaveFocus();
-
-    await userEvent.tab();
-
-    expect(close).toHaveFocus();
-  });
-
-  /*
-   * The trap listens on the panel, so it works only while focus is on it or in
-   * it — and a removed element fires no `focusout` for this to answer. So the
-   * shell cannot catch a child that removes the control the player just used;
-   * each child carries focus across its own swap, and this records why Escape
-   * is worth testing again from wherever focus lands.
-   */
-  it('answers Escape from anywhere inside itself', async () => {
-    const onclose = vi.fn();
-    render(Modal, { title: 'Settings', onclose });
-
-    screen.getByRole('button', { name: 'Close' }).focus();
-    await userEvent.keyboard('{Escape}');
-
-    expect(onclose).toHaveBeenCalledTimes(1);
   });
 });
 

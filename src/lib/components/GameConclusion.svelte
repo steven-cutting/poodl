@@ -1,8 +1,7 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button, Modal } from '@steven-cutting/biscuit-games';
   import Countdown from '$lib/components/Countdown.svelte';
   import LinkReady from '$lib/components/LinkReady.svelte';
-  import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
   import TodaysGame from '$lib/components/TodaysGame.svelte';

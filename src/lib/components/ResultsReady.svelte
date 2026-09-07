@@ -11,7 +11,7 @@
    * `SharedTextGivesNothingAway`: what is shown is exactly what is copied, and
    * the grid names no letter of any word.
    */
-  import Button from '$lib/components/Button.svelte';
+  import { Button } from '@steven-cutting/biscuit-games';
 
   let { text, oncopy }: { text: string; oncopy?: () => void } = $props();
 

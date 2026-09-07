@@ -124,7 +124,7 @@ should be deleted rather than covered; see
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
-| `primitives.test.ts` | The six design-system primitives — `Icon`, `IconButton`, `Button`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |
+| `primitives.test.ts` | The design-system primitives Poodl still owns — `Icon`, `IconButton`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
 | `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: the stylesheet the platform package ships, read from `node_modules` and asserted to be there, put in the document, and measured on a real control. |
 | `contrast.test.ts` | Every measured colour pair in the platform package's stylesheet, read from `node_modules` and asserted to be there, recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |

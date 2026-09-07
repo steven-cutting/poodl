@@ -1,7 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button, Modal } from '@steven-cutting/biscuit-games';
   import LinkReady from '$lib/components/LinkReady.svelte';
-  import Modal from '$lib/components/Modal.svelte';
   import Notice from '$lib/components/Notice.svelte';
   import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
   import { WORD_LENGTH } from '$lib/config';

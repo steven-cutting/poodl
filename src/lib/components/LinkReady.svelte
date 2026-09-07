@@ -11,7 +11,7 @@
    * made it — the share dialog or the conclusion — and no longer. Nothing is
    * written anywhere.
    */
-  import Button from '$lib/components/Button.svelte';
+  import { Button } from '@steven-cutting/biscuit-games';
 
   let { url, oncopy }: { url: string; oncopy?: () => void } = $props();
 

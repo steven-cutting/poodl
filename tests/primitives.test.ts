@@ -1,9 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { createRawSnippet } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 
-import Button from '../src/lib/components/Button.svelte';
 import HeaderBar from '../src/lib/components/HeaderBar.svelte';
 import HowToPlay from '../src/lib/components/HowToPlay.svelte';
 import Icon from '../src/lib/components/Icon.svelte';
@@ -11,11 +9,6 @@ import IconButton from '../src/lib/components/IconButton.svelte';
 import Wordmark from '../src/lib/components/Wordmark.svelte';
 import { ICONS } from '../src/lib/components/icons';
 import type { IconName } from '../src/lib/components/icons';
-
-/** A snippet for `Button`'s children, the way a caller writes text inside it. */
-function says(text: string) {
-  return createRawSnippet(() => ({ render: () => `<span>${text}</span>` }));
-}
 
 /*
  * The icon map and its one renderer. Decorative by construction: an icon never
@@ -86,64 +79,6 @@ describe('IconButton', () => {
     render(IconButton, { label: 'Close', icon: 'x' });
 
     expect(screen.getByRole('button', { name: 'Close' })).not.toHaveAttribute('aria-haspopup');
-  });
-});
-
-describe('Button', () => {
-  it('is named by its children and reports a press', async () => {
-    const onclick = vi.fn();
-    render(Button, { onclick, children: says('New game') });
-
-    await userEvent.click(screen.getByRole('button', { name: 'New game' }));
-
-    expect(onclick).toHaveBeenCalledTimes(1);
-  });
-
-  // The variants and sizes are paint: role and name never move with them.
-  it('keeps its role and name across every variant and size', () => {
-    for (const variant of ['primary', 'secondary', 'ghost'] as const) {
-      for (const size of ['sm', 'md'] as const) {
-        const { unmount } = render(Button, { variant, size, children: says('Continue') });
-
-        expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
-        unmount();
-      }
-    }
-  });
-
-  it('submits a wrapping form when asked to', async () => {
-    const onclick = vi.fn();
-    render(Button, { type: 'submit', onclick, children: says('Make a link') });
-
-    expect(screen.getByRole('button', { name: 'Make a link' })).toHaveAttribute('type', 'submit');
-
-    await userEvent.click(screen.getByRole('button', { name: 'Make a link' }));
-
-    expect(onclick).toHaveBeenCalledTimes(1);
-  });
-
-  // The mode dialog marks the selected mode, and the sentence beside it agrees.
-  it('announces the current choice only when told it is one', () => {
-    const { unmount } = render(Button, { current: true, children: says('Random') });
-
-    expect(screen.getByRole('button', { name: 'Random' })).toHaveAttribute('aria-current', 'true');
-    unmount();
-
-    render(Button, { children: says('Endless') });
-
-    expect(screen.getByRole('button', { name: 'Endless' })).not.toHaveAttribute('aria-current');
-  });
-
-  it('can be disabled', async () => {
-    const onclick = vi.fn();
-    render(Button, { disabled: true, onclick, children: says('New game') });
-    const control = screen.getByRole('button', { name: 'New game' });
-
-    expect(control).toBeDisabled();
-
-    await userEvent.click(control);
-
-    expect(onclick).not.toHaveBeenCalled();
   });
 });
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Modal from '$lib/components/Modal.svelte';
+  import { Modal } from '@steven-cutting/biscuit-games';
   import type { HardModeBlocker } from '$lib/app/engine';
   import type { Settings } from '$lib/app/state';
   import type { ThemeChoice } from '$lib/domain/types';
