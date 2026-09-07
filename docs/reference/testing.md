@@ -126,8 +126,8 @@ should be deleted rather than covered; see
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
 | `primitives.test.ts` | The six design-system primitives — `Icon`, `IconButton`, `Button`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
-| `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: `src/app.css` read from disk, put in the document, and measured on a real control. |
-| `contrast.test.ts` | Every measured colour pair in `src/app.css`, read from disk and recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |
+| `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: the stylesheet the platform package ships, read from `node_modules` and asserted to be there, put in the document, and measured on a real control. |
+| `contrast.test.ts` | Every measured colour pair in the platform package's stylesheet, read from `node_modules` and asserted to be there, recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |
 | `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one, and the figures only a layout engine can produce. |
 
 `directManipulation.test.ts` reads the stylesheet rather than importing it. `?raw` is the
@@ -135,6 +135,12 @@ idiom `src/lib/ports/words.ts` uses for the word lists, but a `.css` file is cla
 Vite's stylesheet pipeline first and comes back as the empty string — a test that injected
 that would assert against an empty cascade and pass on every property at once. It is worth
 knowing about because the failure mode is a green test rather than a red one.
+
+It reads it from the package, through `tests/platform.ts`, which resolves the platform's
+own `exports` subpaths and refuses any path outside `node_modules`. That refusal has the
+same shape as the one above: a stylesheet resolved from a copy in this repository would
+produce figures that agree with each other and describe nothing a player sees, so both
+files also assert the path out loud.
 
 What that file can and cannot see is the whole reason the `DirectManipulation` evidence is
 split across both suites. jsdom resolves `touch-action`, `user-select`, the logical size

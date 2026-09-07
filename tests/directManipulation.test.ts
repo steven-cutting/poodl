@@ -1,10 +1,15 @@
 /*
  * `docs/specs/game.allium` — contract DirectManipulation.
  *
+ * The four invariants are the platform's, stated in the `operation.allium`
+ * that `@steven-cutting/biscuit-games` ships and restated here word for word —
+ * `tests/platformSpecs.test.ts` is what holds the two copies together.
+ *
  * Ten surfaces fulfil this contract and not one of them owns it, which is why
- * its rules live in `src/app.css` rather than in a component. This file reads
- * that stylesheet, puts it in the document and measures what it resolves to on
- * a real control.
+ * its rules live in the stylesheet rather than in a component. That stylesheet
+ * is the platform's as well, so this reads it from `node_modules` — the file
+ * the app actually wears — puts it in the document and measures what it
+ * resolves to on a real control. `src/app.html` beside it is Poodl's own.
  *
  * What jsdom can answer decides what is asserted here. There is no layout
  * engine, so `getBoundingClientRect()` returns zeros and every figure that
@@ -24,6 +29,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { platformFile, platformPath } from './platform';
 import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
 
 /*
@@ -42,7 +48,7 @@ function source(name: string): string {
   return readFileSync(resolve(process.cwd(), 'src', name), 'utf8');
 }
 
-const appCss = source('app.css');
+const appCss = platformFile('app.css');
 const appHtml = source('app.html');
 
 // One of each kind of control the app actually has. No anchors: the game has
@@ -113,6 +119,20 @@ function ruleFor(selector: string): CSSStyleRule {
   }
   throw new Error(`No rule for ${selector}`);
 }
+
+describe('the stylesheet these figures are measured on', () => {
+  /*
+   * The one case that says which file the rest of this suite read. Every figure
+   * below is derived from a cascade, so a stylesheet resolved from the wrong
+   * place would produce figures that are internally consistent and untrue of
+   * anything a player sees. `platformPath` throws on a path outside
+   * `node_modules`; this says so out loud, where a reader of a failure will
+   * look.
+   */
+  it('is the one the package ships, not a copy in this repository', () => {
+    expect(platformPath('app.css')).toContain('node_modules');
+  });
+});
 
 describe('ATapDoesOnlyWhatTheControlDoes', () => {
   it('sends a tap to the control rather than to the platform', () => {
