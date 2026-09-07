@@ -114,14 +114,14 @@ should be deleted rather than covered; see
 | `links.test.ts` | The `AnswerObfuscation` codec: the round trip over the whole dictionary, every single-character alteration of every token swept for the two failures `DecodeRejectsWhatItDidNotProduce` forbids outright, and three tokens pinned so the scheme cannot move under links already issued. |
 | `sharing.test.ts` | The `ShareGridFormat` contract, both palettes, and that no letter reaches the grid. |
 | `statistics.test.ts` | The statistics block and the answer pool, including what recycling does and why the flag exists. |
-| `appearance.test.ts`, `announcements.test.ts` | The two `Appearance` derivations, and the sentences the announcement guarantees ask for. |
+| `announcements.test.ts` | The sentences the announcement guarantees ask for. |
 | `engine.test.ts` | Arriving, starting and retiring: every path a game leaves by, and what each one costs. |
 | `gameplay.test.ts` | Entering letters, the three rejections, accepting a guess, and the endless countdown. |
 | `settings.test.ts` | Every setter, both hard-mode guards, and resetting the statistics. |
 | `customGames.test.ts` | Making, sharing, opening and refusing a custom link, and sharing a result. |
 | `persistence.test.ts` | The round trip, the schema version, and what a damaged store costs — including a record that satisfies every type while breaking an invariant the specifications state. |
 | `store.test.ts` | The rune shell: dispatch, persistence, the countdown under a fake timer, and both clipboard outcomes. |
-| `ports.test.ts` | Every port, real adapter and fake, including the failure paths. |
+| `ports.test.ts` | Every port, real adapter and fake, including the failure paths — the six here, and the platform's preferences port, which two of Poodl's own `Appearance` guarantees rest on. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component, through accessible roles and names. |
 | `primitives.test.ts` | The design-system primitives Poodl still owns — `Icon`, `IconButton`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |

@@ -20,7 +20,7 @@
   import type { StartableMode, ThemeChoice } from '$lib/domain/types';
   import { createNavigatorClipboard } from '$lib/ports/clipboard';
   import { createSystemClock } from '$lib/ports/clock';
-  import { createMediaPreferences } from '$lib/ports/preferences';
+  import { createMediaPreferences } from '@steven-cutting/biscuit-games';
   import { createCryptoRandom } from '$lib/ports/random';
   import { createWebStorage } from '$lib/ports/storage';
   import { createIntervalTimer } from '$lib/ports/timer';

@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { createFakeClock, createSystemClock } from '../src/lib/ports/clock';
 import { createFakeClipboard, createNavigatorClipboard } from '../src/lib/ports/clipboard';
 import { createCryptoRandom, createFakeRandom } from '../src/lib/ports/random';
-import { createFakePreferences, createMediaPreferences } from '../src/lib/ports/preferences';
-import type { MediaQueryListLike } from '../src/lib/ports/preferences';
+import { createFakePreferences, createMediaPreferences } from '@steven-cutting/biscuit-games';
+import type { MediaQueryListLike } from '@steven-cutting/biscuit-games';
 import { createFakeStorage, createWebStorage, deviceStore } from '../src/lib/ports/storage';
 import { createFakeTimer, createIntervalTimer } from '../src/lib/ports/timer';
 
@@ -286,7 +286,7 @@ describe('the preferences port', () => {
       '(prefers-reduced-motion: reduce)': false,
       '(prefers-contrast: more)': true
     });
-    const preferences = createMediaPreferences(media.matchMedia);
+    const preferences = createMediaPreferences({ matchMedia: media.matchMedia });
 
     expect(preferences.prefersDark()).toBe(true);
     expect(preferences.prefersReducedMotion()).toBe(false);
@@ -304,7 +304,7 @@ describe('the preferences port', () => {
       '(prefers-color-scheme: dark)': true,
       '(prefers-contrast: more)': false
     });
-    const preferences = createMediaPreferences(media.matchMedia);
+    const preferences = createMediaPreferences({ matchMedia: media.matchMedia });
 
     expect(preferences.prefersDark()).toBe(true);
     expect(preferences.prefersMoreContrast()).toBe(false);
@@ -314,7 +314,7 @@ describe('the preferences port', () => {
   // device that changes its mind has to be heard, the same as for the theme.
   it('reports a change of contrast preference', () => {
     const media = fakeMatchMedia({ '(prefers-contrast: more)': false });
-    const preferences = createMediaPreferences(media.matchMedia);
+    const preferences = createMediaPreferences({ matchMedia: media.matchMedia });
     let changes = 0;
     const stop = preferences.subscribe(() => {
       changes += 1;
@@ -334,7 +334,7 @@ describe('the preferences port', () => {
   // SystemFollowsTheDeviceAsItChanges: it keeps matching as it changes.
   it('reports a change, and stops once nobody is listening', () => {
     const media = fakeMatchMedia({ '(prefers-color-scheme: dark)': false });
-    const preferences = createMediaPreferences(media.matchMedia);
+    const preferences = createMediaPreferences({ matchMedia: media.matchMedia });
     let changes = 0;
 
     const stop = preferences.subscribe(() => {
