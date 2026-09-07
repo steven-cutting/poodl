@@ -32,7 +32,7 @@ paraphrased, because paraphrase is where the meaning goes.
 
 ## What the modules are
 
-Six, with a one-way dependency graph rooted at the word lists:
+Six are Poodl's, with a one-way dependency graph rooted at the word lists:
 
 ```text
 words  ←  game  ←  settings

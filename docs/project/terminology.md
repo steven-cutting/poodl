@@ -47,7 +47,9 @@ them loosely is how a review ends up arguing about vocabulary instead of behavio
 | Specification | An `.allium` file under `docs/specs/`. Decides behaviour. |
 | Surface | A boundary in a specification: what is exposed, what operations are provided, and what is guaranteed. |
 | Guarantee | A named prose assertion on a surface. Acceptance criteria, not aspiration. |
-| Port | An interface in `src/lib/ports/` standing in front of a side effect, with a real adapter and an in-memory fake. |
+| Port | An interface standing in front of a side effect, with a real adapter and an in-memory fake. Six are in `src/lib/ports/`; the device's preferences and its keyboard are the platform package's. |
+| Platform | Biscuit Games: the repository that decides everything Poodl would share with a second game. See [The platform upstream](platform.md). |
+| Exact | The platform's name for the mark Poodl's rules call correct, after the token that paints it. The engine never says it; the translation happens where a mark reaches something rendered. |
 | Fake | The in-memory implementation of a port, used by tests. Not a mock: it behaves, rather than recording calls. |
 | Gate | A check that can fail the build. Listed in [Quality gates](../reference/quality-gates.md). |
 | Recipe | A `Justfile` target. The only supported way to run anything. |

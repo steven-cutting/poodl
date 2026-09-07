@@ -103,7 +103,8 @@ entity Settings {
 ------------------------------------------------------------
 
 -- One settings record, existing from the first visit. Theme starts dark, not
--- at system: near-black is the product's identity (docs/design/direction.md,
+-- at system: near-black is the platform's identity (its design direction,
+-- reached from docs/project/platform.md,
 -- "Dark is home"), so a first visit lands on it whatever the device prefers.
 -- Light, and system's following of the device, stay one choice away.
 default Settings player_settings = {

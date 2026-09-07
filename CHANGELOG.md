@@ -37,8 +37,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   gains the platform header — brand lockup, mode chip, and the four actions — and
   `GameNavigation` becomes the dialog the chip opens, keeping its surface and its
   guarantees. A `Foundations` story documents the tokens, and
-  [Port a design system component](docs/how-to/port-a-design-system-component.md) records
-  the procedure and the ledger of what remains. The landing page at the domain root moves
+  the porting guide recorded the procedure and the ledger of what remained; it is
+  upstream now, reached from [The platform upstream](docs/project/platform.md). The landing page at the domain root moves
   with it: it already wore `src/app.css`, so it takes the new tokens and the display face,
   and `scripts/stage_site.sh` copies the three font files beside the stylesheet it copies.
 

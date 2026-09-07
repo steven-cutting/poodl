@@ -197,7 +197,8 @@ export interface AppState {
 
 /**
  * `default Settings player_settings`. Theme starts dark, not at system: dark is
- * home (docs/design/direction.md), and `app.html` ships the same answer in its
+ * home (the platform's design direction, reached from docs/project/platform.md), and
+ * `app.html` ships the same answer in its
  * markup so the first paint agrees with this before the store exists.
  */
 export const DEFAULT_SETTINGS: Settings = {
