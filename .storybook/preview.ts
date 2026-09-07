@@ -16,16 +16,16 @@ import '@steven-cutting/biscuit-games/app.css';
  * those inputs adjustable so the surfaces can be built and inspected before the
  * settings screen exists.
  *
- * `src/app.css` keys every palette on `:root` — the documentElement of the
+ * The stylesheet keys every palette on `:root` — the documentElement of the
  * preview iframe. A decorator that wrapped the story in a
  * `<div data-theme="dark">` would set the attribute on an element none of those
  * selectors match, so the writes go to the document root and nowhere else.
  *
  * This is Storybook infrastructure standing in for the host document, not the
- * application expressing a preference, so it needs no port. When the Appearance
- * surface is built it must read the device through a new
- * `src/lib/ports/preferences.ts` fed from these same globals — see
- * `docs/explanation/layering.md`.
+ * application expressing a preference, so it needs no port. The application
+ * does need one, and has one: the route reads the device through the platform's
+ * preferences port and writes these same three attributes from what it says —
+ * see `docs/explanation/layering.md`.
  */
 
 const THEMES = ['system', 'light', 'dark'] as const;

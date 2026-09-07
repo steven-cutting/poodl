@@ -128,12 +128,13 @@ entry to name is drift in the other direction.
 | `ABSENT_TILE` | ⬛ | `sharing.allium`, `config.absent_tile` |
 
 `MINIMUM_TOUCH_TARGET` and `NARROWEST_SUPPORTED_WIDTH` are the only ones whose real consumer
-is a stylesheet, and CSS cannot import a TypeScript constant. So `44px` is written out in
-`src/app.css` and `20rem` in `Keyboard.svelte`, and the tests are what hold them to the
-constants: the jsdom suite compares the resolved `min-block-size` against
-`MINIMUM_TOUCH_TARGET`, and the story run frames the keyboard at `NARROWEST_SUPPORTED_WIDTH`
-and measures it there. Change the specification and the constant, and the gate names the
-stylesheet that did not follow.
+is a stylesheet, and CSS cannot import a TypeScript constant. Both figures are written out
+in the platform's stylesheet and its keyboard, so the tests are what hold this repository's
+constants to them: the jsdom suite compares the resolved `min-block-size` against
+`MINIMUM_TOUCH_TARGET`, and the story run frames the whole screen at
+`NARROWEST_SUPPORTED_WIDTH` and measures every control there. The specification is held to
+the platform's separately, by `tests/platformSpecs.test.ts`, so a figure that moved upstream
+fails on the number rather than on the paint.
 
 ## Version pins
 
