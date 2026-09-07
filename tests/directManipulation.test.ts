@@ -200,10 +200,11 @@ describe('DeliberateZoomIsNeverTakenAway', () => {
 describe('EveryControlIsAComfortableTarget', () => {
   /*
    * Top to bottom, which every control meets outright. Across is measured in
-   * Chromium by the stories: the on-screen keyboard is the one place the figure
-   * cannot be met in that direction, so a declared floor would be wrong for the
-   * keys and redundant for everything else, whose text already carries it past
-   * 44px.
+   * Chromium by the stories: a row of like controls sharing a width is one of
+   * the two shapes the invariant exempts in that direction, and the on-screen
+   * keyboard is the row Poodl draws — so a declared floor would be wrong for
+   * the keys and redundant for everything else, whose text already carries it
+   * past 44px.
    */
   it('gives every control the figure the specification states, top to bottom', () => {
     const floor = `${MINIMUM_TOUCH_TARGET}px`;

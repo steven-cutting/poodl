@@ -266,8 +266,9 @@
    * five checkboxes, and left to the user agent each renders about thirteen
    * pixels across — the smallest targets in the game by a wide margin.
    *
-   * The row is what grows. A label bound to its control activates that control
-   * across its whole area, so the row is what a finger is actually aimed at,
+   * The row is what grows. A label that contains its control activates it
+   * across the label's whole area, so the row is what a finger is aimed at —
+   * which is the case the invariant hands to the label rather than to the box,
    * and the switch drawn below is sized to be aimed at deliberately. Measured
    * in `stories/SettingsPanel.stories.svelte`.
    */

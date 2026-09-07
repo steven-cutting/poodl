@@ -335,6 +335,12 @@ surface SettingsPanel {
 
 -- How Poodl looks, decided jointly by the player's settings and the device.
 -- This surface applies everywhere, not only inside the settings panel.
+--
+-- The six guarantees restate the Appearance surface of appearance.allium,
+-- which @steven-cutting/biscuit-games ships. Allium cannot import across
+-- repositories, so tests/platformSpecs.test.ts holds each body equal to the
+-- shipped text, the game/config. prefix aside: a clause here is amended
+-- upstream and taken as a version, never reworded.
 surface Appearance {
     facing viewer: game/Player
 
@@ -350,53 +356,54 @@ surface Appearance {
         settings.high_contrast_active
 
     @guarantee SystemFollowsTheDeviceAsItChanges
-        -- While theme is system, Poodl matches the device's colour scheme and
-        -- keeps matching it as it changes. Light and dark — the default
-        -- included — hold on their own, and the device is not consulted.
+        -- While theme is system, Biscuit Games matches the device's colour
+        -- scheme and keeps matching it as it changes. Light and dark — the
+        -- default included — hold on their own, and the device is not
+        -- consulted.
 
     @guarantee ReducedMotionOverridesTheAnimationSetting
-        -- Animations run only when the animations setting is on and the
-        -- device expresses no reduced-motion preference. The device
-        -- preference wins: a player who asked their system for less motion
-        -- gets none from Poodl, whatever the setting says.
+        -- Animations run only when the animations setting is on and the device
+        -- expresses no reduced-motion preference. The device preference wins: a
+        -- reader who asked their system for less motion gets none from Biscuit
+        -- Games, whatever the setting says.
 
     @guarantee MoreContrastFromTheDeviceTurnsHighContrastOn
         -- High contrast applies when the setting is on or the device asks for
         -- more contrast. The device wins the same way it does for motion: a
-        -- player who asked their system for more contrast gets it from Poodl
-        -- without having to find the setting and ask a second time.
+        -- reader who asked their system for more contrast gets it without
+        -- having to find the setting and ask a second time.
 
     @guarantee AppearanceNeverCarriesMeaningAlone
-        -- Neither the theme nor high contrast is what makes a result
-        -- readable. Letter results stay distinguishable without relying on
-        -- colour in any combination of these settings.
+        -- Neither the theme nor high contrast is what makes anything readable.
+        -- Nothing on any surface is distinguished by colour alone in any
+        -- combination of these settings: every state colour helps to show also
+        -- carries a shape, a word, or both. A game that adds states of its own
+        -- inherits this obligation and states how it meets them.
 
     @guarantee EveryCombinationMeetsTheLegibilityFloor
-        -- The floor holds in all four combinations of theme and high
-        -- contrast, not only the one a change happened to be looked at in.
-        -- Text on any control the player can operate reaches
-        -- game/config.minimum_text_contrast against what is behind it; every
-        -- such control is identifiable as one — by a boundary reaching
-        -- game/config.minimum_boundary_contrast against the page where it
-        -- draws a boundary, and by its own words where it draws none, since a
-        -- control with no drawn edge is found by reading it and an edge that
-        -- is not there cannot be measured; and the key states stay apart by
-        -- the two figures
-        -- game/GameBoard.AnUntriedKeyIsDistinguishableFromAScoredOne names.
-        -- High contrast raises the floor nowhere: it is a second palette that
-        -- has to clear the same bar, not the version where legibility is
-        -- finally attended to.
+        -- The floor holds in all four combinations of theme and high contrast,
+        -- not only the one a change happened to be looked at in. Text on any
+        -- control the reader can operate reaches game/config.minimum_text_contrast
+        -- against what is behind it, and so does body copy; every such control
+        -- is identifiable as one — by a boundary reaching
+        -- game/config.minimum_boundary_contrast against the page where it draws a
+        -- boundary, and by its own words where it draws none, since a control
+        -- with no drawn edge is found by reading it and an edge that is not
+        -- there cannot be measured. High contrast raises the floor nowhere: it
+        -- is a second palette that has to clear the same bar, not the version
+        -- where legibility is finally attended to. A game that puts two of its
+        -- own states side by side owes a separation between them as well and
+        -- states that figure itself; this module states the bars every surface
+        -- owes the page.
 
     @guarantee AnUnavailableControlIsExempt
-        -- A control the player cannot operate is held to none of those
+        -- A control the reader cannot operate is held to none of those
         -- figures, exactly as WCAG 2.2 exempts an inactive component from
-        -- 1.4.3 and 1.4.11 — and so is the text that names it, because a
-        -- label that stayed bright beside a control that had gone quiet would
-        -- disagree with it about whether the thing can be used. Dimming is
-        -- how unavailability reads, and a dim that had to clear the bar a
-        -- live control clears would not read as one. The keyboard a finished
-        -- game leaves behind is the case this is written for: every key goes
-        -- quiet at once, and the quiet is the point.
+        -- 1.4.3 and 1.4.11 — and so is the text that names it, because a label
+        -- that stayed bright beside a control that had gone quiet would
+        -- disagree with it about whether the thing can be used. Dimming is how
+        -- unavailability reads, and a dim that had to clear the bar a live
+        -- control clears would not read as one.
         -- What the exemption does not buy is anything about how that state is
         -- known. It is spent only while the control genuinely cannot be
         -- operated, never on one that is merely quiet or incidental; the
@@ -404,9 +411,7 @@ surface Appearance {
         -- reader is told in words what the eye reads as dim; and a dimmed
         -- control keeps every non-colour indication its live form carried,
         -- because AppearanceNeverCarriesMeaningAlone admits no exemption at
-        -- all. A scored key keeps its marker bar and its description once the
-        -- game that scored it is over, and the board beside it keeps that
-        -- game's record at full strength.
+        -- all.
 }
 
 ------------------------------------------------------------
