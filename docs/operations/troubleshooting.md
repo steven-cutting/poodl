@@ -53,6 +53,22 @@ Svelte compiles text interpolation into update branches that only run on re-rend
 component tested only with fresh renders shows uncovered branches. A test that updates
 props covers them, and is worth having on its own merits.
 
+## `npm` reports `404 Not Found` for `@steven-cutting/biscuit-games`
+
+The registry is lying about what is missing. GitHub Packages authenticates every request,
+including a read of a public package, and answers an unauthenticated one by naming the
+package rather than the credential.
+
+On a laptop, `~/.npmrc` has no `//npm.pkg.github.com/:_authToken=` line, or its token has
+expired or lost `read:packages`. [Develop locally](../how-to/develop-locally.md) has the
+line; a token that is present but stale fails exactly the same way, so re-issue it before
+looking anywhere else.
+
+In continuous integration, either the package has stopped granting this repository read
+access — a setting on the package, not on either repository — or a step that installs has
+lost its token. Only the steps that install carry one, so a 404 on a step that does not
+install is a different fault.
+
 ## `just check` stops because Playwright cannot start Chromium
 
 The story gate renders in a real browser, and the browser is in neither lockfile, so

@@ -32,6 +32,7 @@
     "chromatic": "chromatic"
   },
   "dependencies": {
+    "@steven-cutting/biscuit-games": "1.0.0",
     "@sveltejs/kit": "2.70.2",
     "svelte": "5.56.8"
   },

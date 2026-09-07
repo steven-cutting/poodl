@@ -101,6 +101,13 @@ restores the Playwright cache, installs the browser, then runs `storybook-build`
 Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build the
 gate makes is proved and then discarded: that one is uploaded nowhere.
 
+Every job that installs authenticates to GitHub Packages for the design system, with the
+token GitHub mints for the run rather than anything stored: `actions/setup-node` is given
+the registry and the `@steven-cutting` scope, and the environment variable goes on each
+installing step rather than on the job. `ci.yml` carries `packages: read` at the workflow
+level because all three of its jobs install; `pages.yml` and `chromatic.yml` carry it on
+the one job in each that does.
+
 A separate workflow uploads a different one. `.github/workflows/chromatic.yml` runs
 `just chromatic`, which builds the workshop again and publishes it for visual review; see
 [decision 0008](../decisions/0008-visual-review-in-chromatic.md). It is a workflow rather

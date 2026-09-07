@@ -8,7 +8,9 @@ requires: []
 
 # Make your first change
 
-About half an hour, from a fresh clone to a green gate — the first run downloads a browser.
+About half an hour, from a fresh clone to a green gate — the first run downloads a browser
+and reads one package from GitHub Packages, which needs a token in `~/.npmrc` that
+[Develop locally](../how-to/develop-locally.md) describes.
 The change is small on purpose; what matters is that it passes through every layer the
 repository has.
 

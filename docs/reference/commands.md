@@ -17,7 +17,7 @@ rather than in a shell history.
 | Recipe | Purpose |
 | --- | --- |
 | `just initialize` | One explicit first run. Creates both lockfiles, installs both toolchains and the browser the story tests need, normalises formatting, installs the hook. Never stages, commits, tags or pushes. |
-| `just sync` | Install exactly what the lockfiles say. Run after pulling. |
+| `just sync` | Install exactly what the lockfiles say. Run after pulling. Reads the design system from GitHub Packages, so it needs the token [Develop locally](../how-to/develop-locally.md) describes. |
 | `just install-hooks` | Install the read-only pre-commit gate. |
 | `just install-allium` | Download, verify and install the pinned `allium` binary into `.tools/bin/`. Over the network; no lockfile can name a binary. |
 | `just storybook-browsers` | Download the Chromium the story tests render in. Over the network, into a cache outside the repository. |

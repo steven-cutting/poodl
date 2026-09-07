@@ -54,9 +54,12 @@ One variable is read by a tool rather than by the build, and it never reaches th
 | Variable | Read by | Effect |
 | --- | --- | --- |
 | `CHROMATIC_PROJECT_TOKEN` | `just chromatic` | Which Chromatic project the workshop publishes to. Export it locally; CI supplies it from the repository secret of the same name. Without it the recipe fails rather than publishing somewhere unexpected. |
+| `NODE_AUTH_TOKEN` | npm, through the `.npmrc` `actions/setup-node` writes outside the checkout | The credential GitHub Packages demands for every read of `@steven-cutting/biscuit-games`. CI sets it from the run's own token on each step that installs, and on no other. Not read on a laptop, where the token is an `_authToken` line in `~/.npmrc`. |
 
-It is the only secret this repository has, and it is deliberately not written into a file —
-see [Security model](../explanation/security-model.md).
+It is the only secret this repository *stores*, and it is deliberately not written into a
+file. The registry credential above is not stored either: per run in CI, and the
+contributor's own on a laptop — see
+[Security model](../explanation/security-model.md).
 
 ## Configuration files
 

@@ -16,11 +16,25 @@ requires: []
 | npm 11 | The package manager. Nothing else is supported. |
 | `uv` | Provides the pinned Python tooling the hook gate runs on. |
 | `just` | The task runner, and the only supported interface to the checks. |
+| A GitHub token with `read:packages` | The design system is installed from GitHub Packages, which authenticates every request. |
 
 Exact versions live in `package.json` (`engines`, `volta`) and in `.python-version`. A
 `volta` block is present, so a Volta user gets the right Node automatically.
 
 ## First run
+
+Poodl takes its design system from `@steven-cutting/biscuit-games`, published to GitHub
+Packages. That registry authenticates every request, including a read of a public package,
+so the token comes before anything else. Put one line in `~/.npmrc` — the user
+configuration, never this repository's `.npmrc`, which names the registry for the scope and
+holds no credential:
+
+```text
+`//npm.pkg.github.com/:_authToken=` followed by the token
+```
+
+Without it npm answers `404 Not Found` and names the package rather than the missing
+credential, which is the registry's habit rather than a broken install.
 
 ```console
 just initialize

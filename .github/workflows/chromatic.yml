@@ -167,6 +167,15 @@ jobs:
     if: needs.authorize.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # A job block replaces the workflow's, so the two write scopes the reply
+    # below needs are restated here beside the read `just sync` needs for the
+    # design system package. `authorize` keeps the workflow's block and gains
+    # no package scope: it installs nothing.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      packages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -183,6 +192,15 @@ jobs:
           node-version: '26'
           cache: npm
           cache-dependency-path: package-lock.json
+          # @steven-cutting/biscuit-games comes from GitHub Packages, which
+          # authenticates every request including a read of a public package.
+          # This writes a user-level .npmrc under RUNNER_TEMP naming the
+          # registry for the scope and reading the token from the environment
+          # of each step that installs; the committed .npmrc names the registry
+          # and holds nothing, and the checkout the gates prove clean stays that
+          # way.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@steven-cutting'
       # uv and just are here only because the run below is a recipe rather than a
       # bare command. That is deliberate: nothing in CI runs something you cannot
       # run yourself.
@@ -195,6 +213,11 @@ jobs:
       - run: uv tool install rust-just==1.51.0
       - run: npm install --global npm@11.17.0
       - run: just sync
+        env:
+          # On the step that installs, never on the job: a step with no use for
+          # the credential should not carry one. It is the run's own token,
+          # minted and discarded with the run, so nothing is stored here.
+          NODE_AUTH_TOKEN: ${{ github.token }}
 
       # The branch name arrives through the environment rather than through
       # `${{ }}` in the command, because an expression is substituted as text

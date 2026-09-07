@@ -22,9 +22,13 @@ Very little, and that is the point.
   device storage and are never uploaded. There is nowhere to upload them to.
 - **There are no credentials in the product.** No sign-in, no tokens, nothing secret in
   the build or the bundle. The `ripsecrets` gate exists to keep it that way. The
-  repository has exactly one secret and it belongs to the toolchain, not to Poodl: a
+  repository *stores* exactly one secret and it belongs to the toolchain, not to Poodl: a
   Chromatic project token, held as a GitHub Actions secret and read from the environment,
-  written into no file here.
+  written into no file here. A second credential is needed and stored nowhere: reading the
+  design system from GitHub Packages takes a token carrying `read:packages`, which lives
+  in each contributor's own `~/.npmrc` and, in continuous integration, is the token GitHub
+  mints for the run and discards with it. The committed `.npmrc` names the registry for
+  the `@steven-cutting` scope and holds nothing.
 
 The practical consequence for a user is that clearing browser data destroys their
 statistics irrecoverably. That is a real cost of the design and is stated in
@@ -46,9 +50,13 @@ opponent and no leaderboard, so there is nobody to cheat but themselves.
 
 - **Supply chain.** Every dependency is pinned exactly and locked; `just lock-check`
   fails if a manifest and its lockfile disagree. GitHub Actions are pinned to commit
-  SHAs, not to mutable tags.
-- **Workflow permissions.** CI runs with `contents: read`. Only the Pages deployment
-  holds `pages: write` and `id-token: write`, and only Chromatic holds `issues: write`,
+  SHAs, not to mutable tags. One dependency comes from GitHub Packages rather than the
+  public registry, pinned and locked like the rest; the scope line in `.npmrc` is what
+  keeps every other package on npmjs.
+- **Workflow permissions.** CI runs with `contents: read` and `packages: read`, the second
+  so the install can read the design system with the run's own token. Only the Pages
+  deployment holds `pages: write` and `id-token: write`, and only Chromatic holds
+  `issues: write`,
   which it needs to answer the comment that summoned it. Each lives in its own file so the
   scopes are visible rather than inherited.
 - **The comment trigger.** `/chromatic` on a pull request starts a job holding the
