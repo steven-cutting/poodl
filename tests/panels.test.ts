@@ -7,6 +7,8 @@ import HowToPlayPanel from '../src/lib/components/HowToPlayPanel.svelte';
 import InvalidLinkNotice from '../src/lib/components/InvalidLinkNotice.svelte';
 import SettingsPanel from '../src/lib/components/SettingsPanel.svelte';
 import SharePanel from '../src/lib/components/SharePanel.svelte';
+import { describeNotice } from '../src/lib/app/state';
+import type { Notice } from '../src/lib/app/state';
 import StatisticsPanel from '../src/lib/components/StatisticsPanel.svelte';
 import { DEFAULT_SETTINGS } from '../src/lib/app/state';
 import {
@@ -38,6 +40,20 @@ function settingsProps(overrides: Record<string, unknown> = {}) {
 /*
  * settings.allium — the `SettingsPanel` surface.
  */
+/**
+ * A notice as the route hands one to a panel: the sentence and the tone, under
+ * the prop names the surfaces take. `describeNotice` is the app's own mapping,
+ * so a test cannot assert a sentence the application would not show.
+ */
+function noticeWords(notice: Notice): {
+  noticeMessage: string | null;
+  noticeTone: 'alert' | 'success';
+} {
+  const words = describeNotice(notice);
+
+  return { noticeMessage: words.message, noticeTone: words.tone };
+}
+
 describe('SettingsPanel', () => {
   it('offers every preference, each labelled and operable', async () => {
     const props = settingsProps();
@@ -449,7 +465,7 @@ describe('SharePanel', () => {
     const field = screen.getByRole('textbox', { name: /word/i });
 
     await userEvent.type(field, 'qqqqq{Enter}');
-    await rerender({ notice: { kind: 'custom_answer_rejected', entry: 'qqqqq' } });
+    await rerender(noticeWords({ kind: 'custom_answer_rejected', entry: 'qqqqq' }));
 
     expect(screen.getByRole('status')).toHaveTextContent(/qqqqq/);
     // Typed first, so this is the field and not the sentence about it.
@@ -475,11 +491,11 @@ describe('SharePanel', () => {
    * change it. Every other Notice caller threads it, and this one used not to.
    */
   it('announces an identical refusal a second time', async () => {
-    const notice = { kind: 'custom_answer_rejected', entry: 'qqqqq' } as const;
-    const { rerender } = render(SharePanel, panelProps({ notice, noticeSequence: 1 }));
+    const words = noticeWords({ kind: 'custom_answer_rejected', entry: 'qqqqq' });
+    const { rerender } = render(SharePanel, panelProps({ ...words, noticeSequence: 1 }));
     const first = screen.getByRole('status').firstElementChild;
 
-    await rerender({ notice: { ...notice }, noticeSequence: 2 });
+    await rerender({ ...words, noticeSequence: 2 });
 
     expect(screen.getByRole('status').firstElementChild).not.toBe(first);
   });

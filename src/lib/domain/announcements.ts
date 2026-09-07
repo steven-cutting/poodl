@@ -1,6 +1,12 @@
 import type { Mark } from '@steven-cutting/biscuit-games';
 
-import type { GuessRejectionReason, LetterMark, LetterResult } from '$lib/domain/types';
+import type {
+  GameMode,
+  GameStatus,
+  GuessRejectionReason,
+  LetterMark,
+  LetterResult
+} from '$lib/domain/types';
 
 /**
  * What Poodl says out loud.
@@ -41,6 +47,36 @@ const MARK_DESCRIPTIONS: Record<LetterMark, string> = {
  */
 export function markFor(mark: LetterMark): Mark {
   return { name: mark === 'correct' ? 'exact' : mark, description: MARK_DESCRIPTIONS[mark] };
+}
+
+/**
+ * The header chip: the word it shows, and the name a reader hears.
+ *
+ * `GameNavigation.@guarantee CurrentModeIsPerceivable` asks for the mode to be
+ * readable as text rather than signalled by which control looks selected, and
+ * the chip is where the chrome says it. The platform draws the chip and knows
+ * nothing about modes, so the words are Poodl's and are written here beside
+ * everything else Poodl says.
+ *
+ * The label says the state and the action, and deliberately never the two words
+ * "random game" together: `InvalidLinkNotice`'s "Play a random game" is queried
+ * by that phrase, and a second control matching it would make every such query
+ * ambiguous.
+ */
+export function describeModeChip(
+  mode: GameMode | null,
+  status: GameStatus | null
+): { word: string; label: string } {
+  if (mode === null) {
+    return { word: 'No game', label: 'No game under way — change game' };
+  }
+
+  const label =
+    status === 'in_progress'
+      ? `Playing ${mode} — change game`
+      : `${mode.charAt(0).toUpperCase()}${mode.slice(1)} finished — change game`;
+
+  return { word: mode, label };
 }
 
 const REJECTIONS: Record<GuessRejectionReason, string> = {

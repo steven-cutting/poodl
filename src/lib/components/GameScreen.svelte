@@ -3,16 +3,16 @@
     Announcer,
     Button,
     Keyboard,
+    Notice,
     PhysicalKeyboard,
     QWERTY
   } from '@steven-cutting/biscuit-games';
   import type { KeysPort } from '@steven-cutting/biscuit-games';
 
   import Board from '$lib/components/Board.svelte';
-  import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
   import TodaysGame from '$lib/components/TodaysGame.svelte';
-  import type { GameState, Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { GameState, ShareableView } from '$lib/app/state';
   import type { TodaysGameView } from '$lib/app/store.svelte';
   import { markFor } from '$lib/domain/announcements';
   import type { KeyKnowledge } from '$lib/domain/types';
@@ -34,7 +34,8 @@
     keys,
     keyboard = [],
     physicalKeyboard = true,
-    notice = null,
+    noticeMessage = null,
+    noticeTone = 'alert',
     noticeSequence = 0,
     shareable = null,
     announcement = null,
@@ -58,7 +59,14 @@
     keys: KeysPort;
     /** Off while a dialog is open: the keys belong to whatever is in front. */
     physicalKeyboard?: boolean;
-    notice?: NoticeValue | null;
+    /**
+     * What Poodl is saying right now, as words and a tone rather than as a
+     * kind. Which sentence a notice carries is the route's to choose —
+     * `describeNotice` in `app/state.ts` writes them once for all three
+     * surfaces that show one — so a component renders what it is handed.
+     */
+    noticeMessage?: string | null;
+    noticeTone?: 'alert' | 'success';
     noticeSequence?: number;
     /**
      * The grid Poodl is holding, for as long as it has one. Made in the
@@ -130,7 +138,12 @@
 
 <Board guesses={game.guesses} currentInput={game.currentInput} />
 
-<Notice {notice} sequence={noticeSequence} ondismiss={ondismissnotice} />
+<Notice
+  message={noticeMessage}
+  tone={noticeTone}
+  sequence={noticeSequence}
+  ondismiss={ondismissnotice}
+/>
 
 {#if shareable?.kind === 'results'}
   <ResultsReady text={shareable.text} {oncopy} />

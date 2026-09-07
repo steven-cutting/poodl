@@ -5,79 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import Countdown from '../src/lib/components/Countdown.svelte';
 import DistributionChart from '../src/lib/components/DistributionChart.svelte';
 import LinkReady from '../src/lib/components/LinkReady.svelte';
-import Notice from '../src/lib/components/Notice.svelte';
 import ResultsReady from '../src/lib/components/ResultsReady.svelte';
 
-/*
- * What Poodl is telling the player right now, visibly and out loud at once.
- * `EveryRejectionIsAnnounced` asks for both.
- */
-describe('Notice', () => {
-  it('says which of the three rejections applied', () => {
-    render(Notice, { notice: { kind: 'guess_rejected', reason: 'not_in_dictionary' } });
-
-    expect(screen.getByRole('status')).toHaveTextContent(/word list/i);
-  });
-
-  it('names the entry a custom answer was refused for', () => {
-    render(Notice, { notice: { kind: 'custom_answer_rejected', entry: 'qqqqq' } });
-
-    expect(screen.getByRole('status')).toHaveTextContent(/qqqqq/);
-  });
-
-  it('reports both outcomes of a copy', () => {
-    const { unmount } = render(Notice, { notice: { kind: 'results_copied' } });
-
-    expect(screen.getByRole('status')).toHaveTextContent(/copied/i);
-    unmount();
-
-    render(Notice, { notice: { kind: 'copy_failed' } });
-
-    expect(screen.getByRole('status')).toHaveTextContent(/could not/i);
-  });
-
-  /*
-   * The region has to be there before it says anything, or the first thing it
-   * says arrives with it and a live region that has not changed is not read.
-   * So "nothing to say" is an empty region, not an absent one.
-   */
-  it('keeps an empty region waiting when there is no notice', () => {
-    render(Notice, { notice: null });
-
-    expect(screen.getByRole('status')).toHaveTextContent('');
-    expect(screen.queryByRole('button', { name: 'Dismiss' })).not.toBeInTheDocument();
-  });
-
-  /*
-   * Two identical sentences in a row change no text, so the nodes are replaced
-   * instead. The sequence is what the engine advances for exactly this.
-   */
-  it('is heard again when the same thing is said twice', async () => {
-    const notice = { kind: 'guess_rejected', reason: 'incomplete' } as const;
-    const { rerender } = render(Notice, { notice, sequence: 1 });
-    const region = screen.getByRole('status');
-    const said = region.firstElementChild;
-
-    await rerender({ notice: { ...notice }, sequence: 2 });
-
-    expect(screen.getByRole('status')).toBe(region);
-    expect(region.firstElementChild).not.toBe(said);
-  });
-
-  it('can be dismissed when a caller offers to take it back', async () => {
-    const ondismiss = vi.fn();
-    render(Notice, { notice: { kind: 'results_copied' }, ondismiss });
-
-    await userEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-
-    expect(ondismiss).toHaveBeenCalledTimes(1);
-  });
-});
-
-/*
- * sharing.allium — `CustomLinkReady`. The link is shown so it can be copied, and
- * `TheWordIsNotReadableInTheLink` means nothing beside it says the word.
- */
 describe('LinkReady', () => {
   const URL_ = 'https://poodl.test/?g=yrqt9rd9';
 

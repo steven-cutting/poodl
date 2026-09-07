@@ -2,6 +2,8 @@ import { render, screen, within } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 
 import Board from '../src/lib/components/Board.svelte';
+import HowToPlay from '../src/lib/components/HowToPlay.svelte';
+import Lockup from '../src/lib/components/Lockup.svelte';
 import TodaysGame from '../src/lib/components/TodaysGame.svelte';
 import { MAX_ATTEMPTS } from '../src/lib/config';
 import { dayStart } from '../src/lib/domain/calendar';
@@ -133,5 +135,79 @@ describe('TodaysGame', () => {
     expect(screen.getByText(/day 4/i)).toBeInTheDocument();
     expect(screen.getByText(/available/i)).toBeInTheDocument();
     expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
+  });
+});
+
+/*
+ * The body of the explanation, without a frame: `WelcomeScreen` names it as a
+ * group and `HowToPlayPanel` as a dialog, so the component itself carries the
+ * words and nothing else.
+ */
+describe('HowToPlay', () => {
+  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, as
+  // many games as they like, and one word a day that everybody shares.
+  it('says how many attempts, how long a word is, that there is no limit, and one word a day', () => {
+    render(HowToPlay, {});
+
+    expect(screen.getByText(/6 attempts/)).toHaveTextContent(/5-letter word/);
+    expect(screen.getByText(/as many as you like/i)).toHaveTextContent(/one word a day/i);
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  /*
+   * The half of the same guarantee that is read rather than seen. The tiles
+   * are `aria-hidden`, so the sentence in each row is the whole of what a
+   * screen reader is given for that mark — and nothing else here would notice
+   * it going: the count above and the bars below both pass just as well on
+   * three empty rows. So each row is held by its own words, in the order the
+   * marks are drawn in, and the words those rows use for the bars are the ones
+   * `GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone` uses itself:
+   * bar, shorter bar and no bar.
+   */
+  it('names every mark in the sentence beside its tile', () => {
+    render(HowToPlay, {});
+    const rows = screen.getAllByRole('listitem');
+
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Correct — right letter, right place. Marker bar.');
+    expect(rows[1]).toHaveTextContent('Present — right letter, wrong place. Shorter marker bar.');
+    expect(rows[2]).toHaveTextContent('Absent — not in the word. No marker bar.');
+  });
+
+  /*
+   * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone, as an
+   * illustration: the example beside each mark is the board's own tile, so it
+   * carries the bar the board draws — one for correct, a shorter one for
+   * present, none for absent. The tiles are hidden from assistive technology,
+   * because the sentence beside each is the content; so the visible half is
+   * held here through `[data-marker]`, the structural hook
+   * `tests/components.test.ts` uses for the same bar, and the names are asked
+   * for with `hidden` only to find each tile by the mark it shows.
+   */
+  it('shows each mark on a real tile that assistive technology does not read', () => {
+    render(HowToPlay, {});
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+
+    const marker = (name: string) =>
+      screen.getByRole('img', { name, hidden: true }).querySelector('[data-marker]');
+
+    expect(marker('Position 1, C, correct')).not.toBeNull();
+    expect(marker('Position 2, R, in the word, wrong place')).not.toBeNull();
+    expect(marker('Position 3, N, not in the word')).toBeNull();
+  });
+});
+
+/*
+ * Poodl's own lockup, handed to the platform's header as its brand. The
+ * platform's `Wordmark` says "biscuit games"; the page has to say which page it
+ * is.
+ */
+describe('Lockup', () => {
+  // The mark's "b" is aria-hidden, so the words are the whole accessible text.
+  it('reads as exactly the lockup, with the mark silent', () => {
+    render(Lockup, {});
+
+    expect(screen.getByText(/biscuit/)).toHaveTextContent(/^biscuit games \/ poodl$/);
   });
 });

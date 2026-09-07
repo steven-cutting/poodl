@@ -50,6 +50,48 @@ afterEach(() => {
  * than being stubbed.
  */
 describe('the page', () => {
+  /*
+   * The chrome, which is the platform's shape carrying Poodl's words. The
+   * lockup is the page's own — the platform's `Wordmark` says only "biscuit
+   * games" — and the chip and the four actions are vocabulary this route
+   * writes, so this is where they are held now that no component owns them.
+   *
+   * The header sits above the hydration branch, so it is in the prerendered
+   * document and needs no waiting for.
+   */
+  it('carries the page heading Poodl draws for itself', () => {
+    render(Page);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('biscuit games / poodl');
+  });
+
+  /*
+   * GameNavigation.@guarantee CurrentModeIsPerceivable, the chip half: the mode
+   * is the chip's visible word and the label says the state and what pressing
+   * it does. The phrase "random game" never appears in one —
+   * `InvalidLinkNotice`'s "Play a random game" owns that query.
+   */
+  it('says no game is under way before one starts, and opens the modes from there', async () => {
+    render(Page);
+
+    const chip = screen.getByRole('button', { name: 'No game under way — change game' });
+
+    expect(chip).toHaveTextContent('No game');
+    expect(chip).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await userEvent.click(chip);
+
+    expect(screen.getByRole('dialog', { name: 'Games' })).toBeInTheDocument();
+  });
+
+  it('offers the four header actions, each announcing that it opens a dialog', () => {
+    render(Page);
+
+    for (const name of ['Share a game', 'Statistics', 'Settings', 'How to play']) {
+      expect(screen.getByRole('button', { name })).toHaveAttribute('aria-haspopup', 'dialog');
+    }
+  });
+
   it('lands on the welcome screen', async () => {
     render(Page);
 

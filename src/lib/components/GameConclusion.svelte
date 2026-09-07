@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { Button, Modal } from '@steven-cutting/biscuit-games';
+  import { Button, Modal, Notice } from '@steven-cutting/biscuit-games';
   import Countdown from '$lib/components/Countdown.svelte';
   import LinkReady from '$lib/components/LinkReady.svelte';
-  import Notice from '$lib/components/Notice.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
   import TodaysGame from '$lib/components/TodaysGame.svelte';
-  import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { ShareableView } from '$lib/app/state';
   import type { TodaysGameView } from '$lib/app/store.svelte';
   import { MAX_ATTEMPTS } from '$lib/config';
   import type { GameMode, StartableMode } from '$lib/domain/types';
@@ -48,7 +47,8 @@
     onshareresults,
     onshareanswer,
     onclose,
-    notice = null,
+    noticeMessage = null,
+    noticeTone = 'alert',
     noticeSequence = 0,
     shareable = null,
     oncopy
@@ -74,7 +74,14 @@
      * a grid rendered behind it would be unreachable until it was closed, and
      * while a countdown runs it cannot be.
      */
-    notice?: NoticeValue | null;
+    /**
+     * What Poodl is saying right now, as words and a tone rather than as a
+     * kind. Which sentence a notice carries is the route's to choose —
+     * `describeNotice` in `app/state.ts` writes them once for all three
+     * surfaces that show one — so a component renders what it is handed.
+     */
+    noticeMessage?: string | null;
+    noticeTone?: 'alert' | 'success';
     noticeSequence?: number;
     shareable?: ShareableView | null;
     oncopy: () => void;
@@ -137,7 +144,7 @@
     <Countdown seconds={secondsRemaining} {onstop} />
   {/if}
 
-  <Notice {notice} sequence={noticeSequence} />
+  <Notice message={noticeMessage} tone={noticeTone} sequence={noticeSequence} />
 
   {#if shareable?.kind === 'custom_link'}
     <LinkReady url={shareable.text} {oncopy} />

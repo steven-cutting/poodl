@@ -55,10 +55,11 @@ installs the system libraries Chromium links against.
 Stories live in `stories/` at the repository root, one file per component. The layout rule
 and what the story run proves are in [Testing](../reference/testing.md).
 
-One file deviates from one-per-component on purpose: `stories/Foundations.stories.svelte`
-documents the design tokens — palette, type ramp, spacing, radii — rather than a
-component, because the tokens are consumed by every component and owned by none. Its
-specimens are for looking; the measured pairs stay in `tests/contrast.test.ts`.
+Every file here covers one component Poodl owns. The design tokens have a specimen sheet
+of their own, and it is the platform's rather than this repository's — the tokens are
+consumed by every component and owned by none of them, and they are not Poodl's to own at
+all. The measured pairs stay in `tests/contrast.test.ts`, which reads the same stylesheet
+from the package.
 
 ## Write a story
 

@@ -32,7 +32,7 @@
    * The tiles are hidden from assistive technology by the frame: the sentence
    * beside each one is the whole of the content, and "Position 1, C, correct"
    * read out before it would be noise. That leaves the sentences carrying the
-   * explanation on their own, so `tests/primitives.test.ts` holds each one by
+   * explanation on their own, so `tests/components.test.ts` holds each one by
    * the row it sits in, and the bars beside them through `[data-marker]` — the
    * structural hook `docs/reference/testing.md` records for exactly this kind
    * of aria-hidden decoration.

@@ -1,6 +1,7 @@
 <script module lang="ts">
   import { createWindowKeys } from '@steven-cutting/biscuit-games';
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { describeNotice } from '../src/lib/app/state';
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameScreen from '../src/lib/components/GameScreen.svelte';
@@ -51,6 +52,11 @@
     '`GuessScoring` contract would not produce.'
   ].join('\n');
 
+  /** The route's own mapping, under the prop names the surfaces take. */
+  function renamed(words: { message: string | null; tone: 'alert' | 'success' }) {
+    return { noticeMessage: words.message, noticeTone: words.tone };
+  }
+
   const { Story } = defineMeta({
     title: 'Game/GameScreen',
     component: GameScreen,
@@ -60,7 +66,8 @@
       keys: createWindowKeys(),
       keyboard: keyboardKnowledge(PLAYING.guesses),
       physicalKeyboard: true,
-      notice: null,
+      noticeMessage: null,
+      noticeTone: 'alert',
       noticeSequence: 0,
       shareable: null,
       announcement: null,
@@ -76,7 +83,8 @@
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
       keys: { control: false, description: 'The device keyboard, as the port the route builds.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
-      notice: { control: false, description: 'What Poodl is saying, if anything.' },
+      noticeMessage: { control: false, description: 'What Poodl is saying, if anything.' },
+      noticeTone: { control: false, description: 'Which glyph sits beside it.' },
       shareable: {
         control: false,
         description: 'The grid the conclusion made, still here after it was put away. Never a link.'
@@ -98,7 +106,7 @@
   name="A guess refused"
   args={{
     game: { ...PLAYING, currentInput: 'qqqqq' },
-    notice: { kind: 'guess_rejected', reason: 'not_in_dictionary' },
+    ...renamed(describeNotice({ kind: 'guess_rejected', reason: 'not_in_dictionary' })),
     noticeSequence: 1
   }}
 />
@@ -204,7 +212,7 @@
     keyboard: keyboardKnowledge(WON_GAME.guesses),
     onshowresult,
     shareable: GRID_MADE,
-    notice: { kind: 'results_copied' },
+    ...renamed(describeNotice({ kind: 'results_copied' })),
     noticeSequence: 1
   }}
   parameters={{ docs: { story: { inline: false } } }}

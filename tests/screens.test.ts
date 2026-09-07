@@ -8,7 +8,8 @@ import GameNavigation from '../src/lib/components/GameNavigation.svelte';
 import GameScreen from '../src/lib/components/GameScreen.svelte';
 import WelcomeScreen from '../src/lib/components/WelcomeScreen.svelte';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
-import type { GameState } from '../src/lib/app/state';
+import { describeNotice } from '../src/lib/app/state';
+import type { GameState, Notice } from '../src/lib/app/state';
 import { dayStart } from '../src/lib/domain/calendar';
 import { keyboardKnowledge } from '../src/lib/domain/keyboard';
 
@@ -19,6 +20,20 @@ function gameAfter(...words: readonly string[]): GameState {
   const played = words.reduce((state, word) => playGuess(env, state, word), started);
 
   return played.currentGame as GameState;
+}
+
+/**
+ * A notice as the route hands one to a surface: the sentence and the tone,
+ * under the prop names the surfaces take. `describeNotice` is the app's own
+ * mapping, so no test can assert a sentence the application would not show.
+ */
+function noticeWords(notice: Notice): {
+  noticeMessage: string | null;
+  noticeTone: 'alert' | 'success';
+} {
+  const words = describeNotice(notice);
+
+  return { noticeMessage: words.message, noticeTone: words.tone };
 }
 
 function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
@@ -757,7 +772,7 @@ describe('GameConclusion', () => {
     render(GameConclusion, {
       ...base,
       shareable: { kind: 'results', text: 'Poodl 3/6\n🟩⬛⬛🟨⬛' },
-      notice: { kind: 'copy_failed' },
+      ...noticeWords({ kind: 'copy_failed' }),
       oncopy
     });
 
@@ -774,7 +789,7 @@ describe('GameConclusion', () => {
 
   // The action reports whether the copy succeeded, where the action was taken.
   it('reports the outcome of a copy, inside itself', () => {
-    render(GameConclusion, { ...base, notice: { kind: 'copy_failed' } });
+    render(GameConclusion, { ...base, ...noticeWords({ kind: 'copy_failed' }) });
 
     expect(
       within(screen.getByRole('dialog', { name: /won/i })).getByRole('status')
@@ -939,7 +954,7 @@ describe('GameScreen', () => {
     render(
       GameScreen,
       screenProps(gameAfter(), {
-        notice: { kind: 'guess_rejected', reason: 'incomplete' },
+        ...noticeWords({ kind: 'guess_rejected', reason: 'incomplete' }),
         announcement: 'Attempt 1: A correct'
       })
     );

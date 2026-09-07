@@ -24,9 +24,9 @@ see. Both recipes pass `--config` themselves, so neither depends on that discove
 ## Layout
 
 Tests live in `tests/`, never colocated with `src/`. Stories live in `stories/`, also at
-the repository root, one file per component — plus the one stated exception,
-`Foundations.stories.svelte`, which documents the design tokens rather than a component;
-[Work in the component workshop](../how-to/work-in-the-component-workshop.md) records why.
+the repository root, one file per component. There is no longer an exception: the token
+sheet documented the design system, and the design system is the platform's — its own
+workshop is where the tokens are looked at now.
 
 | Suffix | Runner |
 | --- | --- |
@@ -124,7 +124,6 @@ should be deleted rather than covered; see
 | `ports.test.ts` | Every port, real adapter and fake, including the failure paths — the six here, and the platform's preferences port, which two of Poodl's own `Appearance` guarantees rest on. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component Poodl owns, through accessible roles and names — including what it hands the platform's cells and keys, and that a finished game's keyboard stays readable. |
-| `primitives.test.ts` | The design-system primitives Poodl still owns — `Icon`, `IconButton`, `Wordmark`, `HowToPlay`, `HeaderBar` — through accessible roles and names. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
 | `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: the stylesheet the platform package ships, read from `node_modules` and asserted to be there, put in the document, and measured on a real control. |
 | `contrast.test.ts` | Every measured colour pair in the platform package's stylesheet, read from `node_modules` and asserted to be there, recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |

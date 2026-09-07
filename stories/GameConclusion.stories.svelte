@@ -1,5 +1,6 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { describeNotice } from '../src/lib/app/state';
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameConclusion from '../src/lib/components/GameConclusion.svelte';
@@ -51,6 +52,11 @@
     'showing.'
   ].join('\n');
 
+  /** The route's own mapping, under the prop names the surfaces take. */
+  function renamed(words: { message: string | null; tone: 'alert' | 'success' }) {
+    return { noticeMessage: words.message, noticeTone: words.tone };
+  }
+
   const { Story } = defineMeta({
     title: 'Game/GameConclusion',
     component: GameConclusion,
@@ -70,7 +76,8 @@
       onclose,
       onwelcome,
       oncopy,
-      notice: null,
+      noticeMessage: null,
+      noticeTone: 'alert',
       noticeSequence: 0,
       shareable: null
     },
@@ -81,7 +88,8 @@
       attemptsUsed: { control: { type: 'range', min: 1, max: 6 } },
       secondsRemaining: { control: false, description: 'Null in every mode but endless.' },
       todaysGame: { control: false, description: 'The TodaysGame surface. Daily only.' },
-      notice: { control: false, description: 'What Poodl is saying about the last copy.' },
+      noticeMessage: { control: false, description: 'What Poodl is saying about the last copy.' },
+      noticeTone: { control: false, description: 'Which glyph sits beside it.' },
       shareable: { control: false, description: 'What either sharing action produced.' }
     },
     parameters: { docs: { description: { component: OVERVIEW }, story: { inline: false } } }
@@ -219,7 +227,11 @@
 -->
 <Story
   name="A copy that failed"
-  args={{ shareable: GRID_MADE, notice: { kind: 'copy_failed' }, noticeSequence: 1 }}
+  args={{
+    shareable: GRID_MADE,
+    ...renamed(describeNotice({ kind: 'copy_failed' })),
+    noticeSequence: 1
+  }}
   play={async ({ canvasElement }) => {
     // ShareResults.@guarantee TheGridIsAvailableAsText
     const dialog = within(canvasElement).getByRole('dialog');

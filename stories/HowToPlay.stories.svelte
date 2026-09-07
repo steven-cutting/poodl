@@ -19,7 +19,7 @@
     '`@guarantee ResultsAreNeverConveyedByColourAlone` is illustrated with the bar the board',
     'draws — most of the bottom edge for correct, a short centred one for present, none for',
     'absent. The tiles are hidden from assistive technology because the sentence beside each is',
-    'the content; `tests/primitives.test.ts` holds the bars through `[data-marker]`, and',
+    'the content; `tests/components.test.ts` holds the bars through `[data-marker]`, and',
     '`Tile`’s own stories hold their geometry.'
   ].join('\n');
 
