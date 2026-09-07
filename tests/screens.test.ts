@@ -1,11 +1,11 @@
+import { createFakeKeys } from '@steven-cutting/biscuit-games';
 import { render, screen, within } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import GameConclusion from '../src/lib/components/GameConclusion.svelte';
 import GameNavigation from '../src/lib/components/GameNavigation.svelte';
 import GameScreen from '../src/lib/components/GameScreen.svelte';
-import PhysicalKeyboard from '../src/lib/components/PhysicalKeyboard.svelte';
 import WelcomeScreen from '../src/lib/components/WelcomeScreen.svelte';
 import { createEnv, fresh, playGuess, run, winInOne } from './engineHarness';
 import type { GameState } from '../src/lib/app/state';
@@ -24,6 +24,9 @@ function gameAfter(...words: readonly string[]): GameState {
 function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
   return {
     game,
+    // The device's keyboard, injected rather than stubbed. A test that wants to
+    // press a key passes its own fake in and reads `listening` off it.
+    keys: createFakeKeys(),
     keyboard: keyboardKnowledge(game.guesses),
     physicalKeyboard: true,
     notice: null,
@@ -791,104 +794,6 @@ describe('GameConclusion', () => {
   });
 });
 
-/*
- * game.allium — the `PhysicalKeyboardInput` surface. The same three actions as
- * the on-screen keyboard, from a different channel.
- */
-describe('PhysicalKeyboard', () => {
-  // Typed spies rather than bare `vi.fn()`: the component's props are typed, so
-  // an untyped mock is not assignable to them and svelte-check says so.
-  const keyHandlers = () => ({
-    onletter: vi.fn<(letter: string) => void>(),
-    ondelete: vi.fn<() => void>(),
-    onsubmit: vi.fn<() => void>()
-  });
-
-  let handlers = keyHandlers();
-
-  beforeEach(() => {
-    handlers = keyHandlers();
-  });
-
-  // EnterSubmitsAndBackspaceDeletes.
-  it('enters letters, submits on Enter and deletes on Backspace', async () => {
-    render(PhysicalKeyboard, handlers);
-
-    await userEvent.keyboard('a');
-    await userEvent.keyboard('{Enter}');
-    await userEvent.keyboard('{Backspace}');
-
-    expect(handlers.onletter).toHaveBeenCalledWith('a');
-    expect(handlers.onsubmit).toHaveBeenCalledTimes(1);
-    expect(handlers.ondelete).toHaveBeenCalledTimes(1);
-  });
-
-  it('takes a letter in whatever case it arrives in', async () => {
-    render(PhysicalKeyboard, handlers);
-
-    await userEvent.keyboard('{Shift>}A{/Shift}');
-
-    expect(handlers.onletter).toHaveBeenCalledWith('A');
-  });
-
-  it('leaves the browser its own shortcuts', async () => {
-    render(PhysicalKeyboard, handlers);
-
-    await userEvent.keyboard('{Control>}a{/Control}');
-    await userEvent.keyboard('{Meta>}r{/Meta}');
-
-    expect(handlers.onletter).not.toHaveBeenCalled();
-  });
-
-  it('keeps its hands off a control that has focus', async () => {
-    render(PhysicalKeyboard, handlers);
-    const button = document.createElement('button');
-    document.body.append(button);
-    button.focus();
-
-    await userEvent.keyboard('{Enter}');
-
-    expect(handlers.onsubmit).not.toHaveBeenCalled();
-    button.remove();
-  });
-
-  /*
-   * Only Enter belongs to the control, because only Enter activates it.
-   * `FullyKeyboardOperable` invites the player to tab to the on-screen keyboard
-   * and press a key there, and the letters they type next are still the board's
-   * — `PhysicalKeyboardInput` grants them on the input length alone.
-   */
-  it('still hears letters and Backspace while a control has focus', async () => {
-    render(PhysicalKeyboard, handlers);
-    const button = document.createElement('button');
-    document.body.append(button);
-    button.focus();
-
-    await userEvent.keyboard('a{Backspace}');
-
-    expect(handlers.onletter).toHaveBeenCalledWith('a');
-    expect(handlers.ondelete).toHaveBeenCalledTimes(1);
-    button.remove();
-  });
-
-  it('leaves every key to somewhere the player is typing', async () => {
-    render(PhysicalKeyboard, handlers);
-    const field = document.createElement('input');
-    document.body.append(field);
-    field.focus();
-
-    await userEvent.keyboard('a{Backspace}{Enter}');
-
-    expect(handlers.onletter).not.toHaveBeenCalled();
-    expect(handlers.ondelete).not.toHaveBeenCalled();
-    expect(handlers.onsubmit).not.toHaveBeenCalled();
-    field.remove();
-  });
-});
-
-/*
- * game.allium — the `GameBoard` surface, assembled.
- */
 describe('GameScreen', () => {
   // AnswerIsNeverExposedWhileInProgress.
   it('shows nothing of the answer while the game is in progress', () => {
@@ -917,26 +822,92 @@ describe('GameScreen', () => {
     expect(onletter).toHaveBeenCalledWith('q');
   });
 
-  // TurningThisOffSurrendersTheKeysEntirely: not letters, not Enter, not
-  // Backspace.
-  it('handles no key press at all when physical input is off', async () => {
-    const props = screenProps(gameAfter(), { physicalKeyboard: false });
+  /*
+   * TurningThisOffSurrendersTheKeysEntirely, and it is total: nothing is
+   * listening at all rather than a handler deciding to ignore what it hears.
+   * `listening` is asserted before the press so the case cannot pass because
+   * nothing ever subscribes.
+   */
+  it('surrenders the device keyboard entirely when physical input is off', () => {
+    const keys = createFakeKeys();
+    const props = screenProps(gameAfter(), { physicalKeyboard: false, keys });
     render(GameScreen, props);
 
-    await userEvent.keyboard('a{Enter}{Backspace}');
-
+    expect(keys.listening).toBe(0);
+    expect(keys.press({ key: 'a' })).toBe(false);
+    expect(keys.press({ key: 'Enter' })).toBe(false);
+    expect(keys.press({ key: 'Backspace' })).toBe(false);
     expect(props.onletter).not.toHaveBeenCalled();
     expect(props.onsubmit).not.toHaveBeenCalled();
     expect(props.ondelete).not.toHaveBeenCalled();
   });
 
-  it('takes typing straight into the board when physical input is on', async () => {
+  // EnterSubmitsAndBackspaceDeletes, over the port the route wires. What each
+  // key means is the platform's; that the three actions arrive is Poodl's.
+  it('takes typing straight into the board when physical input is on', () => {
+    const keys = createFakeKeys();
+    const props = screenProps(gameAfter(), { keys });
+    render(GameScreen, props);
+
+    expect(keys.listening).toBe(1);
+    expect(keys.press({ key: 'a' })).toBe(true);
+    expect(keys.press({ key: 'Enter' })).toBe(true);
+    expect(keys.press({ key: 'Backspace' })).toBe(true);
+    expect(props.onletter).toHaveBeenCalledWith('a');
+    expect(props.onsubmit).toHaveBeenCalledTimes(1);
+    expect(props.ondelete).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops listening to the device once the game is over', () => {
+    const keys = createFakeKeys();
+    const won = winInOne(env, run(env, fresh(), { kind: 'new_game', mode: 'random' }));
+    render(GameScreen, screenProps(won.currentGame as GameState, { keys }));
+
+    expect(keys.listening).toBe(0);
+  });
+
+  // The two named values a Poodl key carries, from the on-screen keyboard.
+  it('submits and deletes from the on-screen keyboard', async () => {
     const props = screenProps(gameAfter());
     render(GameScreen, props);
 
-    await userEvent.keyboard('a');
+    await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
 
-    expect(props.onletter).toHaveBeenCalledWith('a');
+    expect(props.onsubmit).toHaveBeenCalledTimes(1);
+    expect(props.ondelete).toHaveBeenCalledTimes(1);
+  });
+
+  /*
+   * GameBoard.@guarantee AScoredKeyStaysLegibleOnceTheGameIsOver. The
+   * platform's exemption for an unavailable control is only from the contrast
+   * figures; it buys nothing about how the state is known, and this is where
+   * the two things a dimmed key still owes are held. Both matter because the
+   * dimming is one `opacity` declaration away from taking them with it, and
+   * neither gate above would notice: `tests/contrast.test.ts` measures tokens
+   * rather than rendered keys, and axe declines to judge a disabled control at
+   * all.
+   *
+   * The game is finished by saying so rather than by playing the answer: a win
+   * plays every letter of it, which would promote P to correct and leave no
+   * present key to look at.
+   */
+  it('keeps a scored key legible to a reader once the game switches it off', () => {
+    const played = gameAfter('adopt');
+    const over: GameState = { ...played, status: 'lost' };
+    render(GameScreen, screenProps(over));
+
+    for (const name of ['A, correct', 'P, in the word, wrong place', 'O, not in the word', 'Z']) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+    }
+
+    const bar = (name: string) =>
+      screen.getByRole('button', { name }).querySelector('[data-marker]');
+
+    expect(bar('A, correct')).not.toBeNull();
+    expect(bar('P, in the word, wrong place')).not.toBeNull();
+    expect(bar('O, not in the word')).toBeNull();
+    expect(bar('Z')).toBeNull();
   });
 
   it('turns the keyboard off once the game is over', () => {

@@ -1,5 +1,5 @@
 /**
- * Board and keyboard fixtures for the stories.
+ * Board fixtures for the stories.
  *
  * Every fixture is scored by the real `scoreGuess`, so no story can show a
  * result the `GuessScoring` contract in `docs/specs/game.allium` would not
@@ -10,9 +10,8 @@
  * other place in this repository that reaches into `src/` from outside it.
  */
 
-import { keyboardKnowledge } from '../src/lib/domain/keyboard';
 import { scoreGuess } from '../src/lib/domain/scoring';
-import type { KeyKnowledge, ScoredGuess } from '../src/lib/domain/types';
+import type { ScoredGuess } from '../src/lib/domain/types';
 
 /** The answer every board in the stories is played against. */
 export const ANSWER = 'apple';
@@ -20,11 +19,6 @@ export const ANSWER = 'apple';
 /** Score words against `ANSWER`, in the order they were played. */
 export function played(words: readonly string[]): ScoredGuess[] {
   return words.map((word) => ({ results: scoreGuess(word, ANSWER) }));
-}
-
-/** What the guesses so far have revealed, one entry per letter of the alphabet. */
-export function knownFrom(words: readonly string[]): KeyKnowledge[] {
-  return keyboardKnowledge(played(words));
 }
 
 /** Two guesses in: A is placed, P and L are in the word, D O T R M are not. */

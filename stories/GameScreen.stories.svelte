@@ -1,4 +1,5 @@
 <script module lang="ts">
+  import { createWindowKeys } from '@steven-cutting/biscuit-games';
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { expect, fn, userEvent, within } from 'storybook/test';
 
@@ -40,8 +41,8 @@
     '  play, or the conclusion — and goes when that closes. Nothing here renders one.',
     '- `ShareResults.@guarantee TheGridIsAvailableAsText`: the grid shared from the conclusion',
     '  stays on the board as text once the conclusion is put away, where the player is looking.',
-    '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
-    '  measures what the invariant closes on — that the whole screen is playable at',
+    '- `game/DirectManipulation`. The last story here measures what the invariant closes on',
+    '  — that the whole screen is playable at',
     '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
     '  it is one a finger can find: top to bottom without exception, and across for everything',
     '  but the keys the invariant exempts.',
@@ -56,6 +57,7 @@
     tags: ['autodocs'],
     args: {
       game: PLAYING,
+      keys: createWindowKeys(),
       keyboard: keyboardKnowledge(PLAYING.guesses),
       physicalKeyboard: true,
       notice: null,
@@ -72,6 +74,7 @@
     argTypes: {
       game: { control: false, description: 'The game on the board. Its answer is never read.' },
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
+      keys: { control: false, description: 'The device keyboard, as the port the route builds.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
       notice: { control: false, description: 'What Poodl is saying, if anything.' },
       shareable: {
@@ -234,6 +237,43 @@
         await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
       }
     }
+
+    /*
+     * What a tap does to a key, in an engine that has the properties. Two of
+     * these resolve nowhere else: jsdom's CSS parser drops
+     * `-webkit-tap-highlight-color` on the floor, so
+     * `tests/directManipulation.test.ts` can assert the replacement but never
+     * the removal, and this is the other half of that pair. The keys are the
+     * platform's now and the stylesheet with them, but the pairing is Poodl's
+     * to keep proving: it is what `docs/reference/testing.md` says splits this
+     * contract's evidence across the two suites.
+     *
+     * DirectManipulation.@invariant ATapDoesOnlyWhatTheControlDoes
+     * DirectManipulation.@invariant ATouchIsAcknowledged
+     */
+    const key = within(canvasElement).getByRole('button', { name: 'Q' });
+    const resolved = getComputedStyle(key);
+
+    await expect(resolved.getPropertyValue('touch-action')).toBe('manipulation');
+    await expect(resolved.getPropertyValue('user-select')).toBe('none');
+    await expect(resolved.getPropertyValue('-webkit-tap-highlight-color')).toBe('rgba(0, 0, 0, 0)');
+
+    /*
+     * And replaced rather than only removed. `:active` is a state only real
+     * input produces — no synthetic event reaches it and no story can force it
+     * — so what is proved here is that the two tones the replacement is drawn
+     * in resolve to real colours in this engine, and that they differ. Their
+     * measured contrast against all twelve key backgrounds is computed by
+     * `tests/contrast.test.ts`, and `docs/explanation/accessibility.md` says
+     * plainly which part of this no gate can see.
+     */
+    const palette = getComputedStyle(document.documentElement);
+    const ink = palette.getPropertyValue('--text');
+    const paper = palette.getPropertyValue('--background');
+
+    await expect(ink).not.toBe('');
+    await expect(paper).not.toBe('');
+    await expect(ink).not.toBe(paper);
   }}
 >
   {#snippet template(args)}

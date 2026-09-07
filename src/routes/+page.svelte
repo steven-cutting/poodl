@@ -20,7 +20,8 @@
   import type { StartableMode, ThemeChoice } from '$lib/domain/types';
   import { createNavigatorClipboard } from '$lib/ports/clipboard';
   import { createSystemClock } from '$lib/ports/clock';
-  import { createMediaPreferences } from '@steven-cutting/biscuit-games';
+  import { createMediaPreferences, createWindowKeys } from '@steven-cutting/biscuit-games';
+  import type { KeysPort } from '@steven-cutting/biscuit-games';
   import { createCryptoRandom } from '$lib/ports/random';
   import { createWebStorage } from '$lib/ports/storage';
   import { createIntervalTimer } from '$lib/ports/timer';
@@ -49,6 +50,14 @@
    * inside `onMount`, which is a callback control-flow analysis does not follow.
    */
   let store = $state<Store | null>(null);
+
+  /*
+   * The eighth port, and the only one the store does not take. It belongs to
+   * whatever surface is facing the player rather than to the rules, so it is
+   * built here beside the other seven — where a window exists — and handed to
+   * the board, which is the surface that claims keys.
+   */
+  let keys = $state<KeysPort | null>(null);
   let panel = $state<'settings' | 'statistics' | 'share' | 'modes' | 'help' | null>(null);
 
   onMount(() => {
@@ -66,6 +75,7 @@
     );
 
     store = created;
+    keys = createWindowKeys();
 
     /*
      * Opening first, then the token. `BeginGame` dismisses the welcome screen,
@@ -286,7 +296,7 @@
   />
 
   <main>
-    {#if store === null || app === null}
+    {#if store === null || app === null || keys === null}
       <!--
         What the prerendered file contains, and what a reader sees for the moment
         before hydration. It cannot be a board: the game is drawn per visitor, and
@@ -338,6 +348,7 @@
       -->
         <GameScreen
           {game}
+          {keys}
           keyboard={keyboardKnowledge(game.guesses)}
           physicalKeyboard={app.settings.physicalKeyboard && panel === null}
           notice={panel === null && !conclusionShowing ? boardNotice : null}

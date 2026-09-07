@@ -1,4 +1,6 @@
-import type { GuessRejectionReason, LetterResult } from '$lib/domain/types';
+import type { Mark } from '@steven-cutting/biscuit-games';
+
+import type { GuessRejectionReason, LetterMark, LetterResult } from '$lib/domain/types';
 
 /**
  * What Poodl says out loud.
@@ -10,6 +12,36 @@ import type { GuessRejectionReason, LetterResult } from '$lib/domain/types';
  * hears testable without rendering anything, and keeps the board's row labels
  * and the live region saying the same thing.
  */
+
+/**
+ * What each mark means, in Poodl's words: the sentence a cell says after its
+ * letter. One map for the board, the keyboard and the explanation, which used
+ * to hold two identical copies of it between them.
+ *
+ * Every value is a real sentence, and has to be. The platform draws no mark it
+ * has no words for — `EveryMarkIsNamedInWords` — so a blank here would paint a
+ * cell and tell a reader nothing about it, which is the failure that clause
+ * exists to name.
+ */
+const MARK_DESCRIPTIONS: Record<LetterMark, string> = {
+  correct: 'correct',
+  present: 'in the word, wrong place',
+  absent: 'not in the word'
+};
+
+/**
+ * A result as the platform paints it, with Poodl's sentence for it.
+ *
+ * The engine says `correct`, because that is what Poodl's rules say. The
+ * platform's name for the paint is `exact`, after the `--result-exact` token
+ * the stylesheet chose before any component did. This is the whole of the
+ * translation between the two, applied where a mark reaches something rendered
+ * and nowhere else: `describeResults` below still says `correct`, because a row
+ * label and an announcement are the game speaking about its own rules.
+ */
+export function markFor(mark: LetterMark): Mark {
+  return { name: mark === 'correct' ? 'exact' : mark, description: MARK_DESCRIPTIONS[mark] };
+}
 
 const REJECTIONS: Record<GuessRejectionReason, string> = {
   incomplete: 'Not enough letters. Fill the row before submitting.',
