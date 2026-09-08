@@ -57,9 +57,10 @@ components — and the token sheet Poodl no longer keeps — appear under **Bisc
 the sidebar, collapsed, below Poodl's own. They are served from where the platform
 publishes them; nothing is built here.
 
-It costs one request. Storybook checks the address while it builds, so `just storybook-build`
-reaches the network on every run of the gate — and cannot fail on it, because an
-unreachable address becomes an entry that does not open rather than an error.
+Storybook checks the address while it builds, so `just storybook-build` reaches the network
+on every run of the gate — and cannot fail on it, because an unreachable address becomes an
+entry that does not open rather than an error. What it costs is in
+[Quality gates](../reference/quality-gates.md).
 [Quality gates](../reference/quality-gates.md) states the exception, and the story run
 never fetches at all.
 

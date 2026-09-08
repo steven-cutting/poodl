@@ -52,7 +52,9 @@ listed in [Commands](commands.md).
 One gate in the table does reach the network, and it is stated here rather than left to be
 discovered. `.storybook/main.ts` composes the platform's published workshop through a
 `refs` entry, and Storybook checks a ref while it builds by fetching that address's
-`iframe.html`. So gate 6 makes one outbound request on every run of `just check`.
+`iframe.html`. So gate 6 reaches out on every run of `just check`: once for that file, and
+a second time for the same file read as JSON, which is how Storybook tells a workshop from
+a login page. An address that does not answer costs the first request alone.
 
 It cannot fail on it. An address Storybook cannot reach is recorded as a ref of unknown
 type and the build carries on — verified by pointing the entry at a host that does not

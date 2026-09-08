@@ -45,11 +45,15 @@ const config: StorybookConfig = {
    * Poodl's own sidebar.
    *
    * This is the one thing in `just check` that reaches the network. Storybook
-   * checks a ref while it builds, by fetching the address's `iframe.html`, and
+   * checks a ref while it builds by fetching the address's `iframe.html`, and
    * an address it cannot reach becomes a ref marked unknown rather than a
-   * failure — so gate 6 makes one outbound request, degrades to a sidebar entry
-   * that does not open, and passes either way. The story run never fetches at
-   * all: Storybook skips refs under its test runner.
+   * failure — so gate 6 degrades to a sidebar entry that does not open, and
+   * passes either way. The cost is stated as behaviour rather than a count:
+   * `checkRef` fetches once, and on a response it reads the same file a second
+   * time as JSON to tell a workshop from a login page, so an address that
+   * answers costs two requests and one that does not costs one. The story run
+   * never fetches at all — `getRefs` returns nothing under the test runner
+   * before any address is read.
    * `docs/reference/quality-gates.md` states the exception, and decision 0013
    * is why it was taken.
    */
