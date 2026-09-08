@@ -41,8 +41,8 @@
  * disabled button's `--rule` border and the keyboard a finished game dims are
  * measured nowhere here, and adding them would assert a floor the
  * specification does not state. The half of that guarantee which does bind is
- * not a ratio at all, so it is held where the keys are rendered instead:
- * `tests/components.test.ts` proves a switched-off key still reports as
+ * not a ratio at all, so it is held where a finished game is rendered
+ * instead: `tests/screens.test.ts` proves a switched-off key still reports as
  * disabled and still carries the marker bar its live form carried.
  *
  * All four combinations are covered; what is not is one of the two *routes* to

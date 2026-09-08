@@ -33,8 +33,11 @@ holds no credential:
 `//npm.pkg.github.com/:_authToken=` followed by the token
 ```
 
-Without it npm answers `404 Not Found` and names the package rather than the missing
-credential, which is the registry's habit rather than a broken install.
+The line is written that way rather than shown whole because `ripsecrets` reads this
+repository and a complete one, placeholder value and all, is what it exists to stop. The
+token is a personal access token carrying `read:packages`. Without the line npm answers
+`401 Unauthorized` and says the authentication token was not provided — the registry
+refusing the request, rather than a broken install.
 
 ```console
 just initialize

@@ -53,21 +53,23 @@ Svelte compiles text interpolation into update branches that only run on re-rend
 component tested only with fresh renders shows uncovered branches. A test that updates
 props covers them, and is worth having on its own merits.
 
-## `npm` reports `404 Not Found` for `@steven-cutting/biscuit-games`
+## `npm` reports `401 Unauthorized` for `@steven-cutting/biscuit-games`
 
-The registry is lying about what is missing. GitHub Packages authenticates every request,
-including a read of a public package, and answers an unauthenticated one by naming the
-package rather than the credential.
+GitHub Packages authenticates every request, including a read of a public package, and
+refuses an unauthenticated one by naming the credential: `401 Unauthorized … authentication
+token not provided`. That is the string to search a log for, and it is the common fault by
+some distance.
 
 On a laptop, `~/.npmrc` has no `//npm.pkg.github.com/:_authToken=` line, or its token has
-expired or lost `read:packages`. [Develop locally](../how-to/develop-locally.md) has the
-line; a token that is present but stale fails exactly the same way, so re-issue it before
-looking anywhere else.
+expired. [Develop locally](../how-to/develop-locally.md) has the line; a token that is
+present but stale fails the same way, so re-issue it before looking anywhere else.
 
-In continuous integration, either the package has stopped granting this repository read
-access — a setting on the package, not on either repository — or a step that installs has
-lost its token. Only the steps that install carry one, so a 404 on a step that does not
-install is a different fault.
+A `404 Not Found` for the same package is a different fault, and the order matters: the
+request authenticated and then found nothing it was allowed to see. On a laptop that is a
+token without `read:packages`. In continuous integration it is the package having stopped
+granting this repository read access — a setting on the package, not on either repository.
+Either code on a step that installs nothing is a third fault again, because only the steps
+that install carry a token at all.
 
 ## `just check` stops because Playwright cannot start Chromium
 

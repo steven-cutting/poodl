@@ -196,7 +196,7 @@
   The whole screen at the narrowest viewport the specification supports, framed
   to exactly that width with the gutters `.shell` gives the page.
 
-  The keyboard stories measure the keys. This one measures the claim the
+  This story measures the claim the
   invariant closes on — that at `config.narrowest_supported_width` the game is
   playable without scrolling sideways — over everything the board can put on the
   screen at once: the board with the most controls on it is a finished one whose

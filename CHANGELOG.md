@@ -376,8 +376,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   changed; `tests/links.test.ts` sweeps every single-character alteration of every token
   instead of sampling forty words and tolerating a couple of survivors.
 
-[Unreleased]: https://github.com/steven-cutting/poodl/commits/main/
-
 ### Removed
 
 - Every copy the package replaces: `src/app.css` and the two typefaces; the icon set and
@@ -398,3 +396,5 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   duplicates, and the state-separation block it has taken over. Losing the only measurement
   of a figure to a path change would be the worst available outcome of this work, so they
   are retired in a change of their own or not at all.
+
+[Unreleased]: https://github.com/steven-cutting/poodl/commits/main/

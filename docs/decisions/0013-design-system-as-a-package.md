@@ -33,7 +33,7 @@ Install the package at an exact version, and delete every copy it makes redundan
   authenticates every read, so a committed `.npmrc` names the registry for the scope and
   holds no token; the token is a contributor's own in `~/.npmrc`, and in CI it is the one
   GitHub mints for the run.
-- **Deleted here.** `src/app.css` and the three typefaces; the icon set and its map; `Icon`,
+- **Deleted here.** `src/app.css` and the two typefaces; the icon set and its map; `Icon`,
   `IconButton`, `Button`, `Modal`, `Notice`, `Announcer`, `HeaderBar`, `Tile`, `Keyboard`
   and `PhysicalKeyboard`; the preferences port and the appearance derivations. `ThemeChoice`
   is re-exported from the package rather than declared.

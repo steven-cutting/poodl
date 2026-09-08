@@ -152,11 +152,14 @@ render about thirteen pixels across, and what grew is the labelled row rather th
 because a label bound to its control activates it across its whole area and a 44px checkbox
 would be a stranger thing than the problem it solved.
 
-The on-screen keyboard is the one place the figure cannot be met in both directions — ten
-keys and nine gaps do not fit 44px each across 320px, and the specification says so itself.
-There the keys meet it top to bottom, divide each row equally among its letter keys and
-keep a gap between them, so what a letter key gives up is bounded by the width of the
-screen and by nothing else. Before this the keys carried width floors of 2rem and 4rem,
+The specification names two shapes the figure cannot be met in, and Poodl draws one of
+them: a row of like controls sharing the full width, where what the row needs — the figure
+for every control that builds a turn, the gaps between them all, and whatever more a
+turn-ending control takes — is more than the room it is given. How many controls are in the
+row is deliberately not the test; the clause says so, because seven at that figure fit
+inside 320px and the six gaps between them do not. There the keys meet the figure top to
+bottom, divide each row equally among its letter keys and keep a gap between them, so what
+a letter key gives up is bounded by the width of the screen and by nothing else. Before this the keys carried width floors of 2rem and 4rem,
 which defeat flex-shrink: the bottom row measured 416px inside a 320px screen and the game
 scrolled sideways at the width it is supposed to be playable at. Enter and Delete are
 icons, because about 27px is what an equal share comes to and neither word fits that at
@@ -198,9 +201,9 @@ axe-core — and an incomplete result is reported without failing. Every key on 
 keyboard shows one letter; so does every tile. The palette repairs axe did find were on
 `WelcomeScreen` and its siblings, which share the palette but carry words. This page
 used to say that pinning a dark keyboard story turned the dark key's measurement into
-something the gate held, and that was simply wrong. It is checkable in a minute: put an
-unreadable letter ink in `app.css` and every other component's stories fail while
-`Keyboard`'s stay green.
+something the gate held, and that was simply wrong. It is checkable in a minute against the
+sheet the package ships: give the letter ink an unreadable value and every other
+component's stories fail while the keys inside `GameScreen`'s stay green.
 
 So the contrast figures are held by `tests/contrast.test.ts` and by nothing else. It reads
 the stylesheet the platform package ships, from `node_modules` and asserted to be there,
@@ -234,12 +237,16 @@ disabled, which is exactly the shape of what is exempt.
 
 What the exemption does not buy is anything about how the state is *known*. The
 unavailability reaches the accessibility tree rather than resting on the dim, and a dimmed
-control keeps every non-colour indication its live form carried — a scored key keeps its
-marker bar and its description once the game that scored it is over, and the board beside
-it keeps that game's record at full strength. Neither of those is a ratio, so neither is in
-`contrast.test.ts`; both are held where the keys are rendered, in
-`tests/components.test.ts`, and both were checked by breaking them and watching the test
-fail.
+control keeps every non-colour indication its live form carried. Poodl states that for
+itself, in `GameBoard.@guarantee AScoredKeyStaysLegibleOnceTheGameIsOver`, because the
+exemption is the platform's and what it declines to buy is the game's to keep: a scored key
+keeps its marker bar and its description once the game that scored it is over, and the
+board beside it keeps that game's record at full strength. Neither of those is a ratio, so neither is in
+`contrast.test.ts`. The key half is held in `tests/screens.test.ts`, which renders a
+finished game and asks every scored key for its bar and its name, and it was checked by
+breaking it and watching the test fail. The board's record is held by
+`tests/components.test.ts`, which reads the same row labels whatever the game's status —
+nothing dims the board, so there is nothing there to lose.
 
 All four combinations are covered. What jsdom cannot drive is one of the two *routes* to
 one of them: it answers no media query, so every ratio is taken with the dark theme reached

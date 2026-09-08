@@ -84,15 +84,16 @@ element per state.
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import type { ComponentProps } from 'svelte';
-  import Tile from '../src/lib/components/Tile.svelte';
+  import Board from '../src/lib/components/Board.svelte';
+  import { WON, played } from './fixtures';
 
-  const { Story } = defineMeta({ title: 'Game/Tile', component: Tile, tags: ['autodocs'] });
+  const { Story } = defineMeta({ title: 'Game/Board', component: Board, tags: ['autodocs'] });
 
-  const correct: ComponentProps<typeof Tile> = { position: 1, letter: 'a', mark: 'correct' };
+  const won: ComponentProps<typeof Board> = { guesses: played(WON), currentInput: '' };
 </script>
 
 <!-- The comment above a story becomes its description on the docs page. -->
-<Story name="Correct" args={correct} />
+<Story name="Won on the third attempt" args={won} />
 ```
 
 Imports reach into `src/` with a relative path, matching `tests/`.
@@ -106,7 +107,8 @@ Four rules on top of the format:
    coverage floor is still earned there.
 3. **Inject port fakes, never touch a browser global.** The story run is a real browser, so
    `localStorage` and the clipboard exist and would work. That is exactly why the rule
-   holds: construct the component against the fakes in `src/lib/ports/`, as `tests/` does.
+   holds: construct the component against the fakes in `src/lib/ports/` and the two the
+   platform package ships, `createFakePreferences` and `createFakeKeys`, as `tests/` does.
 4. **Reach for a play function when the guarantee is about interaction.** A story that tabs
    to a key and activates it is executable evidence for `FullyKeyboardOperable` in a way a
    rendered picture is not.
@@ -118,8 +120,8 @@ which receives the args and the story context. The addon's own documentation cov
 ## Switch theme, contrast and motion
 
 The toolbar carries three globals. Theme and high contrast set `data-theme` and
-`data-high-contrast` on the preview's root element, which is what `src/app.css` keys on, so
-a story sees the tokens the application will. A story pins a value with a `globals` prop,
+`data-high-contrast` on the preview's root element, which is what the design system's
+stylesheet keys on, so a story sees the tokens the application will. A story pins a value with a `globals` prop,
 which beats the toolbar and disables the matching control.
 
 Reduced motion is a simulation, labelled as one: it freezes declarative motion in the
@@ -140,7 +142,10 @@ to error; its own default only reports.
 2. **A missing or wrong accessible name is a test failure too.** It is the same information
    a role-and-name query matches on, so add the assertion in `tests/` while you are there.
 3. **A contrast failure is usually a token, not a component.** Check the light palette, the
-   dark palette and high contrast in `src/app.css` before changing any markup.
+   dark palette and high contrast in the stylesheet `@steven-cutting/biscuit-games` ships
+   before changing any markup — and note that a token fault is repaired upstream and taken
+   here as a version, not edited in `node_modules`. See
+   [The platform upstream](../project/platform.md).
 4. **Silence is not always a pass.** Axe skips what it cannot attribute, including anything
    behind `aria-hidden` — a tile's marker bar is not checked by the contrast rule at all.
    Measure by hand when a guarantee rests on something the tool does not report.

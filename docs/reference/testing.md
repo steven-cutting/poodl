@@ -81,9 +81,11 @@ The marker bars are the worked example of the split. The bar that discharges
 `ResultsAreNeverConveyedByColourAlone` is aria-hidden decoration with no role and no name,
 so the role-and-name convention cannot reach it and it is queried by `[data-marker]` — the
 same class of structural hook as the grandfathered `data-mark`, granted for the same
-reason. jsdom holds its presence (a bar on correct and present, none on absent); Chromium
-holds its geometry (the two bars differ in length), because only a layout engine can
-measure a width. The decorative icons are the same class of exception: an icon has no
+reason. jsdom holds its presence: a bar on correct and present, none on absent. Its
+geometry — that the two bars differ in length — is the platform's, because the bar is drawn
+by the package's own `Marker` and the workshop that can measure a width is the one
+upstream. What this repository holds is that a bar is there and that the sentence beside it
+says which. The decorative icons are the same class of exception: an icon has no
 role and no name by design, so a test that needs to see one queries `svg` — or
 `aria-hidden` — inside a control it found by role and name.
 
@@ -121,12 +123,12 @@ should be deleted rather than covered; see
 | `customGames.test.ts` | Making, sharing, opening and refusing a custom link, and sharing a result. |
 | `persistence.test.ts` | The round trip, the schema version, and what a damaged store costs — including a record that satisfies every type while breaking an invariant the specifications state. |
 | `store.test.ts` | The rune shell: dispatch, persistence, the countdown under a fake timer, and both clipboard outcomes. |
-| `ports.test.ts` | Every port, real adapter and fake, including the failure paths — the six here, and the platform's preferences port, which two of Poodl's own `Appearance` guarantees rest on. |
+| `ports.test.ts` | Every port, real adapter and fake, including the failure paths — five of the six here, and the platform's preferences port, which two of Poodl's own `Appearance` guarantees rest on. |
 | `words.test.ts` | Every `WordListSource` obligation, against the bundled data, floors included. |
 | `shells.test.ts`, `screens.test.ts`, `panels.test.ts`, `components.test.ts` | Every component Poodl owns, through accessible roles and names — including what it hands the platform's cells and keys, and that a finished game's keyboard stays readable. |
 | `route.test.ts` | The page, driven through its real adapters: arriving, playing, opening a link, and what the appearance writes onto the document. |
 | `directManipulation.test.ts` | The `DirectManipulation` contract, as far as jsdom can answer for it: the stylesheet the platform package ships, read from `node_modules` and asserted to be there, put in the document, and measured on a real control. |
-| `contrast.test.ts` | Every measured colour pair in the platform package's stylesheet, read from `node_modules` and asserted to be there, recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `components.test.ts` instead. |
+| `contrast.test.ts` | Every measured colour pair in the platform package's stylesheet, read from `node_modules` and asserted to be there, recomputed over all four combinations of theme and high contrast against the floors `game.allium` states — plus the parity that keeps the two dark routes and the two high-contrast palettes in step. A control the player cannot operate is measured nowhere, by `AnUnavailableControlIsExempt`; what that state still owes is not a ratio, and is held in `screens.test.ts` instead. |
 | `stories/` | Each component in the states its surface names, rendered in Chromium with axe over every one, and the figures only a layout engine can produce. |
 
 `directManipulation.test.ts` reads the stylesheet rather than importing it. `?raw` is the
@@ -153,7 +155,7 @@ not the stylesheet said anything.
 
 Its CSS parser also drops `-webkit-tap-highlight-color` and `-webkit-touch-callout` on the
 floor, so those resolve to nothing whether or not they were declared. Only the first of the
-two is recovered: `stories/Keyboard.stories.svelte` reads it from Chromium.
+two is recovered: `stories/GameScreen.stories.svelte` reads it from Chromium.
 `-webkit-touch-callout` is declared and verified by neither gate, because desktop Chromium
 does not report it and the platform it is for is iOS Safari — it is a manual check on a real
 phone, listed as such in [Accessibility](../explanation/accessibility.md). Neither half is
