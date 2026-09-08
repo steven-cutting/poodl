@@ -60,8 +60,8 @@ refuses an unauthenticated one by naming the credential: `401 Unauthorized … a
 token not provided`. That is the string to search a log for, and it is the common fault by
 some distance.
 
-On a laptop, `~/.npmrc` has no `//npm.pkg.github.com/:_authToken=` line, or its token has
-expired. [Develop locally](../how-to/develop-locally.md) has the line; a token that is
+On a laptop, `~/.npmrc` has no `//npm.pkg.github.com/:_authToken=` line, its placeholder was
+never replaced, or its token has expired. [Develop locally](../how-to/develop-locally.md) has the line; a token that is
 present but stale fails the same way, so re-issue it before looking anywhere else.
 
 A `404 Not Found` for the same package is a different fault, and the order matters: the

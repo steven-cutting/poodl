@@ -30,14 +30,17 @@ configuration, never this repository's `.npmrc`, which names the registry for th
 holds no credential:
 
 ```text
-`//npm.pkg.github.com/:_authToken=` followed by the token
+//npm.pkg.github.com/:_authToken=<your token>
 ```
 
-The line is written that way rather than shown whole because `ripsecrets` reads this
-repository and a complete one, placeholder value and all, is what it exists to stop. The
-token is a personal access token carrying `read:packages`. Without the line npm answers
-`401 Unauthorized` and says the authentication token was not provided — the registry
-refusing the request, rather than a broken install.
+Replace the placeholder, angle brackets and all. It is bracketed rather than spelled
+`YOUR_TOKEN` because `ripsecrets` reads this repository as part of the gate and takes a
+bare word after `_authToken=` for a token whether or not it is one — so a plainer
+placeholder here would fail the commit that documented it. The token is a personal access
+token carrying `read:packages`, and it lives in `~/.npmrc` and nowhere in this repository.
+
+Without the line npm answers `401 Unauthorized` and says the authentication token was not
+provided — the registry refusing the request, rather than a broken install.
 
 ```console
 just initialize
