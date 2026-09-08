@@ -181,8 +181,9 @@ describe('HowToPlay', () => {
    * present, none for absent. The tiles are hidden from assistive technology,
    * because the sentence beside each is the content; so the visible half is
    * held here through `[data-marker]`, the structural hook
-   * `tests/components.test.ts` uses for the same bar, and the names are asked
-   * for with `hidden` only to find each tile by the mark it shows.
+   * `docs/reference/testing.md` grants for exactly this kind of aria-hidden
+   * decoration, and the names are asked for with `hidden` only to find each
+   * tile by the mark it shows.
    */
   it('shows each mark on a real tile that assistive technology does not read', () => {
     render(HowToPlay, {});

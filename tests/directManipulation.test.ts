@@ -278,13 +278,55 @@ describe('ATouchIsAcknowledged', () => {
    * other: `SettingsPanel`'s rows are suppressed and were once left with nothing
    * in exchange. A text control is on neither list, because nothing takes its
    * flash away in the first place.
+   *
+   * Asked of elements rather than of selector text, which is what the strings
+   * could not answer. The stylesheet declares `touch-action` over one list and
+   * the tap highlight over a narrower one, and both name a label for unrelated
+   * reasons: read as text the two compare equal, and a lookup key they share
+   * silently returns the wrong rule. The suppression is keyed here by
+   * `label:has(input)`, which only it lists.
+   *
+   * `:active` comes off before matching. jsdom matches no dynamic pseudo-class,
+   * so every element fails the acknowledgement selectors as written and a
+   * comparison built on them passes for the wrong reason — the same failure one
+   * step along.
+   *
+   * The row answers rather than the box. A native control inside a label shares
+   * that row's ring rather than carrying one of its own, so a suppressed control
+   * is acknowledged in itself or in the label containing it, and neither on its
+   * own is the test.
    */
   it('owes an acknowledgement to every control it took one from', () => {
-    const suppressed = ruleFor("input[type='radio']").selectorText;
-    const acknowledged = ruleFor('button:active:not(:disabled)').selectorText;
+    const matching = (rule: CSSStyleRule): HTMLElement[] =>
+      Array.from(host.querySelectorAll<HTMLElement>('*')).filter((element) =>
+        rule.selectorText
+          .split(',')
+          .some((one) => element.matches(one.trim().replaceAll(':active', '')))
+      );
 
-    expect(suppressed).toContain('label');
-    expect(acknowledged).toContain('label');
+    const suppressed = matching(ruleFor('label:has(input)'));
+    const acknowledged = matching(ruleFor('button:active:not(:disabled)'));
+
+    expect(suppressed.length).toBeGreaterThan(0);
+    expect(acknowledged.length).toBeGreaterThan(0);
+
+    /*
+     * A control that cannot be operated is on neither side of the debt: the
+     * acknowledgement selectors carry `:not(:disabled)` and the suppression does
+     * not, so a disabled control is suppressed and correctly unacknowledged.
+     */
+    for (const element of suppressed.filter((one) => !one.matches(':disabled'))) {
+      const row = element.closest('label');
+
+      expect(
+        acknowledged.includes(element) || (row !== null && acknowledged.includes(row)),
+        `nothing acknowledges ${element.outerHTML}`
+      ).toBe(true);
+    }
+
+    for (const element of acknowledged) {
+      expect(suppressed, `nothing suppressed ${element.outerHTML}`).toContain(element);
+    }
   });
 
   /*

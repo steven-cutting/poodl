@@ -429,7 +429,6 @@ describe('DailyStatisticsPanel', () => {
 describe('SharePanel', () => {
   function panelProps(overrides: Record<string, unknown> = {}) {
     return {
-      notice: null,
       shareable: null,
       onshareanswer: vi.fn(),
       oncreate: vi.fn(),

@@ -44,7 +44,6 @@ function screenProps(game: GameState, overrides: Record<string, unknown> = {}) {
     keys: createFakeKeys(),
     keyboard: keyboardKnowledge(game.guesses),
     physicalKeyboard: true,
-    notice: null,
     noticeSequence: 0,
     shareable: null,
     announcement: null,
@@ -548,7 +547,6 @@ describe('GameConclusion', () => {
     onshareanswer: vi.fn(),
     onclose: vi.fn(),
     onwelcome: vi.fn(),
-    notice: null,
     noticeSequence: 0,
     shareable: null,
     oncopy: vi.fn()

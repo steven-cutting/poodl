@@ -149,7 +149,16 @@
   <ResultsReady text={shareable.text} {oncopy} />
 {/if}
 
-<Keyboard layout={QWERTY} {marks} disabled={!playing} onpress={press} />
+<!--
+  The gap above the rack, which is this surface's and not the rack's. Poodl's own
+  keyboard carried a 1.5rem top margin; the platform's draws itself and leaves
+  where it sits to whatever placed it, which is right — a rack under a crossword
+  is not spaced like a rack under a board. `--s-8` is that same 24px, named from
+  the scale rather than written again as a length.
+-->
+<div class="keys">
+  <Keyboard layout={QWERTY} {marks} disabled={!playing} onpress={press} />
+</div>
 
 <!--
   The way back to a conclusion the player closed. Passing the word on is not
@@ -169,6 +178,10 @@
 <Announcer message={announcement} sequence={announcementSequence} />
 
 <style>
+  .keys {
+    margin-block-start: var(--s-8);
+  }
+
   .share {
     display: flex;
     gap: var(--s-4);
