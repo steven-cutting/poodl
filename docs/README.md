@@ -13,7 +13,9 @@ reachable from here. That is the whole of the arrangement; the rules behind it a
 [Documentation contract](reference/documentation-contract.md).
 
 Behaviour is specified separately, in Allium, under `docs/specs/` — six modules rooted
-at [`words.allium`](specs/words.allium). Those files are not part of this handbook; they
+at [`words.allium`](specs/words.allium). Three more are the platform's, arrive inside
+`@steven-cutting/biscuit-games`, and are compared against Poodl's restatements rather than
+edited here; see [The platform upstream](project/platform.md). Those files are not part of this handbook; they
 are its subject. Start at [Specifications](explanation/specifications.md) to understand
 how the two relate.
 
@@ -29,17 +31,15 @@ how the two relate.
 - [Develop locally](how-to/develop-locally.md)
 - [Test and debug](how-to/test-and-debug.md)
 - [Work in the component workshop](how-to/work-in-the-component-workshop.md)
-- [Port a design system component](how-to/port-a-design-system-component.md)
 - [Work with the specifications](how-to/work-with-the-specs.md)
 - [Replace the word lists](how-to/replace-the-word-lists.md)
 - [Maintain dependencies](how-to/maintain-dependencies.md)
 - [Deploy to GitHub Pages](how-to/deploy-to-github-pages.md)
 
-## Design
+## Platform
 
-- [Design direction](design/direction.md) — how Biscuit Games looks and feels, and why.
-- [Design resource index](design/resource-index.md) — research, standards, tools and public
-  systems for mobile-web, game and component design.
+- [The platform upstream](project/platform.md) — what Biscuit Games decides for Poodl, which
+  version of it is installed, and where to read the rest.
 
 ## Understand
 

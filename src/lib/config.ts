@@ -45,9 +45,14 @@ export const ENDLESS_COUNTDOWN_MS = 10_000;
  * `game.allium` — `config.minimum_touch_target`, in CSS pixels.
  *
  * Across a control, in both directions, for
- * `DirectManipulation.EveryControlIsAComfortableTarget`. The on-screen keyboard
- * is the one place this cannot be met in both, which is why that invariant says
- * what happens instead rather than stating a size alone.
+ * `DirectManipulation.EveryControlIsAComfortableTarget`. That invariant names
+ * the two shapes it cannot be met in — a row of like controls sharing a width,
+ * and a control inside running text — and says what each owes instead, rather
+ * than stating a size alone.
+ *
+ * The platform states the same figure in `operation.allium`, which
+ * `@steven-cutting/biscuit-games` ships; `tests/platformSpecs.test.ts` holds
+ * the two equal.
  */
 export const MINIMUM_TOUCH_TARGET = 44;
 
@@ -55,7 +60,9 @@ export const MINIMUM_TOUCH_TARGET = 44;
  * `game.allium` — `config.narrowest_supported_width`, in CSS pixels.
  *
  * The narrowest viewport the game is playable on without scrolling sideways,
- * which is the width every target and spacing figure has to survive.
+ * which is the width every target and spacing figure has to survive. The
+ * platform states it in `operation.allium`, held equal by
+ * `tests/platformSpecs.test.ts`.
  */
 export const NARROWEST_SUPPORTED_WIDTH = 320;
 
@@ -64,7 +71,9 @@ export const NARROWEST_SUPPORTED_WIDTH = 320;
  *
  * The first two are the AA bars: text against what is behind it, and anything
  * that is not text — a control's boundary, a state indicator — against what is
- * adjacent to it.
+ * adjacent to it. The platform states all four: the AA bars in
+ * `appearance.allium` and the two separations in `play-surfaces.allium`, each
+ * held equal by `tests/platformSpecs.test.ts`.
  */
 export const MINIMUM_TEXT_CONTRAST = 4.5;
 export const MINIMUM_BOUNDARY_CONTRAST = 3.0;

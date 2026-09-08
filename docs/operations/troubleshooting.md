@@ -53,6 +53,24 @@ Svelte compiles text interpolation into update branches that only run on re-rend
 component tested only with fresh renders shows uncovered branches. A test that updates
 props covers them, and is worth having on its own merits.
 
+## `npm` reports `401 Unauthorized` for `@steven-cutting/biscuit-games`
+
+GitHub Packages authenticates every request, including a read of a public package, and
+refuses an unauthenticated one by naming the credential: `401 Unauthorized … authentication
+token not provided`. That is the string to search a log for, and it is the common fault by
+some distance.
+
+On a laptop, `~/.npmrc` has no `//npm.pkg.github.com/:_authToken=` line, its placeholder was
+never replaced, or its token has expired. [Develop locally](../how-to/develop-locally.md) has the line; a token that is
+present but stale fails the same way, so re-issue it before looking anywhere else.
+
+A `404 Not Found` for the same package is a different fault, and the order matters: the
+request authenticated and then found nothing it was allowed to see. On a laptop that is a
+token without `read:packages`. In continuous integration it is the package having stopped
+granting this repository read access — a setting on the package, not on either repository.
+Either code on a step that installs nothing is a third fault again, because only the steps
+that install carry a token at all.
+
 ## `just check` stops because Playwright cannot start Chromium
 
 The story gate renders in a real browser, and the browser is in neither lockfile, so

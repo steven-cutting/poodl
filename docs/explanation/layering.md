@@ -17,8 +17,12 @@ Five layers, and imports only ever run downwards.
 | `src/lib/app/` | domain, ports, config, types | import a component or a route |
 | `src/lib/domain/` | domain, config, types | import a component, a port, or anything with a side effect |
 | `src/lib/ports/` | types, config, data | import a component or a route |
+| `@steven-cutting/biscuit-games` | nothing here | be copied back into `src/` |
 
-`src/lib/config.ts` and `src/lib/domain/types.ts` sit below everything and import nothing.
+`src/lib/config.ts` sits below everything and imports nothing;
+`src/lib/domain/types.ts` imports one type from the platform package and nothing
+else. The package is below every layer: it is a dependency, so anything may name it and it
+names nothing here.
 
 `src/lib/app/` is the rules. `engine.ts` is one pure function over the whole state, with the
 clock, the randomness and the word lists arriving as an argument rather than as imports, and
@@ -62,11 +66,15 @@ file:
    read.
 3. An in-memory fake with the same interface.
 
-There are seven: storage, randomness, the clock, the clipboard, the word lists, the device's
-preferences and a repeating timer. The last two arrived with the settings and the endless
-countdown, and both take their platform object as an argument for the usual reason — jsdom
+There are eight, and six of them are here: storage, randomness, the clock, the clipboard,
+the word lists and a repeating timer. The device's preferences and the device's keyboard are
+the platform's, taken from `@steven-cutting/biscuit-games` with the fakes it ships, because
+what a surface reads from a device is not one game's question.
+
+Both of those take their platform object as an argument for the usual reason — jsdom
 supplies a `window` without `matchMedia`, so the adapter has to answer for its absence
-itself rather than being stubbed around.
+itself rather than being stubbed around — and a game's route is where all eight are
+constructed, because that is where a window exists.
 
 The rule that follows: **tests inject fakes, they never stub globals.** A stubbed global
 leaks between tests and hides the fact that the code reached outside its layer.

@@ -25,6 +25,10 @@ just dev
 the story gate needs, normalises formatting and installs the pre-commit hook. It never
 stages, commits, tags or pushes.
 
+It also installs the design system from GitHub Packages, which needs a token carrying
+`read:packages` in `~/.npmrc` first — [Develop locally](docs/how-to/develop-locally.md) has
+the line.
+
 ## Check your work
 
 ```console

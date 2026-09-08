@@ -22,11 +22,14 @@
     '  letters, never the answer. The **In progress** story asserts that unreached rows stay',
     '  empty.',
     '- `@guarantee ResultsAreNeverConveyedByColourAlone`, carried by **Tile**, one per position.',
+    "- `@guarantee MotionRespectsTheReducedMotionPreference`. The cell is the platform's and is",
+    "  drawn still; how a row of them arrives is an arrangement, so the reveal is the board's.",
+    '  The last two stories drive both paths, because the guard is one line of CSS and nothing',
+    '  else in the workshop or in `tests/` would notice it going.',
     '',
     'Also `GameBoard` guarantees, undischarged because the behaviour is unimplemented rather',
-    'than because they belong elsewhere: `@guarantee EveryRejectionIsAnnounced`,',
-    '`@guarantee InProgressGameSurvivesReload` and',
-    '`@guarantee MotionRespectsTheReducedMotionPreference`.'
+    'than because they belong elsewhere: `@guarantee EveryRejectionIsAnnounced` and',
+    '`@guarantee InProgressGameSurvivesReload`.'
   ].join('\n');
 
   const { Story } = defineMeta({
@@ -92,9 +95,57 @@
   parameters={{ docs: { story: { inline: false } } }}
   play={async () => {
     // The appearance globals are only useful if they reach the element
-    // `src/app.css` keys on. Nothing else in this suite would notice if they
+    // the platform's stylesheet keys on. Nothing else in this suite would notice if they
     // stopped: both palettes pass the accessibility check, so a global that
     // silently did nothing would leave every story green.
     await expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  }}
+/>
+
+<!--
+  The reveal, running. `Appearance.animations_active` is on, so the board's own
+  `[data-animations='on']` rule reaches the cells a submitted guess just scored.
+
+  The name Svelte compiles the keyframes to is hashed, which is why this matches
+  rather than compares: what is being held is that a marked cell has an
+  animation at all, and the story below that it has none.
+
+  GameBoard.@guarantee MotionRespectsTheReducedMotionPreference
+-->
+<Story
+  name="Reveal, motion allowed"
+  args={{ guesses: played(WON) }}
+  globals={{ animations: 'on', reducedMotion: 'follow' }}
+  play={async ({ canvasElement }) => {
+    const cell = within(canvasElement).getByRole('img', { name: 'Position 5, E, correct' });
+
+    await expect(document.documentElement).toHaveAttribute('data-animations', 'on');
+    await expect(getComputedStyle(cell).animationName).toMatch(/reveal/);
+  }}
+/>
+
+<!--
+  The same board for a reader whose device asks for less motion. The device wins
+  over the setting, so the attribute is absent and the cells are still.
+
+  Pinned and rendered in its own iframe, for the reason the dark story is: the
+  appearance globals are written to the shared documentElement. The toolbar's
+  reduced-motion item is a simulation — nothing inside the page can make
+  `matchMedia` answer `reduce` — but what is asserted here is not the simulation:
+  it is that the board draws no animation once `animations_active` is off, which
+  is the half of the guarantee this component owns.
+
+  GameBoard.@guarantee MotionRespectsTheReducedMotionPreference
+-->
+<Story
+  name="Reveal, motion reduced"
+  args={{ guesses: played(WON) }}
+  globals={{ animations: 'on', reducedMotion: 'reduce' }}
+  parameters={{ docs: { story: { inline: false } } }}
+  play={async ({ canvasElement }) => {
+    const cell = within(canvasElement).getByRole('img', { name: 'Position 5, E, correct' });
+
+    await expect(document.documentElement).not.toHaveAttribute('data-animations');
+    await expect(getComputedStyle(cell).animationName).toBe('none');
   }}
 />

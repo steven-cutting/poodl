@@ -4,12 +4,12 @@ import { hardModeBlocker, hardModeMayBeEnabled, reduce, resultsGrid } from '$lib
 import { loadState, saveState } from '$lib/app/persistence';
 import { keptDailyGame } from '$lib/app/state';
 import type { AppState, ShareableView } from '$lib/app/state';
-import { animationsActive, darkActive, highContrastActive } from '$lib/domain/appearance';
+import { animationsActive, darkActive, highContrastActive } from '@steven-cutting/biscuit-games';
 import { dayOf, dayStart } from '$lib/domain/calendar';
 import type { GameStatus } from '$lib/domain/types';
 import type { ClipboardPort } from '$lib/ports/clipboard';
 import type { ClockPort } from '$lib/ports/clock';
-import type { PreferencesPort } from '$lib/ports/preferences';
+import type { PreferencesPort } from '@steven-cutting/biscuit-games';
 import type { RandomPort } from '$lib/ports/random';
 import type { StoragePort } from '$lib/ports/storage';
 import type { TimerPort } from '$lib/ports/timer';

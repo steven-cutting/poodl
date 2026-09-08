@@ -5,11 +5,14 @@ import { mergeConfig } from 'vite';
 /**
  * The component workshop.
  *
- * Poodl's specifications name thirteen surfaces and three components exist, so
- * ten have to be built with no route to host them. Storybook renders one
- * component at a time, in every state its surface names, with axe over each
- * render. It is local: `just storybook` serves it, `just storybook-build`
- * proves it still compiles, and `.github/workflows/pages.yml` never sees it.
+ * Storybook renders one component at a time, in every state its surface names,
+ * with axe over each render — which is how a component gets built when the
+ * route that will host it does not exist yet, and how every state of one that
+ * does gets looked at without playing until the game produces it.
+ *
+ * `just storybook` serves it and `just storybook-build` proves it still
+ * compiles; `.github/workflows/pages.yml` never sees it, and `just chromatic`
+ * is what publishes a build of it for visual review.
  *
  * Stories live in a root-level `stories/` directory rather than beside the
  * components, for the same reason `tests/` does: a component's source stays one
@@ -31,13 +34,44 @@ const config: StorybookConfig = {
     // Replays the stories as Vitest browser tests in real Chromium.
     '@storybook/addon-vitest'
   ],
+  /*
+   * The platform's own workshop, shown beside this one rather than rebuilt
+   * here: its components, and the token sheet Poodl no longer keeps. Its
+   * address is the one thing about it recorded upstream — pasted here because
+   * this block has to run as it stands — and `docs/project/platform.md` is the
+   * way to the page that records it.
+   *
+   * `expanded: false` because Poodl's own components belong at the top of
+   * Poodl's own sidebar.
+   *
+   * This is the one thing in `just check` that reaches the network. Storybook
+   * checks a ref while it builds by fetching the address's `iframe.html`, and
+   * an address it cannot reach becomes a ref marked unknown rather than a
+   * failure — so gate 6 degrades to a sidebar entry that does not open, and
+   * passes either way. The cost is stated as behaviour rather than a count:
+   * `checkRef` fetches once, and on a response it reads the same file a second
+   * time as JSON to tell a workshop from a login page, so an address that
+   * answers costs two requests and one that does not costs one. The story run
+   * never fetches at all — `getRefs` returns nothing under the test runner
+   * before any address is read.
+   * `docs/reference/quality-gates.md` states the exception, and decision 0013
+   * is why it was taken.
+   */
+  refs: {
+    'biscuit-games': {
+      title: 'Biscuit Games',
+      url: 'https://main--6a99fd20afcb187c61d773f1.chromatic.com',
+      expanded: false
+    }
+  },
   // Resolved relative to this directory. `static/` holds only `.nojekyll`
   // today, but Storybook strips the SvelteKit plugin that would otherwise point
   // Vite's publicDir at it, so anything added there later would 404 silently.
   staticDirs: ['../static'],
   core: {
-    // AGENTS.md prefers local evidence to remote calls, and `just check` runs
-    // `storybook build`. This gates both the CLI's telemetry and the Vitest
+    // AGENTS.md prefers local evidence to remote calls. The `refs` entry above
+    // is the one exception and it is a stated one; telemetry is not, and this
+    // turns it off. It gates both the CLI's own and the Vitest
     // plugin's `test-run` event, which read the same resolved core preset. The
     // separate version check is disabled by `--no-version-updates` in the dev
     // script, and the Justfile exports STORYBOOK_DISABLE_TELEMETRY as a belt.

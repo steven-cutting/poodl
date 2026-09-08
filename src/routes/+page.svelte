@@ -4,7 +4,7 @@
   import GameConclusion from '$lib/components/GameConclusion.svelte';
   import GameNavigation from '$lib/components/GameNavigation.svelte';
   import GameScreen from '$lib/components/GameScreen.svelte';
-  import HeaderBar from '$lib/components/HeaderBar.svelte';
+  import Lockup from '$lib/components/Lockup.svelte';
   import HowToPlayPanel from '$lib/components/HowToPlayPanel.svelte';
   import InvalidLinkNotice from '$lib/components/InvalidLinkNotice.svelte';
   import SettingsPanel from '$lib/components/SettingsPanel.svelte';
@@ -13,14 +13,20 @@
   import WelcomeScreen from '$lib/components/WelcomeScreen.svelte';
   import { createStore } from '$lib/app/store.svelte';
   import type { Store } from '$lib/app/store.svelte';
-  import { canContinue, isFinishedByPlay } from '$lib/app/state';
+  import { canContinue, describeNotice, isFinishedByPlay } from '$lib/app/state';
   import { answersUnseen } from '$lib/domain/answerPool';
+  import { describeModeChip } from '$lib/domain/announcements';
   import { keyboardKnowledge } from '$lib/domain/keyboard';
   import { CUSTOM_GAME_PARAM, tokenFromUrl } from '$lib/domain/links';
   import type { StartableMode, ThemeChoice } from '$lib/domain/types';
   import { createNavigatorClipboard } from '$lib/ports/clipboard';
   import { createSystemClock } from '$lib/ports/clock';
-  import { createMediaPreferences } from '$lib/ports/preferences';
+  import {
+    HeaderBar,
+    createMediaPreferences,
+    createWindowKeys
+  } from '@steven-cutting/biscuit-games';
+  import type { KeysPort } from '@steven-cutting/biscuit-games';
   import { createCryptoRandom } from '$lib/ports/random';
   import { createWebStorage } from '$lib/ports/storage';
   import { createIntervalTimer } from '$lib/ports/timer';
@@ -49,6 +55,14 @@
    * inside `onMount`, which is a callback control-flow analysis does not follow.
    */
   let store = $state<Store | null>(null);
+
+  /*
+   * The eighth port, and the only one the store does not take. It belongs to
+   * whatever surface is facing the player rather than to the rules, so it is
+   * built here beside the other seven — where a window exists — and handed to
+   * the board, which is the surface that claims keys.
+   */
+  let keys = $state<KeysPort | null>(null);
   let panel = $state<'settings' | 'statistics' | 'share' | 'modes' | 'help' | null>(null);
 
   onMount(() => {
@@ -66,6 +80,7 @@
     );
 
     store = created;
+    keys = createWindowKeys();
 
     /*
      * Opening first, then the token. `BeginGame` dismisses the welcome screen,
@@ -202,6 +217,17 @@
    * is its surface, it carries the way out of a dead end, and `boardNotice`
    * has already excluded it from anything the dialog could inherit.
    */
+  /*
+   * The sentences the three notice-bearing surfaces show. `describeNotice`
+   * writes them once; which of them a surface is given is the question this
+   * route already answers just below, and the answer is unchanged.
+   */
+  const boardWords = $derived(
+    describeNotice(panel === null && !conclusionShowing ? boardNotice : null)
+  );
+  const conclusionWords = $derived(describeNotice(panel === null ? boardNotice : null));
+  const shareWords = $derived(describeNotice(boardNotice));
+
   function openSharePanel(): void {
     if (boardNotice !== null) {
       store?.dispatch({ kind: 'dismiss_notice' });
@@ -276,17 +302,30 @@
     is under way and every control only moves the local panel state.
   -->
   <HeaderBar
-    mode={game?.mode ?? null}
-    status={game?.status ?? null}
-    onopenmodes={() => (panel = 'modes')}
-    onopensettings={() => (panel = 'settings')}
-    onopenstatistics={() => (panel = 'statistics')}
-    onopenshare={openSharePanel}
-    onopenhelp={() => (panel = 'help')}
-  />
+    chip={{
+      ...describeModeChip(game?.mode ?? null, game?.status ?? null),
+      onclick: () => (panel = 'modes'),
+      popup: 'dialog'
+    }}
+    actions={[
+      { icon: 'share', label: 'Share a game', popup: 'dialog', onclick: openSharePanel },
+      {
+        icon: 'chart-column',
+        label: 'Statistics',
+        popup: 'dialog',
+        onclick: () => (panel = 'statistics')
+      },
+      { icon: 'settings', label: 'Settings', popup: 'dialog', onclick: () => (panel = 'settings') },
+      { icon: 'info', label: 'How to play', popup: 'dialog', onclick: () => (panel = 'help') }
+    ]}
+  >
+    {#snippet brand()}
+      <Lockup />
+    {/snippet}
+  </HeaderBar>
 
   <main>
-    {#if store === null || app === null}
+    {#if store === null || app === null || keys === null}
       <!--
         What the prerendered file contains, and what a reader sees for the moment
         before hydration. It cannot be a board: the game is drawn per visitor, and
@@ -338,9 +377,11 @@
       -->
         <GameScreen
           {game}
+          {keys}
           keyboard={keyboardKnowledge(game.guesses)}
           physicalKeyboard={app.settings.physicalKeyboard && panel === null}
-          notice={panel === null && !conclusionShowing ? boardNotice : null}
+          noticeMessage={boardWords.message}
+          noticeTone={boardWords.tone}
           noticeSequence={app.noticeSequence}
           shareable={panel === null && !conclusionShowing ? shareable : null}
           announcement={app.announcement}
@@ -403,7 +444,8 @@
                 store?.dispatch({ kind: 'dismiss_shareable' });
               }
             }}
-            notice={panel === null ? boardNotice : null}
+            noticeMessage={conclusionWords.message}
+            noticeTone={conclusionWords.tone}
             noticeSequence={app.noticeSequence}
             shareable={panel === null ? shareable : null}
             oncopy={() => {
@@ -457,7 +499,8 @@
         />
       {:else if panel === 'share'}
         <SharePanel
-          notice={boardNotice}
+          noticeMessage={shareWords.message}
+          noticeTone={shareWords.tone}
           noticeSequence={app.noticeSequence}
           {shareable}
           mode={game?.mode ?? null}

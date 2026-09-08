@@ -119,10 +119,21 @@ one game and a second repository would have been machinery with nothing to carry
 A landing page that stops being tiny would reopen it sooner, because the argument for
 leaving a page outside the gates rests entirely on there being almost nothing to get wrong.
 
+> Noted on 2026-09-07. The second repository now exists: Biscuit Games holds the platform's
+> shared material and a workshop of its own. The domain root has not moved, and moving it is
+> deferred by that repository's own decision — until its site is published, `pnut.fans`
+> serves Poodl at the root exactly as this record describes.
+>
+> One detail above has moved without the address moving. Since
+> [decision 0013](0013-design-system-as-a-package.md) the stylesheet and the three faces
+> `scripts/stage_site.sh` copies to the domain root come from
+> `node_modules/@steven-cutting/biscuit-games/` rather than from `src/`, so what ships twice
+> is the package's file rather than this repository's.
+
 ## Related pages
 
 - [Deploy to GitHub Pages](../how-to/deploy-to-github-pages.md)
 - [Configuration](../reference/configuration.md)
-- [Design direction](../design/direction.md)
+- [The platform upstream](../project/platform.md)
 - [Decision 0001: A static site with no backend](0001-static-site-no-backend.md)
 - [Decision 0010: The Biscuit Games design system](0010-biscuit-games-design-system.md)

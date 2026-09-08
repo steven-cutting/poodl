@@ -105,6 +105,13 @@ prefers evidence that runs offline, and this is the first check that does not. I
 accepted because axe on a real browser reports contrast, landmarks and computed names that
 a jsdom render cannot produce at all.
 
+> Noted on 2026-09-07. No longer the only one, and no longer the only shape of the problem.
+> Since [decision 0013](0013-design-system-as-a-package.md) the workshop composes the
+> platform's published one through a Storybook `refs` entry, so `just storybook-build`
+> makes a request of its own every time the gate runs. The difference from the download
+> above is that this one cannot fail: an unreachable address degrades to a sidebar entry
+> that does not open. [Quality gates](../reference/quality-gates.md) states the exception.
+
 Component behaviour is now expressed in two places: an assertion in `tests/` and a fixture
 in `stories/`. They can disagree, and when they do neither is the arbiter — the
 specification is, as it was already. Each story cites the surface and the `@guarantee`

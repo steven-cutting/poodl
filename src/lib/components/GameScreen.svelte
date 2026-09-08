@@ -1,14 +1,20 @@
 <script lang="ts">
-  import Announcer from '$lib/components/Announcer.svelte';
+  import {
+    Announcer,
+    Button,
+    Keyboard,
+    Notice,
+    PhysicalKeyboard,
+    QWERTY
+  } from '@steven-cutting/biscuit-games';
+  import type { KeysPort } from '@steven-cutting/biscuit-games';
+
   import Board from '$lib/components/Board.svelte';
-  import Button from '$lib/components/Button.svelte';
-  import Keyboard from '$lib/components/Keyboard.svelte';
-  import Notice from '$lib/components/Notice.svelte';
-  import PhysicalKeyboard from '$lib/components/PhysicalKeyboard.svelte';
   import ResultsReady from '$lib/components/ResultsReady.svelte';
   import TodaysGame from '$lib/components/TodaysGame.svelte';
-  import type { GameState, Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { GameState, ShareableView } from '$lib/app/state';
   import type { TodaysGameView } from '$lib/app/store.svelte';
+  import { markFor } from '$lib/domain/announcements';
   import type { KeyKnowledge } from '$lib/domain/types';
 
   /**
@@ -25,9 +31,11 @@
    */
   let {
     game,
+    keys,
     keyboard = [],
     physicalKeyboard = true,
-    notice = null,
+    noticeMessage = null,
+    noticeTone = 'alert',
     noticeSequence = 0,
     shareable = null,
     announcement = null,
@@ -42,9 +50,23 @@
   }: {
     game: GameState;
     keyboard?: readonly KeyKnowledge[];
+    /**
+     * The device's own keyboard, as the port the route builds where a window
+     * exists. `PhysicalKeyboard` subscribes to it only while it is mounted, so
+     * not rendering it is what surrenders the keys entirely — which is what
+     * `TurningThisOffSurrendersTheKeysEntirely` asks for.
+     */
+    keys: KeysPort;
     /** Off while a dialog is open: the keys belong to whatever is in front. */
     physicalKeyboard?: boolean;
-    notice?: NoticeValue | null;
+    /**
+     * What Poodl is saying right now, as words and a tone rather than as a
+     * kind. Which sentence a notice carries is the route's to choose —
+     * `describeNotice` in `app/state.ts` writes them once for all three
+     * surfaces that show one — so a component renders what it is handed.
+     */
+    noticeMessage?: string | null;
+    noticeTone?: 'alert' | 'success';
     noticeSequence?: number;
     /**
      * The grid Poodl is holding, for as long as it has one. Made in the
@@ -72,10 +94,42 @@
   } = $props();
 
   const playing = $derived(game.status === 'in_progress');
+
+  /*
+   * One callback for both keyboards. The platform hands back the value the
+   * pressed key carries, because two named callbacks cannot express the five a
+   * rack needs; Poodl has three actions and switches on the two `QWERTY` names
+   * for them.
+   */
+  function press(value: string): void {
+    switch (value) {
+      case 'submit':
+        onsubmit();
+        return;
+      case 'delete':
+        ondelete();
+        return;
+      default:
+        onletter(value);
+    }
+  }
+
+  /*
+   * What the guesses have made of each key, by the value `QWERTY` gives it. A
+   * letter nothing is known about has no entry, which is how the platform says
+   * untried.
+   */
+  const marks = $derived(
+    Object.fromEntries(
+      keyboard.flatMap((entry) =>
+        entry.status === null ? [] : [[entry.letter, markFor(entry.status)] as const]
+      )
+    )
+  );
 </script>
 
 {#if physicalKeyboard && playing}
-  <PhysicalKeyboard {onletter} {ondelete} {onsubmit} />
+  <PhysicalKeyboard {keys} onpress={press} />
 {/if}
 
 {#if todaysGame !== null}
@@ -84,13 +138,27 @@
 
 <Board guesses={game.guesses} currentInput={game.currentInput} />
 
-<Notice {notice} sequence={noticeSequence} ondismiss={ondismissnotice} />
+<Notice
+  message={noticeMessage}
+  tone={noticeTone}
+  sequence={noticeSequence}
+  ondismiss={ondismissnotice}
+/>
 
 {#if shareable?.kind === 'results'}
   <ResultsReady text={shareable.text} {oncopy} />
 {/if}
 
-<Keyboard knowledge={keyboard} disabled={!playing} {onletter} {ondelete} {onsubmit} />
+<!--
+  The gap above the rack, which is this surface's and not the rack's. Poodl's own
+  keyboard carried a 1.5rem top margin; the platform's draws itself and leaves
+  where it sits to whatever placed it, which is right — a rack under a crossword
+  is not spaced like a rack under a board. `--s-8` is that same 24px, named from
+  the scale rather than written again as a length.
+-->
+<div class="keys">
+  <Keyboard layout={QWERTY} {marks} disabled={!playing} onpress={press} />
+</div>
 
 <!--
   The way back to a conclusion the player closed. Passing the word on is not
@@ -110,6 +178,10 @@
 <Announcer message={announcement} sequence={announcementSequence} />
 
 <style>
+  .keys {
+    margin-block-start: var(--s-8);
+  }
+
   .share {
     display: flex;
     gap: var(--s-4);

@@ -1,3 +1,4 @@
+import { describeRejection } from '$lib/domain/announcements';
 import { EMPTY_POOL } from '$lib/domain/answerPool';
 import type { AnswerPool } from '$lib/domain/answerPool';
 import { EMPTY_DAILY_STATISTICS } from '$lib/domain/dailyStatistics';
@@ -72,6 +73,46 @@ export type Notice =
   | { kind: 'custom_link_invalid' }
   | { kind: 'results_copied' }
   | { kind: 'copy_failed' };
+
+/**
+ * What a notice says, and how the platform should carry it.
+ *
+ * The platform's `Notice` takes a sentence and a tone, because what a product
+ * is telling a reader is the product's to write. This is where Poodl writes it:
+ * one function beside the union, so the three surfaces that show a notice —
+ * the board, the share dialog and the conclusion — cannot come to disagree
+ * about a word.
+ *
+ * `success` is spent on the one kind that earns it. The four refusals take the
+ * default, which is what most of what a product interrupts a reader to say is.
+ */
+export function describeNotice(notice: Notice | null): {
+  message: string | null;
+  tone: 'alert' | 'success';
+} {
+  if (notice === null) {
+    return { message: null, tone: 'alert' };
+  }
+
+  switch (notice.kind) {
+    case 'guess_rejected':
+      return { message: describeRejection(notice.reason), tone: 'alert' };
+    case 'custom_answer_rejected':
+      return {
+        message: `Poodl does not accept “${notice.entry}”. Try a five-letter word it knows.`,
+        tone: 'alert'
+      };
+    case 'custom_link_invalid':
+      return { message: 'That is not a Poodl link.', tone: 'alert' };
+    case 'results_copied':
+      return { message: 'Copied to the clipboard.', tone: 'success' };
+    case 'copy_failed':
+      return {
+        message: 'Poodl could not reach the clipboard. Select the text and copy it yourself.',
+        tone: 'alert'
+      };
+  }
+}
 
 /**
  * What Poodl has just made for the player to take away: the link `CustomLinkReady`
@@ -156,7 +197,8 @@ export interface AppState {
 
 /**
  * `default Settings player_settings`. Theme starts dark, not at system: dark is
- * home (docs/design/direction.md), and `app.html` ships the same answer in its
+ * home (the platform's design direction, reached from docs/project/platform.md), and
+ * `app.html` ships the same answer in its
  * markup so the first paint agrees with this before the store exists.
  */
 export const DEFAULT_SETTINGS: Settings = {

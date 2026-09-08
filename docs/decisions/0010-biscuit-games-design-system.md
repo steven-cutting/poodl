@@ -2,7 +2,7 @@
 title: "Decision 0010: The Biscuit Games design system"
 kind: "decision"
 audience: [contributor, maintainer, agent]
-canonical_for: [decision_design_system]
+canonical_for: [decision_poodl_design_system_port]
 requires: []
 ---
 
@@ -10,7 +10,7 @@ requires: []
 
 ## Context
 
-[Design direction](../design/direction.md) decided how Biscuit Games looks — dark is home,
+The design direction decided how Biscuit Games looks — dark is home,
 thin rules rather than heavy fills, one rationed warm family, a face with fingerprints —
 and the interface still wore the walking skeleton's styling: system fonts, filled marks,
 a centred "POODL" heading. A complete design system was generated from that page in a
@@ -30,7 +30,8 @@ untried key hugs the page, and the mark separation rides the drawn borders.
 
 Port the design system into `src/app.css` and the Svelte components — only as much of it
 as the app consumes, with the rest recorded in
-[Port a design system component](../how-to/port-a-design-system-component.md).
+the porting guide, which is upstream too — [The platform upstream](../project/platform.md)
+reaches both.
 
 - **Tokens.** `src/app.css` holds the raw palette (pure neutrals, the biscuit ramp, the
   result hues chosen dark-first), the semantic vocabulary (`--surface*`, `--rule*`,
@@ -131,7 +132,7 @@ computed by `tests/contrast.test.ts` against the floors `game.allium` states.
   neutral, as the design system's own `Mark` does at its default tone: `::selection` is the
   one place the pair is spent, what makes the wordmark the wordmark is the name and the
   face it is set in rather than a colour — see
-  [the design direction](../design/direction.md) — and the mark's one break is the fourth
+  [the design direction](../project/platform.md) — and the mark's one break is the fourth
   corner.
 - **The shell is 34rem, not 480px.** The bottom keyboard row is ten flex shares and eight
   gaps plus the gutters; a 480px shell caps a letter key at about 40px on a screen with
@@ -142,6 +143,18 @@ computed by `tests/contrast.test.ts` against the floors `game.allium` states.
   board inside every supported screen, and the letter scales with the cell.
 - **The favicon waits.** `app.html` keeps its empty data-URI until the reduced icon-mark
   exists; the typographic placeholder in `Wordmark` is a header lockup, not an icon.
+
+> Noted on 2026-09-07. Design-system ownership has moved to the Biscuit Games repository: the
+> direction, the resource index and the porting guide are decided there now, and since
+> [decision 0013](0013-design-system-as-a-package.md) the stylesheet, the faces, the icons
+> and most of the primitives this port made are installed from
+> `@steven-cutting/biscuit-games` rather than kept here. What this record describes still
+> happened, and is still the record of it.
+>
+> The deviations below are worth one correction. They were made against Poodl's palette in
+> Poodl's gate, and that palette is the one the platform's stylesheet now carries — the port
+> went upstream whole. So they are not Poodl's own any more; they are measured on both sides
+> of the boundary, by this repository's contrast test and by the platform's.
 
 ## Consequences
 
@@ -186,8 +199,7 @@ ahead of this repository — the sync is manual, and the porting guide is the pr
 
 ## Related pages
 
-- [Design direction](../design/direction.md)
-- [Port a design system component](../how-to/port-a-design-system-component.md)
+- [The platform upstream](../project/platform.md)
 - [Accessibility](../explanation/accessibility.md)
 - [Decision 0008: Visual review in Chromatic](0008-visual-review-in-chromatic.md)
 - [Decision 0009: Poodl lives at pnut.fans](0009-poodl-lives-at-pnut-fans.md)

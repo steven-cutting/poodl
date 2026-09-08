@@ -8,7 +8,9 @@ requires: []
 
 # Make your first change
 
-About half an hour, from a fresh clone to a green gate — the first run downloads a browser.
+About half an hour, from a fresh clone to a green gate — the first run downloads a browser
+and reads one package from GitHub Packages, which needs a token in `~/.npmrc` that
+[Develop locally](../how-to/develop-locally.md) describes.
 The change is small on purpose; what matters is that it passes through every layer the
 repository has.
 
@@ -54,8 +56,10 @@ the contract again, not by adjusting until it passes.
 
 ## 5. Add the behaviour and its test together
 
-Now change something a player would notice. Give `Tile.svelte` a title attribute, or add
-a mark description. Whatever you pick, the rule is the same: the component change and its
+Now change something a player would notice. Give `Countdown.svelte` a title attribute, or
+change the words `Lockup.svelte` reads out. Pick something Poodl still owns: the cells, the
+keys and the primitives are the platform's, and their wording is amended upstream rather
+than here. Whatever you pick, the rule is the same: the component change and its
 Testing Library assertion land in the same commit, and the assertion queries by
 accessible role and name.
 

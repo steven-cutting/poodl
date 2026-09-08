@@ -46,19 +46,34 @@ just storybook-browsers
 ```
 
 This downloads a browser over the network into a cache outside the repository. It is the
-one thing here that cannot run offline. `just initialize` does it for you; run it again
-by hand after the `playwright` pin moves. On Linux, `just storybook-browsers-deps`
+one thing here that cannot run offline at all. `just initialize` does it for you; run it
+again by hand after the `playwright` pin moves. On Linux, `just storybook-browsers-deps`
 installs the system libraries Chromium links against.
+
+## The platform's workshop, beside this one
+
+`.storybook/main.ts` carries a `refs` entry for the platform's published workshop, so its
+components — and the token sheet Poodl no longer keeps — appear under **Biscuit Games** in
+the sidebar, collapsed, below Poodl's own. They are served from where the platform
+publishes them; nothing is built here.
+
+Storybook checks the address while it builds, so `just storybook-build` reaches the network
+on every run of the gate — and cannot fail on it, because an unreachable address becomes an
+entry that does not open rather than an error. What it costs is in
+[Quality gates](../reference/quality-gates.md).
+[Quality gates](../reference/quality-gates.md) states the exception, and the story run
+never fetches at all.
 
 ## Where stories live
 
 Stories live in `stories/` at the repository root, one file per component. The layout rule
 and what the story run proves are in [Testing](../reference/testing.md).
 
-One file deviates from one-per-component on purpose: `stories/Foundations.stories.svelte`
-documents the design tokens — palette, type ramp, spacing, radii — rather than a
-component, because the tokens are consumed by every component and owned by none. Its
-specimens are for looking; the measured pairs stay in `tests/contrast.test.ts`.
+Every file here covers one component Poodl owns. The design tokens have a specimen sheet
+of their own, and it is the platform's rather than this repository's — the tokens are
+consumed by every component and owned by none of them, and they are not Poodl's to own at
+all. The measured pairs stay in `tests/contrast.test.ts`, which reads the same stylesheet
+from the package.
 
 ## Write a story
 
@@ -70,15 +85,16 @@ element per state.
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import type { ComponentProps } from 'svelte';
-  import Tile from '../src/lib/components/Tile.svelte';
+  import Board from '../src/lib/components/Board.svelte';
+  import { WON, played } from './fixtures';
 
-  const { Story } = defineMeta({ title: 'Game/Tile', component: Tile, tags: ['autodocs'] });
+  const { Story } = defineMeta({ title: 'Game/Board', component: Board, tags: ['autodocs'] });
 
-  const correct: ComponentProps<typeof Tile> = { position: 1, letter: 'a', mark: 'correct' };
+  const won: ComponentProps<typeof Board> = { guesses: played(WON), currentInput: '' };
 </script>
 
 <!-- The comment above a story becomes its description on the docs page. -->
-<Story name="Correct" args={correct} />
+<Story name="Won on the third attempt" args={won} />
 ```
 
 Imports reach into `src/` with a relative path, matching `tests/`.
@@ -92,7 +108,8 @@ Four rules on top of the format:
    coverage floor is still earned there.
 3. **Inject port fakes, never touch a browser global.** The story run is a real browser, so
    `localStorage` and the clipboard exist and would work. That is exactly why the rule
-   holds: construct the component against the fakes in `src/lib/ports/`, as `tests/` does.
+   holds: construct the component against the fakes in `src/lib/ports/` and the two the
+   platform package ships, `createFakePreferences` and `createFakeKeys`, as `tests/` does.
 4. **Reach for a play function when the guarantee is about interaction.** A story that tabs
    to a key and activates it is executable evidence for `FullyKeyboardOperable` in a way a
    rendered picture is not.
@@ -104,8 +121,8 @@ which receives the args and the story context. The addon's own documentation cov
 ## Switch theme, contrast and motion
 
 The toolbar carries three globals. Theme and high contrast set `data-theme` and
-`data-high-contrast` on the preview's root element, which is what `src/app.css` keys on, so
-a story sees the tokens the application will. A story pins a value with a `globals` prop,
+`data-high-contrast` on the preview's root element, which is what the design system's
+stylesheet keys on, so a story sees the tokens the application will. A story pins a value with a `globals` prop,
 which beats the toolbar and disables the matching control.
 
 Reduced motion is a simulation, labelled as one: it freezes declarative motion in the
@@ -126,7 +143,10 @@ to error; its own default only reports.
 2. **A missing or wrong accessible name is a test failure too.** It is the same information
    a role-and-name query matches on, so add the assertion in `tests/` while you are there.
 3. **A contrast failure is usually a token, not a component.** Check the light palette, the
-   dark palette and high contrast in `src/app.css` before changing any markup.
+   dark palette and high contrast in the stylesheet `@steven-cutting/biscuit-games` ships
+   before changing any markup — and note that a token fault is repaired upstream and taken
+   here as a version, not edited in `node_modules`. See
+   [The platform upstream](../project/platform.md).
 4. **Silence is not always a pass.** Axe skips what it cannot attribute, including anything
    behind `aria-hidden` — a tile's marker bar is not checked by the contrast rule at all.
    Measure by hand when a guarantee rests on something the tool does not report.

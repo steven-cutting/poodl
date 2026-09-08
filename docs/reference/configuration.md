@@ -54,9 +54,12 @@ One variable is read by a tool rather than by the build, and it never reaches th
 | Variable | Read by | Effect |
 | --- | --- | --- |
 | `CHROMATIC_PROJECT_TOKEN` | `just chromatic` | Which Chromatic project the workshop publishes to. Export it locally; CI supplies it from the repository secret of the same name. Without it the recipe fails rather than publishing somewhere unexpected. |
+| `NODE_AUTH_TOKEN` | npm, through the `.npmrc` `actions/setup-node` writes outside the checkout | The credential GitHub Packages demands for every read of `@steven-cutting/biscuit-games`. CI sets it from the run's own token on each step that installs, and on no other. Not read on a laptop, where the token is an `_authToken` line in `~/.npmrc`. |
 
-It is the only secret this repository has, and it is deliberately not written into a file —
-see [Security model](../explanation/security-model.md).
+It is the only secret this repository *stores*, and it is deliberately not written into a
+file. The registry credential above is not stored either: per run in CI, and the
+contributor's own on a laptop — see
+[Security model](../explanation/security-model.md).
 
 ## Configuration files
 
@@ -83,8 +86,8 @@ see [Security model](../explanation/security-model.md).
 ### Storybook appearance globals
 
 Set from the workshop toolbar, or pinned by a story with a `globals` prop. The attributes
-go on the preview document's root element, because `src/app.css` keys every palette on
-`:root`.
+go on the preview document's root element, because the design system's stylesheet keys
+every palette on `:root`.
 
 | Global | Values | Effect |
 | --- | --- | --- |
@@ -125,12 +128,13 @@ entry to name is drift in the other direction.
 | `ABSENT_TILE` | ⬛ | `sharing.allium`, `config.absent_tile` |
 
 `MINIMUM_TOUCH_TARGET` and `NARROWEST_SUPPORTED_WIDTH` are the only ones whose real consumer
-is a stylesheet, and CSS cannot import a TypeScript constant. So `44px` is written out in
-`src/app.css` and `20rem` in `Keyboard.svelte`, and the tests are what hold them to the
-constants: the jsdom suite compares the resolved `min-block-size` against
-`MINIMUM_TOUCH_TARGET`, and the story run frames the keyboard at `NARROWEST_SUPPORTED_WIDTH`
-and measures it there. Change the specification and the constant, and the gate names the
-stylesheet that did not follow.
+is a stylesheet, and CSS cannot import a TypeScript constant. Both figures are written out
+in the platform's stylesheet and its keyboard, so the tests are what hold this repository's
+constants to them: the jsdom suite compares the resolved `min-block-size` against
+`MINIMUM_TOUCH_TARGET`, and the story run frames the whole screen at
+`NARROWEST_SUPPORTED_WIDTH` and measures every control there. The specification is held to
+the platform's separately, by `tests/platformSpecs.test.ts`, so a figure that moved upstream
+fails on the number rather than on the paint.
 
 ## Version pins
 

@@ -1,4 +1,12 @@
-import type { GuessRejectionReason, LetterResult } from '$lib/domain/types';
+import type { Mark } from '@steven-cutting/biscuit-games';
+
+import type {
+  GameMode,
+  GameStatus,
+  GuessRejectionReason,
+  LetterMark,
+  LetterResult
+} from '$lib/domain/types';
 
 /**
  * What Poodl says out loud.
@@ -10,6 +18,66 @@ import type { GuessRejectionReason, LetterResult } from '$lib/domain/types';
  * hears testable without rendering anything, and keeps the board's row labels
  * and the live region saying the same thing.
  */
+
+/**
+ * What each mark means, in Poodl's words: the sentence a cell says after its
+ * letter. One map for the board, the keyboard and the explanation, which used
+ * to hold two identical copies of it between them.
+ *
+ * Every value is a real sentence, and has to be. The platform draws no mark it
+ * has no words for — `EveryMarkIsNamedInWords` — so a blank here would paint a
+ * cell and tell a reader nothing about it, which is the failure that clause
+ * exists to name.
+ */
+const MARK_DESCRIPTIONS: Record<LetterMark, string> = {
+  correct: 'correct',
+  present: 'in the word, wrong place',
+  absent: 'not in the word'
+};
+
+/**
+ * A result as the platform paints it, with Poodl's sentence for it.
+ *
+ * The engine says `correct`, because that is what Poodl's rules say. The
+ * platform's name for the paint is `exact`, after the `--result-exact` token
+ * the stylesheet chose before any component did. This is the whole of the
+ * translation between the two, applied where a mark reaches something rendered
+ * and nowhere else: `describeResults` below still says `correct`, because a row
+ * label and an announcement are the game speaking about its own rules.
+ */
+export function markFor(mark: LetterMark): Mark {
+  return { name: mark === 'correct' ? 'exact' : mark, description: MARK_DESCRIPTIONS[mark] };
+}
+
+/**
+ * The header chip: the word it shows, and the name a reader hears.
+ *
+ * `GameNavigation.@guarantee CurrentModeIsPerceivable` asks for the mode to be
+ * readable as text rather than signalled by which control looks selected, and
+ * the chip is where the chrome says it. The platform draws the chip and knows
+ * nothing about modes, so the words are Poodl's and are written here beside
+ * everything else Poodl says.
+ *
+ * The label says the state and the action, and deliberately never the two words
+ * "random game" together: `InvalidLinkNotice`'s "Play a random game" is queried
+ * by that phrase, and a second control matching it would make every such query
+ * ambiguous.
+ */
+export function describeModeChip(
+  mode: GameMode | null,
+  status: GameStatus | null
+): { word: string; label: string } {
+  if (mode === null) {
+    return { word: 'No game', label: 'No game under way — change game' };
+  }
+
+  const label =
+    status === 'in_progress'
+      ? `Playing ${mode} — change game`
+      : `${mode.charAt(0).toUpperCase()}${mode.slice(1)} finished — change game`;
+
+  return { word: mode, label };
+}
 
 const REJECTIONS: Record<GuessRejectionReason, string> = {
   incomplete: 'Not enough letters. Fill the row before submitting.',

@@ -1,9 +1,7 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button, Modal, Notice } from '@steven-cutting/biscuit-games';
   import LinkReady from '$lib/components/LinkReady.svelte';
-  import Modal from '$lib/components/Modal.svelte';
-  import Notice from '$lib/components/Notice.svelte';
-  import type { Notice as NoticeValue, ShareableView } from '$lib/app/state';
+  import type { ShareableView } from '$lib/app/state';
   import { WORD_LENGTH } from '$lib/config';
   import type { GameMode, GameStatus } from '$lib/domain/types';
 
@@ -69,7 +67,8 @@
    * placeholder may not be, and it is gone the moment typing starts.
    */
   let {
-    notice = null,
+    noticeMessage = null,
+    noticeTone = 'alert',
     noticeSequence = 0,
     shareable = null,
     mode = null,
@@ -79,7 +78,14 @@
     oncopy,
     onclose
   }: {
-    notice?: NoticeValue | null;
+    /**
+     * What Poodl is saying right now, as words and a tone rather than as a
+     * kind. Which sentence a notice carries is the route's to choose —
+     * `describeNotice` in `app/state.ts` writes them once for all three
+     * surfaces that show one — so a component renders what it is handed.
+     */
+    noticeMessage?: string | null;
+    noticeTone?: 'alert' | 'success';
     /** Advances so that an identical refusal is announced a second time. */
     noticeSequence?: number;
     shareable?: ShareableView | null;
@@ -172,7 +178,7 @@
     </form>
   </section>
 
-  <Notice {notice} sequence={noticeSequence} />
+  <Notice message={noticeMessage} tone={noticeTone} sequence={noticeSequence} />
 
   {#if shareable?.kind === 'custom_link'}
     <LinkReady url={shareable.text} {oncopy} />

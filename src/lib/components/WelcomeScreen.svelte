@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button } from '@steven-cutting/biscuit-games';
   import HowToPlay from '$lib/components/HowToPlay.svelte';
   import { describeNextWord } from '$lib/domain/calendar';
   import type { GameMode, GameStatus, StartableMode } from '$lib/domain/types';

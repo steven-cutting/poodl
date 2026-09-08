@@ -1,10 +1,9 @@
 <script lang="ts">
   import { tick } from 'svelte';
 
-  import Button from '$lib/components/Button.svelte';
+  import { Button, Modal } from '@steven-cutting/biscuit-games';
   import DailyStatisticsPanel from '$lib/components/DailyStatisticsPanel.svelte';
   import DistributionChart from '$lib/components/DistributionChart.svelte';
-  import Modal from '$lib/components/Modal.svelte';
   import type { DailyStatistics } from '$lib/domain/dailyStatistics';
   import { losses, winPercentage } from '$lib/domain/statistics';
   import type { Statistics } from '$lib/domain/statistics';

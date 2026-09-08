@@ -2,11 +2,20 @@
  * `docs/specs/settings.allium` — Appearance.@guarantee
  * EveryCombinationMeetsTheLegibilityFloor, and the two figures
  * `docs/specs/game.allium` — GameBoard.@guarantee
- * AnUntriedKeyIsDistinguishableFromAScoredOne names.
+ * AnUntriedKeyIsDistinguishableFromAScoredOne names. The first of those is the
+ * platform's clause, restated here and held to its text by
+ * `tests/platformSpecs.test.ts`; the separations are Poodl's own.
+ *
+ * The palette is the platform's too, and this measures the one the app
+ * actually wears: the stylesheet `@steven-cutting/biscuit-games` ships, read
+ * from `node_modules` rather than from any copy here. A resolve that fell back
+ * to a copy would keep every figure below green while proving nothing about
+ * what a player sees, so `tests/platform.ts` refuses a path outside
+ * `node_modules` and one case asserts it.
  *
  * The guarantee is about enumeration as much as about ratios: the floor holds
  * "in all four combinations of theme and high contrast, not only the one a
- * change happened to be looked at in". So this reads `src/app.css` from disk,
+ * change happened to be looked at in". So this reads that stylesheet from disk,
  * puts it in the document, drives each combination through the root attributes
  * and recomputes every pair. No figure quoted in a comment or a documentation
  * page is trusted; each is derived here from the colours that actually resolve.
@@ -32,8 +41,8 @@
  * disabled button's `--rule` border and the keyboard a finished game dims are
  * measured nowhere here, and adding them would assert a floor the
  * specification does not state. The half of that guarantee which does bind is
- * not a ratio at all, so it is held where the keys are rendered instead:
- * `tests/components.test.ts` proves a switched-off key still reports as
+ * not a ratio at all, so it is held where a finished game is rendered
+ * instead: `tests/screens.test.ts` proves a switched-off key still reports as
  * disabled and still carries the marker bar its live form carried.
  *
  * All four combinations are covered; what is not is one of the two *routes* to
@@ -44,10 +53,9 @@
  * blocks as text and holds them equal — which is what makes every figure here
  * cover both routes rather than the one it can drive.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { platformFile, platformPath } from './platform';
 import {
   MINIMUM_BOUNDARY_CONTRAST,
   MINIMUM_MARK_SEPARATION,
@@ -59,7 +67,7 @@ import {
 // `tests/directManipulation.test.ts` records: Vite claims `.css` and hands back
 // a module whose default export is the empty string, which would assert against
 // an empty cascade and pass on everything at once.
-const appCss = readFileSync(resolve(process.cwd(), 'src', 'app.css'), 'utf8');
+const appCss = platformFile('app.css');
 
 let stylesheet: HTMLStyleElement;
 
@@ -154,6 +162,20 @@ function apply({ theme, highContrast }: Combination): void {
     root.removeAttribute('data-high-contrast');
   }
 }
+
+describe('the stylesheet these figures are measured on', () => {
+  /*
+   * The one case that says which file the rest of this suite read. Every figure
+   * below is derived from a cascade, so a stylesheet resolved from the wrong
+   * place would produce figures that are internally consistent and untrue of
+   * anything a player sees. `platformPath` throws on a path outside
+   * `node_modules`; this says so out loud, where a reader of a failure will
+   * look.
+   */
+  it('is the one the package ships, not a copy in this repository', () => {
+    expect(platformPath('app.css')).toContain('node_modules');
+  });
+});
 
 describe('EveryCombinationMeetsTheLegibilityFloor', () => {
   for (const combination of COMBINATIONS) {

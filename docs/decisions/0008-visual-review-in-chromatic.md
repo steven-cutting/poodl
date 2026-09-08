@@ -36,7 +36,13 @@ copy of logic the pinned dependency already holds, and its documented `@latest` 
 cannot satisfy this repository's SHA pinning.
 
 The recipe sits outside `just check`, beside `check-links-online`, because it needs the
-network and a token. The gate stays offline: nothing `just check` runs needs either. (This
+network and a token. The gate stays offline: nothing `just check` runs needs either.
+
+> Noted on 2026-09-07. Half of that sentence has stopped being true, and the other half has
+> not. Since [decision 0013](0013-design-system-as-a-package.md) gate 6 composes the
+> platform's published workshop through a `refs` entry and fetches its address while it
+> builds, so `just check` does reach the network — but it still needs no token, and it
+> cannot fail on the request. [Quality gates](../reference/quality-gates.md) states it. (This
 sentence used to count the gates, which was true when it was written and stopped being
 true on 2026-08-28, when the two specification gates joined the aggregate.
 [Quality gates](../reference/quality-gates.md) owns the list and is the count to trust.)

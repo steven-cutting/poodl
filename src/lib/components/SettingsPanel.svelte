@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Modal from '$lib/components/Modal.svelte';
+  import { Modal } from '@steven-cutting/biscuit-games';
   import type { HardModeBlocker } from '$lib/app/engine';
   import type { Settings } from '$lib/app/state';
   import type { ThemeChoice } from '$lib/domain/types';
@@ -266,12 +266,22 @@
    * five checkboxes, and left to the user agent each renders about thirteen
    * pixels across — the smallest targets in the game by a wide margin.
    *
-   * The row is what grows. A label bound to its control activates that control
-   * across its whole area, so the row is what a finger is actually aimed at,
+   * The row is what grows. A label that contains its control activates it
+   * across the label's whole area, so the row is what a finger is aimed at —
+   * which is the case the invariant hands to the label rather than to the box,
    * and the switch drawn below is sized to be aimed at deliberately. Measured
    * in `stories/SettingsPanel.stories.svelte`.
    */
-  label {
+  /*
+   * Scoped to both groups rather than left as a bare `label`, because the
+   * platform's stylesheet declares `label:has(input[type='checkbox'])` and its
+   * radio twin at a specificity a Svelte-scoped element selector loses to. Its
+   * `inline-flex` and its narrower gap would take the `auto` margin below off
+   * the row's end and leave the note indented to a gap nothing uses. The floor
+   * it also declares is welcome and is the same 44px stated here.
+   */
+  .theme label,
+  .switches label {
     display: flex;
     gap: var(--s-5);
     align-items: center;

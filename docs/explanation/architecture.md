@@ -79,13 +79,17 @@ next arrival and start a game the player never asked for.
 
 ## Side effects
 
-Seven things reach outside the pure core: storage, randomness, the clock, the clipboard,
-the word lists, the device's colour-scheme and reduced-motion preferences, and a repeating
-timer. The timer serves two: it ticks the endless countdown, and it watches the calendar,
-so the day turns on a tab left open across midnight rather than waiting for a keystroke.
-Each sits behind a port in `src/lib/ports/` with a real
-adapter and an in-memory fake, so the entire application above them is testable without a
-browser. The reasoning is in [Decision 0002](../decisions/0002-ports-and-fakes.md).
+Eight things reach outside the pure core: storage, randomness, the clock, the clipboard,
+the word lists, a repeating timer, the device's colour-scheme and reduced-motion
+preferences, and the device's keyboard. The timer serves two: it ticks the endless
+countdown, and it watches the calendar, so the day turns on a tab left open across midnight
+rather than waiting for a keystroke.
+
+Each sits behind a port with a real adapter and an in-memory fake, so the entire
+application above them is testable without a browser. Six of the ports are in
+`src/lib/ports/`; the last two are the platform's and arrive from
+`@steven-cutting/biscuit-games`. The reasoning is in
+[Decision 0002](../decisions/0002-ports-and-fakes.md).
 
 ## What is not here
 

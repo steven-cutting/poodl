@@ -1,14 +1,12 @@
 import { render, screen, within } from '@testing-library/svelte';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import Board from '../src/lib/components/Board.svelte';
-import Keyboard from '../src/lib/components/Keyboard.svelte';
-import Tile from '../src/lib/components/Tile.svelte';
+import HowToPlay from '../src/lib/components/HowToPlay.svelte';
+import Lockup from '../src/lib/components/Lockup.svelte';
 import TodaysGame from '../src/lib/components/TodaysGame.svelte';
 import { MAX_ATTEMPTS } from '../src/lib/config';
 import { dayStart } from '../src/lib/domain/calendar';
-import { keyboardKnowledge } from '../src/lib/domain/keyboard';
 import { scoreGuess } from '../src/lib/domain/scoring';
 import type { ScoredGuess } from '../src/lib/domain/types';
 
@@ -17,56 +15,6 @@ const ANSWER = 'apple';
 function played(words: readonly string[]): ScoredGuess[] {
   return words.map((word) => ({ results: scoreGuess(word, ANSWER) }));
 }
-
-describe('Tile', () => {
-  it('names an empty position', () => {
-    render(Tile, { position: 3 });
-
-    expect(screen.getByRole('img', { name: 'Position 3, empty' })).toBeInTheDocument();
-  });
-
-  it('names a letter that has not been scored', () => {
-    render(Tile, { position: 1, letter: 'a' });
-
-    expect(screen.getByRole('img', { name: 'Position 1, A' })).toBeInTheDocument();
-  });
-
-  // GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone
-  it('describes every mark in words, not only in colour', () => {
-    render(Tile, { position: 1, letter: 'a', mark: 'correct' });
-    render(Tile, { position: 2, letter: 'b', mark: 'present' });
-    render(Tile, { position: 3, letter: 'c', mark: 'absent' });
-
-    expect(screen.getByRole('img', { name: 'Position 1, A, correct' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('img', { name: 'Position 2, B, in the word, wrong place' })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Position 3, C, not in the word' })).toBeInTheDocument();
-  });
-
-  /*
-   * The same guarantee's visible half: correct and present carry a marker bar
-   * and absent carries the absence of one. The bar is aria-hidden decoration
-   * with no role or name to query by, so `[data-marker]` is the structural
-   * hook — the same class of hook as the grandfathered `data-mark`, and
-   * `docs/reference/testing.md` records the trade. Its relative widths are
-   * geometry, held by the Tile stories where a layout engine exists.
-   */
-  it('draws a marker bar for the two marks that have one, and none for absent', () => {
-    render(Tile, { position: 1, letter: 'a', mark: 'correct' });
-    render(Tile, { position: 2, letter: 'b', mark: 'present' });
-    render(Tile, { position: 3, letter: 'c', mark: 'absent' });
-    render(Tile, { position: 4, letter: 'd' });
-
-    const marker = (name: string) =>
-      screen.getByRole('img', { name }).querySelector('[data-marker]');
-
-    expect(marker('Position 1, A, correct')).not.toBeNull();
-    expect(marker('Position 2, B, in the word, wrong place')).not.toBeNull();
-    expect(marker('Position 3, C, not in the word')).toBeNull();
-    expect(marker('Position 4, D')).toBeNull();
-  });
-});
 
 describe('Board', () => {
   it('shows one row per attempt, whether played or not', () => {
@@ -131,140 +79,6 @@ describe('Board', () => {
   });
 });
 
-describe('Keyboard', () => {
-  it('offers every letter plus Enter and Delete', () => {
-    render(Keyboard);
-
-    expect(screen.getAllByRole('button')).toHaveLength(28);
-    expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
-  });
-
-  /*
-   * DirectManipulation.EveryControlIsAComfortableTarget. A row divided equally
-   * among its letter keys leaves about 27px per control at
-   * `narrowest_supported_width`, which the words "Enter" and "Delete" do not
-   * fit at any legible size, so the two action keys show the icon every
-   * on-screen keyboard shows. The name is what the surface promised and it
-   * does not change: the icon is hidden from assistive technology and the
-   * label says the word, so GameBoard.@guarantee FullyKeyboardOperable reads
-   * exactly as it did.
-   */
-  it('names the action keys in words while showing the icon a finger expects', () => {
-    render(Keyboard);
-
-    for (const name of ['Enter', 'Delete']) {
-      const key = screen.getByRole('button', { name });
-
-      expect(key.querySelector('svg')).not.toBeNull();
-      // The icon is the whole face: no visible text competes with the label.
-      expect(key.textContent.trim()).toBe('');
-    }
-  });
-
-  it('says what is known about a key rather than only colouring it', () => {
-    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])) });
-
-    expect(screen.getByRole('button', { name: 'A, correct' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'P, in the word, wrong place' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'D, not in the word' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Z' })).toBeInTheDocument();
-  });
-
-  /*
-   * AGENTS.md invariant 6 and GameBoard.@guarantee
-   * ResultsAreNeverConveyedByColourAlone. The accessible name carries the
-   * status for anyone reading by ear; the marker bar carries it for a sighted
-   * colour-blind reader with no assistive technology — bar for correct,
-   * shorter bar for present, and for absent the absence of one beside a
-   * dimmed letter. A tile has carried a shape from the start; a key had not.
-   */
-  it('marks a known key with a shape as well as a colour', () => {
-    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])) });
-
-    const keys = new Map(
-      screen.getAllByRole('button').map((key) => [key.getAttribute('data-mark'), key])
-    );
-
-    expect(keys.get('correct')?.querySelector('[data-marker]')).not.toBeNull();
-    expect(keys.get('present')?.querySelector('[data-marker]')).not.toBeNull();
-    expect(keys.get('absent')?.querySelector('[data-marker]')).toBeNull();
-    // A key nothing is known about carries its letter and nothing else.
-    expect(keys.get('none')?.querySelector('[data-marker]')).toBeNull();
-    expect(keys.get('none')?.textContent.trim()).toMatch(/^[A-Z]$/);
-  });
-
-  it('reports the letter that was pressed', async () => {
-    const onletter = vi.fn();
-    render(Keyboard, { onletter });
-
-    await userEvent.click(screen.getByRole('button', { name: 'Q' }));
-
-    expect(onletter).toHaveBeenCalledWith('q');
-  });
-
-  it('reports submission and deletion', async () => {
-    const onsubmit = vi.fn();
-    const ondelete = vi.fn();
-    render(Keyboard, { onsubmit, ondelete });
-
-    await userEvent.click(screen.getByRole('button', { name: 'Enter' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
-
-    expect(onsubmit).toHaveBeenCalledTimes(1);
-    expect(ondelete).toHaveBeenCalledTimes(1);
-  });
-
-  it('stays silent when no handler is supplied', async () => {
-    render(Keyboard);
-
-    await expect(
-      userEvent.click(screen.getByRole('button', { name: 'Q' }))
-    ).resolves.toBeUndefined();
-  });
-
-  it('can be disabled as a whole', () => {
-    render(Keyboard, { disabled: true });
-
-    for (const button of screen.getAllByRole('button')) {
-      expect(button).toBeDisabled();
-    }
-  });
-
-  /*
-   * Appearance.@guarantee AnUnavailableControlIsExempt, which is the clause
-   * that lets a finished game's keyboard go quiet at all. The exemption is
-   * only from the contrast figures; it buys nothing about how the state is
-   * known, and it names two things a dimmed key still owes. Both are asserted
-   * here because the dimming is one `opacity` declaration away from taking
-   * them with it, and neither gate above would notice: `tests/contrast.test.ts`
-   * measures tokens rather than rendered keys, and axe declines to judge a
-   * disabled control at all.
-   *
-   * So: the unavailability reaches the accessibility tree rather than resting
-   * on the dim, and every non-colour indication the live keyboard carried —
-   * the marker bar and the description — survives being switched off.
-   */
-  it('keeps a scored key legible to a reader once the game switches it off', () => {
-    render(Keyboard, { knowledge: keyboardKnowledge(played(['adopt'])), disabled: true });
-
-    const keys = new Map(
-      screen.getAllByRole('button').map((key) => [key.getAttribute('data-mark'), key])
-    );
-
-    for (const mark of ['correct', 'present', 'absent', 'none'] as const) {
-      expect(keys.get(mark)).toBeDisabled();
-    }
-
-    expect(keys.get('correct')?.querySelector('[data-marker]')).not.toBeNull();
-    expect(keys.get('present')?.querySelector('[data-marker]')).not.toBeNull();
-    expect(keys.get('absent')?.querySelector('[data-marker]')).toBeNull();
-
-    expect(screen.getByRole('button', { name: 'A, correct' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'O, not in the word' })).toBeDisabled();
-  });
-});
-
 /*
  * daily.allium — the `TodaysGame` surface's next-word announcement,
  * `ThereIsNoNewGameInDaily`: "Daily offers... the time the next word
@@ -321,5 +135,80 @@ describe('TodaysGame', () => {
     expect(screen.getByText(/day 4/i)).toBeInTheDocument();
     expect(screen.getByText(/available/i)).toBeInTheDocument();
     expect(screen.queryByText(/tomorrow's word arrives/i)).not.toBeInTheDocument();
+  });
+});
+
+/*
+ * The body of the explanation, without a frame: `WelcomeScreen` names it as a
+ * group and `HowToPlayPanel` as a dialog, so the component itself carries the
+ * words and nothing else.
+ */
+describe('HowToPlay', () => {
+  // Welcome.@guarantee AFirstVisitIsExplained: five letters, six attempts, as
+  // many games as they like, and one word a day that everybody shares.
+  it('says how many attempts, how long a word is, that there is no limit, and one word a day', () => {
+    render(HowToPlay, {});
+
+    expect(screen.getByText(/6 attempts/)).toHaveTextContent(/5-letter word/);
+    expect(screen.getByText(/as many as you like/i)).toHaveTextContent(/one word a day/i);
+    expect(screen.getAllByRole('listitem')).toHaveLength(3);
+  });
+
+  /*
+   * The half of the same guarantee that is read rather than seen. The tiles
+   * are `aria-hidden`, so the sentence in each row is the whole of what a
+   * screen reader is given for that mark — and nothing else here would notice
+   * it going: the count above and the bars below both pass just as well on
+   * three empty rows. So each row is held by its own words, in the order the
+   * marks are drawn in, and the words those rows use for the bars are the ones
+   * `GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone` uses itself:
+   * bar, shorter bar and no bar.
+   */
+  it('names every mark in the sentence beside its tile', () => {
+    render(HowToPlay, {});
+    const rows = screen.getAllByRole('listitem');
+
+    expect(rows).toHaveLength(3);
+    expect(rows[0]).toHaveTextContent('Correct — right letter, right place. Marker bar.');
+    expect(rows[1]).toHaveTextContent('Present — right letter, wrong place. Shorter marker bar.');
+    expect(rows[2]).toHaveTextContent('Absent — not in the word. No marker bar.');
+  });
+
+  /*
+   * GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone, as an
+   * illustration: the example beside each mark is the board's own tile, so it
+   * carries the bar the board draws — one for correct, a shorter one for
+   * present, none for absent. The tiles are hidden from assistive technology,
+   * because the sentence beside each is the content; so the visible half is
+   * held here through `[data-marker]`, the structural hook
+   * `docs/reference/testing.md` grants for exactly this kind of aria-hidden
+   * decoration, and the names are asked for with `hidden` only to find each
+   * tile by the mark it shows.
+   */
+  it('shows each mark on a real tile that assistive technology does not read', () => {
+    render(HowToPlay, {});
+
+    expect(screen.queryAllByRole('img')).toHaveLength(0);
+
+    const marker = (name: string) =>
+      screen.getByRole('img', { name, hidden: true }).querySelector('[data-marker]');
+
+    expect(marker('Position 1, C, correct')).not.toBeNull();
+    expect(marker('Position 2, R, in the word, wrong place')).not.toBeNull();
+    expect(marker('Position 3, N, not in the word')).toBeNull();
+  });
+});
+
+/*
+ * Poodl's own lockup, handed to the platform's header as its brand. The
+ * platform's `Wordmark` says "biscuit games"; the page has to say which page it
+ * is.
+ */
+describe('Lockup', () => {
+  // The mark's "b" is aria-hidden, so the words are the whole accessible text.
+  it('reads as exactly the lockup, with the mark silent', () => {
+    render(Lockup, {});
+
+    expect(screen.getByText(/biscuit/)).toHaveTextContent(/^biscuit games \/ poodl$/);
   });
 });

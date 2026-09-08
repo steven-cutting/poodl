@@ -21,8 +21,13 @@ export type GameStatus = 'in_progress' | 'won' | 'lost' | 'abandoned';
 /** `game.allium` — the `GuessRejectionReason` enumeration. */
 export type GuessRejectionReason = 'incomplete' | 'not_in_dictionary' | 'hard_mode_violation';
 
-/** `settings.allium` — the `ThemeChoice` enumeration. */
-export type ThemeChoice = 'system' | 'light' | 'dark';
+/**
+ * `appearance.allium` — the `ThemeChoice` enumeration, which the platform
+ * declares and `settings.allium` restates. Re-exported rather than imported
+ * everywhere, so the vocabulary a component renders is still named in one
+ * place.
+ */
+export type { ThemeChoice } from '@steven-cutting/biscuit-games';
 
 /** `sharing.allium` — the `SharePalette` enumeration. */
 export type SharePalette = 'standard' | 'high_contrast';

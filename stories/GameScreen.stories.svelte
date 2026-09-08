@@ -1,5 +1,7 @@
 <script module lang="ts">
+  import { createFakeKeys } from '@steven-cutting/biscuit-games';
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { describeNotice } from '../src/lib/app/state';
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import GameScreen from '../src/lib/components/GameScreen.svelte';
@@ -13,6 +15,22 @@
   const oncopy = fn();
   const ondismissnotice = fn();
   const onshowresult = fn();
+
+  /*
+   * The device's keyboard, injected as a fake exactly as `tests/screens.test.ts`
+   * injects it. `src/routes/+page.svelte` is where the window-backed adapter is
+   * built and a story never builds one: a story subscribed to the real window
+   * answers to whatever the page around it is doing, and the workshop stops
+   * being a place one component can be looked at on its own.
+   *
+   * Three of them rather than one, because two stories below assert on
+   * `listening` and `listening` is a count. A fake shared with the other
+   * stories would count whatever they left mounted, so each of those two
+   * carries its own and can only be counting itself.
+   */
+  const keys = createFakeKeys();
+  const keysTaken = createFakeKeys();
+  const keysSurrendered = createFakeKeys();
 
   const OVERVIEW = [
     'The board, the keyboard and everything Poodl says while a game is on.',
@@ -40,8 +58,8 @@
     '  play, or the conclusion — and goes when that closes. Nothing here renders one.',
     '- `ShareResults.@guarantee TheGridIsAvailableAsText`: the grid shared from the conclusion',
     '  stays on the board as text once the conclusion is put away, where the player is looking.',
-    '- `game/DirectManipulation`. The keyboard stories measure the keys; the last story here',
-    '  measures what the invariant closes on — that the whole screen is playable at',
+    '- `game/DirectManipulation`. The last story here measures what the invariant closes on',
+    '  — that the whole screen is playable at',
     '  `config.narrowest_supported_width` without scrolling sideways, and that every control on',
     '  it is one a finger can find: top to bottom without exception, and across for everything',
     '  but the keys the invariant exempts.',
@@ -50,15 +68,22 @@
     '`GuessScoring` contract would not produce.'
   ].join('\n');
 
+  /** The route's own mapping, under the prop names the surfaces take. */
+  function renamed(words: { message: string | null; tone: 'alert' | 'success' }) {
+    return { noticeMessage: words.message, noticeTone: words.tone };
+  }
+
   const { Story } = defineMeta({
     title: 'Game/GameScreen',
     component: GameScreen,
     tags: ['autodocs'],
     args: {
       game: PLAYING,
+      keys,
       keyboard: keyboardKnowledge(PLAYING.guesses),
       physicalKeyboard: true,
-      notice: null,
+      noticeMessage: null,
+      noticeTone: 'alert',
       noticeSequence: 0,
       shareable: null,
       announcement: null,
@@ -72,8 +97,10 @@
     argTypes: {
       game: { control: false, description: 'The game on the board. Its answer is never read.' },
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
+      keys: { control: false, description: 'The device keyboard, injected as a fake.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
-      notice: { control: false, description: 'What Poodl is saying, if anything.' },
+      noticeMessage: { control: false, description: 'What Poodl is saying, if anything.' },
+      noticeTone: { control: false, description: 'Which glyph sits beside it.' },
       shareable: {
         control: false,
         description: 'The grid the conclusion made, still here after it was put away. Never a link.'
@@ -84,8 +111,33 @@
   });
 </script>
 
-<!-- Two guesses in, APP typed into the third row, and the keyboard knowing four letters. -->
-<Story name="In progress" />
+<!--
+  Two guesses in, APP typed into the third row, and the keyboard knowing four
+  letters. The physical keyboard is on, which is the default, so this is also
+  where the key channel is proved open — the half that says the story below is
+  measuring a channel that was there to surrender.
+-->
+<Story
+  name="In progress"
+  args={{ keys: keysTaken }}
+  play={async () => {
+    // PhysicalKeyboardInput.@guarantee EnterSubmitsAndBackspaceDeletes, driven
+    // through the port rather than the window. What each key means is the
+    // platform's; that the three actions arrive is Poodl's.
+    onletter.mockClear();
+    ondelete.mockClear();
+    onsubmit.mockClear();
+
+    await expect(keysTaken.listening).toBe(1);
+    await expect(keysTaken.press({ key: 'a' })).toBe(true);
+    await expect(keysTaken.press({ key: 'Enter' })).toBe(true);
+    await expect(keysTaken.press({ key: 'Backspace' })).toBe(true);
+
+    await expect(onletter).toHaveBeenCalledWith('a');
+    await expect(onsubmit).toHaveBeenCalledTimes(1);
+    await expect(ondelete).toHaveBeenCalledTimes(1);
+  }}
+/>
 
 <!--
   A guess Poodl will not take. No attempt is spent and the letters stay on the
@@ -95,7 +147,7 @@
   name="A guess refused"
   args={{
     game: { ...PLAYING, currentInput: 'qqqqq' },
-    notice: { kind: 'guess_rejected', reason: 'not_in_dictionary' },
+    ...renamed(describeNotice({ kind: 'guess_rejected', reason: 'not_in_dictionary' })),
     noticeSequence: 1
   }}
 />
@@ -112,11 +164,12 @@
 <!--
   The physical keyboard surrendered. TurningThisOffSurrendersTheKeysEntirely
   means the listener is not rendered at all rather than filtered, and the play
-  function is the evidence: typing reaches nothing.
+  function is the evidence: nothing is subscribed to the port, and a press on it
+  is claimed by nobody.
 -->
 <Story
   name="Physical keyboard surrendered"
-  args={{ physicalKeyboard: false }}
+  args={{ physicalKeyboard: false, keys: keysSurrendered }}
   play={async ({ canvasElement }) => {
     // PhysicalKeyboardInput.@guarantee TurningThisOffSurrendersTheKeysEntirely
     // PhysicalKeyboardInput.@guarantee TurningThisOffLeavesTheGameFullyPlayable
@@ -124,7 +177,13 @@
     ondelete.mockClear();
     onsubmit.mockClear();
 
-    await userEvent.keyboard('a{Enter}{Backspace}');
+    // Nothing is listening at all, rather than a listener that hears and
+    // declines. `listening` is what says which of the two it is, and the
+    // presses that follow are what says the fake would have carried them.
+    await expect(keysSurrendered.listening).toBe(0);
+    await expect(keysSurrendered.press({ key: 'a' })).toBe(false);
+    await expect(keysSurrendered.press({ key: 'Enter' })).toBe(false);
+    await expect(keysSurrendered.press({ key: 'Backspace' })).toBe(false);
 
     await expect(onletter).not.toHaveBeenCalled();
     await expect(onsubmit).not.toHaveBeenCalled();
@@ -185,7 +244,7 @@
   The whole screen at the narrowest viewport the specification supports, framed
   to exactly that width with the gutters `.shell` gives the page.
 
-  The keyboard stories measure the keys. This one measures the claim the
+  This story measures the claim the
   invariant closes on — that at `config.narrowest_supported_width` the game is
   playable without scrolling sideways — over everything the board can put on the
   screen at once: the board with the most controls on it is a finished one whose
@@ -201,7 +260,7 @@
     keyboard: keyboardKnowledge(WON_GAME.guesses),
     onshowresult,
     shareable: GRID_MADE,
-    notice: { kind: 'results_copied' },
+    ...renamed(describeNotice({ kind: 'results_copied' })),
     noticeSequence: 1
   }}
   parameters={{ docs: { story: { inline: false } } }}
@@ -234,6 +293,43 @@
         await expect(box.width).toBeGreaterThanOrEqual(MINIMUM_TOUCH_TARGET);
       }
     }
+
+    /*
+     * What a tap does to a key, in an engine that has the properties. Two of
+     * these resolve nowhere else: jsdom's CSS parser drops
+     * `-webkit-tap-highlight-color` on the floor, so
+     * `tests/directManipulation.test.ts` can assert the replacement but never
+     * the removal, and this is the other half of that pair. The keys are the
+     * platform's now and the stylesheet with them, but the pairing is Poodl's
+     * to keep proving: it is what `docs/reference/testing.md` says splits this
+     * contract's evidence across the two suites.
+     *
+     * DirectManipulation.@invariant ATapDoesOnlyWhatTheControlDoes
+     * DirectManipulation.@invariant ATouchIsAcknowledged
+     */
+    const key = within(canvasElement).getByRole('button', { name: 'Q' });
+    const resolved = getComputedStyle(key);
+
+    await expect(resolved.getPropertyValue('touch-action')).toBe('manipulation');
+    await expect(resolved.getPropertyValue('user-select')).toBe('none');
+    await expect(resolved.getPropertyValue('-webkit-tap-highlight-color')).toBe('rgba(0, 0, 0, 0)');
+
+    /*
+     * And replaced rather than only removed. `:active` is a state only real
+     * input produces — no synthetic event reaches it and no story can force it
+     * — so what is proved here is that the two tones the replacement is drawn
+     * in resolve to real colours in this engine, and that they differ. Their
+     * measured contrast against all twelve key backgrounds is computed by
+     * `tests/contrast.test.ts`, and `docs/explanation/accessibility.md` says
+     * plainly which part of this no gate can see.
+     */
+    const palette = getComputedStyle(document.documentElement);
+    const ink = palette.getPropertyValue('--text');
+    const paper = palette.getPropertyValue('--background');
+
+    await expect(ink).not.toBe('');
+    await expect(paper).not.toBe('');
+    await expect(ink).not.toBe(paper);
   }}
 >
   {#snippet template(args)}

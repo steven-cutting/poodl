@@ -1,5 +1,6 @@
 <script module lang="ts">
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { describeNotice } from '../src/lib/app/state';
   import { expect, fn, userEvent, within } from 'storybook/test';
 
   import SharePanel from '../src/lib/components/SharePanel.svelte';
@@ -44,12 +45,18 @@
     '  submitting it and copying the resulting link, from the keyboard alone.'
   ].join('\n');
 
+  /** The route's own mapping, under the prop names the surfaces take. */
+  function renamed(words: { message: string | null; tone: 'alert' | 'success' }) {
+    return { noticeMessage: words.message, noticeTone: words.tone };
+  }
+
   const { Story } = defineMeta({
     title: 'Sharing/SharePanel',
     component: SharePanel,
     tags: ['autodocs'],
     args: {
-      notice: null,
+      noticeMessage: null,
+      noticeTone: 'alert',
       shareable: null,
       mode: 'random',
       status: 'in_progress',
@@ -59,7 +66,8 @@
       onclose
     },
     argTypes: {
-      notice: { control: false, description: 'The refusal, or nothing yet.' },
+      noticeMessage: { control: false, description: 'The refusal, in words, or nothing yet.' },
+      noticeTone: { control: false, description: 'Which glyph sits beside it.' },
       shareable: { control: false, description: 'The link, once there is one.' },
       mode: { control: false, description: 'The mode of the game on the board, if any.' },
       status: { control: false, description: 'Whether that game is still being played.' },
@@ -94,7 +102,7 @@
 <!-- A word Poodl does not accept. The entry is named so it can be corrected. -->
 <Story
   name="A word Poodl will not take"
-  args={{ notice: { kind: 'custom_answer_rejected', entry: 'qqqqq' } }}
+  args={{ ...renamed(describeNotice({ kind: 'custom_answer_rejected', entry: 'qqqqq' })) }}
 />
 
 <!-- The link, made. Nothing beside it says the word. -->

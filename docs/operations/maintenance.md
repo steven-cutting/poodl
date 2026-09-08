@@ -61,9 +61,16 @@ Treat any change to how state is stored as one-way, and read
 
 ## Secrets
 
-There are none. No API keys, no tokens, no service accounts. The Pages deployment
-authenticates with a workflow identity token that GitHub issues per run, so there is
-nothing to rotate.
+One is stored: Chromatic's project token, held as a repository secret. Nothing else — no
+API keys, no service accounts. The Pages deployment authenticates with a workflow identity
+token that GitHub issues per run, so there is nothing to rotate there.
+
+The registry credential is not stored and is not this repository's to rotate: on a laptop
+it is the contributor's own `read:packages` token in `~/.npmrc`, and in continuous
+integration it is the token GitHub mints for the run. What can be withdrawn is the
+package's grant of read access to this repository, which is a setting on the package. If it
+ever is, every workflow fails at the install — see
+[Troubleshooting](troubleshooting.md).
 
 ## Related pages
 

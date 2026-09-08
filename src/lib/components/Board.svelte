@@ -1,7 +1,8 @@
 <script lang="ts">
-  import Tile from '$lib/components/Tile.svelte';
+  import { Tile } from '@steven-cutting/biscuit-games';
+
   import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
-  import { describeAttempt } from '$lib/domain/announcements';
+  import { describeAttempt, markFor } from '$lib/domain/announcements';
   import type { LetterMark, ScoredGuess } from '$lib/domain/types';
 
   let {
@@ -65,7 +66,18 @@
     {#each rows as row (row.attempt)}
       <li aria-label={row.label}>
         {#each row.cells as cell, index (index)}
-          <Tile letter={cell.letter} mark={cell.mark} position={index + 1} />
+          <!--
+            The cell is the platform's; where it sits and what its mark means
+            are Poodl's, so the label and the sentence are composed here. The
+            content is upper-cased on the way in because the platform draws it
+            exactly as given: `text-transform` would rewrite "ß" to "SS" and
+            disagree with the name beside it.
+          -->
+          <Tile
+            content={cell.letter.toUpperCase()}
+            mark={cell.mark === null ? null : markFor(cell.mark)}
+            label={`Position ${index + 1}`}
+          />
         {/each}
       </li>
     {/each}
@@ -76,6 +88,42 @@
 </div>
 
 <style>
+  /*
+   * GameBoard.@guarantee MotionRespectsTheReducedMotionPreference, which is the
+   * board's rather than the cell's. The platform draws a still `Tile`; how a
+   * row of them arrives is an arrangement, and the arrangement is Poodl's — so
+   * the reveal lives here, where the rule that six rows of five is a game of
+   * Poodl already lives.
+   *
+   * The attribute is written by the route from `Appearance.animations_active`,
+   * which is the animations setting and the device's reduced-motion preference
+   * taken together — and the device wins. No media query here would be a second
+   * opinion on the same question. A fade and a 4px lift, no rotation: the board
+   * is calm on purpose.
+   *
+   * `[data-mark]` is the platform's own hook, and it is absent until a cell is
+   * marked, so this selects exactly the cells a submitted guess just scored.
+   */
+  li :global([data-mark]) {
+    animation: none;
+  }
+
+  :global(:root[data-animations='on']) li :global([data-mark]) {
+    animation: reveal var(--dur-2) var(--ease);
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
   ol {
     display: grid;
     gap: var(--gap-row);

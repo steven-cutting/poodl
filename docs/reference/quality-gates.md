@@ -18,7 +18,7 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 3 | `frontend-static` | ESLint, Prettier and `svelte-check --fail-on-warnings` are clean. |
 | 4 | `frontend-coverage` | Every test passes and coverage is at or above the floor. |
 | 5 | `frontend-build` | The site actually builds, with every route prerenderable. |
-| 6 | `storybook-build` | The workshop builds, documentation pages included. |
+| 6 | `storybook-build` | The workshop builds, documentation pages included. The one gate that reaches the network — see below. |
 | 7 | `storybook-test` | Every story renders in Chromium, passes axe, and its play function completes. |
 | 8 | `check-docs` | The documentation contract holds. |
 | 9 | `check-agents` | The agent contract holds. |
@@ -48,6 +48,24 @@ waived at all.
 One check is still deliberately missing from the table. `check-links-online` needs the
 network, and a check that can fail because a third party is down is not a gate. It is
 listed in [Commands](commands.md).
+
+One gate in the table does reach the network, and it is stated here rather than left to be
+discovered. `.storybook/main.ts` composes the platform's published workshop through a
+`refs` entry, and Storybook checks a ref while it builds by fetching that address's
+`iframe.html`. So gate 6 reaches out on every run of `just check`: once for that file, and
+a second time for the same file read as JSON, which is how Storybook tells a workshop from
+a login page. An address that does not answer costs the first request alone.
+
+It cannot fail on it. An address Storybook cannot reach is recorded as a ref of unknown
+type and the build carries on — verified by pointing the entry at a host that does not
+resolve, which produced a completed build and a sidebar entry that does not open. What an
+outage costs is the platform's stories being absent from Poodl's sidebar, and a wait as
+long as the connection takes to give up. Gate 7 is unaffected, because Storybook skips ref
+checking under its test runner.
+
+The composition was taken for convenience rather than correctness, which is why it is worth
+naming what it costs. Removing the `refs` block is the whole of undoing it.
+[Decision 0013](../decisions/0013-design-system-as-a-package.md) is why it was taken.
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure
 screenshots. All of them are ignored by Git, because a gate that changes one byte of the
@@ -100,6 +118,13 @@ install, the lockfile dry run, `frontend-static`, `frontend-coverage` and `front
 restores the Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
 Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build the
 gate makes is proved and then discarded: that one is uploaded nowhere.
+
+Every job that installs authenticates to GitHub Packages for the design system, with the
+token GitHub mints for the run rather than anything stored: `actions/setup-node` is given
+the registry and the `@steven-cutting` scope, and the environment variable goes on each
+installing step rather than on the job. `ci.yml` carries `packages: read` at the workflow
+level because all three of its jobs install; `pages.yml` and `chromatic.yml` carry it on
+the one job in each that does.
 
 A separate workflow uploads a different one. `.github/workflows/chromatic.yml` runs
 `just chromatic`, which builds the workshop again and publishes it for visual review; see

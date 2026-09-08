@@ -71,11 +71,13 @@ disagree with the first.
   cannot drift apart on where the app goes.
 - Builds with `npm run build`, which is `just frontend-build`.
 - Stages with `npm run stage`, which is `just stage`: `site-root/` becomes the domain root,
-  `src/app.css` and the three font files it names are copied beside the landing page, and
-  `build/` is moved to `site/poodl/`.
+  the design system's stylesheet and the three font files it names are copied beside the
+  landing page out of `node_modules/@steven-cutting/biscuit-games/`, and `build/` is moved
+  to `site/poodl/`.
 - Uploads `site/` — the whole domain — as a Pages artefact.
 - Deploys it in a second job that holds the `pages: write` and `id-token: write` scopes.
-  Every other workflow in this repository is `contents: read` only.
+  The job that builds holds `contents: read` and `packages: read` and neither publishing
+  scope, so the credential that installs and the credential that deploys never meet.
 
 Deployments are serialised by a concurrency group and are never cancelled mid-flight: a
 half-published site is worse than a slightly stale one.
@@ -98,7 +100,8 @@ the three `.woff2` files, and a `poodl/` directory holding the build. The `.noje
 come from `site-root/` and `static/` and stop Pages treating an underscore-prefixed
 directory as a Jekyll internal.
 
-The fonts sit at `lib/assets/fonts/` because that is the path `src/app.css` names, and the
+The fonts sit at `lib/assets/fonts/` because that is the path the packaged stylesheet
+names, and the
 copy beside the landing page is raw rather than built. A landing page that renders in the
 system sans has that copy missing; nothing else about the page will look wrong, which is
 why it is worth checking for deliberately.

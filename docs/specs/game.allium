@@ -189,44 +189,98 @@ contract KeyboardKnowledge {
 -- itself is a gesture that did not reach the game. Every surface with a
 -- control the player can tap fulfils this, which is why it lives here rather
 -- than on any one of them.
+--
+-- The four invariants restate operation.allium's DirectManipulation, which
+-- @steven-cutting/biscuit-games ships. Allium cannot import across
+-- repositories, so tests/platformSpecs.test.ts holds each body equal to the
+-- shipped text: a clause here is amended upstream and taken as a version,
+-- never reworded.
 contract DirectManipulation {
     @invariant ATapDoesOnlyWhatTheControlDoes
         -- A tap on a control performs that control's action and nothing
-        -- besides. The label is not selected, no callout or magnifier is
-        -- raised by holding, and tapping the same control twice in quick
-        -- succession performs it twice rather than zooming the page. Repeated
-        -- fast tapping on the on-screen keyboard is ordinary play, not a
-        -- gesture.
+        -- besides. The label is not selected, no callout or magnifier is raised
+        -- by holding, and tapping the same control twice in quick succession
+        -- performs it twice rather than zooming the page. Repeated fast tapping
+        -- on a row of keys is ordinary use, not a gesture.
 
     @invariant DeliberateZoomIsNeverTakenAway
         -- What the previous invariant removes is the platform's guess, never
-        -- the player's intent. Pinch-zoom still magnifies the page, and the
-        -- page stays usable when the operating system or the browser is
-        -- already magnifying it. Refusing to be zoomed at all would satisfy
-        -- the first invariant and fail this one; the first is not licence
-        -- for it.
+        -- the reader's intent. Pinch-zoom still magnifies the page, and the
+        -- page stays usable when the operating system or the browser is already
+        -- magnifying it. Refusing to be zoomed at all would satisfy the first
+        -- invariant and fail this one; the first is not licence for it.
 
     @invariant EveryControlIsAComfortableTarget
-        -- Every control is at least config.minimum_touch_target across, in
-        -- both directions. One layout cannot be: ten keys and nine gaps do
-        -- not fit that side by side across config.narrowest_supported_width.
-        -- There the on-screen keyboard meets the figure top to bottom,
-        -- divides the row equally among its letter keys, and keeps a gap
-        -- between keys — so what a letter key gives up is bounded by the
-        -- width of the screen and by nothing else. The two action keys may
-        -- be wider than a letter key, and never narrower: they end a turn
-        -- rather than build one, so they are the last place to save width.
-        -- Every other control meets the figure outright. All of this holds
-        -- down to config.narrowest_supported_width, at which the game is
-        -- playable without scrolling sideways.
+        -- Every control is at least config.minimum_touch_target across, in both
+        -- directions. Two shapes cannot be. The first is a row of like controls
+        -- sharing the full width, where what the row would need is more room
+        -- than it is given: the figure for every control that builds a turn,
+        -- the gaps between them all, and whatever more a control that ends a
+        -- turn is given over one that builds one.
+        --
+        -- Three terms, and each was left out of a wrong version of this clause.
+        -- How many controls are in the row is not the test on its own: seven
+        -- controls at that figure fit inside config.narrowest_supported_width
+        -- and the six gaps between them do not, so a row this invariant
+        -- declined to exempt could not meet the figure either — a rack of seven
+        -- tiles is the shape that found it. The room is what the row is
+        -- actually given rather than the whole viewport, because a row inside a
+        -- page's margins has less than the screen it is drawn on. And the extra
+        -- a turn-ending control takes is counted rather than assumed away: the
+        -- clause below grants it, so a row carrying two of them has that much
+        -- less to divide among the rest, and leaving the term out declared a
+        -- ten-share row unexempted at a width that renders it below the figure.
+        --
+        -- There the row meets the figure top to bottom, divides its width
+        -- equally among the controls that build a turn, and keeps a gap between
+        -- them, so what such a control gives up is bounded by the width of the
+        -- screen and by nothing else. A control in that row that ends a turn
+        -- rather than builds one may be wider than the others, and never
+        -- narrower: those are the last place to save width.
+        --
+        -- The second is a control inside a line of running text, a link in a
+        -- sentence being the one that occurs: its size is set by the text around
+        -- it, and a control given the figure there would break the line it sits
+        -- in. A surface owes such a control a reading distance from the words
+        -- beside it, and owes it nothing else. Where the same destination is
+        -- also offered away from the prose, that offer meets the figure like any
+        -- other control.
+        --
+        -- Every other control meets the figure outright, and a control the
+        -- reader activates by pressing a label that contains it meets the figure
+        -- in that label rather than in its own box: the label is what the finger
+        -- is aimed at, so the label is what has to answer, and the words beside
+        -- the control are part of the target rather than next to it.
+        --
+        -- A label bound to a control it does not contain is the surface's own to
+        -- size. The platform cannot see that binding from the label — it is a
+        -- name matched against an identifier elsewhere in the document — so a
+        -- surface that binds that way answers for the row itself. Stated rather
+        -- than left out, because the shape is legal, common, and would otherwise
+        -- fall through the figure with nothing saying whose it was.
+        --
+        -- A control a surface builds out of a generic element is the surface's
+        -- own to size for the same reason: an element the platform cannot tell
+        -- from ordinary content is one no shared rule can reach. What the
+        -- platform answers for is what it can name — every native control the
+        -- two shapes above do not exempt, and the label that contains one — and
+        -- it answers for all of those rather than for the few a stylesheet
+        -- happened to list. A link in a sentence is named as easily as any of
+        -- them and is still exempt, because the exemption is about where the
+        -- control sits rather than about whether it can be reached.
+        --
+        -- All of this holds down to config.narrowest_supported_width, at which
+        -- the surface is usable without scrolling sideways.
 
     @invariant ATouchIsAcknowledged
         -- A control shows that it was touched, from the moment of contact,
         -- whatever the platform's own tap feedback is doing. Suppressing that
         -- feedback without replacing it leaves a control that reads as dead
         -- under exactly the finger this contract exists for. The
-        -- acknowledgement is a change the eye catches without motion, so it
-        -- owes nothing to whether animations are running.
+        -- acknowledgement is a change the eye catches without motion, so it owes
+        -- nothing to whether animations are running — and it is not a dimming of
+        -- the control, because a control that carries a mark would lose the mark
+        -- along with the light.
 }
 
 ------------------------------------------------------------
@@ -426,14 +480,23 @@ config {
     endless_countdown: Duration = 10.seconds
 
     -- CSS pixels across a control, in both directions, for
-    -- DirectManipulation.EveryControlIsAComfortableTarget. The on-screen
-    -- keyboard is the one place this cannot be met in both, which is why that
-    -- invariant says what happens instead rather than stating a size alone.
+    -- DirectManipulation.EveryControlIsAComfortableTarget. That invariant
+    -- names the two shapes it cannot be met in and says what each owes
+    -- instead, rather than stating a size alone.
+    --
+    -- Stated by the platform under the same name in operation.allium, which
+    -- @steven-cutting/biscuit-games ships. It is kept here because the
+    -- invariant above cites it, and tests/platformSpecs.test.ts holds the two
+    -- equal.
     minimum_touch_target: Integer = 44
 
     -- CSS pixels. The narrowest viewport the game is playable on without
     -- scrolling sideways, which is the width every target and spacing figure
     -- has to survive.
+    --
+    -- Stated by the platform in operation.allium, which
+    -- @steven-cutting/biscuit-games ships, and held equal to it by
+    -- tests/platformSpecs.test.ts.
     narrowest_supported_width: Integer = 320
 
     -- Contrast ratios, as WCAG 2.2 computes them, for the guarantees that name
@@ -441,6 +504,10 @@ config {
     -- kind of figure: a threshold the rendering has to clear, stated once so
     -- that no page and no comment gets to decide it privately. The first two
     -- are the AA bars for text and for anything that is not text.
+    --
+    -- Stated by the platform in appearance.allium, which
+    -- @steven-cutting/biscuit-games ships, and held equal to it by
+    -- tests/platformSpecs.test.ts.
     minimum_text_contrast: Decimal = 4.5
     minimum_boundary_contrast: Decimal = 3.0
 
@@ -448,6 +515,10 @@ config {
     -- scored. No standard supplies this figure, because standards ask a colour
     -- to stand off its background rather than off another state, and a
     -- keyboard's states sit side by side.
+    --
+    -- Stated by the platform in play-surfaces.allium, which
+    -- @steven-cutting/biscuit-games ships, and held equal to it by
+    -- tests/platformSpecs.test.ts.
     minimum_state_separation: Decimal = 3.0
 
     -- How far absent has to sit from correct. That pair and no other: present
@@ -466,6 +537,10 @@ config {
     -- spends the same lightness range this separation is paid from, and a
     -- palette tuned on the standard colours will clear both figures and then
     -- fail on high contrast.
+    --
+    -- Stated by the platform in play-surfaces.allium, which
+    -- @steven-cutting/biscuit-games ships, and held equal to it by
+    -- tests/platformSpecs.test.ts.
     minimum_mark_separation: Decimal = 2.0
 }
 
@@ -1192,6 +1267,15 @@ surface GameBoard {
         -- Which combinations of appearance these survive, and the one case
         -- that is exempt from them — a keyboard the player can no longer
         -- operate — is stated where appearance is decided.
+
+    @guarantee AScoredKeyStaysLegibleOnceTheGameIsOver
+        -- The keyboard a finished game leaves behind is the case the
+        -- platform's exemption for an unavailable control is written for,
+        -- AnUnavailableControlIsExempt: every key goes quiet at once, and the
+        -- quiet is the point. What that exemption does not buy is Poodl's to
+        -- keep. A scored key keeps its marker bar and its description once
+        -- the game that scored it is over, and the board beside it keeps that
+        -- game's record at full strength.
 
     @guarantee EverySubmittedGuessIsAnnounced
         -- When a guess is accepted, its per-letter results are announced to

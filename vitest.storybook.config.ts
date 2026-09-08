@@ -33,6 +33,18 @@ export default defineConfig({
     sveltekit(),
     storybookTest({ configDir: fileURLToPath(new URL('./.storybook', import.meta.url)) })
   ],
+  /*
+   * Named so the optimiser resolves it before the run rather than during it.
+   * A dependency Vite meets for the first time inside a story is prebundled on
+   * the spot, and prebundling reloads the page: the run that was already under
+   * way loses its module graph mid-render and reports a heap of
+   * `Cannot read properties of undefined` from inside Svelte's own DOM
+   * operations. It is a cold-cache failure, so it clears on a second run
+   * locally and never clears in CI, where every cache is cold — which is the
+   * worst shape a failure can have. Vite asks for this list by name when it
+   * happens.
+   */
+  optimizeDeps: { include: ['@steven-cutting/biscuit-games'] },
   test: {
     name: 'storybook',
     browser: {

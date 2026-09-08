@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Button from '$lib/components/Button.svelte';
+  import { Button } from '@steven-cutting/biscuit-games';
 
   /**
    * `sharing.allium` — the refusal half of the `CustomLinkEntry` surface.

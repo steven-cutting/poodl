@@ -1,6 +1,6 @@
 <script lang="ts">
   import HowToPlay from '$lib/components/HowToPlay.svelte';
-  import Modal from '$lib/components/Modal.svelte';
+  import { Modal } from '@steven-cutting/biscuit-games';
 
   /**
    * The explanation as the dialog the header's info button opens.

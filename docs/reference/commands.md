@@ -17,7 +17,7 @@ rather than in a shell history.
 | Recipe | Purpose |
 | --- | --- |
 | `just initialize` | One explicit first run. Creates both lockfiles, installs both toolchains and the browser the story tests need, normalises formatting, installs the hook. Never stages, commits, tags or pushes. |
-| `just sync` | Install exactly what the lockfiles say. Run after pulling. |
+| `just sync` | Install exactly what the lockfiles say. Run after pulling. Reads the design system from GitHub Packages, so it needs the token [Develop locally](../how-to/develop-locally.md) describes. |
 | `just install-hooks` | Install the read-only pre-commit gate. |
 | `just install-allium` | Download, verify and install the pinned `allium` binary into `.tools/bin/`. Over the network; no lockfile can name a binary. |
 | `just storybook-browsers` | Download the Chromium the story tests render in. Over the network, into a cache outside the repository. |
@@ -57,7 +57,7 @@ rather than in a shell history.
 | `just frontend-unit` | Vitest, once. |
 | `just frontend-coverage` | Vitest with the 90% floor enforced. |
 | `just frontend-build` | Production build. Honours `BASE_PATH`. |
-| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. |
+| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. Reaches the network for the platform's workshop, and cannot fail on it. |
 | `just storybook-test` | Every story in real Chromium: axe over each render, play functions as interaction tests. |
 
 ## Documents and agents

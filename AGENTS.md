@@ -34,12 +34,16 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
    communication passes callbacks as props. Enforced by review and by
    `eslint-plugin-svelte`.
 3. **Side effects sit behind a port.** Storage, randomness, the clock, the
-   clipboard, the word lists, the device's preferences and the repeating timer
-   are reached through `src/lib/ports/`, each with an in-memory fake. Tests
+   clipboard, the word lists and the repeating timer are reached through
+   `src/lib/ports/`, each with an in-memory fake; the device's preferences and
+   its keyboard are reached through the two ports
+   `@steven-cutting/biscuit-games` exports, with the fakes it ships. Tests
    inject fakes; they never stub a global.
 4. **Every dependency is pinned to an exact version.** No `^`, no `~`, in
    `package.json` or `pyproject.toml`. Lockfiles are committed and
-   `just lock-check` proves they match.
+   `just lock-check` proves they match. `@steven-cutting/biscuit-games` is
+   pinned the same way and comes from GitHub Packages, which authenticates
+   every read: the token lives in `~/.npmrc`, never in this repository.
 5. **The static build has no server.** `@sveltejs/adapter-static` with full
    prerendering. Nothing may assume a request, a session or an origin it can
    talk to.
@@ -61,13 +65,15 @@ These hold everywhere. Breaking one is a defect, not a trade-off.
 - Components are PascalCase `.svelte` files under `src/lib/components/`.
   Semantic HTML first: real buttons, labels bound to controls, keyboard and
   focus handling, visible loading and error states.
+- The platform's primitives, the cells and keys of the play surface and the
+  token stylesheet are imported from `@steven-cutting/biscuit-games`, never
+  copied. What a second game would render unchanged belongs upstream — see
+  [The platform upstream](docs/project/platform.md).
 - Tests live in `tests/`, never colocated with `src/`. `*.test.ts` for Vitest,
   `*.spec.ts` reserved for Playwright. Component tests query by accessible role
   and name — never by class or test id.
 - Stories live in `stories/` at the repository root, as `*.stories.svelte` in
-  Svelte CSF, one file per component — `Foundations.stories.svelte`, the token
-  specimens, is the one recorded exception — covering the states its surface
-  names.
+  Svelte CSF, one file per component, covering the states its surface names.
   They are the workshop, not the evidence: `tests/` still carries the assertions
   and the coverage floor, and a story injects port fakes exactly as a test does.
   A new component lands with its test and its story in the same change.
@@ -152,8 +158,13 @@ repository, each recorded in [the decision records](docs/decisions/README.md):
 - No backend, database, OpenAPI or Python application code; the app sits at the
   repository root rather than under `frontend/`.
 - Ports and fakes adapted from the template's HTTP `Api` boundary to this app's
-  real boundaries: storage, randomness, clock, clipboard, word lists, the
-  device's preferences and a repeating timer.
+  real boundaries: storage, randomness, clock, clipboard, word lists and a
+  repeating timer, with the device's preferences and its keyboard taken from
+  the platform package.
+- The design system taken as a package from the Biscuit Games hub rather than
+  owned here, with three of its specification modules compared by a test
+  instead of imported, because Allium cannot import across repositories. See
+  [decision 0013](docs/decisions/0013-design-system-as-a-package.md).
 - A fifth layer, `src/lib/app/`, holding every rule the specifications state as
   one pure reducer plus a single rune shell. See
   [decision 0007](docs/decisions/0007-rules-as-a-reducer.md).

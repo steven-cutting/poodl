@@ -13,7 +13,7 @@ import {
   describeCountdown,
   describeSubmission
 } from '$lib/domain/announcements';
-import { highContrastActive } from '$lib/domain/appearance';
+import { highContrastActive } from '@steven-cutting/biscuit-games';
 import { EMPTY_POOL, drawPooledAnswer } from '$lib/domain/answerPool';
 import { dailyAnswer, dayOf } from '$lib/domain/calendar';
 import {

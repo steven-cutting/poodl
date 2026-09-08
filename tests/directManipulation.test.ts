@@ -1,10 +1,15 @@
 /*
  * `docs/specs/game.allium` — contract DirectManipulation.
  *
+ * The four invariants are the platform's, stated in the `operation.allium`
+ * that `@steven-cutting/biscuit-games` ships and restated here word for word —
+ * `tests/platformSpecs.test.ts` is what holds the two copies together.
+ *
  * Ten surfaces fulfil this contract and not one of them owns it, which is why
- * its rules live in `src/app.css` rather than in a component. This file reads
- * that stylesheet, puts it in the document and measures what it resolves to on
- * a real control.
+ * its rules live in the stylesheet rather than in a component. That stylesheet
+ * is the platform's as well, so this reads it from `node_modules` — the file
+ * the app actually wears — puts it in the document and measures what it
+ * resolves to on a real control. `src/app.html` beside it is Poodl's own.
  *
  * What jsdom can answer decides what is asserted here. There is no layout
  * engine, so `getBoundingClientRect()` returns zeros and every figure that
@@ -24,6 +29,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { platformFile, platformPath } from './platform';
 import { MINIMUM_TOUCH_TARGET, NARROWEST_SUPPORTED_WIDTH } from '../src/lib/config';
 
 /*
@@ -42,7 +48,7 @@ function source(name: string): string {
   return readFileSync(resolve(process.cwd(), 'src', name), 'utf8');
 }
 
-const appCss = source('app.css');
+const appCss = platformFile('app.css');
 const appHtml = source('app.html');
 
 // One of each kind of control the app actually has. No anchors: the game has
@@ -113,6 +119,20 @@ function ruleFor(selector: string): CSSStyleRule {
   }
   throw new Error(`No rule for ${selector}`);
 }
+
+describe('the stylesheet these figures are measured on', () => {
+  /*
+   * The one case that says which file the rest of this suite read. Every figure
+   * below is derived from a cascade, so a stylesheet resolved from the wrong
+   * place would produce figures that are internally consistent and untrue of
+   * anything a player sees. `platformPath` throws on a path outside
+   * `node_modules`; this says so out loud, where a reader of a failure will
+   * look.
+   */
+  it('is the one the package ships, not a copy in this repository', () => {
+    expect(platformPath('app.css')).toContain('node_modules');
+  });
+});
 
 describe('ATapDoesOnlyWhatTheControlDoes', () => {
   it('sends a tap to the control rather than to the platform', () => {
@@ -200,10 +220,11 @@ describe('DeliberateZoomIsNeverTakenAway', () => {
 describe('EveryControlIsAComfortableTarget', () => {
   /*
    * Top to bottom, which every control meets outright. Across is measured in
-   * Chromium by the stories: the on-screen keyboard is the one place the figure
-   * cannot be met in that direction, so a declared floor would be wrong for the
-   * keys and redundant for everything else, whose text already carries it past
-   * 44px.
+   * Chromium by the stories: a row of like controls sharing a width is one of
+   * the two shapes the invariant exempts in that direction, and the on-screen
+   * keyboard is the row Poodl draws — so a declared floor would be wrong for
+   * the keys and redundant for everything else, whose text already carries it
+   * past 44px.
    */
   it('gives every control the figure the specification states, top to bottom', () => {
     const floor = `${MINIMUM_TOUCH_TARGET}px`;
@@ -257,13 +278,55 @@ describe('ATouchIsAcknowledged', () => {
    * other: `SettingsPanel`'s rows are suppressed and were once left with nothing
    * in exchange. A text control is on neither list, because nothing takes its
    * flash away in the first place.
+   *
+   * Asked of elements rather than of selector text, which is what the strings
+   * could not answer. The stylesheet declares `touch-action` over one list and
+   * the tap highlight over a narrower one, and both name a label for unrelated
+   * reasons: read as text the two compare equal, and a lookup key they share
+   * silently returns the wrong rule. The suppression is keyed here by
+   * `label:has(input)`, which only it lists.
+   *
+   * `:active` comes off before matching. jsdom matches no dynamic pseudo-class,
+   * so every element fails the acknowledgement selectors as written and a
+   * comparison built on them passes for the wrong reason — the same failure one
+   * step along.
+   *
+   * The row answers rather than the box. A native control inside a label shares
+   * that row's ring rather than carrying one of its own, so a suppressed control
+   * is acknowledged in itself or in the label containing it, and neither on its
+   * own is the test.
    */
   it('owes an acknowledgement to every control it took one from', () => {
-    const suppressed = ruleFor("input[type='radio']").selectorText;
-    const acknowledged = ruleFor('button:active:not(:disabled)').selectorText;
+    const matching = (rule: CSSStyleRule): HTMLElement[] =>
+      Array.from(host.querySelectorAll<HTMLElement>('*')).filter((element) =>
+        rule.selectorText
+          .split(',')
+          .some((one) => element.matches(one.trim().replaceAll(':active', '')))
+      );
 
-    expect(suppressed).toContain('label');
-    expect(acknowledged).toContain('label');
+    const suppressed = matching(ruleFor('label:has(input)'));
+    const acknowledged = matching(ruleFor('button:active:not(:disabled)'));
+
+    expect(suppressed.length).toBeGreaterThan(0);
+    expect(acknowledged.length).toBeGreaterThan(0);
+
+    /*
+     * A control that cannot be operated is on neither side of the debt: the
+     * acknowledgement selectors carry `:not(:disabled)` and the suppression does
+     * not, so a disabled control is suppressed and correctly unacknowledged.
+     */
+    for (const element of suppressed.filter((one) => !one.matches(':disabled'))) {
+      const row = element.closest('label');
+
+      expect(
+        acknowledged.includes(element) || (row !== null && acknowledged.includes(row)),
+        `nothing acknowledges ${element.outerHTML}`
+      ).toBe(true);
+    }
+
+    for (const element of acknowledged) {
+      expect(suppressed, `nothing suppressed ${element.outerHTML}`).toContain(element);
+    }
   });
 
   /*

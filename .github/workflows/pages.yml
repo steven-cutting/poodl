@@ -31,6 +31,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A job block replaces the workflow's rather than adding to it, which is
+    # what keeps the two publishing scopes on `deploy` and off the job that
+    # installs. This one reads the design system package and needs neither.
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,7 +46,21 @@ jobs:
           node-version: '26'
           cache: npm
           cache-dependency-path: package-lock.json
+          # @steven-cutting/biscuit-games comes from GitHub Packages, which
+          # authenticates every request including a read of a public package.
+          # This writes a user-level .npmrc under RUNNER_TEMP naming the
+          # registry for the scope and reading the token from the environment
+          # of each step that installs; the committed .npmrc names the registry
+          # and holds nothing, and the checkout the gates prove clean stays that
+          # way.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@steven-cutting'
       - run: npm ci --no-audit
+        env:
+          # On the step that installs, never on the job: a step with no use for
+          # the credential should not carry one. It is the run's own token,
+          # minted and discarded with the run, so nothing is stored here.
+          NODE_AUTH_TOKEN: ${{ github.token }}
       - name: Build the static site
         run: npm run build
       - name: Stage the domain root around it

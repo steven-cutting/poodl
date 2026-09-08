@@ -69,6 +69,16 @@ Beyond the fields:
 Only `docs/**/*.md` is in scope. The Allium specifications are not Markdown, so the
 contract does not see them; they are still valid link targets.
 
+## Links that leave the repository
+
+One page points outward: [The platform upstream](../project/platform.md) carries the links
+into the Biscuit Games handbook. They are `https://…/blob/main/docs/<path>` URLs to whole
+pages, never to a heading — a fragment across the boundary is checked by nothing on either
+side, and a heading renamed there would rot here silently either way.
+
+The validator and the offline link checker both skip an `https://` target, so nothing in
+`just check` resolves them. `just check-links-online` does, by hand and monthly.
+
 ## Outside the contract
 
 `README.md`, `SECURITY.md`, `CHANGELOG.md`, `AGENTS.md` and `CLAUDE.md` at the repository

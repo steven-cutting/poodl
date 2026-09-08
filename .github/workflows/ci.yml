@@ -10,6 +10,10 @@ on:
 
 permissions:
   contents: read
+  # Every job installs @steven-cutting/biscuit-games from GitHub Packages
+  # with the run's own token. A permission is not a secret: nothing is
+  # stored on this repository for it.
+  packages: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -28,6 +32,15 @@ jobs:
           node-version: '26'
           cache: npm
           cache-dependency-path: package-lock.json
+          # @steven-cutting/biscuit-games comes from GitHub Packages, which
+          # authenticates every request including a read of a public package.
+          # This writes a user-level .npmrc under RUNNER_TEMP naming the
+          # registry for the scope and reading the token from the environment
+          # of each step that installs; the committed .npmrc names the registry
+          # and holds nothing, and the checkout the gates prove clean stays that
+          # way.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@steven-cutting'
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           version: 0.11.18
@@ -37,6 +50,14 @@ jobs:
       - run: uv tool install rust-just==1.51.0
       - run: npm install --global npm@11.17.0
       - run: just sync
+        env:
+          # On the step that installs, never on the job: a step with no use for
+          # the credential should not carry one. It is the run's own token,
+          # minted and discarded with the run, so nothing is stored here.
+          NODE_AUTH_TOKEN: ${{ github.token }}
+      # No token: a dry run against a complete lockfile reads the registry
+      # for nothing, which was checked by running it with no credential in
+      # npm's configuration at all.
       - run: npm ci --ignore-scripts --dry-run --no-audit
       - run: just frontend-static
       - run: just frontend-coverage
@@ -54,6 +75,15 @@ jobs:
           node-version: '26'
           cache: npm
           cache-dependency-path: package-lock.json
+          # @steven-cutting/biscuit-games comes from GitHub Packages, which
+          # authenticates every request including a read of a public package.
+          # This writes a user-level .npmrc under RUNNER_TEMP naming the
+          # registry for the scope and reading the token from the environment
+          # of each step that installs; the committed .npmrc names the registry
+          # and holds nothing, and the checkout the gates prove clean stays that
+          # way.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@steven-cutting'
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           version: 0.11.18
@@ -66,6 +96,11 @@ jobs:
       # validators and the two specification gates, so node_modules, the uv
       # environment and the pinned allium binary must all exist.
       - run: just sync
+        env:
+          # On the step that installs, never on the job: a step with no use for
+          # the credential should not carry one. It is the run's own token,
+          # minted and discarded with the run, so nothing is stored here.
+          NODE_AUTH_TOKEN: ${{ github.token }}
       # Over the network, into the gitignored .tools/bin. No lockfile can name a
       # binary, so `just sync` deliberately does not install it and this does.
       # It is not cached: 1.6 MB downloads faster than a cache round trip.
@@ -93,6 +128,15 @@ jobs:
           node-version: '26'
           cache: npm
           cache-dependency-path: package-lock.json
+          # @steven-cutting/biscuit-games comes from GitHub Packages, which
+          # authenticates every request including a read of a public package.
+          # This writes a user-level .npmrc under RUNNER_TEMP naming the
+          # registry for the scope and reading the token from the environment
+          # of each step that installs; the committed .npmrc names the registry
+          # and holds nothing, and the checkout the gates prove clean stays that
+          # way.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@steven-cutting'
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           version: 0.11.18
@@ -110,6 +154,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
       - run: just sync
+        env:
+          # On the step that installs, never on the job: a step with no use for
+          # the credential should not carry one. It is the run's own token,
+          # minted and discarded with the run, so nothing is stored here.
+          NODE_AUTH_TOKEN: ${{ github.token }}
       # The cache restores the browser binaries but not the apt packages they
       # link against, so the dependency step runs unconditionally.
       - run: just storybook-browsers-deps

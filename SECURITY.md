@@ -41,8 +41,9 @@ backports: a fix lands on `main` and deploys.
 - Every dependency pinned to an exact version and locked; `just lock-check` fails if a
   manifest and its lockfile disagree.
 - Every GitHub Action pinned to a commit SHA rather than a mutable tag.
-- Continuous integration runs with `contents: read`. Only the Pages deployment holds
-  write scopes, in its own workflow file.
+- Continuous integration runs with `contents: read` and `packages: read`, the second so
+  the install can read the design system package. Only the Pages deployment holds write
+  scopes, in its own workflow file.
 - `ripsecrets` scans every commit, with its output suppressed so a match never copies the
   matched value into a log.
 

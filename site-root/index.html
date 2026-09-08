@@ -10,16 +10,17 @@
     />
     <link rel="icon" href="data:," />
     <!--
-      The application's own tokens, copied here by scripts/stage_site.sh rather
-      than restated. A second palette would sit outside the contrast gate that
-      tests/contrast.test.ts holds over the first one. It carries the theme too:
-      data-theme="dark" on the root pins the page to the dark palette — the
-      default the app ships in its own markup — with no script to run, and no
-      settings panel here to choose otherwise.
+      The design system's tokens, copied here by scripts/stage_site.sh out of
+      the @steven-cutting/biscuit-games package the app imports them from,
+      rather than restated. A second palette would sit outside the contrast gate
+      that tests/contrast.test.ts holds over that same file. It carries the
+      theme too: data-theme="dark" on the root pins the page to the dark palette
+      — the default the app ships in its own markup — with no script to run, and
+      no settings panel here to choose otherwise.
 
-      Since decision 0010 it carries the two faces as well, and the staging
-      copies them to the path the stylesheet names. If the page renders in the
-      system sans, that copy is what is missing.
+      It carries the two faces as well, and the staging copies them beside it at
+      the path the stylesheet names. If the page renders in the system sans,
+      that copy is what is missing.
     -->
     <link rel="stylesheet" href="./app.css" />
     <style>

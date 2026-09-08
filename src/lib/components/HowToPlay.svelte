@@ -1,7 +1,8 @@
 <script lang="ts">
-  import Tile from '$lib/components/Tile.svelte';
+  import { Explainer, Tile } from '@steven-cutting/biscuit-games';
+
   import { MAX_ATTEMPTS, WORD_LENGTH } from '$lib/config';
-  import type { LetterMark } from '$lib/domain/types';
+  import { markFor } from '$lib/domain/announcements';
 
   /**
    * What Poodl is — the body of the explanation, and only the body.
@@ -14,7 +15,13 @@
    * from anywhere — so the words live here once and each consumer supplies its
    * own frame and its own name.
    *
-   * The example beside each mark is the board's own `Tile`, so the bar a player
+   * The frame is `Explainer`, the platform's: prose, a list pairing a live
+   * example with the sentence that explains it, and a quiet closing note. Every
+   * game explains itself and every one of them explains it this way, which is
+   * what makes the scaffold the platform's and every word below Poodl's —
+   * `Primer.@guarantee TheWordsAreTheGamesAndTheFrameIsThePlatforms`.
+   *
+   * The example beside each mark is the board's own cell, so the bar a player
    * is told about is the bar the board draws, in every theme and both palettes
    * (`GameBoard.@guarantee ResultsAreNeverConveyedByColourAlone`). The words
    * for the three are that guarantee's own — bar, shorter bar and no bar —
@@ -22,88 +29,58 @@
    * all of it, and calling it full would set the sentence against the tile
    * beside it.
    *
-   * The tiles are hidden from assistive technology: the sentence beside each
-   * one is the content, and "Position 1, C, correct" read out before it would
-   * be noise. That leaves the sentences carrying the whole explanation on
-   * their own, so `tests/primitives.test.ts` holds each one by the row it sits
-   * in, and the bars beside them through `[data-marker]` — the structural hook
-   * `docs/reference/testing.md` records for exactly this kind of aria-hidden
-   * decoration.
+   * The tiles are hidden from assistive technology by the frame: the sentence
+   * beside each one is the whole of the content, and "Position 1, C, correct"
+   * read out before it would be noise. That leaves the sentences carrying the
+   * explanation on their own, so `tests/components.test.ts` holds each one by
+   * the row it sits in, and the bars beside them through `[data-marker]` — the
+   * structural hook `docs/reference/testing.md` records for exactly this kind
+   * of aria-hidden decoration.
    */
-  const MARKS: readonly { mark: LetterMark; letter: string; sentence: string }[] = [
-    {
-      mark: 'correct',
-      letter: 'c',
-      sentence: 'Correct — right letter, right place. Marker bar.'
-    },
-    {
-      mark: 'present',
-      letter: 'r',
-      sentence: 'Present — right letter, wrong place. Shorter marker bar.'
-    },
-    { mark: 'absent', letter: 'n', sentence: 'Absent — not in the word. No marker bar.' }
-  ];
 </script>
 
-<div class="how">
+{#snippet correct()}
+  <Tile content="C" mark={markFor('correct')} label="Position 1" />
+{/snippet}
+
+{#snippet present()}
+  <Tile content="R" mark={markFor('present')} label="Position 2" />
+{/snippet}
+
+{#snippet absent()}
+  <Tile content="N" mark={markFor('absent')} label="Position 3" />
+{/snippet}
+
+<Explainer
+  rows={[
+    { show: correct, says: 'Correct — right letter, right place. Marker bar.' },
+    { show: present, says: 'Present — right letter, wrong place. Shorter marker bar.' },
+    { show: absent, says: 'Absent — not in the word. No marker bar.' }
+  ]}
+>
   <p>
     Guess the word in {MAX_ATTEMPTS} attempts. Every guess is a real
     <span class="nowrap">{WORD_LENGTH}-letter</span> word.
   </p>
-  <ul class="marks">
-    {#each MARKS as example, index (example.mark)}
-      <li>
-        <span class="example" aria-hidden="true">
-          <Tile position={index + 1} letter={example.letter} mark={example.mark} />
-        </span>
-        <span>{example.sentence}</span>
-      </li>
-    {/each}
-  </ul>
-  <p class="note">
-    Play as many as you like, and one word a day that everybody shares. Your statistics are saved in
-    this browser.
-  </p>
-</div>
+  {#snippet footnote()}
+    <p>
+      Play as many as you like, and one word a day that everybody shares. Your statistics are saved
+      in this browser.
+    </p>
+  {/snippet}
+</Explainer>
 
 <style>
   /*
-   * `text-wrap: pretty` is inherited by every sentence here. At the dialog's
-   * width a row's sentence runs to two lines, and without it the second line
-   * is as likely as not to be one word; where the browser does not know the
-   * value it wraps as it always did. The word length and its hyphen are kept
-   * together so the intro never breaks after "5-".
+   * The frame carries `text-wrap: pretty` and the spacing; what is left here is
+   * the intro's own. The word length and its hyphen are kept together so it
+   * never breaks after "5-".
    */
-  .how {
-    display: grid;
-    gap: var(--s-6);
-    text-wrap: pretty;
-  }
-
   p {
     margin: 0;
   }
 
   .nowrap {
     white-space: nowrap;
-  }
-
-  .marks {
-    display: grid;
-    gap: var(--s-5);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .marks li {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--s-5);
-    align-items: center;
-  }
-
-  .note {
-    color: var(--text-2);
   }
 </style>
