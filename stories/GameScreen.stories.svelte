@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import { createWindowKeys } from '@steven-cutting/biscuit-games';
+  import { createFakeKeys } from '@steven-cutting/biscuit-games';
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { describeNotice } from '../src/lib/app/state';
   import { expect, fn, userEvent, within } from 'storybook/test';
@@ -15,6 +15,22 @@
   const oncopy = fn();
   const ondismissnotice = fn();
   const onshowresult = fn();
+
+  /*
+   * The device's keyboard, injected as a fake exactly as `tests/screens.test.ts`
+   * injects it. `src/routes/+page.svelte` is where the window-backed adapter is
+   * built and a story never builds one: a story subscribed to the real window
+   * answers to whatever the page around it is doing, and the workshop stops
+   * being a place one component can be looked at on its own.
+   *
+   * Three of them rather than one, because two stories below assert on
+   * `listening` and `listening` is a count. A fake shared with the other
+   * stories would count whatever they left mounted, so each of those two
+   * carries its own and can only be counting itself.
+   */
+  const keys = createFakeKeys();
+  const keysTaken = createFakeKeys();
+  const keysSurrendered = createFakeKeys();
 
   const OVERVIEW = [
     'The board, the keyboard and everything Poodl says while a game is on.',
@@ -63,7 +79,7 @@
     tags: ['autodocs'],
     args: {
       game: PLAYING,
-      keys: createWindowKeys(),
+      keys,
       keyboard: keyboardKnowledge(PLAYING.guesses),
       physicalKeyboard: true,
       noticeMessage: null,
@@ -81,7 +97,7 @@
     argTypes: {
       game: { control: false, description: 'The game on the board. Its answer is never read.' },
       keyboard: { control: false, description: 'One entry per letter of the alphabet.' },
-      keys: { control: false, description: 'The device keyboard, as the port the route builds.' },
+      keys: { control: false, description: 'The device keyboard, injected as a fake.' },
       physicalKeyboard: { control: 'boolean', description: 'Whether typing reaches the board.' },
       noticeMessage: { control: false, description: 'What Poodl is saying, if anything.' },
       noticeTone: { control: false, description: 'Which glyph sits beside it.' },
@@ -95,8 +111,33 @@
   });
 </script>
 
-<!-- Two guesses in, APP typed into the third row, and the keyboard knowing four letters. -->
-<Story name="In progress" />
+<!--
+  Two guesses in, APP typed into the third row, and the keyboard knowing four
+  letters. The physical keyboard is on, which is the default, so this is also
+  where the key channel is proved open — the half that says the story below is
+  measuring a channel that was there to surrender.
+-->
+<Story
+  name="In progress"
+  args={{ keys: keysTaken }}
+  play={async () => {
+    // PhysicalKeyboardInput.@guarantee EnterSubmitsAndBackspaceDeletes, driven
+    // through the port rather than the window. What each key means is the
+    // platform's; that the three actions arrive is Poodl's.
+    onletter.mockClear();
+    ondelete.mockClear();
+    onsubmit.mockClear();
+
+    await expect(keysTaken.listening).toBe(1);
+    await expect(keysTaken.press({ key: 'a' })).toBe(true);
+    await expect(keysTaken.press({ key: 'Enter' })).toBe(true);
+    await expect(keysTaken.press({ key: 'Backspace' })).toBe(true);
+
+    await expect(onletter).toHaveBeenCalledWith('a');
+    await expect(onsubmit).toHaveBeenCalledTimes(1);
+    await expect(ondelete).toHaveBeenCalledTimes(1);
+  }}
+/>
 
 <!--
   A guess Poodl will not take. No attempt is spent and the letters stay on the
@@ -123,11 +164,12 @@
 <!--
   The physical keyboard surrendered. TurningThisOffSurrendersTheKeysEntirely
   means the listener is not rendered at all rather than filtered, and the play
-  function is the evidence: typing reaches nothing.
+  function is the evidence: nothing is subscribed to the port, and a press on it
+  is claimed by nobody.
 -->
 <Story
   name="Physical keyboard surrendered"
-  args={{ physicalKeyboard: false }}
+  args={{ physicalKeyboard: false, keys: keysSurrendered }}
   play={async ({ canvasElement }) => {
     // PhysicalKeyboardInput.@guarantee TurningThisOffSurrendersTheKeysEntirely
     // PhysicalKeyboardInput.@guarantee TurningThisOffLeavesTheGameFullyPlayable
@@ -135,7 +177,13 @@
     ondelete.mockClear();
     onsubmit.mockClear();
 
-    await userEvent.keyboard('a{Enter}{Backspace}');
+    // Nothing is listening at all, rather than a listener that hears and
+    // declines. `listening` is what says which of the two it is, and the
+    // presses that follow are what says the fake would have carried them.
+    await expect(keysSurrendered.listening).toBe(0);
+    await expect(keysSurrendered.press({ key: 'a' })).toBe(false);
+    await expect(keysSurrendered.press({ key: 'Enter' })).toBe(false);
+    await expect(keysSurrendered.press({ key: 'Backspace' })).toBe(false);
 
     await expect(onletter).not.toHaveBeenCalled();
     await expect(onsubmit).not.toHaveBeenCalled();
