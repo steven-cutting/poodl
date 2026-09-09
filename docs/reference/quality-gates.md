@@ -18,7 +18,7 @@ one. A recipe that modifies a file fails the run, because checks are read-only.
 | 3 | `frontend-static` | ESLint, Prettier and `svelte-check --fail-on-warnings` are clean. |
 | 4 | `frontend-coverage` | Every test passes and coverage is at or above the floor. |
 | 5 | `frontend-build` | The site actually builds, with every route prerenderable. |
-| 6 | `storybook-build` | The workshop builds, documentation pages included. The one gate that reaches the network — see below. |
+| 6 | `storybook-build` | The workshop builds, documentation pages included. |
 | 7 | `storybook-test` | Every story renders in Chromium, passes axe, and its play function completes. |
 | 8 | `check-docs` | The documentation contract holds. |
 | 9 | `check-agents` | The agent contract holds. |
@@ -49,22 +49,28 @@ One check is still deliberately missing from the table. `check-links-online` nee
 network, and a check that can fail because a third party is down is not a gate. It is
 listed in [Commands](commands.md).
 
-One gate in the table does reach the network, and it is stated here rather than left to be
-discovered. `.storybook/main.ts` composes the platform's published workshop through a
-`refs` entry, and Storybook checks a ref while it builds by fetching that address's
-`iframe.html`. So gate 6 reaches out on every run of `just check`: once for that file, and
-a second time for the same file read as JSON, which is how Storybook tells a workshop from
-a login page. An address that does not answer costs the first request alone.
+Every gate in the table is offline, gate 6 included. `.storybook/main.ts` composes the
+platform's published workshop through a `refs` entry, and Storybook checks a ref while it
+builds by fetching that address's `iframe.html` — but only when the `COMPOSE_PLATFORM_WORKSHOP`
+environment variable is set to `1`. Nothing in `just check` sets it, so `storybook-build`
+there resolves `refs` to the incoming config unchanged and makes no request. `just storybook`
+and `just chromatic` set the flag themselves, because a human is about to look at the
+result in both cases; `just chromatic`'s build inherits the flag from the recipe that
+invokes it. A build run without the flag — by hand, or by any other recipe — is offline by
+default, the same as every other gate.
 
-It cannot fail on it. An address Storybook cannot reach is recorded as a ref of unknown
-type and the build carries on — verified by pointing the entry at a host that does not
-resolve, which produced a completed build and a sidebar entry that does not open. What an
-outage costs is the platform's stories being absent from Poodl's sidebar, and a wait as
-long as the connection takes to give up. Gate 7 is unaffected, because Storybook skips ref
-checking under its test runner.
+Under the flag, Storybook fetches the ref's `iframe.html`, and a second time for the same
+file read as JSON, which is how it tells a workshop from a login page. It cannot fail on
+the request: an address it cannot reach is recorded as a ref of unknown type and the build
+carries on — verified by pointing the entry at a host that does not resolve, which
+produced a completed build and a sidebar entry that does not open. What an outage costs,
+under the flag, is the platform's stories being absent from the sidebar, and a wait as
+long as the connection takes to give up. Gate 7 is unaffected either way, because
+Storybook skips ref checking under its test runner.
 
 The composition was taken for convenience rather than correctness, which is why it is worth
-naming what it costs. Removing the `refs` block is the whole of undoing it.
+naming what it costs. Unsetting the flag on `just storybook` and `just chromatic`, or
+removing the `refs` function's `biscuit-games` branch entirely, is the whole of undoing it.
 [Decision 0013](../decisions/0013-design-system-as-a-package.md) is why it was taken.
 
 Storybook writes a cache and a static build, and Vitest's browser mode can write failure

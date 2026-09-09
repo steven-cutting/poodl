@@ -79,9 +79,11 @@ stage-preview:
     uv run --frozen python -m http.server --bind 127.0.0.1 --directory site 4174
 
 # The component workshop on port 6006. This serves it; `just chromatic` is what
-# publishes a build of it for visual review.
+# publishes a build of it for visual review. The flag composes the platform's
+# workshop into the sidebar — see the `refs` comment in `.storybook/main.ts` —
+# because a human is about to look at the result.
 storybook:
-    npm run storybook
+    COMPOSE_PLATFORM_WORKSHOP=1 npm run storybook
 
 # ----------------------------------------------------------------- format ---
 
@@ -173,5 +175,7 @@ check:
 # Needs the network and CHROMATIC_PROJECT_TOKEN, so it is deliberately outside
 # `just check` — the same reason check-links-online sits outside it. Pass a
 # branch name when HEAD is detached, which is how CI reaches a pull request.
+# The flag composes the platform's workshop into the published build, the same
+# flag `just storybook` sets — see `.storybook/main.ts`.
 chromatic branch="":
-    npm run chromatic -- ${1:+--branch-name "$1"}
+    COMPOSE_PLATFORM_WORKSHOP=1 npm run chromatic -- ${1:+--branch-name "$1"}

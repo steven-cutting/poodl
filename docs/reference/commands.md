@@ -39,7 +39,7 @@ rather than in a shell history.
 | `just preview` | Serve the built output in `build/`. Build first, and set the same `BASE_PATH` — see [Configuration](configuration.md). |
 | `just stage` | Assemble `site/`: the domain root from `site-root/`, with the build moved in beneath it at `BASE_PATH`. This is what Pages is given. |
 | `just stage-preview` | Serve the staged tree in `site/` on port 4174 — the whole domain, landing page included, which `just preview` cannot show. |
-| `just storybook` | The component workshop on port 6006, with hot module replacement. |
+| `just storybook` | The component workshop on port 6006, with hot module replacement. Composes the platform's published workshop into the sidebar, which reaches the network for its `iframe.html`; see [Quality gates](quality-gates.md). |
 
 ## Format and repair
 
@@ -57,7 +57,7 @@ rather than in a shell history.
 | `just frontend-unit` | Vitest, once. |
 | `just frontend-coverage` | Vitest with the 90% floor enforced. |
 | `just frontend-build` | Production build. Honours `BASE_PATH`. |
-| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. Reaches the network for the platform's workshop, and cannot fail on it. |
+| `just storybook-build` | Build the workshop into `storybook-static/`. Ignored by Git; this build is discarded, and `just chromatic` is what publishes one. Offline: it does not set the flag that composes the platform's workshop. |
 | `just storybook-test` | Every story in real Chromium: axe over each render, play functions as interaction tests. |
 
 ## Documents and agents
@@ -79,7 +79,7 @@ has not run `just initialize` must run `just install-allium` first.
 
 | Recipe | Purpose |
 | --- | --- |
-| `just chromatic [branch]` | Build the workshop and publish it to Chromatic for visual review. Manual; needs the network and `CHROMATIC_PROJECT_TOKEN`. Never part of `just check`. The argument overrides the branch name, which only CI needs, because it checks a pull request out at a detached head. |
+| `just chromatic [branch]` | Build the workshop and publish it to Chromatic for visual review. Manual; needs the network and `CHROMATIC_PROJECT_TOKEN`, and composes the platform's workshop the same as `just storybook`. Never part of `just check`. The argument overrides the branch name, which only CI needs, because it checks a pull request out at a detached head. |
 
 ## Aggregate
 
