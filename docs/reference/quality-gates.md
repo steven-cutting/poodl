@@ -98,10 +98,12 @@ One gap is worth knowing about rather than being surprised by. `actionlint` anal
 `run:` block by handing it to `shellcheck`, and it reports nothing at all when it cannot
 find `shellcheck` on its own `PATH`. Under `prek` each hook gets its own environment, so
 the `shellcheck` hook two rows up is not the one `actionlint` can see, and the shell
-embedded in a workflow goes unread. The `authorize` job in
-`.github/workflows/chromatic.yml` is the only place that shell is more than a line, and it
-was checked by extracting it and running `shellcheck` over it by hand. Anything comparable
-added later deserves the same treatment until the gap is closed.
+embedded in a workflow goes unread. Poodl's own workflows now carry no such shell: the
+three `run:` blocks longer than a line, the `/chromatic` gate, the token check and the
+reply on the pull request, live in `game-chromatic.yml` in
+`steven-cutting/biscuit_games_tooling` rather than in this repository's `chromatic.yml`.
+A block of more than a line added to a workflow here should be extracted and run through
+`shellcheck` by hand until the gap is closed.
 
 ## The mutating counterpart
 
@@ -111,20 +113,26 @@ installed as a hook and runs only from `just fix`.
 
 ## In continuous integration
 
-`.github/workflows/ci.yml` runs the same recipes in three jobs. `frontend` runs the
-install, the lockfile dry run, `frontend-static`, `frontend-coverage` and `frontend-build`;
-`documents` runs `sync`, then `install-allium` — the binary no lockfile can name — then
-`lint`, `check-docs`, `check-agents`, `check-specs` and `analyse-specs`; `stories`
-restores the Playwright cache, installs the browser, then runs `storybook-build` and `storybook-test`.
-Nothing in CI runs a command that does not exist in the `Justfile`. The workshop build the
-gate makes is proved and then discarded: that one is uploaded nowhere.
+`.github/workflows/ci.yml` runs the same recipes in three jobs, from a workflow every game
+shares: its one job, `ci`, calls `game-ci.yml` in `steven-cutting/biscuit_games_tooling`
+at a pinned release. `frontend` runs the install, `lock-check`, `frontend-static`,
+`frontend-coverage` and `frontend-build`; `documents` runs `sync`, then `install-allium` —
+the binary no lockfile can name — then `lint`, `check-docs`, `check-agents`, `check-specs`
+and `analyse-specs`; `stories` restores the Playwright cache, installs the browser, then
+runs `storybook-build` and `storybook-test`. Past installing Node, Python, `just` and npm
+themselves, which that repository's `setup-toolchain` action does, nothing in CI runs a
+command that does not exist in the `Justfile`. The workshop build the gate makes is proved
+and then discarded: that one is uploaded nowhere.
 
 Every job that installs authenticates to GitHub Packages for the design system, with the
 token GitHub mints for the run rather than anything stored: `actions/setup-node` is given
 the registry and the `@steven-cutting` scope, and the environment variable goes on each
 installing step rather than on the job. `ci.yml` carries `packages: read` at the workflow
-level because all three of its jobs install; `pages.yml` and `chromatic.yml` carry it on
-the one job in each that does.
+level, where its one job inherits it and hands it to all three jobs of the called workflow,
+each of which installs. `pages.yml` and `chromatic.yml` carry it on the job that calls the
+shared workflow, because a called workflow can narrow the token it is handed but never
+widen it; inside, the one job in each that installs keeps the scope and the other gives it
+up.
 
 A separate workflow uploads a different one. `.github/workflows/chromatic.yml` runs
 `just chromatic`, which builds the workshop again and publishes it for visual review; see
@@ -138,8 +146,9 @@ repository; the checks and what they are for are in
 
 ## On `main`
 
-`main` is protected, and `frontend`, `documents` and `stories` must all pass before a
-branch merges into it. Those three names are the CI jobs, and they are the only required
+`main` is protected, and `ci / frontend`, `ci / documents` and `ci / stories` must all pass
+before a branch merges into it. Those three names are the CI jobs, each named after the
+calling job in `ci.yml` and then the shared job it runs, and they are the only required
 checks: the Pages workflow's own jobs never run on a pull request, so requiring them would
 block every merge. Chromatic is not among them either, and deliberately so — a visual
 change is a thing to look at, not a thing to fail on, so the job reports and passes.
