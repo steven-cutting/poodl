@@ -67,8 +67,9 @@ disagree with the first.
 
 ## What the workflow does
 
-- Reads `BASE_PATH` from the workflow's own `env` block, so the build and the staging
-  cannot drift apart on where the app goes.
+- Hands `/poodl` to `game-pages.yml` in `steven-cutting/biscuit_games_tooling` as its
+  `base_path` input, which that workflow sets once as `BASE_PATH` for the build and the
+  staging alike, so the two cannot drift apart on where the app goes.
 - Builds with `npm run build`, which is `just frontend-build`.
 - Stages with `npm run stage`, which is `just stage`: `site-root/` becomes the domain root,
   the design system's stylesheet and the three font files it names are copied beside the
