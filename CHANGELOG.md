@@ -203,6 +203,19 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The six repository checkers come from `biscuit-games-tooling` 0.2.0 rather than from
+  copies under `scripts/`. It is a git dependency in the `dev` group of `pyproject.toml`,
+  pinned to its release tag, with the commit recorded in `uv.lock`; the hooks and recipes
+  run its console scripts `bg-validate-docs`, `bg-validate-agents`, `bg-install-allium`,
+  `bg-run-allium`, `bg-project-check` and `bg-ripsecrets`, and
+  `[tool.biscuit-games-tooling]` in `pyproject.toml` lists the gates `just check` runs.
+  The package's validators are stricter than the copies were — a key named twice in
+  frontmatter or in the manifest fails, a skill bridge's body must be the exact pointer
+  sentence, and an adapter is compared byte for byte — and the tree already met all of
+  it. The Allium version and checksums moved with the package unchanged, so moving Allium
+  is now a release there and a moved pin here; see
+  [Maintain dependencies](docs/how-to/maintain-dependencies.md).
+
 - The ten restated clauses now carry the platform's wording verbatim, with Poodl's module
   prefix kept on the two contrast references. They had drifted: the platform reworded
   `EveryControlIsAComfortableTarget` three times after the port, and Poodl's copy still
@@ -377,6 +390,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   instead of sampling forty words and tolerating a couple of survivors.
 
 ### Removed
+
+- `scripts/validate_docs.py`, `scripts/validate_agents.py`, `scripts/install_allium.py`,
+  `scripts/run_allium.py`, `scripts/run_project_check.py` and
+  `scripts/run_ripsecrets_redacted.py`, which the package above replaces. The same six
+  lived in Poodl, the hub and the template, so a fix reached each copy by hand.
 
 - Every copy the package replaces: `src/app.css` and the two typefaces; the icon set and
   its map; `Icon`, `IconButton`, `Button`, `Modal`, `Notice`, `Announcer`, `HeaderBar`,

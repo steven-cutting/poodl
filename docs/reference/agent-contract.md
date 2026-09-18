@@ -8,10 +8,10 @@ requires: []
 
 # Agent contract
 
-Enforced by `scripts/validate_agents.py`, run by `just check-agents` and by a pre-commit
-hook. `AGENTS.md` is the single source of truth for how an agent works in this
-repository; everything else in the agent surface exists only so a particular tool can
-find it.
+Enforced by `bg-validate-agents`, a console script of the `biscuit-games-tooling`
+package, run by `just check-agents` and by a pre-commit hook. `AGENTS.md` is the single
+source of truth for how an agent works in this repository; everything else in the agent
+surface exists only so a particular tool can find it.
 
 ## The four surfaces
 
@@ -36,7 +36,7 @@ is good; it verifies that the six topics were not dropped in an edit.
 
 ## What a skill must be
 
-Frontmatter of exactly two keys:
+Frontmatter of exactly two keys, neither named twice:
 
 ```markdown
 ---
@@ -53,9 +53,15 @@ description: Implement or review a Svelte route or component change with accessi
 ## What a bridge must be
 
 Each of `.claude/skills/<name>/SKILL.md` and `.codex/skills/<name>/SKILL.md` carries the
-canonical frontmatter verbatim, then one sentence pointing at
-`../../../.agents/skills/<name>/SKILL.md` — exactly one such reference, and at most forty
-words in total. A bridge that grows content of its own fails.
+canonical frontmatter verbatim, then a body that is exactly this, with the skill's name
+in place of `<name>`:
+
+```markdown
+Follow `../../../.agents/skills/<name>/SKILL.md`. That file is canonical and this bridge adds nothing to it.
+```
+
+The body is compared whole rather than measured, so a bridge that grows content of its
+own fails however brief the addition.
 
 ## The inventory
 

@@ -8,8 +8,9 @@ requires: []
 
 # Documentation contract
 
-Enforced by `scripts/validate_docs.py`, run by `just check-docs` and by a pre-commit
-hook. It reports every violation at once rather than stopping at the first.
+Enforced by `bg-validate-docs`, a console script of the `biscuit-games-tooling` package,
+run by `just check-docs` and by a pre-commit hook. It reports every violation at once
+rather than stopping at the first.
 
 The contract exists so documentation cannot quietly rot: every page is registered once,
 owns its topics, repeats its metadata in frontmatter, and is reachable from the index.
@@ -25,11 +26,13 @@ JSON is a subset of YAML. No trailing commas, no comments.
  "canonical_for": ["command_reference"], "requires": []}
 ```
 
-Every entry carries exactly those six keys — extra keys fail as loudly as missing ones.
+Every entry carries exactly those six keys — extra keys fail as loudly as missing ones,
+and so does a key named twice.
 
 ## Frontmatter
 
-Every page carries exactly five keys, and each must equal the manifest entry.
+Every page carries exactly five keys, none of them twice, and each must equal the
+manifest entry.
 
 ```markdown
 ---
@@ -53,7 +56,7 @@ fails.
 | `kind` | One of `project`, `tutorial`, `how-to`, `explanation`, `reference`, `operations`, `decision`. |
 | `audience` | Non-empty subset of `user`, `contributor`, `maintainer`, `operator`, `agent`. |
 | `canonical_for` | At least one topic, and every topic is owned by exactly one page across the whole tree. |
-| `requires` | Feature predicates. This project defines none, so every page carries `[]`. |
+| `requires` | Feature predicates, declared under `[tool.biscuit-games-tooling]` in `pyproject.toml`. This project declares none, so every page carries `[]`. |
 
 Beyond the fields:
 

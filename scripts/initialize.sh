@@ -18,11 +18,12 @@ npm ci --no-audit
 # that no lockfile accounts for.
 npm run storybook:browsers
 
-# The other one. The Allium checker for docs/specs/, pinned and checksummed in
-# the script, landing in the gitignored .tools/bin. `just check-specs` and
-# `just analyse-specs` run it, and both the hook gate and `just check` run those,
-# so a worktree without it cannot reach a green gate.
-uv run --frozen python scripts/install_allium.py
+# The other one. The Allium checker for docs/specs/, landing in the gitignored
+# .tools/bin. The pin and its checksums live in biscuit-games-tooling, the
+# package pyproject.toml pins. `just check-specs` and `just analyse-specs` run
+# it, and both the hook gate and `just check` run those, so a worktree without
+# it cannot reach a green gate.
+uv run --frozen bg-install-allium
 
 # Formatting is normalised once here rather than leaving the first `just check`
 # to fail on it.
