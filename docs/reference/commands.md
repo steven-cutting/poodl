@@ -70,10 +70,10 @@ rather than in a shell history.
 | `just analyse-specs` | `allium analyse` over `docs/specs/`: the same structural diagnostics plus data flow, reachability, deadlocks and conflicts. Asserts that both arrays are empty; a finding cannot be waived, so any finding is a regression. |
 | `just check-links-online` | Follow external links. Manual; needs the network. |
 
-Both spec recipes go through `scripts/run_allium.py`, which reads the JSON rather than
-trusting the exit code — `allium check` exits 0 on an `info` diagnostic and `allium
-analyse` ignores diagnostics altogether. Both need the pinned binary, so a worktree that
-has not run `just initialize` must run `just install-allium` first.
+Both spec recipes go through `bg-run-allium`, which reads the JSON rather than trusting
+the exit code — `allium check` exits 0 on an `info` diagnostic and `allium analyse`
+ignores diagnostics altogether. Both need the pinned binary, so a worktree that has not
+run `just initialize` must run `just install-allium` first.
 
 ## Publish
 

@@ -36,12 +36,12 @@ install-hooks:
     test -f uv.lock || { printf '%s\n' 'uv.lock is missing; run just initialize first' >&2; exit 2; }
     uv run --frozen prek install --overwrite --hook-type=pre-commit
 
-# The Allium checker for docs/specs/, pinned and checksummed in the script.
+# The Allium checker for docs/specs/, pinned and checksummed in the tooling package.
 # Downloads over the network into .tools/bin, which Git ignores. It is not part
 # of `just sync` for the same reason the browser below is not: sync installs
 # exactly what the lockfiles say, and no lockfile can name a binary.
 install-allium:
-    uv run --frozen python scripts/install_allium.py
+    uv run --frozen bg-install-allium
 
 # The Chromium build the story tests render in. Downloads over the network into
 # a per-user cache outside the repository, so the worktree never sees it.
@@ -130,10 +130,10 @@ storybook-test:
 
 check-docs:
     uv run --frozen prek run --all-files markdownlint-cli2 typos lychee
-    uv run --frozen python scripts/validate_docs.py
+    uv run --frozen bg-validate-docs
 
 check-agents:
-    uv run --frozen python scripts/validate_agents.py
+    uv run --frozen bg-validate-agents
 
 # The specifications, checked mechanically rather than by review: syntax,
 # references, and names a module reaches for that no import defines. Every
@@ -146,14 +146,14 @@ check-agents:
 # trusting the status. Both need the pinned binary, which `just initialize`
 # installs and `just install-allium` repairs.
 check-specs:
-    uv run --frozen python scripts/run_allium.py check
+    uv run --frozen bg-run-allium check
 
 # The same modules read for process completeness rather than structure: data
 # flow, reachability, deadlocks, conflicts and invariants. It repeats everything
 # `check-specs` reports and adds findings of its own, and findings cannot be
 # waived, so anything reported is a regression.
 analyse-specs:
-    uv run --frozen python scripts/run_allium.py analyse
+    uv run --frozen bg-run-allium analyse
 
 check-links-online:
     uv run --frozen prek run --all-files --hook-stage manual lychee-online
@@ -161,11 +161,11 @@ check-links-online:
 # ---------------------------------------------------------------- aggregate ---
 
 check-clean baseline="":
-    uv run --frozen python scripts/run_project_check.py clean "$1"
+    uv run --frozen bg-project-check clean "$1"
 
 # The complete gate.
 check:
-    uv run --frozen python scripts/run_project_check.py run
+    uv run --frozen bg-project-check run
 
 # ---------------------------------------------------------------- publish ---
 

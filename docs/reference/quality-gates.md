@@ -38,10 +38,10 @@ Neither gate trusts the tool's exit code, because neither exit code means what t
 project means by clean. `allium check` exits 0 on an `info` diagnostic —
 `allium.field.unused` is one — and `allium analyse` keys its status on findings alone and
 ignores diagnostics entirely, so a module that does not parse passes it with the `error`
-sitting in the JSON it has just printed. `scripts/run_allium.py` runs the subcommand,
-prints its output whole, and asserts what the contract actually says: every module reports
-an empty `diagnostics` array and an empty `findings` array. A diagnostic may be waived
-only where the checker itself is wrong, on the terms in
+sitting in the JSON it has just printed. `bg-run-allium` runs the subcommand, prints its
+output whole, and asserts what the contract actually says: every module reports an empty
+`diagnostics` array and an empty `findings` array. A diagnostic may be waived only where
+the checker itself is wrong, on the terms in
 [Work with the specifications](../how-to/work-with-the-specs.md); a finding cannot be
 waived at all.
 
@@ -79,7 +79,7 @@ configuration, and it is the one installed as the pre-commit hook.
 
 | Hook | Checks |
 | --- | --- |
-| `ruff-check`, `ruff-format-check` | Every Python script under `scripts/`. |
+| `ruff-check`, `ruff-format-check` | Any Python Poodl adds. There is none at present: the checkers are console scripts of the `biscuit-games-tooling` package, and are linted there. |
 | `editorconfig-checker` | Whitespace, line endings, final newlines. |
 | `eslint` | ESLint and `prettier --check` across the application, the stories, and the workshop configuration. |
 | `validate-docs`, `validate-agents` | The two contracts, so a hook catches them before the aggregate does. |

@@ -36,38 +36,39 @@ repos:
 
       - id: validate-docs
         name: Documentation contract
-        entry: uv run --frozen python scripts/validate_docs.py
+        entry: uv run --frozen bg-validate-docs
         language: system
         pass_filenames: false
-        files: ^(README\.md|SECURITY\.md|docs/|scripts/validate_docs\.py)
+        files: ^(README\.md|SECURITY\.md|docs/|pyproject\.toml$)
 
       - id: validate-agents
         name: Agent instruction contract
-        entry: uv run --frozen python scripts/validate_agents.py
+        entry: uv run --frozen bg-validate-agents
         language: system
         pass_filenames: false
-        files: ^(AGENTS\.md|CLAUDE\.md|\.agents/|\.claude/|\.codex/|\.github/copilot-instructions\.md|scripts/validate_agents\.py)
+        files: ^(AGENTS\.md|CLAUDE\.md|\.agents/|\.claude/|\.codex/|\.github/copilot-instructions\.md|pyproject\.toml$)
 
       # The specifications, which outrank the code, held to the same standard as
       # the two contracts above. Both need the pinned binary in the gitignored
       # .tools/bin, so a worktree that has never run `just initialize` fails here
       # until `just install-allium` puts one there. That is deliberate: a gate
-      # that skips itself when its tool is absent asserts nothing. The pin
-      # itself is a trigger, because a waiver is only ever valid against the
-      # version it was verified on.
+      # that skips itself when its tool is absent asserts nothing. The allium
+      # pin lives in biscuit-games-tooling, whose version is the pin in
+      # pyproject.toml, so that file is a trigger: a waiver is only ever valid
+      # against the version it was verified on.
       - id: check-specs
         name: Specification diagnostics
-        entry: uv run --frozen python scripts/run_allium.py check
+        entry: uv run --frozen bg-run-allium check
         language: system
         pass_filenames: false
-        files: ^(docs/specs/|scripts/run_allium\.py|scripts/install_allium\.py)
+        files: ^(docs/specs/|pyproject\.toml$)
 
       - id: analyse-specs
         name: Specification analysis
-        entry: uv run --frozen python scripts/run_allium.py analyse
+        entry: uv run --frozen bg-run-allium analyse
         language: system
         pass_filenames: false
-        files: ^(docs/specs/|scripts/run_allium\.py|scripts/install_allium\.py)
+        files: ^(docs/specs/|pyproject\.toml$)
 
   - repo: builtin
     hooks:
@@ -161,4 +162,4 @@ repos:
     rev: 7d94620933e79b8acaa0cd9e60e9864b07673d86 # v0.1.11
     hooks:
       - id: ripsecrets
-        entry: uv run --no-project python scripts/run_ripsecrets_redacted.py
+        entry: uv run --frozen bg-ripsecrets

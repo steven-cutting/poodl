@@ -84,7 +84,7 @@ means by clean. `allium check` exits 0 on an `info` diagnostic — `allium.field
 one, so the waiver the modules used to carry for it was never what kept the recipe green —
 and `allium analyse` keys its status on findings alone, so a module that does not parse
 passes it with the `error` sitting in the JSON it has just printed.
-`scripts/run_allium.py` reads the arrays instead.
+`bg-run-allium` reads the arrays instead.
 
 Either recipe reporting anything at all is therefore a regression in the change under
 review. Fix it at the root. A finding cannot be waived. A diagnostic can, but only when the
