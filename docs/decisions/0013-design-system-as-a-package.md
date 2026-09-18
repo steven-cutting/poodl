@@ -49,8 +49,8 @@ Install the package at an exact version, and delete every copy it makes redundan
   them there. Poodl keeps its own `Appearance` surface and its own `config` entries: the
   package makes the two comparable, not merged, and deleting the entries would fail
   `check-specs`, because Poodl's own clauses cite them.
-- **The workshop composes the platform's**, which costs gate 6 a network request; see
-  [Quality gates](../reference/quality-gates.md).
+- **The workshop composes the platform's**, opt-in behind a flag so gate 6 stays offline
+  by default; see [Quality gates](../reference/quality-gates.md).
 - **Three pages leave.** The design direction, the design resource index and the porting
   guide are decided upstream. [The platform upstream](../project/platform.md) is the one page
   that replaces them, and it is the only thing here that points outward.

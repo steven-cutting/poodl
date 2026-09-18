@@ -46,6 +46,14 @@ network and a token. The gate stays offline: nothing `just check` runs needs eit
 sentence used to count the gates, which was true when it was written and stopped being
 true on 2026-08-28, when the two specification gates joined the aggregate.
 [Quality gates](../reference/quality-gates.md) owns the list and is the count to trust.)
+>
+> Noted again on 2026-09-08. The first half of the original sentence is true again: the
+> `refs` entry composes the platform's workshop only when `COMPOSE_PLATFORM_WORKSHOP=1` is
+> set, `just check` never sets it, and neither does a bare `storybook build`, so gate 6
+> makes no request by default. `just storybook` and `just chromatic` set the flag
+> themselves, because a human is about to look at the composed result in both cases; the
+> request the note above described still happens, just no longer inside the gate.
+> [Quality gates](../reference/quality-gates.md) states the flag.
 
 `.github/workflows/chromatic.yml` has two entry points, and they do different jobs:
 
